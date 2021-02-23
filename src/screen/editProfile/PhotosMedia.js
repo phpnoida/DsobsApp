@@ -1,0 +1,674 @@
+import React, {useState, useEffect} from 'react';
+import {
+  Text,
+  View,
+  TouchableWithoutFeedback,
+  TouchableOpacity,
+  TextInput,
+  Image,
+  Keyboard,
+  FlatList,
+  Platform,
+  Alert,
+} from 'react-native';
+import g from '../../theme/global';
+import grid from '../../theme/grid';
+import {scale} from '../../theme/Scalling';
+import GlobalInclude from '../../globalInclude/Globalinclude';
+import {IconType} from '../../helper/Constants';
+import CommonButton from '../../component/CommonButton';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import PhotoSheet from 'react-native-raw-bottom-sheet';
+import VideoSheet from 'react-native-raw-bottom-sheet';
+import RNFetchBlob from 'rn-fetch-blob';
+import ImagePicker from 'react-native-image-crop-picker';
+import VideoWebView from '../../component/VideoWebView';
+import DocumentPicker from 'react-native-document-picker';
+import NextPreviousButton from '../../component/NextPreviousButton';
+import {uploadMedia} from '../../Actions/CommonActions';
+import {updateUserProfile} from '../../Actions/UserActions';
+
+let photoSheet = null;
+let videoSheet = null;
+let responseMessage = '';
+
+const PhotosMedia = (props) => {
+  const {profileData} = props;
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [mediaData, setMediaData] = useState([]);
+
+  const [selectedLink, setSelectedLink] = useState('');
+  const [selectedLinkError, setSelectedLinkError] = useState('');
+  const [selectedLinkTags, setSelectedLinkTags] = useState('');
+  const [selectedTagsError, setSelectedTagsError] = useState('');
+  const [inEditMode, setInEditMode] = useState(false);
+  const [showContactUsModal, setShowContactUsModal] = useState(false);
+
+  useEffect(() => {
+    setMediaData(profileData.photos);
+    return () => {};
+  }, [profileData]);
+
+  const handleInput = (key, value) => {
+    if (key === 'link') {
+      setSelectedLink(value);
+    } else if (key === 'tags') {
+      setSelectedLinkTags(value);
+    }
+  };
+
+  const removeMedia = (index) => {
+    if (index > mediaData.length) {
+      return;
+    }
+    let oldData = mediaData;
+    oldData.splice(index, 1);
+    setMediaData([...oldData]);
+  };
+
+  const renderMediaItem = ({item, index}) => {
+    return (
+      <View
+        key={index}
+        style={[
+          {flex: 1 / 2},
+          index % 2 === 0 ? g.pl10 : g.pl5,
+          index % 2 !== 0 ? g.pr10 : g.pr5,
+          g.pb10,
+        ]}>
+        {item.type === 1 && (
+          <View style={[g.b1, g.br3, g.oh]}>
+            <View
+              style={[
+                grid.rowdir,
+                grid.justifyContentRight,
+                {position: 'absolute', right: 10, top: 10, zIndex: 1},
+              ]}>
+              <TouchableOpacity
+                onPress={(e) => {
+                  props.removeIndex(() => {
+                    removeMedia(index);
+                  });
+                }}>
+                <GlobalInclude.BaseIcon
+                  containerStyle={{height: scale(18), width: scale(18)}}
+                  iconColor={'#fff'}
+                  iconName={'remove'}
+                  iconSize={scale(18)}
+                  iconType={IconType[4]}
+                />
+              </TouchableOpacity>
+            </View>
+            <View style={[g.bggray]}>
+              <Image
+                style={{aspectRatio: 16 / 9}}
+                resizeMode="contain"
+                source={{uri: item.thumbnail}}
+              />
+            </View>
+          </View>
+        )}
+
+        {item.type === 2 && (
+          <View style={[g.b1, g.br3, g.oh]}>
+            <View
+              style={[
+                grid.rowdir,
+                grid.justifyContentRight,
+                {position: 'absolute', right: 10, top: 10, zIndex: 1},
+              ]}>
+              <TouchableOpacity
+                onPress={(e) =>
+                  props.removeIndex(() => {
+                    removeMedia(index);
+                  })
+                }>
+                <GlobalInclude.BaseIcon
+                  containerStyle={{height: scale(18), width: scale(18)}}
+                  iconColor={'#fff'}
+                  iconName={'remove'}
+                  iconSize={scale(18)}
+                  iconType={IconType[4]}
+                />
+              </TouchableOpacity>
+            </View>
+            <VideoWebView videoUrl={item.thumbnail} />
+          </View>
+        )}
+
+        {item.type === 3 && (
+          <View style={[g.b1, g.br3, g.oh, g.p10, {aspectRatio: 16 / 9}]}>
+            <View
+              style={[
+                grid.rowdir,
+                grid.justifyContentRight,
+                g.colorGray,
+                {position: 'absolute', right: 10, top: 10, zIndex: 1},
+              ]}>
+              <TouchableOpacity
+                onPress={(e) => {
+                  props.removeIndex(() => {
+                    removeMedia(index);
+                  });
+                }}>
+                <GlobalInclude.BaseIcon
+                  containerStyle={{height: scale(18), width: scale(18)}}
+                  iconColor={'#333333'}
+                  iconName={'remove'}
+                  iconSize={scale(18)}
+                  iconType={IconType[4]}
+                />
+              </TouchableOpacity>
+            </View>
+            <View style={[grid.rowrow, grid.justifyContentCenter, g.mt5]}>
+              {item.thumbnail.includes('.pdf') && (
+                <GlobalInclude.BaseIcon
+                  containerStyle={{height: scale(48), width: scale(48)}}
+                  iconColor={'#6e6e6e'}
+                  iconName={'file-pdf-o'}
+                  iconSize={scale(48)}
+                  iconType={IconType[4]}
+                />
+              )}
+            </View>
+            <Text
+              style={[g.fs14, g.colordarkGray, g.FHNM, g.mt15]}
+              numberOfLines={2}>
+              {item.fieldName}
+            </Text>
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  /**
+   *
+   * API Section start
+   *
+   */
+  const updateProfileDetails = () => {
+    if (mediaData.length > 0) {
+      if (global.isConnected) {
+        let requestData = {
+          photos: mediaData,
+        };
+
+        setIsLoading(true);
+        updateUserProfile(
+          requestData,
+          (response) => {
+            setIsLoading(false);
+
+            if (response && response !== null) {
+              if (
+                response.data &&
+                response.data !== undefined &&
+                response.response !== null
+              ) {
+                let data = response.data;
+                if (data.status) {
+                  props.updateData(data.data);
+                  setTimeout(() => {
+                    props.onSaveTab();
+                  }, 500);
+                }
+              }
+            }
+          },
+          (error, message) => {
+            //console.log('error', error);
+            setIsLoading(false);
+            responseMessage = message;
+            setShowContactUsModal(true);
+          },
+        );
+      }
+    } else {
+      setTimeout(() => {
+        props.onSaveTab();
+      }, 500);
+    }
+  };
+
+  const uploadMediaContent = (body, childPath, mediaType) => {
+    setIsLoading(true);
+    uploadMedia(
+      childPath,
+      body,
+      (response) => {
+        setIsLoading(false);
+        if (response && response !== undefined && response !== null) {
+          if (response.status) {
+            if (response.data && response.data !== null) {
+              let childData = response.data.data;
+              let object = {
+                thumbnail: childData,
+                fileName: childData,
+                type: mediaType,
+              };
+
+              let oldData = mediaData;
+
+              oldData.push(object);
+              setMediaData([...oldData]);
+            }
+          }
+        }
+      },
+      (error, message) => {
+        setIsLoading(false);
+        responseMessage = message;
+        setShowContactUsModal(true);
+      },
+    );
+  };
+
+  /**
+   *
+   * API Section end
+   *
+   */
+
+  const uploadImage = (pickFile, childPath, mediaType) => {
+    let body = [];
+
+    if (pickFile !== null) {
+      var path = '';
+
+      if (Platform.OS === 'android') {
+        path = pickFile.path;
+      } else if (Platform.OS === 'ios') {
+        path = pickFile.sourceURL;
+      }
+      let imageName = '';
+      if (
+        pickFile.fileName === undefined ||
+        pickFile.fileName == null ||
+        pickFile.fileName === ''
+      ) {
+        var getFilename = path.split('/');
+        imageName = getFilename[getFilename.length - 1];
+        var extension = imageName.split('.')[1];
+        imageName = new Date().getTime() + '.' + extension;
+      } else {
+        imageName = pickFile.fileName;
+      }
+
+      let imagePath =
+        Platform.OS === 'ios' ? path.replace('file://', '') : path;
+
+      let imageType = pickFile.mime;
+
+      var imageData = {
+        name: 'image',
+        filename: imageName,
+        type: imageType,
+        data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
+      };
+      body.push(imageData);
+
+      uploadMediaContent(body, childPath, mediaType);
+    }
+  };
+
+  const uploadDoc = (pickFile, childPath, mediaType) => {
+    let body = [];
+
+    if (pickFile !== null) {
+      var path = pickFile.uri;
+      let imageName = '';
+      if (
+        pickFile.name === undefined ||
+        pickFile.name == null ||
+        pickFile.name === ''
+      ) {
+        var getFilename = path.split('/');
+        imageName = getFilename[getFilename.length - 1];
+        var extension = imageName.split('.')[1];
+        imageName = new Date().getTime() + '.' + extension;
+      } else {
+        imageName = pickFile.name;
+      }
+
+      let imagePath =
+        Platform.OS === 'ios' ? path.replace('file://', '') : path;
+
+      let imageType = pickFile.type;
+
+      var imageData = {
+        name: 'image',
+        filename: imageName,
+        type: imageType,
+        data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
+      };
+      body.push(imageData);
+
+      uploadMediaContent(body, childPath, mediaType);
+    }
+  };
+
+  const pickMultiple = () => {
+    ImagePicker.openPicker({
+      includeBase64: false,
+      cropping: false,
+      includeExif: false,
+      mediaType: 'photo',
+      multiple: false,
+    })
+      .then((images) => {
+        if (images !== null) {
+          console.log('images', images);
+          uploadImage(images, 'utils/imageupload', 1);
+        }
+      })
+      .catch((err) => {
+        Alert.alert('User Cancelled Selection!');
+        console.log('err', err);
+      })
+      .finally(() => {
+        photoSheet.close();
+      });
+  };
+
+  const pickDocument = async () => {
+    try {
+      const res = await DocumentPicker.pick({
+        type: [DocumentPicker.types.pdf],
+      });
+      if (res !== null) {
+        console.log('res', res);
+        uploadDoc(res, 'utils/imageupload?type=1', 3);
+      }
+    } catch (err) {
+      console.log('err', err);
+      Alert.alert('User Cancelled Selection!');
+    }
+  };
+
+  const addToVideo = () => {
+    if (selectedLink.trim() === '') {
+      setSelectedLinkError('This field is required!');
+    } else if (selectedLinkTags.trim() === '') {
+      setSelectedTagsError('This field is required!');
+    } else {
+      videoSheet.close();
+      const thumbnail =
+        selectedLink.includes('youtube') || selectedLink.includes('youtu.be')
+          ? selectedLink.replace('watch?v=', 'embed/')
+          : selectedLink.includes('vimeo')
+          ? selectedLink.replace(
+              'https://vimeo.com/',
+              'https://player.vimeo.com/video/',
+            )
+          : '';
+      const obj = {
+        fileName: selectedLink,
+        thumbnail: thumbnail,
+        type: 2,
+        tags: selectedLinkTags,
+      };
+      let oldData = mediaData;
+
+      oldData.push(obj);
+      setMediaData([...oldData]);
+    }
+  };
+
+  return (
+    <TouchableWithoutFeedback
+      style={GlobalInclude.AppStyle.fill}
+      onPress={() => {
+        Keyboard.dismiss();
+      }}
+      activeOpacity={1}>
+      <View style={GlobalInclude.AppStyle.fill}>
+        <KeyboardAwareScrollView
+          style={[g.mt20, g.mb20]}
+          showsVerticalScrollIndicator={false}>
+          <View style={[grid.flex1, g.pb30]}>
+            {showContactUsModal && (
+              <GlobalInclude.ModalAlert
+                status={showContactUsModal}
+                header={responseMessage}
+                okButton={'Okay'}
+                okAction={() => {
+                  setShowContactUsModal(false);
+                }}
+                cancelAction={() => {
+                  setShowContactUsModal(false);
+                }}
+              />
+            )}
+            <View style={g.mb15}>
+              <TouchableOpacity
+                style={grid.rowdir}
+                onPress={() => {
+                  photoSheet.open();
+                }}
+                activeOpacity={0.7}>
+                <View
+                  style={[
+                    g.bglightGray,
+                    grid.col,
+                    g.mr10,
+                    {padding: 15, borderRadius: 10},
+                  ]}>
+                  <Text style={[g.fs16, g.FHNR, g.colorLightGray]}>
+                    Upload a Photo here
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    g.p15,
+                    g.bglightGray,
+                    {width: 50, height: 50, borderRadius: 10},
+                  ]}>
+                  <Image
+                    source={GlobalInclude.Assets.UploadIcon}
+                    resizeMode="contain"
+                    style={[g.w20, {height: 23}]}
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
+            <View style={g.mb15}>
+              <TouchableOpacity
+                style={grid.rowdir}
+                onPress={() => {
+                  setSelectedLink('');
+                  setSelectedLinkTags('');
+                  setInEditMode(false);
+                  videoSheet.open();
+                }}
+                activeOpacity={0.7}>
+                <View
+                  style={[
+                    g.bglightGray,
+                    grid.col,
+                    g.mr10,
+                    {padding: 15, borderRadius: 10},
+                  ]}>
+                  <Text style={[g.fs16, g.FHNR, g.colorLightGray]}>
+                    Upload a Video here
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    g.p15,
+                    g.bglightGray,
+                    {width: 50, height: 50, borderRadius: 10},
+                  ]}>
+                  <Image
+                    source={GlobalInclude.Assets.UploadIcon}
+                    resizeMode="contain"
+                    style={[g.w20, {height: 23}]}
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
+            <View style={g.mb15}>
+              <TouchableOpacity
+                style={grid.rowdir}
+                onPress={() => {
+                  pickDocument();
+                }}
+                activeOpacity={0.7}>
+                <View
+                  style={[
+                    g.bglightGray,
+                    grid.col,
+                    g.mr10,
+                    {padding: 15, borderRadius: 10},
+                  ]}>
+                  <Text style={[g.fs16, g.FHNR, g.colorLightGray]}>
+                    Upload a Docs here
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    g.p15,
+                    g.bglightGray,
+                    {width: 50, height: 50, borderRadius: 10},
+                  ]}>
+                  <Image
+                    source={GlobalInclude.Assets.UploadIcon}
+                    resizeMode="contain"
+                    style={[g.w20, {height: 23}]}
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
+            {mediaData.length > 0 && (
+              <View style={g.mb15}>
+                <Text style={[g.colorBlack, g.fs14, g.FHNB, g.pl10, g.mb10]}>
+                  Delete
+                </Text>
+                <FlatList
+                  style={{margin: scale(5)}}
+                  data={mediaData}
+                  numColumns={2}
+                  keyExtractor={(item, index) => index.toString()}
+                  renderItem={renderMediaItem}
+                />
+              </View>
+            )}
+          </View>
+        </KeyboardAwareScrollView>
+        <NextPreviousButton
+          isLoading={isLoading}
+          onPreviuosTab={() => {
+            props.onPreviuosTab();
+          }}
+          onSaveTab={() => {
+            updateProfileDetails();
+            //props.onSaveTab();
+          }}
+        />
+        <PhotoSheet
+          ref={(ref) => {
+            photoSheet = ref;
+          }}
+          height={120}
+          minClosingHeight={50}
+          duration={350}
+          closeOnDragDown={true}
+          customStyles={{
+            container: {
+              backgroundColor: '#fff',
+              borderTopLeftRadius: 30,
+              borderTopRightRadius: 30,
+              paddingStart: scale(15),
+              paddingEnd: scale(15),
+              paddingBottom: scale(20),
+            },
+          }}>
+          <View style={[g.bb1, g.p15, g.pl0, {borderBottomColor: '#e5e5e5'}]}>
+            <TouchableOpacity
+              activeOpacity={1}
+              style={[grid.rowdir, grid.alignItems]}
+              onPress={() => {
+                pickMultiple();
+              }}>
+              <View
+                style={[grid.rowdir, grid.justifyContentCenter, {width: 22}]}>
+                <GlobalInclude.BaseIcon
+                  containerStyle={{height: scale(18), width: scale(18)}}
+                  iconColor={'#bababa'}
+                  iconName={'mobile'}
+                  iconSize={scale(18)}
+                  iconType={IconType[4]}
+                />
+              </View>
+              <Text style={[g.fs16, g.FHNB, g.colordarkGray, g.ml15]}>
+                {'Upload From Device'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </PhotoSheet>
+
+        {/* video sheet */}
+        <VideoSheet
+          ref={(ref) => {
+            videoSheet = ref;
+          }}
+          height={260}
+          minClosingHeight={50}
+          duration={350}
+          closeOnDragDown={true}
+          customStyles={{
+            container: {
+              backgroundColor: '#fff',
+              borderTopLeftRadius: 30,
+              borderTopRightRadius: 30,
+              paddingStart: scale(15),
+              paddingEnd: scale(15),
+              paddingTop: scale(10),
+              paddingBottom: scale(10),
+            },
+          }}>
+          <View style={grid.flex1}>
+            <View style={[grid.col, g.mb10]}>
+              <TextInput
+                placeholder={'Paste Youtube link here (Required)'}
+                onChangeText={(link) => handleInput('link', link)}
+                underlineColorAndroid="transparent"
+                style={g.inputWhite}
+                value={selectedLink}
+              />
+              {selectedLinkError && selectedLinkError !== '' ? (
+                <Text style={g.errorMsg}>{selectedLinkError}</Text>
+              ) : null}
+            </View>
+
+            <View style={[grid.row, g.mb10]}>
+              <View style={grid.col}>
+                <TextInput
+                  placeholder={
+                    'Tag this photo, seperate tags by comma (Required)'
+                  }
+                  onChangeText={(tags) => handleInput('tags', tags)}
+                  underlineColorAndroid="transparent"
+                  style={[g.inputWhite]}
+                  value={selectedLinkTags}
+                />
+                {selectedTagsError && selectedTagsError !== '' ? (
+                  <Text style={g.errorMsg}>{selectedTagsError}</Text>
+                ) : null}
+              </View>
+            </View>
+            <CommonButton
+              showLoader={isLoading}
+              title={!inEditMode ? 'SAVE' : 'Update'}
+              onPress={() => addToVideo()}
+            />
+          </View>
+        </VideoSheet>
+      </View>
+    </TouchableWithoutFeedback>
+  );
+};
+
+export default PhotosMedia;
