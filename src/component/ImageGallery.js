@@ -7,17 +7,13 @@ import {
   TouchableNativeFeedback,
   Image,
   ScrollView,
-  Platform,
 } from 'react-native';
-import VideoWebView from '../component/VideoWebView';
 import {scale} from '../theme/Scalling';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import {IconType} from '../helper/Constants';
-import Helper from '../helper/Helper';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import DocViewer from '../component/DocViewer';
 import ImageShareModal from '../component/ImageShareModal';
-import Helpers from '../helper/Helper';
 import PlayVideo from '../component/PlayVideo';
 
 let imageArray = [];
@@ -34,7 +30,7 @@ const ImageGallery = (props) => {
    * ]
    * Here type ===1 is image and 2 is video
    */
-  const [mediaContent, setMediaContent] = useState(props.mediaContent);
+  const [mediaContent] = useState(props.mediaContent);
   const [lastIndex, setIastIndex] = useState(0);
 
   const openImage = () => {

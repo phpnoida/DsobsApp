@@ -113,6 +113,93 @@ const Helpers = {
     }
     return newUrl;
   },
+  loadYoutubeThumb: function (video) {
+    return `https://img.youtube.com/vi/${video}/0.jpg`;
+  },
+
+  stripParameters: function (str) {
+    // Split parameters or split folder separator
+    if (str.indexOf('?') > -1) {
+      return str.split('?')[0];
+    }
+    if (str.indexOf('/') > -1) {
+      return str.split('/')[0];
+    }
+    if (str.indexOf('&') > -1) {
+      return str.split('&')[0];
+    }
+    return str;
+  },
+  GetYoutubeId: function (youtubeStr) {
+    let str = youtubeStr;
+
+    // remove time hash at the end of the string
+    str = str.replace(/#t=.*$/, '');
+
+    // shortcode
+    const shortcode = /youtube:\/\/|https?:\/\/youtu\.be\/|http:\/\/y2u\.be\//g;
+
+    if (shortcode.test(str)) {
+      const shortcodeid = str.split(shortcode)[1];
+      return this.stripParameters(shortcodeid);
+    }
+
+    // /v/ or /vi/
+    const inlinev = /\/v\/|\/vi\//g;
+
+    if (inlinev.test(str)) {
+      const inlineid = str.split(inlinev)[1];
+      return this.stripParameters(inlineid);
+    }
+
+    // v= or vi=
+    const parameterv = /v=|vi=/g;
+
+    if (parameterv.test(str)) {
+      const arr = str.split(parameterv);
+      return this.stripParameters(arr[1].split('&')[0]);
+    }
+
+    // v= or vi=
+    const parameterwebp = /\/an_webp\//g;
+
+    if (parameterwebp.test(str)) {
+      const webp = str.split(parameterwebp)[1];
+      return this.stripParameters(webp);
+    }
+
+    // embed
+    const embedreg = /\/embed\//g;
+
+    if (embedreg.test(str)) {
+      const embedid = str.split(embedreg)[1];
+      return this.stripParameters(embedid);
+    }
+
+    // ignore /user/username pattern
+    const usernamereg = /\/user\/([a-zA-Z0-9]*)$/g;
+
+    if (usernamereg.test(str)) {
+      return undefined;
+    }
+
+    // user
+    const userreg = /\/user\/(?!.*videos)/g;
+
+    if (userreg.test(str)) {
+      const elements = str.split('/');
+      return this.stripParameters(elements.pop());
+    }
+
+    // attribution_link
+    const attrreg = /\/attribution_link\?.*v%3D([^%&]*)(%26|&|$)/;
+
+    if (attrreg.test(str)) {
+      return this.stripParameters(str.match(attrreg)[1]);
+    }
+
+    return undefined;
+  },
 };
 
 export default Helpers;

@@ -371,6 +371,7 @@ const SearchDirectory = ({route, navigation}) => {
                   <View style={{paddingHorizontal: scale(15)}}>
                     <TopHeaderView
                       index={2}
+                      showBack={true}
                       onIconPress={() => {
                         navigation.goBack();
                       }}

@@ -577,7 +577,10 @@ const Dashboard = (props) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    Alert.alert('Coming soon...');
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      props.navigation.navigate('Video');
+                    }, 500);
                   }}>
                   <Image
                     source={GlobalInclude.Assets.Video}

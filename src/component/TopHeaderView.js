@@ -133,17 +133,19 @@ const TopHeaderView = (props) => {
             </TouchableOpacity>
           </View>
           <View style={[grid.col]}>
-            <TouchableOpacity
-              style={{
-                width: scale(50),
-                alignSelf: 'flex-end',
-              }}
-              activeOpacity={1}
-              onPress={() => {
-                props.onIconPress();
-              }}>
-              <Image source={GlobalInclude.Assets.Back} style={styles.back} />
-            </TouchableOpacity>
+            {props.showBack && (
+              <TouchableOpacity
+                style={{
+                  width: scale(50),
+                  alignSelf: 'flex-end',
+                }}
+                activeOpacity={1}
+                onPress={() => {
+                  props.onIconPress();
+                }}>
+                <Image source={GlobalInclude.Assets.Back} style={styles.back} />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       )}

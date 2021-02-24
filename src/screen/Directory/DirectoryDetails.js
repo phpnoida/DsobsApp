@@ -13,7 +13,6 @@ import {
   Keyboard,
   Alert,
   SafeAreaView,
-  StatusBar,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
