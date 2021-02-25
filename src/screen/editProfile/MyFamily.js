@@ -125,7 +125,7 @@ const MyFamily = (props) => {
   const [childName, setChildName] = useState('');
   const [childPhoto, setChildPhoto] = useState('');
   const [childBirthDate, setChildBirthDate] = useState('');
-  const [childrens, setChildrens] = useState('');
+  const [childrens, setChildrens] = useState([]);
   const [showImageModal, setShowImageModal] = useState(false);
 
   useEffect(() => {
@@ -284,6 +284,7 @@ const MyFamily = (props) => {
   };
 
   const inflateLinks = ({index, item}) => {
+    console.log('item', item);
     return (
       <EditLinksExperience
         indexName={index}
@@ -347,23 +348,17 @@ const MyFamily = (props) => {
   };
 
   const addNewLink = (updateMode) => {
+    let insertedItem = {
+      childName: childName,
+      dob: serverDate,
+      gender: childGender,
+      childPhoto: childPhoto,
+    };
     if (updateMode) {
-      let insertedItem = {
-        childName: childName,
-        dob: serverDate,
-        gender: childGender,
-        childPhoto: childPhoto,
-      };
       let oldData = childrens;
       oldData[lastSelectedIndex] = insertedItem;
       setChildrens([...oldData]);
     } else {
-      let insertedItem = {
-        childName: childName,
-        dob: serverDate,
-        gender: childGender,
-        childPhoto: childPhoto,
-      };
       let oldData = childrens;
       oldData.push(insertedItem);
       setChildrens([...oldData]);
@@ -420,8 +415,9 @@ const MyFamily = (props) => {
                 onCloseAction={() => {
                   setShowDatePicker(false);
                 }}
-                onDateSelect={(displayDate, serverDate) => {
-                  setSelectedDate(serverDate);
+                onDateSelect={(displayDate, selected) => {
+                  serverDate = selected;
+                  setSelectedDate(selected);
                   setShowDatePicker(false);
                 }}
               />

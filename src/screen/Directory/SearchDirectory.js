@@ -34,6 +34,8 @@ let deviceHeight = Dimensions.get('window').height;
 let professionSheet = null;
 let professionListMain = [];
 let searchBy = 1;
+let searchVal = '';
+const tablet = deviceWidth >= 768;
 
 const myInput = React.createRef();
 const scrollRef = React.createRef();
@@ -109,7 +111,12 @@ const SearchDirectory = ({route, navigation}) => {
                 navigation.navigate('DirectoryDetails', {data: data.data});
               }
             } else {
-              setSearchedUser([...data.data]);
+              console.log('searchVal', searchVal);
+              if (searchVal.length > 0) {
+                setSearchedUser([...data.data]);
+              } else {
+                setSearchedUser([]);
+              }
             }
           }
         }
@@ -346,7 +353,7 @@ const SearchDirectory = ({route, navigation}) => {
   };
 
   return (
-    <SafeAreaView style={GlobalInclude.AppStyle.fill}>
+    <View style={GlobalInclude.AppStyle.fill}>
       <TouchableOpacity
         style={GlobalInclude.AppStyle.fill}
         activeOpacity={1}
@@ -605,8 +612,10 @@ const SearchDirectory = ({route, navigation}) => {
                                 returnKeyType={'done'}
                                 placeholder={'I am looking for'}
                                 onChangeText={(text) => {
+                                  searchVal = text;
                                   setSearchQuery(text);
                                   if (text.length > 0) {
+                                    setSearchedUser([]);
                                     doSearchUser(text);
                                   } else {
                                     setSearchedUser([]);
@@ -683,6 +692,10 @@ const SearchDirectory = ({route, navigation}) => {
                                     activeOpacity={1}
                                     onPress={() => {
                                       setSelectedGroup(listItem.group);
+                                      if (myInput.current !== null) {
+                                        myInput.current.goToPage(0);
+                                      }
+
                                       setTimeout(() => {
                                         scrollRef.current.scrollTo({
                                           y:
@@ -766,7 +779,7 @@ const SearchDirectory = ({route, navigation}) => {
           />
         </ProfessionSheet>
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 };
 

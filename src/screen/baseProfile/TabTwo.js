@@ -7,13 +7,13 @@ const concatSchoolAndHouse = (profileData) => {
   let string = '';
 
   string =
-    profileData.house.charAt(0).toUpperCase() +
-    profileData.house.slice(1).toLowerCase();
+    profileData.house.toLowerCase().charAt(0).toUpperCase() +
+    profileData.house.toLowerCase().slice(1).toLowerCase();
 
   if (profileData.section && profileData.section !== undefined) {
     string = string + ' ' + profileData.section;
   }
-  return string.toUpperCase();
+  return string;
 };
 
 const TabTwo = (props) => {

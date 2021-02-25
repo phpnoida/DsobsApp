@@ -82,32 +82,32 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="DirectoryDetails"
         component={DirectoryDetails}
-        options={{headerShown: true}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AppRules"
         component={AppRules}
-        options={{headerShown: true}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AppCommittee"
         component={AppCommittee}
-        options={{headerShown: true}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AppRepresentives"
         component={AppRepresentives}
-        options={{headerShown: true}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AppChapters"
         component={AppChapters}
-        options={{headerShown: true}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="CommonWebPage"
         component={CommonWebPage}
-        options={{headerShown: true}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="Video"

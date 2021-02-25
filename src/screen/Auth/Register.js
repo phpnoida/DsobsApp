@@ -352,7 +352,6 @@ const Register = (props) => {
             <View style={[grid.rowrow]}>
               <TouchableOpacity
                 onPress={() => {
-                  console.log('props', props);
                   props.route.params.onRefresh();
                   props.navigation.goBack();
                 }}

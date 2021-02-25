@@ -15,34 +15,37 @@ const CommonWebPage = ({route, navigation}) => {
   }, [navigation]);
 
   return (
-    <SafeAreaView style={GlobalInclude.AppStyle.fill}>
-      <View style={GlobalInclude.AppStyle.parentStyle}>
-        <WebView
-          style={{marginTop: scale(10)}}
-          source={{uri: route.params.link}}
-          scalesPageToFit
-          onLoadStart={() => {
-            setIsLoading(true);
-          }}
-          onLoadEnd={() => {
-            setIsLoading(false);
-          }}
-        />
-        {isLoading && (
-          <ActivityIndicator
-            size={'large'}
-            color={'#2b3252'}
-            style={{
-              alignSelf: 'center',
-              position: 'absolute',
-              justifyContent: 'center',
-              top: 0,
-              bottom: 0,
+    <View style={GlobalInclude.AppStyle.fill}>
+      <HeaderBar navigation={navigation} />
+      <SafeAreaView style={GlobalInclude.AppStyle.fill}>
+        <View style={GlobalInclude.AppStyle.parentStyle}>
+          <WebView
+            style={{marginTop: scale(10)}}
+            source={{uri: route.params.link}}
+            scalesPageToFit
+            onLoadStart={() => {
+              setIsLoading(true);
+            }}
+            onLoadEnd={() => {
+              setIsLoading(false);
             }}
           />
-        )}
-      </View>
-    </SafeAreaView>
+          {isLoading && (
+            <ActivityIndicator
+              size={'large'}
+              color={'#2b3252'}
+              style={{
+                alignSelf: 'center',
+                position: 'absolute',
+                justifyContent: 'center',
+                top: 0,
+                bottom: 0,
+              }}
+            />
+          )}
+        </View>
+      </SafeAreaView>
+    </View>
   );
 };
 

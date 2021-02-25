@@ -218,17 +218,14 @@ const UserProfile = ({route, navigation}) => {
    * ************************************************
    */
 
-  /*
-   * ************************************************
-   * Validation start
-   * ************************************************
-   */
-
-  /*
-   * ************************************************
-   * Validation end
-   * ************************************************
-   */
+  const onRefresh = () => {
+    setStep(1);
+    if (userId === global.userId) {
+      getProfile();
+    } else {
+      getOtherUserProfile();
+    }
+  };
 
   /*
    * ************************************************
@@ -261,12 +258,14 @@ const UserProfile = ({route, navigation}) => {
         userId: userId,
         step: 4,
         profileData: JSON.stringify(profileData),
+        onRefresh: onRefresh,
       });
     } else {
       navigation.navigate('EditProfile', {
         userId: userId,
         step: moveToStep,
         profileData: JSON.stringify(profileData),
+        onRefresh: onRefresh,
       });
     }
   };
@@ -531,7 +530,7 @@ const styles = StyleSheet.create({
   },
   absoluteView: {
     position: 'absolute',
-    bottom: 50,
+    bottom: 30,
     zIndex: 1,
     right: 15,
   },

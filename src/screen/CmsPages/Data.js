@@ -1,4 +1,4 @@
-export const AppRulesArticle = `<div style="margin-bottom: 15px; "> <b>THE DOON SCHOOL OLD BOYS&rsquo; SOCIETY, DEHRA DUN</b> </div>
+export const AppRulesArticle = `<div style="margin-bottom: 15px; "> <b>THE DOON SCHOOL OLD BOYS&rsquo; SOCIETY, DEHRADUN</b> </div>
 		<div style="margin-bottom: 15px; "><b>MEMORANDUM OF ASSOCIATION</b> </div>
 		<div style="margin-bottom: 15px; "><u>1. NAME</u></div>
 		<div style="margin-bottom: 15px; ">The name of the Society is The Doon School Old Boys&rsquo; Society. </div>

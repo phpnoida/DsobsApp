@@ -14,7 +14,7 @@ import {IconType} from '../helper/Constants';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import DocViewer from '../component/DocViewer';
 import ImageShareModal from '../component/ImageShareModal';
-import PlayVideo from '../component/PlayVideo';
+import YoutubeView from '../component/YoutubeView';
 
 let imageArray = [];
 let documentItem = '';
@@ -104,7 +104,17 @@ const ImageGallery = (props) => {
                 width: '100%',
                 justifyContent: 'center',
               }}>
-              <PlayVideo videoUrl={item.thumbnail} />
+              <YoutubeView
+                link={item.thumbnail}
+                containerStyle={{
+                  width: scale(85),
+                  height: scale(85),
+                  borderRadius: scale(6),
+                  justifyContent: 'center',
+                }}
+                iconName={'play-circle-o'}
+                iconType={'font-awesome'}
+              />
             </View>
           )}
           {type === 3 && (
@@ -243,7 +253,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignSelf: 'center',
     width: '100%',
-    justifyContent: 'center',
   },
   buttonCircle: {
     width: 24,

@@ -15,6 +15,7 @@ import g from '../theme/global';
 const HeaderBar = ({title, navigation}) => {
   return (
     <View>
+      <View style={headerStyle.topContainer} />
       <View style={headerStyle.container}>
         <TouchableOpacity
           onPress={() => {
@@ -44,7 +45,6 @@ const headerStyle = StyleSheet.create({
     paddingEnd: scale(15),
     alignContent: 'center',
     alignItems: 'center',
-    marginTop: Platform.OS === 'android' ? 0 : getStatusBarHeight(),
     zIndex: 8,
     elevation: 6,
   },
@@ -60,7 +60,7 @@ const headerStyle = StyleSheet.create({
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
     height: 4,
-    marginTop: scale(-6),
+    marginTop: Platform.OS === 'android' ? scale(-6) : 2,
   },
   backIcon: {
     height: scale(23),
@@ -80,6 +80,11 @@ const headerStyle = StyleSheet.create({
     height: scale(30),
     padding: scale(4),
     alignSelf: 'flex-end',
+  },
+  topContainer: {
+    height: Platform.OS === 'android' ? 0 : getStatusBarHeight() + 8,
+    width: '100%',
+    backgroundColor: 'white',
   },
 });
 

@@ -8,21 +8,10 @@ import grid from '../../theme/grid';
 import {ScrollView} from 'react-native-gesture-handler';
 
 const AppCommittee = ({navigation}) => {
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      header: () => (
-        <HeaderBar
-          navigation={navigation}
-          title={'DSOBS Executive Committee'}
-        />
-      ),
-    });
-    return () => {};
-  }, [navigation]);
-
   return (
-    <SafeAreaView style={GlobalInclude.AppStyle.fill}>
-      <View style={GlobalInclude.AppStyle.parentStyle}>
+    <View style={GlobalInclude.AppStyle.fill}>
+      <HeaderBar navigation={navigation} title={'DSOBS Executive Committee'} />
+      <SafeAreaView style={GlobalInclude.AppStyle.ViewStyle}>
         <ScrollView
           style={[g.p10, g.bgWhite]}
           showsVerticalScrollIndicator={false}>
@@ -42,8 +31,8 @@ const AppCommittee = ({navigation}) => {
             );
           })}
         </ScrollView>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 };
 

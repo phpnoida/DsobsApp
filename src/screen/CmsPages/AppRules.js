@@ -1,5 +1,5 @@
 import React, {useLayoutEffect} from 'react';
-import {View, Dimensions, StyleSheet} from 'react-native';
+import {View, Dimensions, StyleSheet, SafeAreaView} from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import HeaderBar from '../../component/HeaderBar';
 import {AppRulesArticle} from './Data';
@@ -9,24 +9,11 @@ import g from '../../theme/global';
 import {ScrollView} from 'react-native-gesture-handler';
 
 const AppRules = ({navigation}) => {
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      header: () => (
-        <HeaderBar
-          navigation={navigation}
-          title={'Dsobs Memorandum and Rules'}
-        />
-      ),
-    });
-    return () => {};
-  }, [navigation]);
-
   return (
     <View style={GlobalInclude.AppStyle.fill}>
-      <View style={GlobalInclude.AppStyle.parentStyle}>
-        <ScrollView
-          style={[g.p10, g.bgWhite]}
-          showsVerticalScrollIndicator={false}>
+      <HeaderBar navigation={navigation} title={'Dsobs Memorandum and Rules'} />
+      <SafeAreaView style={GlobalInclude.AppStyle.ViewStyle}>
+        <ScrollView style={g.p10} showsVerticalScrollIndicator={false}>
           <HTML
             source={{
               html:
@@ -47,7 +34,7 @@ const AppRules = ({navigation}) => {
             contentWidth={Dimensions.get('window').width - 30}
           />
         </ScrollView>
-      </View>
+      </SafeAreaView>
     </View>
   );
 };
