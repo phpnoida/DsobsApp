@@ -22,11 +22,11 @@ import PhotoSheet from 'react-native-raw-bottom-sheet';
 import VideoSheet from 'react-native-raw-bottom-sheet';
 import RNFetchBlob from 'rn-fetch-blob';
 import ImagePicker from 'react-native-image-crop-picker';
-import VideoWebView from '../../component/VideoWebView';
 import DocumentPicker from 'react-native-document-picker';
 import NextPreviousButton from '../../component/NextPreviousButton';
 import {uploadMedia} from '../../Actions/CommonActions';
 import {updateUserProfile} from '../../Actions/UserActions';
+import YoutubeView from '../../component/YoutubeView';
 
 let photoSheet = null;
 let videoSheet = null;
@@ -134,7 +134,19 @@ const PhotosMedia = (props) => {
                 />
               </TouchableOpacity>
             </View>
-            <VideoWebView videoUrl={item.thumbnail} />
+
+            <YoutubeView
+              link={item.thumbnail}
+              containerStyle={{
+                width: '100%',
+                height: '100%',
+                borderRadius: scale(6),
+                justifyContent: 'center',
+                aspectRatio: 16 / 9,
+              }}
+              iconName={'play-circle-o'}
+              iconType={'font-awesome'}
+            />
           </View>
         )}
 
@@ -190,46 +202,40 @@ const PhotosMedia = (props) => {
    *
    */
   const updateProfileDetails = () => {
-    if (mediaData.length > 0) {
-      if (global.isConnected) {
-        let requestData = {
-          photos: mediaData,
-        };
+    if (global.isConnected) {
+      let requestData = {
+        photos: mediaData,
+      };
 
-        setIsLoading(true);
-        updateUserProfile(
-          requestData,
-          (response) => {
-            setIsLoading(false);
+      setIsLoading(true);
+      updateUserProfile(
+        requestData,
+        (response) => {
+          setIsLoading(false);
 
-            if (response && response !== null) {
-              if (
-                response.data &&
-                response.data !== undefined &&
-                response.response !== null
-              ) {
-                let data = response.data;
-                if (data.status) {
-                  props.updateData(data.data);
-                  setTimeout(() => {
-                    props.onSaveTab();
-                  }, 500);
-                }
+          if (response && response !== null) {
+            if (
+              response.data &&
+              response.data !== undefined &&
+              response.response !== null
+            ) {
+              let data = response.data;
+              if (data.status) {
+                props.updateData(data.data);
+                setTimeout(() => {
+                  props.onSaveTab();
+                }, 500);
               }
             }
-          },
-          (error, message) => {
-            //console.log('error', error);
-            setIsLoading(false);
-            responseMessage = message;
-            setShowContactUsModal(true);
-          },
-        );
-      }
-    } else {
-      setTimeout(() => {
-        props.onSaveTab();
-      }, 500);
+          }
+        },
+        (error, message) => {
+          //console.log('error', error);
+          setIsLoading(false);
+          responseMessage = message;
+          setShowContactUsModal(true);
+        },
+      );
     }
   };
 

@@ -69,9 +69,7 @@ const YearSelection = (props) => {
                   <View
                     key={index.toString()}
                     style={{
-                      alignSelf: 'flex-start',
                       width: '100%',
-                      marginBottom: scale(10),
                     }}>
                     <Radio
                       item={item}
@@ -83,10 +81,17 @@ const YearSelection = (props) => {
                       radioStyle={styles.radioCircle}
                       selectedStyle={styles.selectedRb}
                       containerStyle={{
-                        marginBottom: scale(3),
-                        borderBottomWidth: 0.5,
-                        paddingBottom: scale(3),
+                        marginTop: scale(6),
+                        marginBottom: scale(6),
+                        marginLeft: scale(8),
+                      }}
+                    />
+                    <View
+                      style={{
+                        borderBottomWidth:
+                          index < props.yearList.length - 1 ? 0.5 : 0,
                         borderColor: '#f2f2f2',
+                        alignContent: 'center',
                       }}
                     />
                   </View>

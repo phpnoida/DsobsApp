@@ -88,7 +88,7 @@ const concatSchoolAndHouse = (profileData) => {
   if (profileData.section && profileData.section !== undefined) {
     string = string + ' ' + profileData.section;
   }
-  return string.toUpperCase();
+  return string;
 };
 
 const createGenderRadioButtons = (value) => {

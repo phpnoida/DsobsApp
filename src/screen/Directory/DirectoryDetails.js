@@ -371,30 +371,30 @@ const DirectoryDetails = ({route, navigation}) => {
                   marginTop: scale(6),
                   marginBottom: scale(8),
                 }}>
-                <View style={{flex: 1}}>
-                  {item.batch ? (
+                <View style={{flex: 1, flexDirection: 'row'}}>
+                  {item.schoolNumber ? (
                     <Text style={[g.fs12, g.colorBlack, g.FHNR]}>
-                      {item.batch}
+                      {item.schoolNumber}
+                    </Text>
+                  ) : null}
+
+                  {item.house ? (
+                    <Text style={[g.fs12, g.colorBlack, g.FHNR, g.ml5, g.mr5]}>
+                      {item.house.toLowerCase().charAt(0).toUpperCase() +
+                        item.house.toLowerCase().slice(1)}
+                    </Text>
+                  ) : null}
+
+                  {item.section ? (
+                    <Text style={[g.fs12, g.colorBlack, g.FHNR]}>
+                      {item.section}
                     </Text>
                   ) : null}
                 </View>
 
-                {item.schoolNumber ? (
+                {item.batch ? (
                   <Text style={[g.fs12, g.colorBlack, g.FHNR]}>
-                    {item.schoolNumber}
-                  </Text>
-                ) : null}
-
-                {item.house ? (
-                  <Text style={[g.fs12, g.colorBlack, g.FHNR, g.ml5, g.mr5]}>
-                    {item.house.toLowerCase().charAt(0).toUpperCase() +
-                      item.house.toLowerCase().slice(1)}
-                  </Text>
-                ) : null}
-
-                {item.section ? (
-                  <Text style={[g.fs12, g.colorBlack, g.FHNR]}>
-                    {item.section}
+                    {item.batch}
                   </Text>
                 ) : null}
               </View>
@@ -650,12 +650,14 @@ const DirectoryDetails = ({route, navigation}) => {
 
   return (
     <TouchableOpacity
-      style={[GlobalInclude.AppStyle.fill, {backgroundColor: 'white'}]}
+      style={GlobalInclude.AppStyle.fill}
       activeOpacity={1}
       onPress={() => {
         Keyboard.dismiss();
       }}>
-      <SafeAreaView style={GlobalInclude.AppStyle.fill}>
+      <HeaderBar navigation={navigation} />
+      <SafeAreaView
+        style={[GlobalInclude.AppStyle.fill, {backgroundColor: 'white'}]}>
         {isLoading ? (
           <View style={GlobalInclude.AppStyle.fillCenter}>
             <ActivityIndicator size={'small'} color={'#2b3252'} />

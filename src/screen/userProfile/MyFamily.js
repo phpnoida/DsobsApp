@@ -48,6 +48,7 @@ const MyFamily = (props) => {
   const {profileData} = props;
 
   const generateWorkExperience = ({item, index}) => {
+    console.log('item', item);
     return (
       <View>
         <WorkExperience
@@ -57,7 +58,7 @@ const MyFamily = (props) => {
           description={item.gender.toString() === '1' ? 'Female' : 'Male'}
           image={item.childPhoto}
           onImagePress={() => {
-            imageArray = [{url: item.image}];
+            imageArray = [{url: item.childPhoto}];
             setShowImageModal(!showImageModal);
           }}
         />

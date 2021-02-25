@@ -103,14 +103,13 @@ const MagazineDetails = ({route, navigation}) => {
                 renderTabBar={() => <View />}>
                 {pageContent.map((content, index) => {
                   return (
-                    <ScrollView style={GlobalInclude.AppStyle.fill} key={index}>
+                    <View style={GlobalInclude.AppStyle.fill} key={index}>
                       <View
                         style={[
-                          GlobalInclude.AppStyle.fillRow,
+                          GlobalInclude.AppStyle.row,
                           grid.alignItems,
                           grid.justifyContent,
                           g.mb10,
-                          g.mt15,
                           g.ml15,
                         ]}>
                         <View style={grid.col}>
@@ -209,113 +208,117 @@ const MagazineDetails = ({route, navigation}) => {
                           </TouchableOpacity>
                         </View>
                       </View>
-                      <View
-                        style={[
-                          g.p10,
-                          g.bgWhite,
-                          grid.rowrow,
-                          grid.justifyContent,
-                          grid.alignItems,
-                        ]}>
-                        <View style={[grid.col]}>
-                          <Text
-                            style={{
-                              fontSize: currentFontSize + scale(2),
-                              color: '#000000',
-                              marginBottom: scale(5),
-                              fontWeight: 'bold',
-                            }}>
-                            {content.header}
-                          </Text>
-                          <Text
-                            style={{
-                              fontSize: currentFontSize,
-                              color: '#000000',
-                              fontWeight: 'bold',
-                            }}>
-                            {content.subTitle}
-                          </Text>
+                      <ScrollView
+                        style={GlobalInclude.AppStyle.fill}
+                        key={index}>
+                        <View
+                          style={[
+                            g.p10,
+                            g.bgWhite,
+                            grid.rowrow,
+                            grid.justifyContent,
+                            grid.alignItems,
+                          ]}>
+                          <View style={[grid.col]}>
+                            <Text
+                              style={{
+                                fontSize: currentFontSize + scale(2),
+                                color: '#000000',
+                                marginBottom: scale(5),
+                                fontWeight: 'bold',
+                              }}>
+                              {content.header}
+                            </Text>
+                            <Text
+                              style={{
+                                fontSize: currentFontSize,
+                                color: '#000000',
+                                fontWeight: 'bold',
+                              }}>
+                              {content.subTitle}
+                            </Text>
+                          </View>
                         </View>
-                      </View>
-                      <HTML
-                        key={index}
-                        source={{
-                          html:
-                            '<div>' +
-                            content.body
-                              .replace(/<p[^>]*><br><\/p>/g, '<br>')
-                              .replace(/<h3[^>]*><br><\/h3>/g, '')
-                              .replace(/(<br\s*\/?>){1,}/gi, '<br>')
-                              .replace(/(\r\n|\n|\r)/gm, '')
-                              .replace(/(<br\s*\/?>)/gi, '') +
-                            '</div>',
-                        }}
-                        baseFontStyle={{fontSize: currentFontSize}}
-                        textSelectable={false}
-                        defaultTextProps={{allowFontScaling: true}}
-                        tagsStyles={richTextStyles}
-                        allowWhitespaceNodes={false}
-                        containerStyle={styles.container}
-                        contentWidth={Dimensions.get('window').width - 30}
-                        computeEmbeddedMaxWidth={computeEmbeddedMaxWidth}
-                        renderers={{
-                          img: (
-                            htmlAttribs,
-                            children,
-                            convertedCSSStyles,
-                            passProps,
-                          ) => {
-                            return (
-                              <TouchableOpacity
-                                onPress={() => {
-                                  imageArray = [{url: htmlAttribs.src}];
-                                  setShowImageModal(true);
-                                }}>
-                                <ProgressImage
-                                  source={{uri: htmlAttribs.src}}
-                                  style={{aspectRatio: 1}}
-                                  imageStyle={{
-                                    aspectRatio: 1,
-                                    opacity: opacity,
-                                    transform: [
-                                      {
-                                        scale: opacity.interpolate({
-                                          inputRange: [0, 1.0],
-                                          outputRange: [0.85, 1.0],
-                                        }),
-                                      },
-                                    ],
-                                  }}
-                                  indicatorProps={{
-                                    animated: true,
-                                    borderColor: 'red',
-                                    borderWidth: 2,
-                                    color: '#2b3252',
-                                    direction:
-                                      Platform.os === 'android'
-                                        ? 'clockwise'
-                                        : 'rtl',
-                                    indeterminate: true,
-                                    progress: 100,
-                                    strokeCap: 'butt',
-                                    size: scale(20),
-                                  }}
-                                  onLoad={() => {
-                                    Animated.timing(opacity, {
-                                      toValue: 1.0,
-                                      duration: 200,
-                                      useNativeDriver: true,
-                                    }).start();
-                                  }}
-                                  resizeMode={FastImage.resizeMode.contain}
-                                  threshold={20}
-                                />
-                              </TouchableOpacity>
-                            );
-                          },
-                        }}
-                      />
-                    </ScrollView>
+                        <HTML
+                          key={index}
+                          source={{
+                            html:
+                              '<div>' +
+                              content.body
+                                .replace(/<p[^>]*><br><\/p>/g, '<br>')
+                                .replace(/<h3[^>]*><br><\/h3>/g, '')
+                                .replace(/(<br\s*\/?>){1,}/gi, '<br>')
+                                .replace(/(\r\n|\n|\r)/gm, '')
+                                .replace(/(<br\s*\/?>)/gi, '') +
+                              '</div>',
+                          }}
+                          baseFontStyle={{fontSize: currentFontSize}}
+                          textSelectable={false}
+                          defaultTextProps={{allowFontScaling: true}}
+                          tagsStyles={richTextStyles}
+                          allowWhitespaceNodes={false}
+                          containerStyle={styles.container}
+                          contentWidth={Dimensions.get('window').width - 30}
+                          computeEmbeddedMaxWidth={computeEmbeddedMaxWidth}
+                          renderers={{
+                            img: (
+                              htmlAttribs,
+                              children,
+                              convertedCSSStyles,
+                              passProps,
+                            ) => {
+                              return (
+                                <TouchableOpacity
+                                  onPress={() => {
+                                    imageArray = [{url: htmlAttribs.src}];
+                                    setShowImageModal(true);
+                                  }}>
+                                  <ProgressImage
+                                    source={{uri: htmlAttribs.src}}
+                                    style={{aspectRatio: 1}}
+                                    imageStyle={{
+                                      aspectRatio: 1,
+                                      opacity: opacity,
+                                      transform: [
+                                        {
+                                          scale: opacity.interpolate({
+                                            inputRange: [0, 1.0],
+                                            outputRange: [0.85, 1.0],
+                                          }),
+                                        },
+                                      ],
+                                    }}
+                                    indicatorProps={{
+                                      animated: true,
+                                      borderColor: 'red',
+                                      borderWidth: 2,
+                                      color: '#2b3252',
+                                      direction:
+                                        Platform.os === 'android'
+                                          ? 'clockwise'
+                                          : 'rtl',
+                                      indeterminate: true,
+                                      progress: 100,
+                                      strokeCap: 'butt',
+                                      size: scale(20),
+                                    }}
+                                    onLoad={() => {
+                                      Animated.timing(opacity, {
+                                        toValue: 1.0,
+                                        duration: 200,
+                                        useNativeDriver: true,
+                                      }).start();
+                                    }}
+                                    resizeMode={FastImage.resizeMode.contain}
+                                    threshold={20}
+                                  />
+                                </TouchableOpacity>
+                              );
+                            },
+                          }}
+                        />
+                      </ScrollView>
+                    </View>
                   );
                 })}
               </ScrollableTabView>

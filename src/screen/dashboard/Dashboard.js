@@ -32,6 +32,11 @@ let bottomSheetProfile = null;
 let bottomSheetExtraMenu = null;
 let timer = null;
 
+const isX =
+  Platform.OS === 'ios' && (deviceHeight > 800 || deviceHeight > 800)
+    ? true
+    : false;
+
 let profileSheetMenu = [
   {
     title: 'My Profile',
@@ -162,7 +167,7 @@ const Dashboard = (props) => {
 
   const renderHeader = () => {
     return (
-      <View>
+      <View style={{marginTop: scale(10)}}>
         <View style={GlobalInclude.AppStyle.row}>
           <View style={GlobalInclude.AppStyle.fill}>
             <View style={GlobalInclude.AppStyle.appLogo}>
@@ -389,16 +394,19 @@ const Dashboard = (props) => {
                   style={styles.whiteButton}
                   activeOpacity={1}
                   onPress={() => {
-                    Alert.alert('Coming soon...');
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      props.navigation.navigate('Magazine');
+                    }, 200);
                   }}>
                   <Image
-                    source={GlobalInclude.Assets.Events}
+                    source={GlobalInclude.Assets.Magazine}
                     resizeMode={'contain'}
                     resizeMethod={'auto'}
-                    style={[styles.menuIcon, {marginStart: scale(25)}]}
+                    style={[styles.menuIcon, {marginStart: scale(5)}]}
                   />
                   <View style={GlobalInclude.AppStyle.fillCenter}>
-                    <Text style={styles.menuStyle}>Events</Text>
+                    <Text style={styles.menuStyle}>The Rose Bowl</Text>
                   </View>
                 </TouchableOpacity>
                 <View style={{margin: scale(5)}} />
@@ -415,7 +423,7 @@ const Dashboard = (props) => {
                     source={GlobalInclude.Assets.Alumini}
                     resizeMode={'contain'}
                     resizeMethod={'auto'}
-                    style={[styles.menuIcon, {marginStart: scale(25)}]}
+                    style={[styles.menuIcon, {marginStart: scale(5)}]}
                   />
                   <View style={GlobalInclude.AppStyle.fillCenter}>
                     <Text style={styles.menuStyle}>Directory</Text>
@@ -446,19 +454,16 @@ const Dashboard = (props) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    bottomSheet.close();
-                    setTimeout(() => {
-                      props.navigation.navigate('Magazine');
-                    }, 500);
+                    Alert.alert('Coming soon...');
                   }}>
                   <Image
-                    source={GlobalInclude.Assets.Magazine}
+                    source={GlobalInclude.Assets.Events}
                     resizeMode={'contain'}
                     resizeMethod={'auto'}
                     style={styles.menuIcon}
                   />
                   <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>The Rose Bowl</Text>
+                    <Text style={styles.menuStyle}>Events</Text>
                   </View>
                 </TouchableOpacity>
                 <View style={{margin: scale(5)}} />
@@ -529,7 +534,7 @@ const Dashboard = (props) => {
                     source={GlobalInclude.Assets.Jobs}
                     resizeMode={'contain'}
                     resizeMethod={'auto'}
-                    style={[styles.menuIcon, {marginStart: scale(25)}]}
+                    style={[styles.menuIcon, {marginStart: scale(20)}]}
                   />
                   <View style={GlobalInclude.AppStyle.fillCenter}>
                     <Text style={styles.menuStyle}>Jobs</Text>
@@ -546,7 +551,7 @@ const Dashboard = (props) => {
                     source={GlobalInclude.Assets.Offers}
                     resizeMode={'contain'}
                     resizeMethod={'auto'}
-                    style={[styles.menuIcon, {marginStart: scale(25)}]}
+                    style={[styles.menuIcon, {marginStart: scale(20)}]}
                   />
                   <View style={GlobalInclude.AppStyle.fillCenter}>
                     <Text style={styles.menuStyle}>Offers</Text>
@@ -694,7 +699,7 @@ const Dashboard = (props) => {
             position: 'absolute',
             left: 0,
             right: 0,
-            top: 25,
+            top: 0,
           }}>
           {/* top header */}
           {renderHeader()}
@@ -747,7 +752,7 @@ const Dashboard = (props) => {
                   source={GlobalInclude.Assets.Magazine}
                   resizeMode={'contain'}
                   resizeMethod={'auto'}
-                  style={[styles.menuIcon, {marginStart: scale(20)}]}
+                  style={[styles.menuIcon, {marginStart: scale(5)}]}
                 />
                 <View style={GlobalInclude.AppStyle.fillCenter}>
                   <Text style={styles.menuStyle}>The Rose Bowl</Text>
@@ -764,7 +769,7 @@ const Dashboard = (props) => {
                   source={GlobalInclude.Assets.Alumini}
                   resizeMode={'contain'}
                   resizeMethod={'auto'}
-                  style={[styles.menuIcon, {marginStart: scale(20)}]}
+                  style={[styles.menuIcon, {marginStart: scale(5)}]}
                 />
                 <View style={GlobalInclude.AppStyle.fillCenter}>
                   <Text style={styles.menuStyle}>Directory</Text>
@@ -804,13 +809,6 @@ const styles = StyleSheet.create({
     minHeight: (deviceWidth / 305) * 542,
     aspectRatio: 305 / 542,
     zIndex: 0,
-  },
-  videoContainerIOS: {
-    width: Dimensions.get('window').height,
-    height: Dimensions.get('window').width,
-    minWidth: Dimensions.get('window').height,
-    minHeight: Dimensions.get('window').width,
-    transform: [{rotate: '90deg'}],
   },
   headIconContainer: {
     width: scale(38),
@@ -868,8 +866,10 @@ const styles = StyleSheet.create({
   whiteButton: {
     backgroundColor: '#ffffff',
     borderRadius: 10,
-    padding: scale(12),
-    height: scale(90),
+    justifyContent: 'center',
+    height: scale(85),
+    paddingStart: scale(5),
+    paddingEnd: scale(5),
     shadowColor: '#333333',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
@@ -882,8 +882,9 @@ const styles = StyleSheet.create({
   whiteButtonHorizontal: {
     backgroundColor: '#ffffff',
     borderRadius: 10,
-    padding: scale(12),
-    height: scale(90),
+    height: scale(85),
+    paddingStart: scale(5),
+    paddingEnd: scale(5),
     shadowColor: '#333333',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
@@ -891,6 +892,7 @@ const styles = StyleSheet.create({
     elevation: 5,
     alignItems: 'center',
     flex: 1,
+    justifyContent: 'center',
   },
   whiteButtonNext: {
     backgroundColor: '#ffffff',

@@ -19,7 +19,6 @@ import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
 import {CommonActions} from '@react-navigation/native';
 import Globalinclude from '../../globalInclude/Globalinclude';
-import {getUserProfile} from '../../Actions/UserActions';
 
 import BasicProfile from './BasicProfile';
 import AboutMe from './AboutMe';
@@ -59,7 +58,6 @@ const EditProfile = ({route, navigation}) => {
   const [step, setStep] = useState(givenStep);
   const [profileData, setProfileData] = useState(userData);
   const [openDropDown, setOpenDropDown] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedTab, setSelectedTab] = useState(
     menuOptions[givenStep - 1].label,
   );
@@ -102,12 +100,15 @@ const EditProfile = ({route, navigation}) => {
    */
 
   const moveBack = () => {
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{name: 'Dashboard'}],
-      }),
-    );
+    // navigation.dispatch(
+    //   CommonActions.reset({
+    //     index: 0,
+    //     routes: [{name: 'Dashboard'}],
+    //   }),
+    // );
+
+    route.params.onRefresh();
+    navigation.goBack();
   };
 
   const goPreviousTab = () => {
@@ -303,116 +304,107 @@ const EditProfile = ({route, navigation}) => {
   return (
     <View style={GlobalInclude.AppStyle.fill}>
       <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
-        {isLoading ? (
-          <View style={GlobalInclude.AppStyle.fillCenter}>
-            <ActivityIndicator size={'small'} color={'#2b3252'} />
-          </View>
-        ) : (
-          <View
-            style={[
-              GlobalInclude.AppStyle.fill,
-              {
-                paddingStart: scale(12),
-                paddingEnd: scale(12),
-              },
-            ]}>
-            {profileData !== null && (
-              <View style={GlobalInclude.AppStyle.fill}>
-                <View
-                  style={[
-                    grid.rowdir,
-                    grid.justifyContent,
-                    grid.alignItems,
-                    g.p15,
-                    g.pl0,
-                    g.pb0,
-                  ]}>
-                  <View style={grid.flex1}>
+        <View
+          style={[
+            GlobalInclude.AppStyle.fill,
+            {
+              paddingStart: scale(12),
+              paddingEnd: scale(12),
+            },
+          ]}>
+          {profileData !== null && (
+            <View style={GlobalInclude.AppStyle.fill}>
+              <View
+                style={[
+                  grid.rowdir,
+                  grid.justifyContent,
+                  grid.alignItems,
+                  g.p15,
+                  g.pl0,
+                  g.pb0,
+                ]}>
+                <View style={grid.flex1}>
+                  <TouchableOpacity
+                    activeOpacity={1}
+                    onPress={() => moveBack()}>
+                    <Image
+                      source={Globalinclude.Assets.Back}
+                      style={styles.back}
+                    />
+                  </TouchableOpacity>
+                </View>
+                <View style={grid.justifyContentRight}>
+                  <TouchableOpacity
+                    style={styles.currentTab}
+                    onPress={() => {
+                      setOpenDropDown(true);
+                    }}
+                    activeOpacity={1}>
+                    <Text style={[g.colorBlue, g.fs18, g.FHNB, g.txtCenter]}>
+                      {selectedTab}
+                    </Text>
+                    <View style={styles.triangleShape} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <View style={[grid.rowdir, grid.justifyContentRight]}>
+                <Progress.Bar
+                  height={scale(5)}
+                  width={width / 2 + 30}
+                  progress={getBarPercentage(step)}
+                  borderRadius={scale(10)}
+                  borderWidth={0}
+                  unfilledColor={'#f8f8f8'}
+                  color={'#2b3252'}
+                />
+              </View>
+              {openDropDown ? (
+                <View style={styles.menuDropDown}>
+                  <View style={[grid.rowdir, grid.justifyContentRight, g.pb20]}>
                     <TouchableOpacity
-                      activeOpacity={1}
-                      onPress={() => moveBack()}>
+                      hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
+                      onPress={() => {
+                        setOpenDropDown(false);
+                      }}>
                       <Image
-                        source={Globalinclude.Assets.Back}
-                        style={styles.back}
+                        source={GlobalInclude.Assets.Close}
+                        style={{width: scale(20), height: scale(20)}}
                       />
                     </TouchableOpacity>
                   </View>
-                  <View style={grid.justifyContentRight}>
-                    <TouchableOpacity
-                      style={styles.currentTab}
-                      onPress={() => {
-                        setOpenDropDown(true);
-                      }}
-                      activeOpacity={1}>
-                      <Text style={[g.colorBlue, g.fs18, g.FHNB, g.txtCenter]}>
-                        {selectedTab}
-                      </Text>
-                      <View style={styles.triangleShape} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                <View style={[grid.rowdir, grid.justifyContentRight]}>
-                  <Progress.Bar
-                    height={scale(5)}
-                    width={width / 2 + 30}
-                    progress={getBarPercentage(step)}
-                    borderRadius={scale(10)}
-                    borderWidth={0}
-                    unfilledColor={'#f8f8f8'}
-                    color={'#2b3252'}
-                  />
-                </View>
-                {openDropDown ? (
-                  <View style={styles.menuDropDown}>
-                    <View
-                      style={[grid.rowdir, grid.justifyContentRight, g.pb20]}>
-                      <TouchableOpacity
-                        hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
-                        onPress={() => {
-                          setOpenDropDown(false);
-                        }}>
-                        <Image
-                          source={GlobalInclude.Assets.Close}
-                          style={{width: scale(20), height: scale(20)}}
-                        />
-                      </TouchableOpacity>
+                  <ScrollView showsVerticalScrollIndicator={false}>
+                    <View style={grid.alignItems}>
+                      {menuOptions.map(function (item, i) {
+                        let arrayStyle = [styles.menuDefaultStyle];
+                        if (item.label === selectedTab) {
+                          arrayStyle.push({color: '#2b3252'});
+                        } else {
+                          arrayStyle.push({color: '#bababa'});
+                        }
+                        return item.label !== '' ? (
+                          <TouchableOpacity
+                            key={i}
+                            activeOpacity={1}
+                            onPress={() => {
+                              setSelectedTab(item.label);
+                              setOpenDropDown(false);
+                              setStep(i + 1);
+                            }}>
+                            <Text style={arrayStyle}>{item.label}</Text>
+                          </TouchableOpacity>
+                        ) : null;
+                      })}
                     </View>
-                    <ScrollView showsVerticalScrollIndicator={false}>
-                      <View style={grid.alignItems}>
-                        {menuOptions.map(function (item, i) {
-                          let arrayStyle = [styles.menuDefaultStyle];
-                          if (item.label === selectedTab) {
-                            arrayStyle.push({color: '#2b3252'});
-                          } else {
-                            arrayStyle.push({color: '#bababa'});
-                          }
-                          return item.label !== '' ? (
-                            <TouchableOpacity
-                              key={i}
-                              activeOpacity={1}
-                              onPress={() => {
-                                setSelectedTab(item.label);
-                                setOpenDropDown(false);
-                                setStep(i + 1);
-                              }}>
-                              <Text style={arrayStyle}>{item.label}</Text>
-                            </TouchableOpacity>
-                          ) : null;
-                        })}
-                      </View>
-                    </ScrollView>
-                  </View>
-                ) : (
-                  <View />
-                )}
-
-                <View style={GlobalInclude.AppStyle.fill}>
-                  {loadPage(step)}
+                  </ScrollView>
                 </View>
-              </View>
-            )}
-          </View>
-        )}
+              ) : (
+                <View />
+              )}
+
+              <View style={GlobalInclude.AppStyle.fill}>{loadPage(step)}</View>
+            </View>
+          )}
+        </View>
       </SafeAreaView>
     </View>
   );

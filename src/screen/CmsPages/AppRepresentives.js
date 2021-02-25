@@ -8,21 +8,10 @@ import grid from '../../theme/grid';
 import {ScrollView} from 'react-native-gesture-handler';
 
 const AppRepresentives = ({navigation}) => {
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      header: () => (
-        <HeaderBar
-          navigation={navigation}
-          title={'Dsobs Memorandum and Rules'}
-        />
-      ),
-    });
-    return () => {};
-  }, [navigation]);
-
   return (
-    <SafeAreaView style={GlobalInclude.AppStyle.fill}>
-      <View style={GlobalInclude.AppStyle.parentStyle}>
+    <View style={GlobalInclude.AppStyle.fill}>
+      <HeaderBar navigation={navigation} title={'Dsobs Memorandum and Rules'} />
+      <SafeAreaView style={GlobalInclude.AppStyle.ViewStyle}>
         <ScrollView
           style={[g.p10, g.bgWhite]}
           showsVerticalScrollIndicator={false}>
@@ -37,8 +26,8 @@ const AppRepresentives = ({navigation}) => {
             );
           })}
         </ScrollView>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 };
 

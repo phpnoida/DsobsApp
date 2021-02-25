@@ -1,6 +1,5 @@
 import React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
-import Splash from '../screen/Splash';
 import AppTour from '../screen/AppTour';
 import Login from '../screen/Auth/Login';
 import Register from '../screen/Auth/Register';
@@ -24,11 +23,6 @@ const Stack = createStackNavigator();
 export const RootNavigators = (baseRoute) => {
   return (
     <Stack.Navigator initialRouteName={baseRoute}>
-      <Stack.Screen
-        name="Splash"
-        component={Splash}
-        options={{headerShown: false}}
-      />
       <Stack.Screen
         name="AppTour"
         component={AppTour}
@@ -87,32 +81,32 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="DirectoryDetails"
         component={DirectoryDetails}
-        options={{headerShown: true}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AppRules"
         component={AppRules}
-        options={{headerShown: true}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AppCommittee"
         component={AppCommittee}
-        options={{headerShown: true}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AppRepresentives"
         component={AppRepresentives}
-        options={{headerShown: true}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AppChapters"
         component={AppChapters}
-        options={{headerShown: true}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="CommonWebPage"
         component={CommonWebPage}
-        options={{headerShown: true}}
+        options={{headerShown: false}}
       />
     </Stack.Navigator>
   );
