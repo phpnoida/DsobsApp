@@ -11,7 +11,7 @@ const CommonButton = (props) => {
         backgroundColor: '#2b3252',
         textAlign: 'center',
         fontSize: scale(16),
-        borderRadius: scale(8),
+        borderRadius: props.radius ? props.radius : scale(8),
         width: '100%',
         height: scale(38),
         justifyContent: 'center',

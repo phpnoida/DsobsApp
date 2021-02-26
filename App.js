@@ -57,7 +57,7 @@ const App = () => {
       unsubscribe();
       AppState.removeEventListener('change', _handleAppStateChange);
     };
-  }, [loadingComplete, currentState]);
+  }, []);
 
   const completeLogin = () => {
     setTimeout(() => {

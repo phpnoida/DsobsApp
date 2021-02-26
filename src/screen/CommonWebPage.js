@@ -1,5 +1,5 @@
 import React, {useLayoutEffect, useState} from 'react';
-import {View, SafeAreaView, ActivityIndicator} from 'react-native';
+import {View, SafeAreaView, ActivityIndicator, ScrollView} from 'react-native';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import {WebView} from 'react-native-webview';
 import HeaderBar from '../component/HeaderBar';
@@ -7,12 +7,6 @@ import {scale} from '../theme/Scalling';
 
 const CommonWebPage = ({route, navigation}) => {
   const [isLoading, setIsLoading] = useState(true);
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      header: () => <HeaderBar navigation={navigation} />,
-    });
-    return () => {};
-  }, [navigation]);
 
   return (
     <View style={GlobalInclude.AppStyle.fill}>
@@ -30,6 +24,7 @@ const CommonWebPage = ({route, navigation}) => {
               setIsLoading(false);
             }}
           />
+
           {isLoading && (
             <ActivityIndicator
               size={'large'}

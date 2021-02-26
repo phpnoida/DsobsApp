@@ -93,6 +93,21 @@ export function sendPresenceStatus(callback, errCallback) {
   };
 }
 
+export function getPopNotification(callback, errCallback) {
+  let requestPath = `${SERVER_PATH}utils/popFilter`;
+  const request = axios
+    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .then((res) => {
+      callback(res);
+    })
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
 export function handleError(err, errCallback) {
   if (
     err.response &&

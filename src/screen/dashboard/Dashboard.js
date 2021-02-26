@@ -24,6 +24,8 @@ import {APP_NAME} from '../../helper/Constants';
 import RBSheetMenus from 'react-native-raw-bottom-sheet';
 import RBSheetProfile from 'react-native-raw-bottom-sheet';
 import AsyncStorage from '@react-native-community/async-storage';
+import ShowPopNotification from '../../component/ShowPopNotification';
+import {getPopNotification} from '../../Actions/CommonActions';
 
 let deviceHeight = Dimensions.get('screen').height;
 let deviceWidth = Dimensions.get('screen').width;
@@ -31,11 +33,8 @@ let bottomSheet = null;
 let bottomSheetProfile = null;
 let bottomSheetExtraMenu = null;
 let timer = null;
-
-const isX =
-  Platform.OS === 'ios' && (deviceHeight > 800 || deviceHeight > 800)
-    ? true
-    : false;
+let notificationList = [];
+let currentNotificationIndex = 0;
 
 let profileSheetMenu = [
   {
@@ -60,15 +59,102 @@ let bottomSheetMenu = [
 const Dashboard = (props) => {
   const [showWelcome, setShowWelcome] = useState(true);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
+  const [showPopNotification, setShowPopNotification] = useState(false);
 
   useEffect(() => {
     timer = setTimeout(() => {
       setShowWelcome(false);
     }, 7000);
+
+    if (global.isConnected) {
+      getPopNotification(
+        (response) => {
+          if (response && response !== null) {
+            if (
+              response.data &&
+              response.data !== undefined &&
+              response.response !== null
+            ) {
+              let data = response.data;
+
+              console.log('getPopNotification', data);
+
+              notificationList = [
+                {
+                  __v: 0,
+                  _id: '60378499dd690d0ccc7fe49c',
+                  body: '',
+                  createdAt: '2021-02-25T11:06:01.960Z',
+                  date: '19 Jan 1970',
+                  eventType: 10,
+                  extra: 'extra',
+                  imagelink:
+                    'https://quorumbucket2.s3.ap-south-1.amazonaws.com/How+To+Q+Images/HTQ-01.jpg',
+                  isPopUpShow: false,
+                  linkUrl:
+                    'https://express-validator.github.io/docs/check-api.html',
+                  notification_id: '60378499dd690d0ccc7fe497',
+                  notification_type: 'pop',
+                  senderId: '5ff46ff5f355165c488012d7',
+                  senderName: 'Amit Singh',
+                  sent_date: 1614251161,
+                  time: '04:24 pm',
+                  timestamp: 1614251243,
+                  title: '',
+                  type: 0,
+                  updatedAt: '2021-02-25T11:06:01.960Z',
+                  userId: '602a65dca1714c5bd918612e',
+                },
+              ];
+              setShowPopNotification(true);
+
+              // if (data.status) {
+              //   if (data.data.length > 0) {
+              //     notificationList = data.data;
+              //     setShowPopNotification(true);
+              //   }
+              // }
+            }
+          }
+        },
+        (status, error) => {},
+      );
+    }
+
     return () => {
       clearInterval(timer);
     };
-  }, [showWelcome]);
+  }, []);
+
+  const openNotification = (notification) => {
+    console.log('notification', notification);
+    if (
+      notification.linkUrl &&
+      notification.linkUrl !== null &&
+      notification.linkUrl !== ''
+    ) {
+      props.navigation.navigate('CommonWebPage', {
+        link: notification.linkUrl,
+      });
+    } else {
+      if (
+        notification.eventType &&
+        notification.eventType !== null &&
+        notification.eventType !== ''
+      ) {
+        switch (parseInt(notification.eventType, 10)) {
+          case 1:
+            props.navigation.navigate('Magazine');
+            break;
+          case 2:
+            props.navigation.navigate('SearchDirectory');
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  };
 
   const inflateProfileMenu = (item) => {
     let index = item.index;
@@ -585,7 +671,7 @@ const Dashboard = (props) => {
                     bottomSheet.close();
                     setTimeout(() => {
                       props.navigation.navigate('Video');
-                    }, 500);
+                    }, 200);
                   }}>
                   <Image
                     source={GlobalInclude.Assets.Video}
@@ -681,6 +767,30 @@ const Dashboard = (props) => {
     <SafeAreaView style={{flex: 1, backgroundColor: '#2b3252'}}>
       <View style={GlobalInclude.AppStyle.fill}>
         <View style={styles.videoContainerAndroid}>
+          {showPopNotification && (
+            <ShowPopNotification
+              imagelink={notificationList[currentNotificationIndex].imagelink}
+              onClose={() => {
+                if (notificationList.length > 1) {
+                  currentNotificationIndex++;
+                  setShowPopNotification(false);
+                  setTimeout(() => {
+                    setShowPopNotification(true);
+                  }, 200);
+                } else {
+                  notificationList = [];
+                  currentNotificationIndex = 0;
+                  setShowPopNotification(false);
+                }
+              }}
+              onButtonPress={() => {
+                setShowPopNotification(false);
+                setTimeout(() => {
+                  openNotification(notificationList[currentNotificationIndex]);
+                }, 200);
+              }}
+            />
+          )}
           <Video
             source={require('../../../Assets/Video/homeVideo.mp4')}
             resizeMode={'cover'}
