@@ -33,7 +33,6 @@ let bottomSheet = null;
 let bottomSheetProfile = null;
 let bottomSheetExtraMenu = null;
 let timer = null;
-let notificationList = [];
 let currentNotificationIndex = 0;
 
 let profileSheetMenu = [
@@ -56,16 +55,30 @@ let bottomSheetMenu = [
   {title: `${APP_NAME} Regional Chapter Reps`, screenName: 'AppChapters'},
 ];
 
-const Dashboard = (props) => {
+const Dashboard = ({props, navigation}) => {
   const [showWelcome, setShowWelcome] = useState(true);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [showPopNotification, setShowPopNotification] = useState(false);
+  const [notificationList, setNotificationList] = useState([]);
 
   useEffect(() => {
     timer = setTimeout(() => {
       setShowWelcome(false);
     }, 7000);
 
+    const unsubscribe = navigation.addListener('focus', () => {
+      console.log('focus');
+      // Prevent default action
+      getPopNotifications();
+    });
+
+    return () => {
+      clearInterval(timer);
+      unsubscribe();
+    };
+  }, [navigation]);
+
+  const getPopNotifications = () => {
     if (global.isConnected) {
       getPopNotification(
         (response) => {
@@ -76,55 +89,21 @@ const Dashboard = (props) => {
               response.response !== null
             ) {
               let data = response.data;
-
-              console.log('getPopNotification', data);
-
-              notificationList = [
-                {
-                  __v: 0,
-                  _id: '60378499dd690d0ccc7fe49c',
-                  body: '',
-                  createdAt: '2021-02-25T11:06:01.960Z',
-                  date: '19 Jan 1970',
-                  eventType: 10,
-                  extra: 'extra',
-                  imagelink:
-                    'https://quorumbucket2.s3.ap-south-1.amazonaws.com/How+To+Q+Images/HTQ-01.jpg',
-                  isPopUpShow: false,
-                  linkUrl:
-                    'https://express-validator.github.io/docs/check-api.html',
-                  notification_id: '60378499dd690d0ccc7fe497',
-                  notification_type: 'pop',
-                  senderId: '5ff46ff5f355165c488012d7',
-                  senderName: 'Amit Singh',
-                  sent_date: 1614251161,
-                  time: '04:24 pm',
-                  timestamp: 1614251243,
-                  title: '',
-                  type: 0,
-                  updatedAt: '2021-02-25T11:06:01.960Z',
-                  userId: '602a65dca1714c5bd918612e',
-                },
-              ];
-              setShowPopNotification(true);
-
-              // if (data.status) {
-              //   if (data.data.length > 0) {
-              //     notificationList = data.data;
-              //     setShowPopNotification(true);
-              //   }
-              // }
+              if (data.status) {
+                if (data.data.length > 0) {
+                  setNotificationList([...data.data]);
+                  setTimeout(() => {
+                    setShowPopNotification(true);
+                  }, 100);
+                }
+              }
             }
           }
         },
         (status, error) => {},
       );
     }
-
-    return () => {
-      clearInterval(timer);
-    };
-  }, []);
+  };
 
   const openNotification = (notification) => {
     console.log('notification', notification);
@@ -133,7 +112,10 @@ const Dashboard = (props) => {
       notification.linkUrl !== null &&
       notification.linkUrl !== ''
     ) {
-      props.navigation.navigate('CommonWebPage', {
+      let oldData = notificationList;
+      oldData.splice(currentNotificationIndex, 1);
+      setNotificationList([...oldData]);
+      navigation.navigate('CommonWebPage', {
         link: notification.linkUrl,
       });
     } else {
@@ -142,12 +124,16 @@ const Dashboard = (props) => {
         notification.eventType !== null &&
         notification.eventType !== ''
       ) {
+        let oldData = notificationList;
+        oldData.splice(currentNotificationIndex, 1);
+        setNotificationList([...oldData]);
+
         switch (parseInt(notification.eventType, 10)) {
           case 1:
-            props.navigation.navigate('Magazine');
+            navigation.navigate('Magazine');
             break;
           case 2:
-            props.navigation.navigate('SearchDirectory');
+            navigation.navigate('SearchDirectory');
             break;
           default:
             break;
@@ -176,7 +162,7 @@ const Dashboard = (props) => {
             if (item.item.title === 'Logout') {
               bottomSheetProfile.close();
               AsyncStorage.clear().then(() => {
-                props.navigation.dispatch(
+                navigation.dispatch(
                   CommonActions.reset({
                     index: 0,
                     routes: [{name: 'Login'}],
@@ -188,7 +174,7 @@ const Dashboard = (props) => {
                 bottomSheetProfile.close();
                 setTimeout(() => {
                   if (item.item.title === 'My Profile') {
-                    props.navigation.navigate(item.item.screenName, {
+                    navigation.navigate(item.item.screenName, {
                       userId: global.userId,
                     });
                   }
@@ -226,13 +212,13 @@ const Dashboard = (props) => {
             } else {
               if (item.item.screenName === 'CommonWebPage') {
                 setTimeout(() => {
-                  props.navigation.navigate(item.item.screenName, {
+                  navigation.navigate(item.item.screenName, {
                     link: 'http://m.dsobs.net/',
                   });
                 }, 300);
               } else {
                 setTimeout(() => {
-                  props.navigation.navigate(item.item.screenName);
+                  navigation.navigate(item.item.screenName);
                 }, 300);
               }
             }
@@ -482,7 +468,7 @@ const Dashboard = (props) => {
                   onPress={() => {
                     bottomSheet.close();
                     setTimeout(() => {
-                      props.navigation.navigate('Magazine');
+                      navigation.navigate('Magazine');
                     }, 200);
                   }}>
                   <Image
@@ -502,7 +488,7 @@ const Dashboard = (props) => {
                   onPress={() => {
                     bottomSheet.close();
                     setTimeout(() => {
-                      props.navigation.navigate('SearchDirectory');
+                      navigation.navigate('SearchDirectory');
                     }, 200);
                   }}>
                   <Image
@@ -670,7 +656,7 @@ const Dashboard = (props) => {
                   onPress={() => {
                     bottomSheet.close();
                     setTimeout(() => {
-                      props.navigation.navigate('Video');
+                      navigation.navigate('Video');
                     }, 200);
                   }}>
                   <Image
@@ -767,30 +753,36 @@ const Dashboard = (props) => {
     <SafeAreaView style={{flex: 1, backgroundColor: '#2b3252'}}>
       <View style={GlobalInclude.AppStyle.fill}>
         <View style={styles.videoContainerAndroid}>
-          {showPopNotification && (
-            <ShowPopNotification
-              imagelink={notificationList[currentNotificationIndex].imagelink}
-              onClose={() => {
-                if (notificationList.length > 1) {
-                  currentNotificationIndex++;
+          {showPopNotification &&
+            notificationList.length > currentNotificationIndex && (
+              <ShowPopNotification
+                imagelink={notificationList[currentNotificationIndex].imagelink}
+                onClose={() => {
+                  if (notificationList.length > 1) {
+                    let oldData = notificationList;
+                    oldData.splice(currentNotificationIndex, 1);
+                    setNotificationList([...oldData]);
+                    currentNotificationIndex++;
+                    setShowPopNotification(false);
+                    setTimeout(() => {
+                      setShowPopNotification(true);
+                    }, 200);
+                  } else {
+                    setNotificationList([]);
+                    currentNotificationIndex = 0;
+                    setShowPopNotification(false);
+                  }
+                }}
+                onButtonPress={() => {
                   setShowPopNotification(false);
                   setTimeout(() => {
-                    setShowPopNotification(true);
+                    openNotification(
+                      notificationList[currentNotificationIndex],
+                    );
                   }, 200);
-                } else {
-                  notificationList = [];
-                  currentNotificationIndex = 0;
-                  setShowPopNotification(false);
-                }
-              }}
-              onButtonPress={() => {
-                setShowPopNotification(false);
-                setTimeout(() => {
-                  openNotification(notificationList[currentNotificationIndex]);
-                }, 200);
-              }}
-            />
-          )}
+                }}
+              />
+            )}
           <Video
             source={require('../../../Assets/Video/homeVideo.mp4')}
             resizeMode={'cover'}
@@ -858,7 +850,7 @@ const Dashboard = (props) => {
                 activeOpacity={1}
                 onPress={() => {
                   setTimeout(() => {
-                    props.navigation.navigate('Magazine');
+                    navigation.navigate('Magazine');
                   }, 500);
                 }}>
                 <Image
@@ -876,7 +868,7 @@ const Dashboard = (props) => {
                 style={styles.whiteButton}
                 activeOpacity={1}
                 onPress={() => {
-                  props.navigation.navigate('SearchDirectory');
+                  navigation.navigate('SearchDirectory');
                 }}>
                 <Image
                   source={GlobalInclude.Assets.Alumini}

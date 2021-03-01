@@ -1,4 +1,4 @@
-package com.alumbus;
+package com.dsobs;
  
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.JavaScriptModule;

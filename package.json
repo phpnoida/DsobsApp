@@ -1,5 +1,5 @@
 {
-  "name": "alumbus",
+  "name": "dsobs",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -25,6 +25,8 @@
     "@react-native-community/progress-bar-android": "^1.0.4",
     "@react-native-community/progress-view": "^1.2.3",
     "@react-native-community/viewpager": "^4.2.2",
+    "@react-native-firebase/app": "~10.8.1",
+    "@react-native-firebase/messaging": "~10.8.1",
     "@react-navigation/native": "^5.8.10",
     "@react-navigation/stack": "^5.12.8",
     "axios": "^0.21.1",

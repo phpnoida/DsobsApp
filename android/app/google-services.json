@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "461574981149",
+    "firebase_url": "https://dsobs-dcdfa.firebaseio.com",
+    "project_id": "dsobs-dcdfa",
+    "storage_bucket": "dsobs-dcdfa.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:461574981149:android:1c333d36aaf90935",
+        "android_client_info": {
+          "package_name": "com.dsobs"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "461574981149-ih30kb6609q41vgt5jrevfq5jsk51059.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhitTiPqjM1J5NPrMxM0zMY4mLGqo_JfQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "461574981149-ih30kb6609q41vgt5jrevfq5jsk51059.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "461574981149-eotib60k245melo9rfe5o1433960p0m5.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dsobs.dsobs"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,4 +1,4 @@
-package com.alumbus;
+package com.dsobs;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
