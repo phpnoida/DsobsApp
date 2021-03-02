@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   Image,
   Dimensions,
+  Platform,
 } from 'react-native';
 import {RootNavigators} from './src/route/Route';
 import {NavigationContainer} from '@react-navigation/native';
@@ -19,7 +20,9 @@ import DeviceInfo from 'react-native-device-info';
 import grid from './src/theme/grid';
 import g from './src/theme/global';
 import GlobalInclude from './src/globalInclude/Globalinclude';
-
+import messaging from '@react-native-firebase/messaging';
+import firebase from '@react-native-firebase/app';
+import Helper from './src/helper/Helper';
 let baseRoute = 'AppTour';
 const deviceWidth = Dimensions.get('window').width;
 const appVersion = DeviceInfo.getVersion();
@@ -53,8 +56,49 @@ const App = () => {
         });
     }); // we check this as first priority
 
+    /**
+     *
+     * Notification start
+     *
+     */
+    const onMessage = messaging().onMessage(async (remoteMessage) => {
+      handleNotification('onMessage', remoteMessage);
+    });
+
+    messaging().onNotificationOpenedApp((remoteMessage) => {
+      console.log(
+        'Notification caused app to open from background state:',
+        remoteMessage,
+      );
+    });
+
+    // Check whether an initial notification is available
+    messaging()
+      .getInitialNotification()
+      .then((remoteMessage) => {
+        if (remoteMessage) {
+          console.log(
+            'Notification caused app to open from quit state:',
+            remoteMessage.notification,
+          );
+        }
+      });
+
+    if (Platform.OS === 'android') {
+      getFcmToken(); //<---- To get Push Token
+    } else {
+      requestUserPermission();
+    }
+
+    /**
+     *
+     * Notification end
+     *
+     */
+
     return () => {
       unsubscribe();
+      onMessage();
       AppState.removeEventListener('change', _handleAppStateChange);
     };
   }, []);
@@ -121,6 +165,35 @@ const App = () => {
         }
       },
     );
+  };
+
+  async function requestUserPermission() {
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+    if (enabled) {
+      console.log('Authorization status:', authStatus);
+    }
+  }
+
+  const getFcmToken = async () => {
+    if (!firebase.messaging().isDeviceRegisteredForRemoteMessages) {
+      await firebase.messaging().registerDeviceForRemoteMessages();
+    }
+    const fcmToken = await messaging().getToken();
+    if (fcmToken) {
+      console.log('Your Firebase Token is:', fcmToken);
+    } else {
+      console.log('Failed', 'No token received');
+    }
+  };
+
+  const handleNotification = (from, data) => {
+    console.log('currentState', currentState);
+    global.notification = data;
+    Helper.presentNotification(from, data);
   };
 
   return (

@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useLayoutEffect} from 'react';
 import {
   Text,
   View,
@@ -61,6 +61,11 @@ const Dashboard = ({props, navigation}) => {
   const [showPopNotification, setShowPopNotification] = useState(false);
   const [notificationList, setNotificationList] = useState([]);
 
+  useLayoutEffect(() => {
+    console.log('useLayoutEffect');
+    return () => {};
+  }, []);
+
   useEffect(() => {
     timer = setTimeout(() => {
       setShowWelcome(false);
@@ -68,8 +73,15 @@ const Dashboard = ({props, navigation}) => {
 
     const unsubscribe = navigation.addListener('focus', () => {
       console.log('focus');
-      // Prevent default action
+
       getPopNotifications();
+
+      /**
+       *
+       * We check weather we have push notification data or not
+       *
+       */
+      validatePushNotification();
     });
 
     return () => {
@@ -102,6 +114,31 @@ const Dashboard = ({props, navigation}) => {
         },
         (status, error) => {},
       );
+    }
+  };
+
+  const validatePushNotification = () => {
+    if (global.notification !== undefined && global.notification !== null) {
+      let data = global.notification;
+      let notificationType = data.type;
+
+      console.log('data', data);
+
+      // if (
+      //   notificationType === '21' ||
+      //   notificationType === '22' ||
+      //   notificationType === '23' ||
+      //   notificationType === '24' ||
+      //   notificationType === '25' ||
+      //   notificationType === '26' ||
+      //   notificationType === '27' ||
+      //   notificationType === '101'
+      // ) {
+      //   global.specificPage = notificationType;
+      //   global.specificPageLink = data.linkUrl;
+      //   console.log('321-App.js');
+      //   this._showPushNotification(notification);
+      // }
     }
   };
 

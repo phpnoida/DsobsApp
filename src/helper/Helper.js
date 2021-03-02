@@ -1,7 +1,6 @@
-import {SERVER_PATH, AUTH_KEY} from '../../config';
-import {Linking, Alert} from 'react-native';
+import {Linking, Alert, Platform} from 'react-native';
 import {APP_NAME, WHATSAPP_NO} from '../helper/Constants';
-
+import PushNotification from 'react-native-push-notification';
 const Helpers = {
   ToastShow: function (name, style) {
     if (style === 'success') {
@@ -199,6 +198,37 @@ const Helpers = {
     }
 
     return undefined;
+  },
+  presentNotification: function (from, notification) {
+    console.log('from', from);
+    const title = notification.data.title;
+    const body = notification.data.body;
+    const icon = notification.data.imagelink;
+
+    var notificationObj = {
+      title: title,
+      message: body,
+      bigText: body,
+      bigPictureUrl: icon,
+      vibrate: true,
+      vibration: 100,
+      onlyAlertOnce: true,
+      allowWhileIdle: true,
+      invokeApp: true,
+      importance: 'max',
+      priority: 'max',
+      ignoreInForeground: false,
+      foreground: true,
+      channelId: 'fcm_fallback_notification_channel',
+    };
+
+    if (icon !== '') {
+      notificationObj.largeIconUrl = icon;
+    } else {
+      notificationObj.largeIcon = 'ic_launcher';
+    }
+    console.log('notificationObj', notificationObj);
+    PushNotification.presentLocalNotification(notificationObj);
   },
 };
 

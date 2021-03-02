@@ -10,6 +10,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name="com.dsobs.MainApplication"
@@ -21,6 +23,37 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:targetApi="m">
+        <!--Firebase configuration-->
+        <meta-data
+            android:name="com.dieam.reactnativepushnotification.notification_foreground"
+            android:value="true" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="@string/app_name"
+            tools:replace="android:value" />
+        <meta-data
+            android:name="com.dieam.reactnativepushnotification.default_notification_channel_id"
+            android:value="@string/app_name"
+            tools:replace="android:value" />
+
+        <receiver android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationActions" />
+        <receiver android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationPublisher" />
+        <receiver android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationBootEventReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationListenerService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <!--Firebase configuration-->
         <activity
             android:name="com.dsobs.MainActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
