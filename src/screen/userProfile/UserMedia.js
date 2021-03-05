@@ -11,7 +11,7 @@ const SocialMedia = (props) => {
   const {photos} = profileData;
 
   return (
-    <View style={{paddingStart: scale(15), paddingEnd: scale(15), flex: 1}}>
+    <View style={{flex: 1}}>
       {photos.length > 0 ? (
         <ImageGallery mediaContent={photos} />
       ) : (

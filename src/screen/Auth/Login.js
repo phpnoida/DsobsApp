@@ -12,7 +12,7 @@ import {
   ImageBackground,
   Linking,
   Keyboard,
-  SafeAreaView
+  SafeAreaView,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import Helper from '../../helper/Helper';
@@ -27,7 +27,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Constants from '../../helper/Constants';
 import {URL_REGX, APP_NAME} from '../../helper/Constants';
 import {CommonActions} from '@react-navigation/native';
-
+import messaging from '@react-native-firebase/messaging';
 import CommonButton from '../../component/CommonButton';
 
 const {emailRegex, phoneRegex} = URL_REGX;
@@ -132,7 +132,7 @@ const Login = ({navigation}) => {
       setPhone(selectedNumber.replace('+91', ''));
     } else if (selectedNumber.startsWith('91')) {
       setCountryCode('+91');
-      setPhone(selectedNumber.replace('+91', ''));
+      setPhone(selectedNumber.replace('91', ''));
     } else if (selectedNumber.startsWith('0')) {
       setCountryCode('+91');
       setPhone(selectedNumber.replace('+91', ''));
@@ -242,39 +242,50 @@ const Login = ({navigation}) => {
               response.response !== null
             ) {
               let data = response.data;
+              console.log('loginresponse', data);
               if (data.status) {
                 if (data.data && data.data !== null) {
                   let userDetails = data.data;
                   let tokens = userDetails.tokens;
+                  let fcmTopic = userDetails.fcmTopic;
                   global.userDetails = userDetails;
                   global.accessToken = tokens.accessToken;
                   global.userId = userDetails._id;
                   global.firstName = userDetails.firstName;
                   global.lastName = userDetails.lastName;
                   clearInterval(timerInterval);
-                  AsyncStorage.setItem('loggedIn', '1').then(() => {
-                    AsyncStorage.setItem(
-                      'userDetails',
-                      JSON.stringify(userDetails),
-                    ).then(() => {
-                      AsyncStorage.setItem(
-                        'accessToken',
-                        tokens.accessToken,
-                      ).then(() => {
+                  console.log('fcmTopic', fcmTopic);
+                  messaging()
+                    .subscribeToTopic(fcmTopic)
+                    .then(() => {
+                      AsyncStorage.setItem('loggedIn', '1').then(() => {
                         AsyncStorage.setItem(
-                          'refreshToken',
-                          tokens.refreshToken,
+                          'userDetails',
+                          JSON.stringify(userDetails),
                         ).then(() => {
-                          navigation.dispatch(
-                            CommonActions.reset({
-                              index: 1,
-                              routes: [{name: 'Profile'}],
-                            }),
-                          );
+                          AsyncStorage.setItem(
+                            'accessToken',
+                            tokens.accessToken,
+                          ).then(() => {
+                            AsyncStorage.setItem(
+                              'refreshToken',
+                              tokens.refreshToken,
+                            ).then(() => {
+                              AsyncStorage.setItem('fcmTopic', fcmTopic).then(
+                                () => {
+                                  navigation.dispatch(
+                                    CommonActions.reset({
+                                      index: 0,
+                                      routes: [{name: 'Profile'}],
+                                    }),
+                                  );
+                                },
+                              );
+                            });
+                          });
                         });
                       });
                     });
-                  });
                 }
               }
             }

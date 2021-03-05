@@ -7,6 +7,9 @@ import {
   TouchableNativeFeedback,
   Image,
   ScrollView,
+  Animated,
+  Dimensions,
+  Platform,
 } from 'react-native';
 import {scale} from '../theme/Scalling';
 import GlobalInclude from '../globalInclude/Globalinclude';
@@ -15,9 +18,21 @@ import ImageViewer from 'react-native-image-zoom-viewer';
 import DocViewer from '../component/DocViewer';
 import ImageShareModal from '../component/ImageShareModal';
 import YoutubeView from '../component/YoutubeView';
+import g from '../theme/global';
+import grid from '../theme/grid';
+import FastImage from 'react-native-fast-image';
+import {createImageProgress} from 'react-native-image-progress';
+
+const AnimatedFastImage = Animated.createAnimatedComponent(FastImage);
+const ProgressImage = createImageProgress(AnimatedFastImage);
 
 let imageArray = [];
 let documentItem = '';
+
+const deviceWidth = Dimensions.get('window').width;
+const tablet = deviceWidth >= 768;
+let opacity = new Animated.Value(0.0);
+
 const ImageGallery = (props) => {
   const [showModal, setShowModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -53,119 +68,189 @@ const ImageGallery = (props) => {
 
   const _renderPhotos = () => {
     let photosArray = [];
-    mediaContent.map((item, index) => {
+
+    let imageMedia = [];
+    let videoMedia = [];
+    let docMedia = [];
+
+    mediaContent.map((item) => {
       let type = item.type;
+      if (type === 1) {
+        console.log('item', item);
+        imageMedia.push(item);
+      } else if (type === 2) {
+        videoMedia.push(item);
+      } else if (type === 3) {
+        docMedia.push(item);
+      }
+    });
+
+    // video
+    videoMedia.map((item, index) => {
+      const image = (
+        <View style={[g.mb10, {width: '100%'}]} key={index.toString()}>
+          <YoutubeView
+            link={item.thumbnail}
+            containerStyle={{
+              borderRadius: scale(6),
+              justifyContent: 'center',
+              aspectRatio: 16 / 9,
+            }}
+            iconName={'play-circle-o'}
+            iconType={'font-awesome'}
+          />
+        </View>
+      );
+      photosArray.push(image);
+    });
+
+    imageMedia.map((item, index) => {
       const image = (
         <View
+          key={index}
           style={{
-            width: scale(85),
-            height: scale(85),
-            margin: scale(4),
-            alignSelf: 'center',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-          key={index.toString()}>
-          {type === 1 && (
+            width: deviceWidth / 3 - 27,
+            marginTop: 10,
+            marginRight: 5,
+            marginLeft: 5,
+          }}>
+          <View style={[g.br3, g.oh, g.bglightGray]}>
             <TouchableOpacity
               onPress={() => {
-                //setIastIndex(index);
                 openImage();
               }}
               onLongPress={() => {
-                console.log('long press');
                 openShareOptions();
               }}
-              key={index}
-              style={{
-                height: '100%',
-                width: '100%',
-                borderRadius: scale(6),
-              }}
+              style={g.bglightGray}
               activeOpacity={1}>
-              <Image
-                key={index}
-                style={{
-                  width: scale(85),
-                  height: scale(85),
-                  borderRadius: scale(6),
-                }}
-                resizeMode={'cover'}
+              <ProgressImage
                 source={{uri: item.thumbnail}}
-                resizeMethod={'auto'}
-              />
-            </TouchableOpacity>
-          )}
-          {type === 2 && (
-            <View
-              key={index}
-              style={{
-                height: '100%',
-                width: '100%',
-                justifyContent: 'center',
-              }}>
-              <YoutubeView
-                link={item.thumbnail}
-                containerStyle={{
-                  width: scale(85),
-                  height: scale(85),
-                  borderRadius: scale(6),
-                  justifyContent: 'center',
+                style={{aspectRatio: 1 / 1}}
+                imageStyle={{
+                  aspectRatio: 1 / 1,
+                  opacity: opacity,
+                  transform: [
+                    {
+                      scale: opacity.interpolate({
+                        inputRange: [0, 1.0],
+                        outputRange: [0.85, 1.0],
+                      }),
+                    },
+                  ],
                 }}
-                iconName={'play-circle-o'}
-                iconType={'font-awesome'}
+                indicatorProps={{
+                  animated: true,
+                  borderColor: 'red',
+                  borderWidth: 2,
+                  color: '#2b3252',
+                  direction: Platform.os === 'android' ? 'clockwise' : 'rtl',
+                  indeterminate: true,
+                  progress: 100,
+                  strokeCap: 'butt',
+                  size: scale(20),
+                }}
+                onLoad={() => {
+                  Animated.timing(opacity, {
+                    toValue: 1.0,
+                    duration: 200,
+                    useNativeDriver: true,
+                  }).start();
+                }}
+                resizeMode={FastImage.resizeMode.cover}
+                threshold={20}
               />
-            </View>
-          )}
-          {type === 3 && (
-            <TouchableOpacity
-              onPress={() => {
-                console.log('item', item);
-                documentItem = item.fileName;
-                setShowDocViewer(true);
-              }}
-              key={index}
-              style={{
-                height: '100%',
-                width: '100%',
-                borderRadius: scale(6),
-              }}
-              activeOpacity={1}>
-              <View
-                key={index}
-                style={{
-                  borderRadius: scale(6),
-                  justifyContent: 'center',
-                  alignSelf: 'center',
-                  alignItems: 'center',
-                  borderWidth: 0.5,
-                  height: '100%',
-                  width: '100%',
-                }}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={{height: scale(36), width: scale(36)}}
-                  iconColor={'#000'}
-                  iconName={'file-pdf-o'}
-                  iconSize={scale(36)}
-                  iconType={IconType[4]}
-                />
-              </View>
             </TouchableOpacity>
-          )}
+          </View>
         </View>
       );
-
       photosArray.push(image);
     });
+
+    docMedia.map((item, index) => {
+      const image = (
+        <View
+          key={index}
+          style={{
+            width: deviceWidth / 3 - 27,
+            marginTop: 10,
+            marginRight: 5,
+            marginLeft: 5,
+          }}>
+          <TouchableOpacity
+            onPress={() => {
+              documentItem = item.fileName;
+              setShowDocViewer(true);
+            }}
+            style={[
+              g.bglightGray,
+              g.br3,
+              grid.justifyContentCenter,
+              grid.alignItems,
+              {aspectRatio: 1 / 1},
+            ]}
+            activeOpacity={1}>
+            <GlobalInclude.BaseIcon
+              containerStyle={{height: scale(36), width: scale(36)}}
+              iconColor={'#000'}
+              iconName={'file-pdf-o'}
+              iconSize={scale(36)}
+              iconType={IconType[4]}
+            />
+          </TouchableOpacity>
+        </View>
+      );
+      photosArray.push(image);
+    });
+
     return photosArray;
   };
 
   return (
     <View style={GlobalInclude.AppStyle.fill}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {mediaContent.length > 0 && (
-          <View style={styles.mediaButtonContainer}>{_renderPhotos()}</View>
-        )}
+      <ScrollView>
+        <View style={GlobalInclude.AppStyle.fill}>
+          {tablet ? (
+            <View
+              style={[
+                {
+                  marginBottom: 5,
+                  marginTop: 10,
+                  marginLeft: 15,
+                  marginRight: 15,
+                  padding: 10,
+                  paddingBottom: 15,
+                },
+                g.bgWhite,
+                g.boxShadow,
+                g.br3,
+              ]}>
+              <View style={[grid.rowdir, grid.flexwrap]}>
+                {_renderPhotos()}
+              </View>
+            </View>
+          ) : (
+            <View
+              style={[
+                {
+                  marginBottom: 5,
+                  marginTop: 10,
+                  marginLeft: 15,
+                  marginRight: 15,
+                  padding: 10,
+                  paddingBottom: 15,
+                },
+                g.bgWhite,
+                g.boxShadow,
+                g.br3,
+              ]}>
+              <View style={[grid.rowdir, grid.flexwrap]}>
+                {_renderPhotos()}
+              </View>
+            </View>
+          )}
+        </View>
+        <View style={{height: 100}} />
       </ScrollView>
       {/* image slider modal */}
       <Modal
@@ -189,7 +274,6 @@ const ImageGallery = (props) => {
               iconType={IconType[8]}
             />
           </TouchableOpacity>
-          {console.log('lastIndex', lastIndex)}
           <ImageViewer
             imageUrls={imageArray}
             index={lastIndex}
@@ -239,20 +323,19 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   mediaButtonContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'white',
     borderRadius: scale(10),
-    margin: scale(6),
-    flex: 1,
     shadowColor: '#333333',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 5,
     padding: scale(5),
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignSelf: 'center',
-    width: '100%',
+    marginStart: scale(4),
+    marginEnd: scale(4),
+    marginBottom: scale(6),
+    marginTop: scale(6),
+    flexGrow: 0,
   },
   buttonCircle: {
     width: 24,

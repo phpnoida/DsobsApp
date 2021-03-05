@@ -4,7 +4,7 @@ import AppIntroSlider from 'react-native-app-intro-slider';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import grid from '../theme/grid';
 import {scale} from '../theme/Scalling';
-import Icon from 'react-native-vector-icons/AntDesign';
+import {CommonActions} from '@react-navigation/native';
 
 const slides = [
   {
@@ -27,7 +27,12 @@ const slides = [
 
 const AppTour = ({navigation}) => {
   const _onDone = () => {
-    navigation.navigate('Login', {});
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{name: 'Login'}],
+      }),
+    );
   };
 
   const renderImage = ({item}) => {

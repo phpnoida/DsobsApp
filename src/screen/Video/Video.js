@@ -112,13 +112,7 @@ const Video = ({navigation}) => {
           {paddingHorizontal: scale(10)},
         ]}>
         <View style={{paddingHorizontal: scale(5)}}>
-          <TopHeaderView
-            index={11}
-            onIconPress={() => {
-              navigation.goBack();
-            }}
-            onTabPress={() => {}}
-          />
+          <TopHeaderView index={11} navigation={navigation} />
         </View>
         <View style={[grid.rowdir, g.mb15, g.mt10, g.ml5, g.mr5]}>
           <View style={[g.br3, grid.col, g.mr5]}>

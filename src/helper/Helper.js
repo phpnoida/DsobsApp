@@ -219,16 +219,19 @@ const Helpers = {
       priority: 'max',
       ignoreInForeground: false,
       foreground: true,
-      channelId: 'fcm_fallback_notification_channel',
+      channelId: APP_NAME,
     };
-
     if (icon !== '') {
       notificationObj.largeIconUrl = icon;
     } else {
       notificationObj.largeIcon = 'ic_launcher';
     }
-    console.log('notificationObj', notificationObj);
-    PushNotification.presentLocalNotification(notificationObj);
+
+    PushNotification.channelExists(APP_NAME, (status) => {
+      if (status) {
+        PushNotification.presentLocalNotification(notificationObj);
+      }
+    });
   },
 };
 

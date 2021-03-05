@@ -32,11 +32,11 @@ const ProfessionalDetail = (props) => {
         style={GlobalInclude.AppStyle.userProfileBox}>
         <View style={[grid.rowdir, grid.alignItems]}>
           <View style={[grid.col]}>
-            <Text style={GlobalInclude.AppStyle.menuHeader}>
+            <Text style={GlobalInclude.AppStyle.menuHeader}>{item.link}</Text>
+            <View style={{margin: scale(5)}} />
+            <Text style={GlobalInclude.AppStyle.menuTitle}>
               {item.aboutLink}
             </Text>
-            <View style={{margin: scale(5)}} />
-            <Text style={GlobalInclude.AppStyle.menuTitle}>{item.link}</Text>
           </View>
           <GlobalInclude.BaseIcon
             containerStyle={{height: scale(20), width: scale(20)}}

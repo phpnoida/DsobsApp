@@ -4,44 +4,35 @@ import {
   View,
   TouchableOpacity,
   Image,
-  TextInput,
   ScrollView,
-  ImageBackground,
-  Linking,
-  Keyboard,
   StyleSheet,
-  Dimensions,
-  Alert,
 } from 'react-native';
 import GlobalInclude from '../globalInclude/Globalinclude';
-import Helper from '../helper/Helper';
 import g from '../theme/global';
 import grid from '../theme/grid';
 import {scale} from '../theme/Scalling';
-
+import {CommonActions} from '@react-navigation/native';
 const menuOptions = [
-  {value: 0, label: 'Chat'},
-  {value: 1, label: 'Events'},
-  {value: 2, label: 'Directory'},
-  {value: 3, label: 'News'},
-  {value: 4, label: 'Ventures'},
-  {value: 5, label: 'Common Room'},
-  {value: 6, label: 'Store'},
-  {value: 7, label: 'Melaram Gallery'},
-  {value: 8, label: 'Jobs'},
-  {value: 9, label: 'Offers'},
-  {value: 10, label: 'Footsteps'},
-  {value: 11, label: 'Videos'},
-  {value: 12, label: 'The Rose Bowl'},
-  {value: 13, label: 'Contributions'},
-  {value: 14, label: 'Masters'},
+  {screen: '', visible: false, value: 0, label: 'Chat'},
+  {screen: '', visible: false, value: 1, label: 'Events'},
+  {screen: 'SearchDirectory', visible: true, value: 2, label: 'Directory'},
+  {screen: '', visible: false, value: 3, label: 'News'},
+  {screen: '', visible: false, value: 4, label: 'Ventures'},
+  {screen: '', visible: false, value: 5, label: 'Common Room'},
+  {screen: '', visible: false, value: 6, label: 'Store'},
+  {screen: '', visible: false, value: 7, label: 'Melaram Gallery'},
+  {screen: '', visible: false, value: 8, label: 'Jobs'},
+  {screen: '', visible: false, value: 9, label: 'Offers'},
+  {screen: '', visible: false, value: 10, label: 'Footsteps'},
+  {screen: 'Video', visible: true, value: 11, label: 'Videos'},
+  {screen: 'Magazine', visible: true, value: 12, label: 'The Rose Bowl'},
+  {screen: '', visible: false, value: 13, label: 'Contributions'},
+  {screen: '', visible: false, value: 14, label: 'Masters'},
 ];
 
-const TopHeaderView = (props) => {
+const TopHeaderView = ({navigation, index, showBack}) => {
   const [openDropDown, setOpenDropDown] = useState(false);
-  const [selectedTab, setSelectedTab] = useState(
-    menuOptions[props.index].label,
-  );
+  const [selectedTab] = useState(menuOptions[index].label);
   return (
     <View>
       {openDropDown ? (
@@ -70,17 +61,19 @@ const TopHeaderView = (props) => {
                 } else {
                   arrayStyle.push({color: '#bababa'});
                 }
-                return item.label !== '' ? (
+                return item.label !== '' && item.visible ? (
                   <TouchableOpacity
                     key={i}
                     activeOpacity={1}
                     onPress={() => {
-                      // setSelectedTab(item.label);
-                      // setOpenDropDown(false);
-                      // if (props.onTabPress) {
-                      //   props.onTabPress();
-                      // }
-                      Alert.alert('Coming soon!');
+                      setOpenDropDown(false);
+                      setTimeout(() => {
+                        if (item.screen !== '') {
+                          if (index !== item.value) {
+                            navigation.navigate(item.screen);
+                          }
+                        }
+                      }, 200);
                     }}>
                     <Text style={arrayStyle}>{item.label}</Text>
                   </TouchableOpacity>
@@ -97,9 +90,12 @@ const TopHeaderView = (props) => {
                 width: scale(50),
               }}
               onPress={() => {
-                if (props.onIconPress) {
-                  props.onIconPress();
-                }
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{name: 'Dashboard'}],
+                  }),
+                );
               }}>
               <View
                 style={[
@@ -133,7 +129,7 @@ const TopHeaderView = (props) => {
             </TouchableOpacity>
           </View>
           <View style={[grid.col]}>
-            {props.showBack && (
+            {showBack && (
               <TouchableOpacity
                 style={{
                   width: scale(50),
@@ -141,7 +137,7 @@ const TopHeaderView = (props) => {
                 }}
                 activeOpacity={1}
                 onPress={() => {
-                  props.onIconPress();
+                  navigation.goBack();
                 }}>
                 <Image source={GlobalInclude.Assets.Back} style={styles.back} />
               </TouchableOpacity>
@@ -178,6 +174,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     marginTop: scale(15),
     marginBottom: scale(30),
+    height: '100%',
   },
   menuDefaultStyle: {
     fontSize: scale(20),

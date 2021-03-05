@@ -8,6 +8,7 @@ import {
   Dimensions,
   StyleSheet,
   Linking,
+  Alert,
 } from 'react-native';
 import g from '../../theme/global';
 import Globalinclude from '../../globalInclude/Globalinclude';
@@ -50,6 +51,18 @@ const SocialMedia = (props) => {
     linkedinUrl,
   } = profileData;
 
+  const openLink = (link) => {
+    Linking.canOpenURL(link).then((status) => {
+      if (status) {
+        Linking.openURL(link).catch(() => {
+          Alert.alert('Unable to open link!');
+        });
+      } else {
+        Alert.alert('Invalid link!');
+      }
+    });
+  };
+
   return (
     <View style={{paddingStart: scale(15), paddingEnd: scale(15), flex: 1}}>
       <View style={Globalinclude.AppStyle.fill}>
@@ -71,43 +84,43 @@ const SocialMedia = (props) => {
               {fb.trim() !== '' &&
                 generateView('#3b5998', 'facebook', IconType[4], () => {
                   if (fb !== '') {
-                    Linking.openURL(fb);
+                    openLink(fb);
                   }
                 })}
               {twitter.trim() !== '' &&
                 generateView('#55acee', 'twitter', IconType[4], () => {
                   if (twitter !== '') {
-                    Linking.openURL(twitter);
+                    openLink(twitter);
                   }
                 })}
               {insta.trim() !== '' &&
                 generateView('#3f729b', 'instagram', IconType[4], () => {
                   if (insta !== '') {
-                    Linking.openURL(insta);
+                    openLink(insta);
                   }
                 })}
               {wiki.trim() !== '' &&
                 generateView('#222222', 'wikipedia-w', IconType[4], () => {
                   if (wiki !== '') {
-                    Linking.openURL(wiki);
+                    openLink(wiki);
                   }
                 })}
               {youtube.trim() !== '' &&
                 generateView('#c62d1d', 'youtube-play', IconType[4], () => {
                   if (youtube !== '') {
-                    Linking.openURL(youtube);
+                    openLink(youtube);
                   }
                 })}
               {whatsapp.trim() !== '' &&
                 generateView('#25d366', 'whatsapp', IconType[4], () => {
                   if (whatsapp !== '') {
-                    Linking.openURL(whatsapp);
+                    openLink(whatsapp);
                   }
                 })}
               {linkedinUrl.trim() !== '' &&
                 generateView('#0e76a8', 'linkedin', IconType[4], () => {
                   if (linkedinUrl !== '') {
-                    Linking.openURL(linkedinUrl);
+                    openLink(linkedinUrl);
                   }
                 })}
             </View>

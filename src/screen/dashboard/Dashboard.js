@@ -11,6 +11,7 @@ import {
   Alert,
   SafeAreaView,
   Platform,
+  BackHandler,
 } from 'react-native';
 import {BlurView} from '@react-native-community/blur';
 import {CommonActions} from '@react-navigation/native';
@@ -26,6 +27,8 @@ import RBSheetProfile from 'react-native-raw-bottom-sheet';
 import AsyncStorage from '@react-native-community/async-storage';
 import ShowPopNotification from '../../component/ShowPopNotification';
 import {getPopNotification} from '../../Actions/CommonActions';
+import {useDispatch, useSelector, shallowEqual} from 'react-redux';
+import {clearState} from '../../reducer/NotificationReducer';
 
 let deviceHeight = Dimensions.get('screen').height;
 let deviceWidth = Dimensions.get('screen').width;
@@ -34,7 +37,7 @@ let bottomSheetProfile = null;
 let bottomSheetExtraMenu = null;
 let timer = null;
 let currentNotificationIndex = 0;
-
+let backHandler = null;
 let profileSheetMenu = [
   {
     title: 'My Profile',
@@ -61,19 +64,43 @@ const Dashboard = ({props, navigation}) => {
   const [showPopNotification, setShowPopNotification] = useState(false);
   const [notificationList, setNotificationList] = useState([]);
 
-  useLayoutEffect(() => {
-    console.log('useLayoutEffect');
-    return () => {};
-  }, []);
+  const dispatch = useDispatch();
+
+  const refreshState = useSelector((state) => {
+    if (state.notification && state.notification !== undefined) {
+      let notification = state.notification;
+      if (notification.refresh && notification.refresh !== undefined) {
+        return true;
+      }
+    }
+    return false;
+  }, shallowEqual);
+
+  console.log('refreshState-80', refreshState);
 
   useEffect(() => {
     timer = setTimeout(() => {
       setShowWelcome(false);
     }, 7000);
 
+    const backAction = () => {
+      if (navigation.isFocused()) {
+        Alert.alert('', `Would you like to close the ${APP_NAME} app?`, [
+          {
+            text: 'Cancel',
+            onPress: () => null,
+            style: 'cancel',
+          },
+          {text: 'YES', onPress: () => BackHandler.exitApp()},
+        ]);
+        return true;
+      }
+    };
+
+    backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+
     const unsubscribe = navigation.addListener('focus', () => {
       console.log('focus');
-
       getPopNotifications();
 
       /**
@@ -84,11 +111,18 @@ const Dashboard = ({props, navigation}) => {
       validatePushNotification();
     });
 
+    if (refreshState) {
+      setTimeout(() => {
+        console.log('78');
+        validatePushNotification();
+      }, 500);
+    }
     return () => {
       clearInterval(timer);
       unsubscribe();
+      backHandler.remove();
     };
-  }, [navigation]);
+  }, [navigation, refreshState]);
 
   const getPopNotifications = () => {
     if (global.isConnected) {
@@ -118,27 +152,21 @@ const Dashboard = ({props, navigation}) => {
   };
 
   const validatePushNotification = () => {
+    dispatch(clearState());
+    console.log('global.notification', global.notification);
     if (global.notification !== undefined && global.notification !== null) {
-      let data = global.notification;
-      let notificationType = data.type;
+      let data = global.notification.data;
+      console.log('validatePushNotification', data);
+      let linkUrl = data.linkUrl;
+      if (linkUrl && linkUrl !== null && linkUrl !== '') {
+        global.notification = null;
 
-      console.log('data', data);
-
-      // if (
-      //   notificationType === '21' ||
-      //   notificationType === '22' ||
-      //   notificationType === '23' ||
-      //   notificationType === '24' ||
-      //   notificationType === '25' ||
-      //   notificationType === '26' ||
-      //   notificationType === '27' ||
-      //   notificationType === '101'
-      // ) {
-      //   global.specificPage = notificationType;
-      //   global.specificPageLink = data.linkUrl;
-      //   console.log('321-App.js');
-      //   this._showPushNotification(notification);
-      // }
+        navigation.navigate('CommonWebPage', {
+          link: linkUrl,
+        });
+      } else {
+        openSpecificPage(data.eventType);
+      }
     }
   };
 
@@ -152,6 +180,7 @@ const Dashboard = ({props, navigation}) => {
       let oldData = notificationList;
       oldData.splice(currentNotificationIndex, 1);
       setNotificationList([...oldData]);
+
       navigation.navigate('CommonWebPage', {
         link: notification.linkUrl,
       });
@@ -164,18 +193,22 @@ const Dashboard = ({props, navigation}) => {
         let oldData = notificationList;
         oldData.splice(currentNotificationIndex, 1);
         setNotificationList([...oldData]);
-
-        switch (parseInt(notification.eventType, 10)) {
-          case 1:
-            navigation.navigate('Magazine');
-            break;
-          case 2:
-            navigation.navigate('SearchDirectory');
-            break;
-          default:
-            break;
-        }
+        openSpecificPage(notification.eventType);
       }
+    }
+  };
+
+  const openSpecificPage = (type) => {
+    global.notification = null;
+    switch (parseInt(type, 10)) {
+      case 0:
+        navigation.navigate('Magazine');
+        break;
+      case 1:
+        navigation.navigate('SearchDirectory');
+        break;
+      default:
+        break;
     }
   };
 
@@ -478,6 +511,8 @@ const Dashboard = ({props, navigation}) => {
             backgroundColor: 'transparent',
             borderTopLeftRadius: 30,
             borderTopRightRadius: 30,
+            height:
+              Platform.OS === 'ios' ? deviceHeight - 100 : deviceHeight - 170,
           },
           draggableIcon: {
             backgroundColor: 'transparent',

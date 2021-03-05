@@ -58,6 +58,7 @@ const TabSeven = (props) => {
                 borderRadius: 100,
                 borderWidth: 3,
                 borderColor: '#2b3252',
+                alignContent:'center'
               },
             ]}>
             {props.profileImg !== '' ? (
@@ -68,8 +69,8 @@ const TabSeven = (props) => {
               />
             ) : (
               <Image
-                style={{height: scale(144), width: scale(144)}}
-                resizeMode="cover"
+                style={{height: scale(144), width: scale(144),justifyContent:'center',alignSelf:'center'}}
+                resizeMode="contain"
                 source={Globalinclude.Assets.AppLogo}
               />
             )}

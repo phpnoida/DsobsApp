@@ -207,13 +207,7 @@ const Magazine = ({route, navigation}) => {
                 </View>
               ) : (
                 <View style={GlobalInclude.AppStyle.fill}>
-                  <TopHeaderView
-                    index={12}
-                    onIconPress={() => {
-                      navigation.goBack();
-                    }}
-                    onTabPress={() => {}}
-                  />
+                  <TopHeaderView index={12} navigation={navigation} />
                   <View style={[g.br3, g.mb15, g.mt5]}>
                     <View style={[g.inputNew, grid.rowdir]}>
                       <GlobalInclude.BaseIcon

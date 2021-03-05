@@ -377,12 +377,9 @@ const SearchDirectory = ({route, navigation}) => {
                 <View style={GlobalInclude.AppStyle.fill}>
                   <View style={{paddingHorizontal: scale(15)}}>
                     <TopHeaderView
+                      navigation={navigation}
                       index={2}
                       showBack={true}
-                      onIconPress={() => {
-                        navigation.goBack();
-                      }}
-                      onTabPress={() => {}}
                     />
                   </View>
 

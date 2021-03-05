@@ -7,6 +7,7 @@ import {
   Image,
   Dimensions,
   Platform,
+  Alert,
 } from 'react-native';
 import {RootNavigators} from './src/route/Route';
 import {NavigationContainer} from '@react-navigation/native';
@@ -23,15 +24,19 @@ import GlobalInclude from './src/globalInclude/Globalinclude';
 import messaging from '@react-native-firebase/messaging';
 import firebase from '@react-native-firebase/app';
 import Helper from './src/helper/Helper';
+import {useDispatch} from 'react-redux';
+import {refreshScreen} from './src/reducer/NotificationReducer';
+import NotifService from './src/helper/NotifService';
+
 let baseRoute = 'AppTour';
 const deviceWidth = Dimensions.get('window').width;
 const appVersion = DeviceInfo.getVersion();
-
+let notif;
 const App = () => {
   const [loadingComplete, setLoadingComplete] = useState(false);
   const [currentState, setCurrentState] = useState(AppState.currentState);
   const [isConnected, setIsConnected] = useState(true);
-
+  const dispatch = useDispatch();
   useEffect(() => {
     SplashScreen.hide();
     global.isLoggedIn = false;
@@ -84,11 +89,7 @@ const App = () => {
         }
       });
 
-    if (Platform.OS === 'android') {
-      getFcmToken(); //<---- To get Push Token
-    } else {
-      requestUserPermission();
-    }
+    requestUserPermission();
 
     /**
      *
@@ -103,6 +104,14 @@ const App = () => {
     };
   }, []);
 
+  const onRegister = (token) => {};
+
+  const onNotif = (remoteData) => {
+    console.log('remoteData', remoteData);
+    handleNotification('onNotif', remoteData);
+    //Alert.alert(notif.title, notif.message);
+  };
+
   const completeLogin = () => {
     setTimeout(() => {
       setLoadingComplete(true);
@@ -115,10 +124,7 @@ const App = () => {
         if (value && value !== null && value !== '') {
           if (value === '1') {
             global.isLoggedIn = true;
-
             baseRoute = 'Dashboard';
-            //baseRoute = 'UserProfile';
-            //baseRoute = 'Profile';
           }
         } else {
           global.isLoggedIn = false;
@@ -145,6 +151,13 @@ const App = () => {
 
   const _handleAppStateChange = (nextState) => {
     console.log('nextState', nextState);
+    console.log('currentState', currentState);
+
+    if (nextState === 'active' && currentState === 'active') {
+      if (global.notification !== undefined && global.notification !== null) {
+        dispatch(refreshScreen());
+      }
+    }
     setCurrentState(nextState);
   };
 
@@ -177,18 +190,6 @@ const App = () => {
       console.log('Authorization status:', authStatus);
     }
   }
-
-  const getFcmToken = async () => {
-    if (!firebase.messaging().isDeviceRegisteredForRemoteMessages) {
-      await firebase.messaging().registerDeviceForRemoteMessages();
-    }
-    const fcmToken = await messaging().getToken();
-    if (fcmToken) {
-      console.log('Your Firebase Token is:', fcmToken);
-    } else {
-      console.log('Failed', 'No token received');
-    }
-  };
 
   const handleNotification = (from, data) => {
     console.log('currentState', currentState);
