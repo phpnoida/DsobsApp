@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useLayoutEffect} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   Text,
   View,
@@ -12,6 +12,7 @@ import {
   SafeAreaView,
   Platform,
   BackHandler,
+  AppState,
 } from 'react-native';
 import {BlurView} from '@react-native-community/blur';
 import {CommonActions} from '@react-navigation/native';
@@ -29,6 +30,7 @@ import ShowPopNotification from '../../component/ShowPopNotification';
 import {getPopNotification} from '../../Actions/CommonActions';
 import {useDispatch, useSelector, shallowEqual} from 'react-redux';
 import {clearState} from '../../reducer/NotificationReducer';
+import messaging from '@react-native-firebase/messaging';
 
 let deviceHeight = Dimensions.get('screen').height;
 let deviceWidth = Dimensions.get('screen').width;
@@ -76,8 +78,6 @@ const Dashboard = ({props, navigation}) => {
     return false;
   }, shallowEqual);
 
-  console.log('refreshState-80', refreshState);
-
   useEffect(() => {
     timer = setTimeout(() => {
       setShowWelcome(false);
@@ -98,11 +98,11 @@ const Dashboard = ({props, navigation}) => {
     };
 
     backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+    AppState.addEventListener('change', _handleAppStateChange);
 
     const unsubscribe = navigation.addListener('focus', () => {
       console.log('focus');
       getPopNotifications();
-
       /**
        *
        * We check weather we have push notification data or not
@@ -121,8 +121,16 @@ const Dashboard = ({props, navigation}) => {
       clearInterval(timer);
       unsubscribe();
       backHandler.remove();
+      AppState.removeEventListener('change', _handleAppStateChange);
     };
   }, [navigation, refreshState]);
+
+  const _handleAppStateChange = (nextState) => {
+    console.log('nextState-128', nextState);
+    if (nextState === 'active') {
+      getPopNotifications();
+    }
+  };
 
   const getPopNotifications = () => {
     if (global.isConnected) {
@@ -152,26 +160,32 @@ const Dashboard = ({props, navigation}) => {
   };
 
   const validatePushNotification = () => {
+    console.log('isNotificationTap', global.isNotificationTap);
     dispatch(clearState());
-    console.log('global.notification', global.notification);
     if (global.notification !== undefined && global.notification !== null) {
       let data = global.notification.data;
       console.log('validatePushNotification', data);
       let linkUrl = data.linkUrl;
-      if (linkUrl && linkUrl !== null && linkUrl !== '') {
-        global.notification = null;
-
-        navigation.navigate('CommonWebPage', {
-          link: linkUrl,
-        });
+      if (global.isNotificationTap) {
+        if (linkUrl && linkUrl !== null && linkUrl !== '') {
+          global.notification = null;
+          global.isNotificationTap = false;
+          navigation.navigate('CommonWebPage', {
+            link: linkUrl,
+          });
+        } else {
+          openSpecificPage(data.eventType);
+        }
       } else {
-        openSpecificPage(data.eventType);
+        //global.notification = null;
+        //global.isNotificationTap = false;
       }
+    } else {
+      global.isNotificationTap = false;
     }
   };
 
   const openNotification = (notification) => {
-    console.log('notification', notification);
     if (
       notification.linkUrl &&
       notification.linkUrl !== null &&
@@ -185,27 +199,27 @@ const Dashboard = ({props, navigation}) => {
         link: notification.linkUrl,
       });
     } else {
-      if (
-        notification.eventType &&
-        notification.eventType !== null &&
-        notification.eventType !== ''
-      ) {
+      let eventType = notification.eventType.toString();
+      if (eventType && eventType !== null && eventType !== '') {
         let oldData = notificationList;
         oldData.splice(currentNotificationIndex, 1);
         setNotificationList([...oldData]);
-        openSpecificPage(notification.eventType);
+
+        openSpecificPage(eventType);
       }
     }
   };
 
   const openSpecificPage = (type) => {
     global.notification = null;
+    global.isNotificationTap = false;
+
     switch (parseInt(type, 10)) {
       case 0:
-        navigation.navigate('Magazine');
+        navigation.navigate('SearchDirectory');
         break;
       case 1:
-        navigation.navigate('SearchDirectory');
+        navigation.navigate('Magazine');
         break;
       default:
         break;
@@ -231,13 +245,23 @@ const Dashboard = ({props, navigation}) => {
           onPress={() => {
             if (item.item.title === 'Logout') {
               bottomSheetProfile.close();
+              let fcmTopic = global.userDetails.fcmTopic;
               AsyncStorage.clear().then(() => {
-                navigation.dispatch(
-                  CommonActions.reset({
-                    index: 0,
-                    routes: [{name: 'Login'}],
-                  }),
-                );
+                messaging()
+                  .unsubscribeFromTopic(fcmTopic)
+                  .then(() => {
+                    global.userDetails = null;
+                    global.accessToken = null;
+                    global.userId = null;
+                    global.firstName = null;
+                    global.lastName = null;
+                    navigation.dispatch(
+                      CommonActions.reset({
+                        index: 0,
+                        routes: [{name: 'Login'}],
+                      }),
+                    );
+                  });
               });
             } else {
               if (item.item.screenName !== '') {

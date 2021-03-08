@@ -85,18 +85,7 @@ const TopHeaderView = ({navigation, index, showBack}) => {
       ) : (
         <View style={[grid.rowdir, grid.justifyContent, grid.alignItems]}>
           <View style={[grid.col]}>
-            <TouchableOpacity
-              style={{
-                width: scale(50),
-              }}
-              onPress={() => {
-                navigation.dispatch(
-                  CommonActions.reset({
-                    index: 0,
-                    routes: [{name: 'Dashboard'}],
-                  }),
-                );
-              }}>
+            <View style={{width: scale(50)}}>
               <View
                 style={[
                   g.boxShadow,
@@ -107,13 +96,24 @@ const TopHeaderView = ({navigation, index, showBack}) => {
                     shadowOpacity: 0.15,
                   },
                 ]}>
-                <Image
-                  source={GlobalInclude.Assets.AppLogo}
-                  style={{width: scale(50), height: scale(50)}}
-                  resizeMode="contain"
-                />
+                <TouchableOpacity
+                  style={{}}
+                  onPress={() => {
+                    navigation.dispatch(
+                      CommonActions.reset({
+                        index: 0,
+                        routes: [{name: 'Dashboard'}],
+                      }),
+                    );
+                  }}>
+                  <Image
+                    source={GlobalInclude.Assets.AppLogo}
+                    style={{width: scale(50), height: scale(50)}}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
+            </View>
           </View>
           <View style={[grid.col, grid.justifyContentCenter]}>
             <TouchableOpacity

@@ -6,8 +6,6 @@ import {
   SafeAreaView,
   Image,
   Dimensions,
-  Platform,
-  Alert,
 } from 'react-native';
 import {RootNavigators} from './src/route/Route';
 import {NavigationContainer} from '@react-navigation/native';
@@ -22,16 +20,14 @@ import grid from './src/theme/grid';
 import g from './src/theme/global';
 import GlobalInclude from './src/globalInclude/Globalinclude';
 import messaging from '@react-native-firebase/messaging';
-import firebase from '@react-native-firebase/app';
 import Helper from './src/helper/Helper';
 import {useDispatch} from 'react-redux';
 import {refreshScreen} from './src/reducer/NotificationReducer';
-import NotifService from './src/helper/NotifService';
 
 let baseRoute = 'AppTour';
 const deviceWidth = Dimensions.get('window').width;
 const appVersion = DeviceInfo.getVersion();
-let notif;
+
 const App = () => {
   const [loadingComplete, setLoadingComplete] = useState(false);
   const [currentState, setCurrentState] = useState(AppState.currentState);
@@ -67,6 +63,7 @@ const App = () => {
      *
      */
     const onMessage = messaging().onMessage(async (remoteMessage) => {
+      global.isNotificationTap = true;
       handleNotification('onMessage', remoteMessage);
     });
 
@@ -75,6 +72,7 @@ const App = () => {
         'Notification caused app to open from background state:',
         remoteMessage,
       );
+      global.isNotificationTap = true;
     });
 
     // Check whether an initial notification is available
@@ -87,6 +85,7 @@ const App = () => {
             remoteMessage.notification,
           );
         }
+        global.isNotificationTap = true;
       });
 
     requestUserPermission();
@@ -150,9 +149,6 @@ const App = () => {
   };
 
   const _handleAppStateChange = (nextState) => {
-    console.log('nextState', nextState);
-    console.log('currentState', currentState);
-
     if (nextState === 'active' && currentState === 'active') {
       if (global.notification !== undefined && global.notification !== null) {
         dispatch(refreshScreen());
@@ -168,10 +164,21 @@ const App = () => {
       },
       (statusCode, error) => {
         if (statusCode === 401) {
+          let fcmTopic = global.userDetails.fcmTopic;
+
           AsyncStorage.clear().then(() => {
-            validateUser(() => {
-              completeLogin();
-            });
+            global.userDetails = null;
+            global.accessToken = null;
+            global.userId = null;
+            global.firstName = null;
+            global.lastName = null;
+            messaging()
+              .unsubscribeFromTopic(fcmTopic)
+              .then(() => {
+                validateUser(() => {
+                  completeLogin();
+                });
+              });
           });
         } else {
           completeLogin();
@@ -187,7 +194,7 @@ const App = () => {
       authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
     if (enabled) {
-      console.log('Authorization status:', authStatus);
+     // console.log('Authorization status:', authStatus);
     }
   }
 

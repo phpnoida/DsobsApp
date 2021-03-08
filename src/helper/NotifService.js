@@ -3,25 +3,29 @@ import NotificationHandler from './NotificationHandler';
 import {APP_NAME} from './Constants';
 
 export default class NotifService {
-  constructor(onRegister, onNotification) {
-    this.lastId = 0;
-    this.lastChannelCounter = 0;
+  // constructor(onRegister, onNotification) {
+  //   this.lastId = 0;
+  //   this.lastChannelCounter = 0;
 
+  //   this.createDefaultChannels();
+
+  //   NotificationHandler.attachRegister(onRegister);
+  //   NotificationHandler.attachNotification(onNotification);
+
+  //   // Clear badge number at start
+  //   PushNotification.getApplicationIconBadgeNumber(function (number) {
+  //     if (number > 0) {
+  //       PushNotification.setApplicationIconBadgeNumber(0);
+  //     }
+  //   });
+
+  //   PushNotification.getChannels(function (channels) {
+  //     console.log(channels);
+  //   });
+  // }
+
+  constructor() {
     this.createDefaultChannels();
-
-    NotificationHandler.attachRegister(onRegister);
-    NotificationHandler.attachNotification(onNotification);
-
-    // Clear badge number at start
-    PushNotification.getApplicationIconBadgeNumber(function (number) {
-      if (number > 0) {
-        PushNotification.setApplicationIconBadgeNumber(0);
-      }
-    });
-
-    PushNotification.getChannels(function (channels) {
-      console.log(channels);
-    });
   }
 
   createDefaultChannels() {

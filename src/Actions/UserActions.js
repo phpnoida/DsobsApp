@@ -57,7 +57,6 @@ export function addUser(data, callback, errCallback) {
 
 export function submitContactForm(data, callback, errCallback) {
   let requestPath = `${SERVER_PATH}contactForm`;
-  console.log('requestPath', requestPath);
   const request = axios
     .post(requestPath, data)
     .then((res) => {

@@ -228,8 +228,11 @@ const Helpers = {
     }
 
     PushNotification.channelExists(APP_NAME, (status) => {
+      console.log('status', status);
       if (status) {
         PushNotification.presentLocalNotification(notificationObj);
+      }else{
+        
       }
     });
   },

@@ -76,7 +76,6 @@ const ImageGallery = (props) => {
     mediaContent.map((item) => {
       let type = item.type;
       if (type === 1) {
-        console.log('item', item);
         imageMedia.push(item);
       } else if (type === 2) {
         videoMedia.push(item);
@@ -117,7 +116,10 @@ const ImageGallery = (props) => {
           <View style={[g.br3, g.oh, g.bglightGray]}>
             <TouchableOpacity
               onPress={() => {
-                openImage();
+                setIastIndex(index);
+                setTimeout(() => {
+                  openImage();
+                }, 200);
               }}
               onLongPress={() => {
                 openShareOptions();
