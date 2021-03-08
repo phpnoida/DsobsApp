@@ -30,7 +30,8 @@ const WorkExperience = (props) => {
           <View style={{margin: scale(1)}} />
           <Text style={styles.menuTitle}>{props.description}</Text>
         </View>
-        <View style={[grid.row, grid.justifyContentRight, grid.alignItemsTop]}>
+        <View
+          style={[grid.rowrow, grid.justifyContentRight, grid.alignItemsTop]}>
           {props.video ? (
             <TouchableOpacity
               activeOpacity={1}

@@ -229,14 +229,14 @@ const MagazineDetails = ({route, navigation}) => {
                               }}>
                               {content.header}
                             </Text>
-                            <Text
+                            {/* <Text
                               style={{
                                 fontSize: currentFontSize,
                                 color: '#000000',
                                 fontWeight: 'bold',
                               }}>
                               {content.subTitle}
-                            </Text>
+                            </Text> */}
                           </View>
                         </View>
                         <HTML

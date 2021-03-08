@@ -114,7 +114,9 @@ const SocialMedia = (props) => {
               {whatsapp.trim() !== '' &&
                 generateView('#25d366', 'whatsapp', IconType[4], () => {
                   if (whatsapp !== '') {
-                    openLink(whatsapp);
+                    var phoneNumber = '91' + whatsapp;
+                    let url = `whatsapp://send?text=Hi&phone=${phoneNumber}`;
+                    openLink(url);
                   }
                 })}
               {linkedinUrl.trim() !== '' &&

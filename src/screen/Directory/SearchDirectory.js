@@ -313,12 +313,19 @@ const SearchDirectory = ({route, navigation}) => {
               {row.schoolNumber}
             </Text>
           ) : null}
-          {row.house ? (
-            <Text style={[g.fs12, g.colorBlack, g.FHNR, {margin: scale(2)}]}>
-              {row.house.toLowerCase().charAt(0).toUpperCase() +
-                row.house.toLowerCase().slice(1)}
-            </Text>
-          ) : null}
+          <View style={{flexDirection: 'row'}}>
+            {row.house ? (
+              <Text style={[g.fs12, g.colorBlack, g.FHNR, {margin: scale(2)}]}>
+                {row.house.toLowerCase().charAt(0).toUpperCase() +
+                  row.house.toLowerCase().slice(1)}
+              </Text>
+            ) : null}
+            {row.section ? (
+              <Text style={[g.fs12, g.colorBlack, g.FHNR, {margin: scale(2)}]}>
+                {row.section}
+              </Text>
+            ) : null}
+          </View>
         </TouchableOpacity>
       );
     });

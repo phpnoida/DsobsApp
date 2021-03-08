@@ -429,12 +429,27 @@ const Dashboard = ({props, navigation}) => {
     return (
       <Image
         source={GlobalInclude.Assets.BlurBackground}
-        blurRadius={15}
+        blurRadius={90}
         style={styles.blurImage}
         resizeMethod={'auto'}
         resizeMode={'cover'}
       />
     );
+
+    // return (
+    //   <BlurView
+    //     style={{
+    //       position: 'absolute',
+    //       top: 0,
+    //       left: 0,
+    //       bottom: 0,
+    //       right: 0,
+    //     }}
+    //     blurType={'regular'}
+    //     blurAmount={7}
+    //     reducedTransparencyFallbackColor="white"
+    //   />
+    // );
   };
 
   const addBottomSheetProfile = () => {
@@ -750,10 +765,11 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    bottomSheet.close();
-                    setTimeout(() => {
-                      navigation.navigate('Video');
-                    }, 200);
+                    // bottomSheet.close();
+                    // setTimeout(() => {
+                    //   navigation.navigate('Video');
+                    // }, 200);
+                    Alert.alert('Coming soon...');
                   }}>
                   <Image
                     source={GlobalInclude.Assets.Video}
@@ -919,7 +935,7 @@ const Dashboard = ({props, navigation}) => {
           }}>
           <View style={styles.bottomSheetMenu}>
             {renderBlurView()}
-
+            <View style={styles.blurImage} />
             <View style={[g.p10, grid.rowdir, grid.justifyContentCenter]}>
               <TouchableOpacity
                 onPress={() => {
@@ -1006,9 +1022,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
+    bottom: 0,
     width: deviceWidth,
-    minHeight: (deviceWidth / 305) * 542,
-    aspectRatio: 305 / 542,
+    minHeight: (deviceWidth / 290) * 542,
+    aspectRatio: 300 / 542,
     zIndex: 0,
   },
   headIconContainer: {
