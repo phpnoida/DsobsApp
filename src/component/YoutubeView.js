@@ -51,17 +51,24 @@ const YoutubeView = (props) => {
               <View
                 style={props.overlayStyle ? props.overlayStyle : g.videoBlackBg}
               />
-              <View style={style.playIcon}>
+              <View
+                style={
+                  props.playIconstyle ? props.playIconstyle : style.playIcon
+                }>
                 <TouchableOpacity
                   onPress={() => {
                     setPlayVideo(true);
                   }}
                   activeOpacity={1}>
                   <GlobalInclude.BaseIcon
-                    containerStyle={{height: scale(36), width: scale(36)}}
+                    containerStyle={
+                      props.playIconContainer
+                        ? props.playIconContainer
+                        : style.playContainer
+                    }
                     iconColor={'#fff'}
                     iconName={props.iconName ? props.iconName : 'play'}
-                    iconSize={scale(36)}
+                    iconSize={props.iconSize ? props.iconSize : scale(36)}
                     iconType={props.iconType ? props.iconType : IconType[4]}
                   />
                 </TouchableOpacity>
@@ -97,6 +104,7 @@ const style = StyleSheet.create({
     alignContent: 'center',
     zIndex: 9,
   },
+  playContainer: {height: scale(36), width: scale(36)},
 });
 
 export default YoutubeView;

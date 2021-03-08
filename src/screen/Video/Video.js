@@ -8,6 +8,8 @@ import {
   Image,
   Text,
   ActivityIndicator,
+  TouchableOpacity,
+  Dimensions,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -17,6 +19,8 @@ import {IconType} from '../../helper/Constants';
 import {getVideos} from '../../Actions/VideoActions';
 import YoutubeView from '../../component/YoutubeView';
 import TopHeaderView from '../../component/TopHeaderView';
+const deviceWidth = Dimensions.get('window').width;
+
 const Video = ({navigation}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [pageContent, setPageContent] = useState([]);
@@ -47,7 +51,12 @@ const Video = ({navigation}) => {
             let data = response.data;
 
             if (data.status) {
-              setPageContent([...data.data]);
+              let records = data.data;
+
+              records.map((child) => {
+                child.isShowing = false;
+              });
+              setPageContent([...records]);
             }
           }
         }
@@ -65,24 +74,25 @@ const Video = ({navigation}) => {
    * ************************************************
    */
 
+  const updateChild = (index) => {
+    let oldData = pageContent;
+    oldData[index].isShowing = !oldData[index].isShowing;
+    setPageContent([...oldData]);
+  };
+
   const renderVideos = () => {
     return pageContent.map((item, index) => {
       return (
         <View>
           {item.videos !== undefined && item.videos.length > 0 ? (
-            <View
-              style={[
-                g.bgWhite,
-                g.boxShadow,
-                g.mb15,
-                {margin: scale(5), borderRadius: scale(6)},
-              ]}>
+            <View style={[g.bgWhite, g.boxShadow, g.mb15, {margin: scale(5)}]}>
               <View style={g.bggray3}>
                 <YoutubeView
                   link={item.videos[0].videoLink}
                   containerStyle={style.videoContainer}
                   overlayStyle={style.overlayStyle}
                   thumbStyle={style.thumbStyle}
+                  playIconstyle={style.playIconstyle}
                 />
               </View>
               <View style={[g.p15]}>
@@ -95,6 +105,68 @@ const Video = ({navigation}) => {
                   {item.videos[0].about}
                 </Text>
               </View>
+              <View style={[g.pl15, g.pr15, g.pb15]}>
+                <TouchableOpacity
+                  onPress={() => {
+                    updateChild(index);
+                  }}
+                  style={{
+                    flexDirection: 'row',
+                    width: scale(80),
+                    justifyContent: 'center',
+                    alignContent: 'center',
+                    alignItems: 'center',
+                  }}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(20), width: scale(20)}}
+                    iconColor={'#2b3252'}
+                    iconName={item.isShowing ? 'caretdown' : 'caretright'}
+                    iconSize={scale(20)}
+                    iconType={IconType[10]}
+                  />
+                  <Text style={[g.fs14, g.FHNR, g.colorBlack, g.ml10]}>
+                    {'See More'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              {item.isShowing &&
+                item.videos.map((child, innnerIndex) => {
+                  return (
+                    <View
+                      key={innnerIndex}
+                      style={{
+                        width: deviceWidth / 2 - 18,
+                        marginTop: 10,
+                        marginRight: 10,
+                        marginLeft: 10,
+                      }}>
+                      <View style={g.bggray3}>
+                        <YoutubeView
+                          link={child.videoLink}
+                          containerStyle={style.childVideoContainer}
+                          overlayStyle={style.overlayStyle}
+                          thumbStyle={style.childThumb}
+                          playIconstyle={style.playIconstyle}
+                          playIconContainer={{
+                            height: scale(18),
+                            width: scale(18),
+                          }}
+                          iconSize={scale(18)}
+                        />
+                      </View>
+                      <View style={[g.p10]}>
+                        <Text style={[g.FHNB, g.fs11, g.colorBlack]}>
+                          {item.title ? item.title : ''}
+                        </Text>
+                        <Text
+                          style={[g.fs10, g.mt5, g.FHNR, g.colorBlack]}
+                          numberOfLines={2}>
+                          {child.about}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
             </View>
           ) : (
             <View />
@@ -210,14 +282,32 @@ const style = StyleSheet.create({
     top: 0,
     left: 0,
     zIndex: 1,
-    borderRadius: scale(6),
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
   },
   thumbStyle: {
     height: scale(200),
     width: '100%',
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  playIconstyle: {
+    position: 'absolute',
+    zIndex: 9,
+    bottom: 15,
+    left: 15,
+  },
+  childVideoContainer: {
+    height: scale(100),
+    width: '100%',
     borderRadius: scale(6),
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    justifyContent: 'center',
+  },
+  childThumb: {
+    height: scale(100),
+    width: '100%',
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
   },

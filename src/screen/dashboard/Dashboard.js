@@ -133,7 +133,6 @@ const Dashboard = ({props, navigation}) => {
   };
 
   const getPopNotifications = () => {
-    
     if (global.isConnected) {
       getPopNotification(
         (response) => {
