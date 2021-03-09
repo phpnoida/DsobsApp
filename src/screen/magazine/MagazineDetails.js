@@ -102,6 +102,7 @@ const MagazineDetails = ({route, navigation}) => {
                 initialPage={currentIndex}
                 renderTabBar={() => <View />}>
                 {pageContent.map((content, index) => {
+                  console.log('content', content);
                   return (
                     <View style={GlobalInclude.AppStyle.fill} key={index}>
                       <View
@@ -229,14 +230,14 @@ const MagazineDetails = ({route, navigation}) => {
                               }}>
                               {content.header}
                             </Text>
-                            {/* <Text
+                            <Text
                               style={{
                                 fontSize: currentFontSize,
                                 color: '#000000',
                                 fontWeight: 'bold',
                               }}>
                               {content.subTitle}
-                            </Text> */}
+                            </Text>
                           </View>
                         </View>
                         <HTML

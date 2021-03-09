@@ -136,8 +136,8 @@ const Summary = ({route, navigation}) => {
     tableOfContents.map((content) => {
       content.data.map((data) => {
         let object = {
-          header: content.title,
-          subTitle: data.title,
+          header: data.title,
+          subTitle: data.subTitle,
           body: data.body,
           shareLink:
             content.shareLink && content.shareLink !== undefined

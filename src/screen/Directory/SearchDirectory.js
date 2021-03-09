@@ -489,19 +489,24 @@ const SearchDirectory = ({route, navigation}) => {
           ) : (
             <View
               style={{
-                marginStart: scale(5),
-                marginEnd: scale(5),
-                flexShrink: 1,
+                marginStart: scale(3),
                 marginTop: scale(5),
               }}>
-              <Text
-                style={{
-                  fontSize: scale(12),
-                  color: '#333333',
-                  fontFamily: 'Lato-Regular',                  
-                }}>
-                {row}
-              </Text>
+              {row.split(' ').map((child) => {
+                if (child.trim() !== '') {
+                  return (
+                    <Text
+                      style={{
+                        fontSize: scale(12),
+                        color: '#333333',
+                        fontFamily: 'Lato-Regular',
+                        includeFontPadding: false,
+                      }}>
+                      {child.trim()}
+                    </Text>
+                  );
+                }
+              })}
             </View>
           )}
         </TouchableOpacity>
@@ -1027,7 +1032,7 @@ const style = StyleSheet.create({
     marginTop: scale(5),
   },
   suggestionContainer: {
-    width: scale(70),
+    width: scale(73),
     marginEnd: scale(10),
     marginTop: scale(6),
     marginBottom: scale(6),

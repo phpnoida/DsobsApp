@@ -12,7 +12,7 @@ const SocialMedia = (props) => {
   return (
     <View style={{flex: 1}}>
       {photos.length > 0 ? (
-        <ImageGallery mediaContent={photos} />
+        <ImageGallery mediaContent={photos.reverse()} />
       ) : (
         <View style={Globalinclude.AppStyle.fillCenter}>
           <Text style={[g.fs16, g.FHNB, g.colorBlack]}>
