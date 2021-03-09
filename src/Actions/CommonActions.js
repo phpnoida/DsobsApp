@@ -108,6 +108,36 @@ export function getPopNotification(callback, errCallback) {
   };
 }
 
+export function doSearchCity(query, size, index, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}user/directory/cities?size=${size}&index=${index}&s=${query}`;
+  const request = axios
+    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .then((res) => {
+      callback(res);
+    })
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function doSearchCompany(query, size, index, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}user/directory/company?size=${size}&index=${index}&s=${query}`;
+  const request = axios
+    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .then((res) => {
+      callback(res);
+    })
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
 export function handleError(err, errCallback) {
   if (
     err.response &&

@@ -3,7 +3,6 @@ import React from 'react';
 import {Text, View} from 'react-native';
 import g from '../../theme/global';
 import ImageGallery from '../../component/ImageGallery';
-import {scale} from '../../theme/Scalling';
 import Globalinclude from '../../globalInclude/Globalinclude';
 
 const SocialMedia = (props) => {

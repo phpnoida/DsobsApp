@@ -356,7 +356,7 @@ const DirectoryDetails = ({route, navigation}) => {
                 <View style={{aspectRatio: 3 / 4}} />
               )}
             </View>
-            <View style={[g.bggray3, g.p5, g.w100p, {minHeight: scale(85)}]}>
+            <View style={[g.bggray3, g.p5, g.w100p, {minHeight: scale(80)}]}>
               <Text
                 style={[g.fs12, g.FHNR, g.colorBlack]}
                 numberOfLines={2}
@@ -400,12 +400,39 @@ const DirectoryDetails = ({route, navigation}) => {
 
               {item.profession ? (
                 <Text
-                  style={[g.fs12, g.colorBlack, g.FHNR]}
+                  style={[
+                    g.fs12,
+                    g.colorBlack,
+                    g.FHNR,
+                    {
+                      justifyContent: 'center',
+                      alignContent: 'center',
+                      flex: 1,
+                      textAlignVertical: 'center',
+                    },
+                  ]}
                   numberOfLines={2}
                   ellipsizeMode={'tail'}>
                   {renameProfession(item.profession)}
                 </Text>
-              ) : null}
+              ) : (
+                <Text
+                  style={[
+                    g.fs12,
+                    g.colorBlack,
+                    g.FHNR,
+                    {
+                      justifyContent: 'center',
+                      alignContent: 'center',
+                      flex: 1,
+                      textAlignVertical: 'center',
+                    },
+                  ]}
+                  numberOfLines={2}
+                  ellipsizeMode={'tail'}>
+                  No Profession Selected
+                </Text>
+              )}
 
               {/* <View style={[grid.row, grid.alignItemsBottom, g.mt10]}>
                 <View style={{flexDirection: 'row'}}>

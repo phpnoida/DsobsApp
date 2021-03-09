@@ -10,7 +10,6 @@ import {
   Dimensions,
   StyleSheet,
   Keyboard,
-  SafeAreaView,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
@@ -20,6 +19,7 @@ import {IconType} from '../../helper/Constants';
 import TopHeaderView from '../../component/TopHeaderView';
 import CheckBoxIOS from 'react-native-check-box';
 import {doGetProfessionList} from '../../Actions/UserActions';
+import {doSearchCity, doSearchCompany} from '../../Actions/CommonActions';
 import {getDirectory} from '../../Actions/DirectoryActions';
 import BottomSheetHeader from '../../component/BottomSheetHeader';
 import ProfessionSheet from 'react-native-raw-bottom-sheet';
@@ -35,7 +35,6 @@ let professionSheet = null;
 let professionListMain = [];
 let searchBy = 1;
 let searchVal = '';
-const tablet = deviceWidth >= 768;
 
 const myInput = React.createRef();
 const scrollRef = React.createRef();
@@ -48,8 +47,14 @@ const SearchDirectory = ({route, navigation}) => {
   const [selectedGroup, setSelectedGroup] = useState('');
   const [professions, setProfessions] = useState([]);
   const [searchedUser, setSearchedUser] = useState([]);
+  const [searchedCityCompany, setSearchedCityCompany] = useState([]);
 
   useEffect(() => {
+    professionSheet = null;
+    professionListMain = [];
+    searchBy = 1;
+    searchVal = '';
+
     if (global.isConnected) {
       getProfessionList();
     }
@@ -93,6 +98,70 @@ const SearchDirectory = ({route, navigation}) => {
     );
   };
 
+  const getSearchDataByCity = (query) => {
+    doSearchCity(
+      query,
+      10,
+      0,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              console.log('data.status', data.data);
+              if (searchVal.length > 0) {
+                setSearchedCityCompany([...data.data]);
+              } else {
+                setSearchedCityCompany([]);
+              }
+            }
+          }
+        }
+      },
+      (code, error) => {
+        setSearchedCityCompany([]);
+        console.log('error', error);
+      },
+    );
+  };
+
+  const getSearchDataByCompany = (query) => {
+    doSearchCompany(
+      query,
+      10,
+      0,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              console.log('data.status', data.data);
+              if (searchVal.length > 0) {
+                setSearchedCityCompany([...data.data]);
+              } else {
+                setSearchedCityCompany([]);
+              }
+            }
+          }
+        }
+      },
+      (code, error) => {
+        setSearchedCityCompany([]);
+        console.log('error', error);
+      },
+    );
+  };
+
   const doSearchUser = (query) => {
     getDirectory(
       searchBy.toString(),
@@ -112,6 +181,7 @@ const SearchDirectory = ({route, navigation}) => {
               }
             } else {
               console.log('searchVal', searchVal);
+              console.log('dataLength', data.data.length);
               if (searchVal.length > 0) {
                 setSearchedUser([...data.data]);
               } else {
@@ -359,6 +429,105 @@ const SearchDirectory = ({route, navigation}) => {
     }
   };
 
+  /**
+   *
+   * New added on 09-03-2021
+   *
+   */
+
+  const renderAutoSuggestCityCompany = () => {
+    var data = searchedCityCompany.map((row, index) => {
+      return (
+        <TouchableOpacity
+          key={index}
+          activeOpacity={1}
+          style={style.suggestionContainer}
+          onPress={() => {
+            setSearchedCityCompany([]);
+            if (searchIndex === 2) {
+              setTimeout(() => {
+                setSearchQuery(row.name.toString());
+                doSearchUser(row.name.toString());
+              }, 200);
+            } else if (searchIndex === 3) {
+              setTimeout(() => {
+                setSearchQuery(row.toString());
+                doSearchUser(row.toString());
+              }, 200);
+            }
+          }}>
+          <View
+            style={{
+              backgroundColor: '#323232',
+              borderRadius: scale(10),
+              height: scale(93),
+            }}
+          />
+          {searchIndex === 2 ? (
+            <View style={{marginStart: scale(5)}}>
+              <Text
+                style={[
+                  style.userName,
+                  {
+                    textTransform: 'capitalize',
+                  },
+                ]}>
+                {row.name}
+              </Text>
+              <Text
+                style={[
+                  style.userName,
+                  {
+                    textTransform: 'capitalize',
+                    flex: 1,
+                    flexWrap: 'wrap',
+                  },
+                ]}>
+                {row.country_name}
+              </Text>
+            </View>
+          ) : (
+            <View
+              style={{
+                marginStart: scale(5),
+                marginEnd: scale(5),
+                flexShrink: 1,
+                marginTop: scale(5),
+              }}>
+              <Text
+                style={{
+                  fontSize: scale(12),
+                  color: '#333333',
+                  fontFamily: 'Lato-Regular',                  
+                }}>
+                {row}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      );
+    });
+    return (
+      <View style={[g.AutoCompleteList1, g.p10]}>
+        <Text style={[g.colordarkGray, g.fs12, g.FHNM, g.pb5]}>
+          Search Suggestion:
+        </Text>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          horizontal={true}
+          showsHorizontalScrollIndicator={false}>
+          {data}
+        </ScrollView>
+      </View>
+    );
+  };
+
+  /**
+   *
+   * New added on 09-03-2021
+   *
+   */
+
   return (
     <View style={GlobalInclude.AppStyle.fill}>
       <TouchableOpacity
@@ -426,6 +595,7 @@ const SearchDirectory = ({route, navigation}) => {
                                   {maxWidth: 23, height: 20},
                                 ]}
                                 onClick={() => {
+                                  setSearchedCityCompany([]);
                                   setSearchIndex(1);
                                   searchBy = 1;
                                 }}
@@ -473,6 +643,7 @@ const SearchDirectory = ({route, navigation}) => {
                                   {maxWidth: 23, height: 20},
                                 ]}
                                 onClick={() => {
+                                  setSearchedCityCompany([]);
                                   setSearchIndex(2);
                                   searchBy = 2;
                                 }}
@@ -515,6 +686,7 @@ const SearchDirectory = ({route, navigation}) => {
                                   {maxWidth: 23, height: 20},
                                 ]}
                                 onClick={() => {
+                                  setSearchedCityCompany([]);
                                   setSearchIndex(3);
                                   searchBy = 3;
                                 }}
@@ -557,6 +729,7 @@ const SearchDirectory = ({route, navigation}) => {
                                   {maxWidth: 23, height: 20},
                                 ]}
                                 onClick={() => {
+                                  setSearchedCityCompany([]);
                                   setSearchIndex(4);
                                   searchBy = 4;
                                 }}
@@ -620,9 +793,24 @@ const SearchDirectory = ({route, navigation}) => {
                                   setSearchQuery(text);
                                   if (text.length > 0) {
                                     setSearchedUser([]);
-                                    doSearchUser(text);
+                                    if (searchIndex === 2) {
+                                      if (text.length > 2) {
+                                        getSearchDataByCity(text);
+                                      } else {
+                                        setSearchedCityCompany([]);
+                                      }
+                                    } else if (searchIndex === 3) {
+                                      if (text.length > 2) {
+                                        getSearchDataByCompany(text);
+                                      } else {
+                                        setSearchedCityCompany([]);
+                                      }
+                                    } else {
+                                      doSearchUser(text);
+                                    }
                                   } else {
                                     setSearchedUser([]);
+                                    setSearchedCityCompany([]);
                                   }
                                 }}
                               />
@@ -667,7 +855,9 @@ const SearchDirectory = ({route, navigation}) => {
                         </View>
                         {/* Search  view end */}
                         <View>
-                          {searchedUser.length > 0 && renderAutoSuggest()}
+                          {searchedCityCompany.length > 0
+                            ? renderAutoSuggestCityCompany()
+                            : searchedUser.length > 0 && renderAutoSuggest()}
                         </View>
                         {/* below contents */}
                         {professionList.length > 0 && (
