@@ -247,6 +247,8 @@ const PhotosMedia = (props) => {
         photos: mediaData,
       };
 
+      console.log('json', JSON.stringify(mediaData));
+
       setIsLoading(true);
       updateUserProfile(
         requestData,

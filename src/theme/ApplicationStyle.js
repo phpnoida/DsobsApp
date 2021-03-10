@@ -10,7 +10,8 @@ export default StyleSheet.create({
     backgroundColor: 'white',
   },
   parentStyle: {
-    paddingTop: Platform.OS === 'android' ? scale(5) : getStatusBarHeight(),
+    //paddingTop: Platform.OS === 'android' ? scale(5) : getStatusBarHeight(),
+    paddingTop: Platform.OS === 'android' ? 0 : 0,
     flex: 1,
     backgroundColor: '#fff',
   },

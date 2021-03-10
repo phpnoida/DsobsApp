@@ -446,7 +446,9 @@ const SearchDirectory = ({route, navigation}) => {
             setSearchedCityCompany([]);
             if (searchIndex === 2) {
               setTimeout(() => {
-                setSearchQuery(row.name.toString());
+                let title = row.name.toString().toLowerCase().charAt(0).toUpperCase() +
+                row.name.toString().toLowerCase().slice(1);
+                setSearchQuery(title);
                 doSearchUser(row.name.toString());
               }, 200);
             } else if (searchIndex === 3) {

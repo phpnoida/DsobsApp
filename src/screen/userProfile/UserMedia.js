@@ -9,10 +9,15 @@ const SocialMedia = (props) => {
   const {profileData} = props;
   const {photos} = profileData;
 
+  let cloneData = JSON.parse(JSON.stringify(photos));
+  cloneData = cloneData.reverse();
+
+  console.log('photos', photos);
+
   return (
     <View style={{flex: 1}}>
       {photos.length > 0 ? (
-        <ImageGallery mediaContent={photos.reverse()} />
+        <ImageGallery mediaContent={cloneData} />
       ) : (
         <View style={Globalinclude.AppStyle.fillCenter}>
           <Text style={[g.fs16, g.FHNB, g.colorBlack]}>
