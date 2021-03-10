@@ -38,6 +38,12 @@ import Bookmark from '../../Assets/Icon/bookmark.png';
 import Share from '../../Assets/Icon/share.png';
 import NoNetwork from '../../Assets/Icon/no_wifi.png';
 import Alumbus from '../../Assets/Icon/alumbus.png';
+import ShareWhatsApp from '../../Assets/Icon/share_whatsapp.png';
+import ShareTwitter from '../../Assets/Icon/share_twitter.png';
+import ShareFacebook from '../../Assets/Icon/share_facebook.png';
+import ShareEmail from '../../Assets/Icon/share_email.png';
+import ShareMore from '../../Assets/Icon/share_more.png';
+import ShareClipboard from '../../Assets/Icon/share_clipboard.png';
 export default {
   AppLogo: AppLogo,
   Alumbus: Alumbus,
@@ -79,4 +85,10 @@ export default {
   Bookmark: Bookmark,
   Share: Share,
   NoNetwork: NoNetwork,
+  ShareWhatsApp: ShareWhatsApp,
+  ShareTwitter: ShareTwitter,
+  ShareFacebook: ShareFacebook,
+  ShareEmail: ShareEmail,
+  ShareMore: ShareMore,
+  ShareClipboard: ShareClipboard,
 };

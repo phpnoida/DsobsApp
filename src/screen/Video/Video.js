@@ -10,20 +10,27 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Dimensions,
+  Clipboard,
+  Alert,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
-import {IconType} from '../../helper/Constants';
+import {IconType, APP_NAME} from '../../helper/Constants';
 import {getVideos} from '../../Actions/VideoActions';
 import YoutubeView from '../../component/YoutubeView';
 import TopHeaderView from '../../component/TopHeaderView';
+import Share, {ShareSheet, Button} from 'react-native-share';
+import Helper from '../../helper/Helper';
+
 const deviceWidth = Dimensions.get('window').width;
+let selectedVideo = {};
 
 const Video = ({navigation}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [pageContent, setPageContent] = useState([]);
+  const [showSharingSheet, setShowSharingSheet] = useState(false);
 
   useEffect(() => {
     getVideoData('');
@@ -53,6 +60,8 @@ const Video = ({navigation}) => {
             if (data.status) {
               let records = data.data;
 
+              //console.log('records', JSON.stringify(records));
+
               records.map((child) => {
                 child.isShowing = false;
               });
@@ -78,6 +87,84 @@ const Video = ({navigation}) => {
     let oldData = pageContent;
     oldData[index].isShowing = !oldData[index].isShowing;
     setPageContent([...oldData]);
+  };
+
+  const renderChildVideos = (videos, parent) => {
+    let videoArray = [];
+    videos.map((child, index) => {
+      const video = (
+        <View key={index} style={[grid.c2, g.mb5]}>
+          <View style={g.bggray2}>
+            <YoutubeView
+              link={child.videoLink}
+              containerStyle={style.childVideoContainer}
+              overlayStyle={style.overlayStyle}
+              thumbStyle={style.childThumb}
+              playIconstyle={style.playIconstyle}
+              playIconContainer={{
+                height: scale(18),
+                width: scale(18),
+              }}
+              iconSize={scale(18)}
+            />
+          </View>
+          <View style={[g.p10]}>
+            <Text
+              style={[g.fs10, g.mt5, g.FHNR, g.colorBlack]}
+              numberOfLines={2}>
+              {child.about}
+            </Text>
+            <View style={[grid.rowdir, grid.alignItems, g.mb10]}>
+              <View
+                style={[
+                  grid.rowdir,
+                  grid.justifyContentRight,
+                  grid.alignItems,
+                  g.mt10,
+                ]}>
+                <TouchableOpacity
+                  style={[grid.rowrow, grid.alignItems, g.ml15]}
+                  onPress={() => {
+                    selectedVideo = {};
+                    let title =
+                      parent.title !== undefined && parent.title !== null
+                        ? parent.title
+                        : `Hey,Check out The ${APP_NAME}`;
+
+                    let subject = child.about.substring(0, 30);
+                    let youtubeId = Helper.GetYoutubeId(child.videoLink);
+                    let attachment =
+                      youtubeId !== undefined
+                        ? Helper.loadYoutubeThumb(youtubeId)
+                        : null;
+
+                    selectedVideo.title = title;
+                    selectedVideo.message = subject;
+                    selectedVideo.type =
+                      attachment !== null ? 'image/*' : 'text/plain';
+                    selectedVideo.url =
+                      'https://homepages.cae.wisc.edu/~ece533/images/airplane.png';
+
+                    console.log('selectedVideo', selectedVideo);
+                    setShowSharingSheet(true);
+                  }}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(20), width: scale(20)}}
+                    iconColor={'#2b3252'}
+                    iconName={'sharealt'}
+                    iconSize={scale(20)}
+                    iconType={IconType[10]}
+                  />
+                  <Text style={[g.fs10, g.ml10]}>SHARE</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      );
+      videoArray.push(video);
+    });
+    return videoArray;
   };
 
   const renderVideos = () => {
@@ -129,44 +216,21 @@ const Video = ({navigation}) => {
                   </Text>
                 </TouchableOpacity>
               </View>
-              {item.isShowing &&
-                item.videos.map((child, innnerIndex) => {
-                  return (
-                    <View
-                      key={innnerIndex}
-                      style={{
-                        width: deviceWidth / 2 - 18,
-                        marginTop: 10,
-                        marginRight: 10,
-                        marginLeft: 10,
-                      }}>
-                      <View style={g.bggray3}>
-                        <YoutubeView
-                          link={child.videoLink}
-                          containerStyle={style.childVideoContainer}
-                          overlayStyle={style.overlayStyle}
-                          thumbStyle={style.childThumb}
-                          playIconstyle={style.playIconstyle}
-                          playIconContainer={{
-                            height: scale(18),
-                            width: scale(18),
-                          }}
-                          iconSize={scale(18)}
-                        />
-                      </View>
-                      <View style={[g.p10]}>
-                        <Text style={[g.FHNB, g.fs11, g.colorBlack]}>
-                          {item.title ? item.title : ''}
-                        </Text>
-                        <Text
-                          style={[g.fs10, g.mt5, g.FHNR, g.colorBlack]}
-                          numberOfLines={2}>
-                          {child.about}
-                        </Text>
-                      </View>
-                    </View>
-                  );
-                })}
+              {item.isShowing && (
+                <View
+                  style={{
+                    marginBottom: 5,
+                    marginTop: 10,
+                    marginLeft: 5,
+                    marginRight: 5,
+                    padding: 5,
+                    paddingBottom: 15,
+                  }}>
+                  <View style={[grid.rowdir, grid.flexwrap]}>
+                    {renderChildVideos(item.videos, item)}
+                  </View>
+                </View>
+              )}
             </View>
           ) : (
             <View />
@@ -241,6 +305,92 @@ const Video = ({navigation}) => {
             )}
           </View>
         )}
+
+        <ShareSheet
+          visible={showSharingSheet}
+          onCancel={() => {
+            setShowSharingSheet(false);
+          }}>
+          <Button
+            iconSrc={GlobalInclude.Assets.ShareTwitter}
+            onPress={() => {
+              setShowSharingSheet(false);
+              setTimeout(() => {
+                Share.shareSingle(
+                  Object.assign(selectedVideo, {
+                    social: 'twitter',
+                  }),
+                );
+              }, 300);
+            }}>
+            Twitter
+          </Button>
+          <Button
+            iconSrc={GlobalInclude.Assets.ShareFacebook}
+            onPress={() => {
+              setShowSharingSheet(false);
+              setTimeout(() => {
+                Share.shareSingle(
+                  Object.assign(selectedVideo, {
+                    social: 'facebook',
+                  }),
+                );
+              }, 300);
+            }}>
+            Facebook
+          </Button>
+          <Button
+            iconSrc={GlobalInclude.Assets.ShareWhatsApp}
+            onPress={() => {
+              setShowSharingSheet(false);
+              setTimeout(() => {
+                Share.shareSingle(
+                  Object.assign(selectedVideo, {
+                    social: 'whatsapp',
+                  }),
+                );
+              }, 300);
+            }}>
+            Whatsapp
+          </Button>
+          <Button
+            iconSrc={GlobalInclude.Assets.ShareEmail}
+            onPress={() => {
+              setShowSharingSheet(false);
+              setTimeout(() => {
+                Share.shareSingle(
+                  Object.assign(selectedVideo, {
+                    social: 'email',
+                  }),
+                );
+              }, 300);
+            }}>
+            Email
+          </Button>
+          <Button
+            iconSrc={GlobalInclude.Assets.ShareClipboard}
+            onPress={() => {
+              setShowSharingSheet(false);
+              setTimeout(() => {
+                if (typeof selectedVideo.url !== undefined) {
+                  Clipboard.setString(selectedVideo.url);
+                  Alert.alert('Link Copied');
+                }
+              }, 300);
+            }}>
+            Copy Link
+          </Button>
+          <Button
+            iconSrc={GlobalInclude.Assets.ShareMore}
+            onPress={() => {
+              setShowSharingSheet(false);
+              setTimeout(() => {
+                Share.open(selectedVideo);
+              }, 300);
+            }}>
+            More
+          </Button>
+        </ShareSheet>
       </SafeAreaView>
     </View>
   );
@@ -300,7 +450,6 @@ const style = StyleSheet.create({
   childVideoContainer: {
     height: scale(100),
     width: '100%',
-    borderRadius: scale(6),
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
     justifyContent: 'center',

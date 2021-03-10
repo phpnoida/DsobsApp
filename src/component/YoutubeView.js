@@ -18,7 +18,10 @@ const YoutubeView = (props) => {
   const [playVideo, setPlayVideo] = useState(false);
   const [thumbnail] = useState(Helper.loadYoutubeThumb(youtubeId));
 
-  console.log('thumbnail', thumbnail);
+  // const [thumbnail] = useState(
+  //   youtubeId !== undefined ? Helper.loadYoutubeThumb(youtubeId) : null,
+  // );
+
   return (
     <View>
       {playVideo ? (
