@@ -1,6 +1,7 @@
 import {Linking, Alert, Platform} from 'react-native';
 import {APP_NAME, WHATSAPP_NO} from '../helper/Constants';
 import PushNotification from 'react-native-push-notification';
+import PushNotificationIOS from '@react-native-community/push-notification-ios';
 const Helpers = {
   ToastShow: function (name, style) {
     if (style === 'success') {
@@ -201,40 +202,56 @@ const Helpers = {
   },
   presentNotification: function (from, notification) {
     console.log('from', from);
+    //console.log('notification', notification.data);
+
     const title = notification.data.title;
     const body = notification.data.body;
     const icon = notification.data.imagelink;
 
-    var notificationObj = {
-      title: title,
-      message: body,
-      bigText: body,
-      bigPictureUrl: icon,
-      vibrate: true,
-      vibration: 100,
-      onlyAlertOnce: true,
-      allowWhileIdle: true,
-      invokeApp: true,
-      importance: 'max',
-      priority: 'max',
-      ignoreInForeground: false,
-      foreground: true,
-      channelId: APP_NAME,
-    };
-    if (icon !== '') {
-      notificationObj.largeIconUrl = icon;
-    } else {
-      notificationObj.largeIcon = 'ic_launcher';
-    }
-
-    PushNotification.channelExists(APP_NAME, (status) => {
-      console.log('status', status);
-      if (status) {
-        PushNotification.presentLocalNotification(notificationObj);
-      }else{
-        
+    if (Platform.OS === 'android') {
+      var notificationObj = {
+        title: title,
+        message: body,
+        bigText: body,
+        bigPictureUrl: icon,
+        vibrate: true,
+        vibration: 100,
+        onlyAlertOnce: true,
+        allowWhileIdle: true,
+        invokeApp: true,
+        importance: 'max',
+        priority: 'max',
+        ignoreInForeground: false,
+        foreground: true,
+        channelId: APP_NAME,
+      };
+      if (icon !== '') {
+        notificationObj.largeIconUrl = icon;
+      } else {
+        notificationObj.largeIcon = 'ic_launcher';
       }
-    });
+      PushNotification.channelExists(APP_NAME, (status) => {
+        console.log('status', status);
+        if (status) {
+          PushNotification.presentLocalNotification(notificationObj);
+        } else {
+        }
+      });
+    } else if (Platform.OS === 'ios') {
+      let details = {
+        alertBody: body,
+        alertTitle: title,
+        alertAction: 'view',
+        userInfo: notification.data,
+      };
+      console.log('nextAppState', global.nextAppState);
+      console.log('isNotificationTap', global.isNotificationTap);
+
+      if (global.nextAppState === 'active' && !global.isNotificationTap) {
+        PushNotificationIOS.presentLocalNotification(details);
+      }
+    }
+    return Promise.resolve();
   },
 };
 

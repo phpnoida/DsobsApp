@@ -22,6 +22,14 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
+	<key>FirebaseScreenReportingEnabled</key>
+	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>whatsapp</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -40,7 +48,7 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>$(PRODUCT_NAME) would like access to your photo gallery to upload profile picture in $(PRODUCT_NAME) don't worry we are saving your picture in secure place and will not upload anywere without authorization.</string>
+	<string>$(PRODUCT_NAME) would like access to your photo gallery to upload profile picture in $(PRODUCT_NAME) don&apos;t worry we are saving your picture in secure place and will not upload anywere without authorization.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Font AwesomeFreeSolid-900.ttf</string>

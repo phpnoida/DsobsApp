@@ -23,6 +23,7 @@ import messaging from '@react-native-firebase/messaging';
 import Helper from './src/helper/Helper';
 import {useDispatch} from 'react-redux';
 import {refreshScreen} from './src/reducer/NotificationReducer';
+import PushNotificationIOS from '@react-native-community/push-notification-ios';
 
 let baseRoute = 'AppTour';
 const deviceWidth = Dimensions.get('window').width;
@@ -62,8 +63,24 @@ const App = () => {
      * Notification start
      *
      */
+
+    // PushNotificationIOS.addEventListener('notification', (notification) => {
+    //   console.log('notification', notification.getData());
+    //   if (
+    //     notification.getData() !== undefined &&
+    //     notification.getData() !== null
+    //   ) {
+    //     let data = notification.getData();
+    //     let notificationObj = {};
+    //     notificationObj.data = data;
+    //     global.isNotificationTap = false;
+    //     handleNotification('notification', notificationObj);
+    //   }
+    // });
+
     const onMessage = messaging().onMessage(async (remoteMessage) => {
-      global.isNotificationTap = true;
+      //global.isNotificationTap = true;
+      console.log('83');
       handleNotification('onMessage', remoteMessage);
     });
 
@@ -72,6 +89,7 @@ const App = () => {
         'Notification caused app to open from background state:',
         remoteMessage,
       );
+      console.log('92');
       global.isNotificationTap = true;
     });
 
@@ -149,6 +167,7 @@ const App = () => {
   };
 
   const _handleAppStateChange = (nextState) => {
+    global.nextAppState = nextState;
     if (nextState === 'active' && currentState === 'active') {
       if (global.notification !== undefined && global.notification !== null) {
         dispatch(refreshScreen());
@@ -194,7 +213,7 @@ const App = () => {
       authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
     if (enabled) {
-     // console.log('Authorization status:', authStatus);
+      // console.log('Authorization status:', authStatus);
     }
   }
 
