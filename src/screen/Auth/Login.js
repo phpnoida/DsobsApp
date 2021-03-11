@@ -18,6 +18,7 @@ import GlobalInclude from '../../globalInclude/Globalinclude';
 import Helper from '../../helper/Helper';
 import AsyncStorage from '@react-native-community/async-storage';
 import {requestAuthCode, verifyAuthCode} from '../../Actions/UserActions';
+import {sendPresenceStatus} from '../../Actions/CommonActions';
 import CountryPicker from 'react-native-country-picker-modal';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import g from '../../theme/global';
@@ -242,50 +243,16 @@ const Login = ({navigation}) => {
               response.response !== null
             ) {
               let data = response.data;
-              console.log('loginresponse', data);
+
               if (data.status) {
                 if (data.data && data.data !== null) {
                   let userDetails = data.data;
+
                   let tokens = userDetails.tokens;
-                  let fcmTopic = userDetails.fcmTopic;
-                  global.userDetails = userDetails;
+
                   global.accessToken = tokens.accessToken;
-                  global.userId = userDetails._id;
-                  global.firstName = userDetails.firstName;
-                  global.lastName = userDetails.lastName;
-                  clearInterval(timerInterval);
-                  console.log('fcmTopic', fcmTopic);
-                  messaging()
-                    .subscribeToTopic(fcmTopic)
-                    .then(() => {
-                      AsyncStorage.setItem('loggedIn', '1').then(() => {
-                        AsyncStorage.setItem(
-                          'userDetails',
-                          JSON.stringify(userDetails),
-                        ).then(() => {
-                          AsyncStorage.setItem(
-                            'accessToken',
-                            tokens.accessToken,
-                          ).then(() => {
-                            AsyncStorage.setItem(
-                              'refreshToken',
-                              tokens.refreshToken,
-                            ).then(() => {
-                              AsyncStorage.setItem('fcmTopic', fcmTopic).then(
-                                () => {
-                                  navigation.dispatch(
-                                    CommonActions.reset({
-                                      index: 0,
-                                      routes: [{name: 'Profile'}],
-                                    }),
-                                  );
-                                },
-                              );
-                            });
-                          });
-                        });
-                      });
-                    });
+
+                  sendUserPresence(userDetails);
                 }
               }
             }
@@ -297,6 +264,57 @@ const Login = ({navigation}) => {
         },
       );
     }
+  };
+
+  const sendUserPresence = (userDetails) => {
+    sendPresenceStatus(
+      (response) => {
+        console.log('details');
+        completeLogin(userDetails);
+      },
+      (statusCode, error) => {
+        console.log('error');
+      },
+    );
+  };
+
+  const completeLogin = (userDetails) => {
+    let tokens = userDetails.tokens;
+    let fcmTopic = userDetails.fcmTopic;
+    global.userDetails = userDetails;
+    global.accessToken = tokens.accessToken;
+    global.userId = userDetails._id;
+    global.firstName = userDetails.firstName;
+    global.lastName = userDetails.lastName;
+    clearInterval(timerInterval);
+    console.log('fcmTopic', fcmTopic);
+    messaging()
+      .subscribeToTopic(fcmTopic)
+      .then(() => {
+        AsyncStorage.setItem('loggedIn', '1').then(() => {
+          AsyncStorage.setItem('userDetails', JSON.stringify(userDetails)).then(
+            () => {
+              AsyncStorage.setItem('accessToken', tokens.accessToken).then(
+                () => {
+                  AsyncStorage.setItem(
+                    'refreshToken',
+                    tokens.refreshToken,
+                  ).then(() => {
+                    AsyncStorage.setItem('fcmTopic', fcmTopic).then(() => {
+                      navigation.dispatch(
+                        CommonActions.reset({
+                          index: 0,
+                          routes: [{name: 'Profile'}],
+                        }),
+                      );
+                    });
+                  });
+                },
+              );
+            },
+          );
+        });
+      });
   };
 
   const makeAuthTimer = () => {

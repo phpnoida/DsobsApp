@@ -301,8 +301,8 @@ const UserProfile = ({route, navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.fill}>
-      <MyStatusBar barStyle="light-content" />
+    <View style={GlobalInclude.AppStyle.topSpace}>
+      <MyStatusBar barStyle={'light-content'} />
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.parentStyle}>
           {isLoading ? (
@@ -322,7 +322,7 @@ const UserProfile = ({route, navigation}) => {
                         grid.alignItems,
                         g.p15,
                         g.pl0,
-                        {paddingBottom: 0},
+                        {paddingBottom: 0, paddingTop: 0},
                       ]}>
                       <TouchableOpacity
                         activeOpacity={1}

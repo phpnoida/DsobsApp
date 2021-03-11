@@ -11,10 +11,12 @@ import {getStatusBarHeight} from 'react-native-iphone-x-helper';
 const MyStatusBar = ({backgroundColor, ...props}) => (
   <View style={[styles.statusBar, {backgroundColor}]}>
     <SafeAreaView>
-      <StatusBar backgroundColor={backgroundColor} {...props} />
+      <StatusBar backgroundColor={backgroundColor} {...props} hidden />
     </SafeAreaView>
   </View>
 );
+
+//hidden={Platform.OS === 'ios' ? true : false}
 const STATUSBAR_HEIGHT = StatusBar.currentHeight;
 
 const styles = StyleSheet.create({
@@ -22,7 +24,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statusBar: {
-    height: Platform.OS === 'android' ? 0 : getStatusBarHeight(),
+    height: Platform.OS === 'android' ? 0 : 0,
     backgroundColor: '#fff',
   },
 });

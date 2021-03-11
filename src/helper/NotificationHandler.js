@@ -1,5 +1,5 @@
 import PushNotification from 'react-native-push-notification';
-import Helper from './Helper';
+
 class NotificationHandler {
   onNotification(notification) {
     console.log('onNotification:', notification);

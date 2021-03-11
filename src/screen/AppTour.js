@@ -52,7 +52,7 @@ const AppTour = ({navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.fill}>
+    <View style={GlobalInclude.AppStyle.topSpace}>
       <MyStatusBar backgroundColor={'#fff'} />
       <View style={GlobalInclude.AppStyle.parentStyle}>
         <View style={[grid.rowdir, grid.justifyContentRight]}>

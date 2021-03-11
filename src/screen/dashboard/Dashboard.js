@@ -245,24 +245,43 @@ const Dashboard = ({props, navigation}) => {
           onPress={() => {
             if (item.item.title === 'Logout') {
               bottomSheetProfile.close();
-              let fcmTopic = global.userDetails.fcmTopic;
-              AsyncStorage.clear().then(() => {
-                messaging()
-                  .unsubscribeFromTopic(fcmTopic)
-                  .then(() => {
-                    global.userDetails = null;
-                    global.accessToken = null;
-                    global.userId = null;
-                    global.firstName = null;
-                    global.lastName = null;
-                    navigation.dispatch(
-                      CommonActions.reset({
-                        index: 0,
-                        routes: [{name: 'Login'}],
-                      }),
-                    );
-                  });
-              });
+              if (
+                global.userDetails !== undefined &&
+                global.userDetails !== null
+              ) {
+                let fcmTopic = global.userDetails.fcmTopic;
+                AsyncStorage.clear().then(() => {
+                  messaging()
+                    .unsubscribeFromTopic(fcmTopic)
+                    .then(() => {
+                      global.userDetails = null;
+                      global.accessToken = null;
+                      global.userId = null;
+                      global.firstName = null;
+                      global.lastName = null;
+                      navigation.dispatch(
+                        CommonActions.reset({
+                          index: 0,
+                          routes: [{name: 'Login'}],
+                        }),
+                      );
+                    });
+                });
+              } else {
+                AsyncStorage.clear().then(() => {
+                  global.userDetails = null;
+                  global.accessToken = null;
+                  global.userId = null;
+                  global.firstName = null;
+                  global.lastName = null;
+                  navigation.dispatch(
+                    CommonActions.reset({
+                      index: 0,
+                      routes: [{name: 'Login'}],
+                    }),
+                  );
+                });
+              }
             } else {
               if (item.item.screenName !== '') {
                 bottomSheetProfile.close();
@@ -954,7 +973,7 @@ const Dashboard = ({props, navigation}) => {
                   paddingStart: scale(15),
                   paddingEnd: scale(15),
                   paddingTop: scale(6),
-                  paddingBottom: scale(15),
+                  paddingBottom: scale(25),
                 },
               ]}>
               <TouchableOpacity

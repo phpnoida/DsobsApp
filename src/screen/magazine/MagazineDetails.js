@@ -33,6 +33,7 @@ import Share, {ShareSheet, Button} from 'react-native-share';
 import ZoomImage from '../../component/ZoomImage';
 import FastImage from 'react-native-fast-image';
 import {createImageProgress} from 'react-native-image-progress';
+import MyStatusBar from '../../component/MyStatusBar';
 
 const AnimatedFastImage = Animated.createAnimatedComponent(FastImage);
 const ProgressImage = createImageProgress(AnimatedFastImage);
@@ -70,346 +71,349 @@ const MagazineDetails = ({route, navigation}) => {
   };
 
   return (
-    <SafeAreaView style={GlobalInclude.AppStyle.fill}>
-      <View style={GlobalInclude.AppStyle.parentStyle}>
-        <View style={GlobalInclude.AppStyle.fill}>
-          {pageContent === null ? (
-            <View style={GlobalInclude.AppStyle.fillCenter}>
-              <Image
-                style={{height: scale(100), width: scale(100)}}
-                source={GlobalInclude.Assets.AppLogo}
-              />
-              <Text style={[g.colorGray8, g.FHNM, g.fs18]}>
-                No Content Found
-              </Text>
-            </View>
-          ) : (
-            <View style={GlobalInclude.AppStyle.fill}>
-              <ScrollableTabView
-                underlineColor={'#ffffff'}
-                style={{paddingLeft: 0, paddingRight: 0}}
-                tabBarActiveTextColor={'#2b3252'}
-                tabBarInactiveTextColor={'#bababa'}
-                tabBarTextStyle={{
-                  fontSize: scale(15),
-                  fontFamily: 'Lato-Regular',
-                }}
-                tabBarUnderlineStyle={{height: 0}}
-                onChangeTab={(index) => {
-                  shareOptions.url = pageContent[index.i].shareLink;
-                  console.log('data', pageContent[index.i]);
-                }}
-                initialPage={currentIndex}
-                renderTabBar={() => <View />}>
-                {pageContent.map((content, index) => {
-                  console.log('content', content);
-                  return (
-                    <View style={GlobalInclude.AppStyle.fill} key={index}>
-                      <View
-                        style={[
-                          GlobalInclude.AppStyle.row,
-                          grid.alignItems,
-                          grid.justifyContent,
-                          g.mb10,
-                          g.ml15,
-                        ]}>
-                        <View style={grid.col}>
-                          <View style={[grid.rowrow, grid.alignItems]}>
-                            <TouchableOpacity
-                              onPress={() => navigation.goBack()}>
-                              <GlobalInclude.BaseIcon
-                                containerStyle={styles.backIcon}
-                                iconColor={'#2b3252'}
-                                iconName={'arrowleft'}
-                                iconSize={scale(30)}
-                                iconType={IconType[10]}
-                              />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                              onPress={() => {
-                                //setShowShare(true);
-                                Alert.alert('Coming soon!');
-                              }}
-                              style={{marginStart: scale(5)}}>
-                              <GlobalInclude.BaseIcon
-                                containerStyle={styles.backIcon}
-                                iconColor={'#2b3252'}
-                                iconName={'sharealt'}
-                                iconSize={scale(24)}
-                                iconType={IconType[10]}
-                              />
-                            </TouchableOpacity>
-                          </View>
-                        </View>
+    <View style={GlobalInclude.AppStyle.topSpace}>
+      <MyStatusBar barStyle={'light-content'} hidden />
+      <SafeAreaView style={GlobalInclude.AppStyle.fill}>
+        <View style={GlobalInclude.AppStyle.parentStyle}>
+          <View style={GlobalInclude.AppStyle.fill}>
+            {pageContent === null ? (
+              <View style={GlobalInclude.AppStyle.fillCenter}>
+                <Image
+                  style={{height: scale(100), width: scale(100)}}
+                  source={GlobalInclude.Assets.AppLogo}
+                />
+                <Text style={[g.colorGray8, g.FHNM, g.fs18]}>
+                  No Content Found
+                </Text>
+              </View>
+            ) : (
+              <View style={GlobalInclude.AppStyle.fill}>
+                <ScrollableTabView
+                  underlineColor={'#ffffff'}
+                  style={{paddingLeft: 0, paddingRight: 0}}
+                  tabBarActiveTextColor={'#2b3252'}
+                  tabBarInactiveTextColor={'#bababa'}
+                  tabBarTextStyle={{
+                    fontSize: scale(15),
+                    fontFamily: 'Lato-Regular',
+                  }}
+                  tabBarUnderlineStyle={{height: 0}}
+                  onChangeTab={(index) => {
+                    shareOptions.url = pageContent[index.i].shareLink;
+                    console.log('data', pageContent[index.i]);
+                  }}
+                  initialPage={currentIndex}
+                  renderTabBar={() => <View />}>
+                  {pageContent.map((content, index) => {
+                    console.log('content', content);
+                    return (
+                      <View style={GlobalInclude.AppStyle.fill} key={index}>
                         <View
                           style={[
-                            grid.rowrow,
-                            grid.alignItemsBottom,
-                            grid.justifyContent,
-                            {marginEnd: scale(10), height: 30},
-                          ]}>
-                          <TouchableOpacity
-                            activeOpacity={1}
-                            onPress={() => {
-                              setCurrentFontSize(scale(12));
-                              setSelectedSize(1);
-                            }}>
-                            <Text
-                              style={[
-                                selectedSize === 1
-                                  ? g.colorBlue
-                                  : g.colordarkGray,
-                                selectedSize === 1 ? g.textunderline : null,
-                                {
-                                  lineHeight: 18,
-                                  fontSize: 12,
-                                },
-                                g.FHNB,
-                              ]}>
-                              A
-                            </Text>
-                          </TouchableOpacity>
-                          <View style={{marginHorizontal: scale(4)}} />
-                          <TouchableOpacity
-                            activeOpacity={1}
-                            onPress={() => {
-                              setCurrentFontSize(scale(16));
-                              setSelectedSize(2);
-                            }}>
-                            <Text
-                              style={[
-                                selectedSize === 2
-                                  ? g.colorBlue
-                                  : g.colordarkGray,
-                                selectedSize === 2 ? g.textunderline : null,
-                                {lineHeight: 20, fontSize: 15},
-                                g.FHNB,
-                              ]}>
-                              A
-                            </Text>
-                          </TouchableOpacity>
-                          <View style={{marginHorizontal: scale(3)}} />
-                          <TouchableOpacity
-                            activeOpacity={1}
-                            onPress={() => {
-                              setCurrentFontSize(scale(20));
-                              setSelectedSize(3);
-                            }}>
-                            <Text
-                              style={[
-                                selectedSize === 3
-                                  ? g.colorBlue
-                                  : g.colordarkGray,
-                                selectedSize === 3 ? g.textunderline : null,
-                                {lineHeight: 20, fontSize: 20},
-                                g.FHNB,
-                              ]}>
-                              A
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                      <ScrollView
-                        style={GlobalInclude.AppStyle.fill}
-                        key={index}>
-                        <View
-                          style={[
-                            g.p10,
-                            g.bgWhite,
-                            grid.rowrow,
-                            grid.justifyContent,
+                            GlobalInclude.AppStyle.row,
                             grid.alignItems,
+                            grid.justifyContent,
+                            g.mb10,
+                            g.ml15,
                           ]}>
-                          <View style={[grid.col]}>
-                            <Text
-                              style={{
-                                fontSize: currentFontSize + scale(2),
-                                color: '#000000',
-                                marginBottom: scale(5),
-                                fontWeight: 'bold',
+                          <View style={grid.col}>
+                            <View style={[grid.rowrow, grid.alignItems]}>
+                              <TouchableOpacity
+                                onPress={() => navigation.goBack()}>
+                                <GlobalInclude.BaseIcon
+                                  containerStyle={styles.backIcon}
+                                  iconColor={'#2b3252'}
+                                  iconName={'arrowleft'}
+                                  iconSize={scale(30)}
+                                  iconType={IconType[10]}
+                                />
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                onPress={() => {
+                                  //setShowShare(true);
+                                  Alert.alert('Coming soon!');
+                                }}
+                                style={{marginStart: scale(5)}}>
+                                <GlobalInclude.BaseIcon
+                                  containerStyle={styles.backIcon}
+                                  iconColor={'#2b3252'}
+                                  iconName={'sharealt'}
+                                  iconSize={scale(24)}
+                                  iconType={IconType[10]}
+                                />
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                          <View
+                            style={[
+                              grid.rowrow,
+                              grid.alignItemsBottom,
+                              grid.justifyContent,
+                              {marginEnd: scale(10), height: 30},
+                            ]}>
+                            <TouchableOpacity
+                              activeOpacity={1}
+                              onPress={() => {
+                                setCurrentFontSize(scale(12));
+                                setSelectedSize(1);
                               }}>
-                              {content.header}
-                            </Text>
-                            <Text
-                              style={{
-                                fontSize: currentFontSize,
-                                color: '#000000',
-                                fontWeight: 'bold',
+                              <Text
+                                style={[
+                                  selectedSize === 1
+                                    ? g.colorBlue
+                                    : g.colordarkGray,
+                                  selectedSize === 1 ? g.textunderline : null,
+                                  {
+                                    lineHeight: 18,
+                                    fontSize: 12,
+                                  },
+                                  g.FHNB,
+                                ]}>
+                                A
+                              </Text>
+                            </TouchableOpacity>
+                            <View style={{marginHorizontal: scale(4)}} />
+                            <TouchableOpacity
+                              activeOpacity={1}
+                              onPress={() => {
+                                setCurrentFontSize(scale(16));
+                                setSelectedSize(2);
                               }}>
-                              {content.subTitle}
-                            </Text>
+                              <Text
+                                style={[
+                                  selectedSize === 2
+                                    ? g.colorBlue
+                                    : g.colordarkGray,
+                                  selectedSize === 2 ? g.textunderline : null,
+                                  {lineHeight: 20, fontSize: 15},
+                                  g.FHNB,
+                                ]}>
+                                A
+                              </Text>
+                            </TouchableOpacity>
+                            <View style={{marginHorizontal: scale(3)}} />
+                            <TouchableOpacity
+                              activeOpacity={1}
+                              onPress={() => {
+                                setCurrentFontSize(scale(20));
+                                setSelectedSize(3);
+                              }}>
+                              <Text
+                                style={[
+                                  selectedSize === 3
+                                    ? g.colorBlue
+                                    : g.colordarkGray,
+                                  selectedSize === 3 ? g.textunderline : null,
+                                  {lineHeight: 20, fontSize: 20},
+                                  g.FHNB,
+                                ]}>
+                                A
+                              </Text>
+                            </TouchableOpacity>
                           </View>
                         </View>
-                        <HTML
-                          key={index}
-                          source={{
-                            html:
-                              '<div>' +
-                              content.body
-                                .replace(/<p[^>]*><br><\/p>/g, '<br>')
-                                .replace(/<h3[^>]*><br><\/h3>/g, '')
-                                .replace(/(<br\s*\/?>){1,}/gi, '<br>')
-                                .replace(/(\r\n|\n|\r)/gm, '')
-                                .replace(/(<br\s*\/?>)/gi, '') +
-                              '</div>',
-                          }}
-                          baseFontStyle={{fontSize: currentFontSize}}
-                          textSelectable={false}
-                          defaultTextProps={{allowFontScaling: true}}
-                          tagsStyles={richTextStyles}
-                          allowWhitespaceNodes={false}
-                          containerStyle={styles.container}
-                          contentWidth={Dimensions.get('window').width - 30}
-                          computeEmbeddedMaxWidth={computeEmbeddedMaxWidth}
-                          renderers={{
-                            img: (
-                              htmlAttribs,
-                              children,
-                              convertedCSSStyles,
-                              passProps,
-                            ) => {
-                              return (
-                                <TouchableOpacity
-                                  onPress={() => {
-                                    imageArray = [{url: htmlAttribs.src}];
-                                    setShowImageModal(true);
-                                  }}>
-                                  <ProgressImage
-                                    source={{uri: htmlAttribs.src}}
-                                    style={{aspectRatio: 1}}
-                                    imageStyle={{
-                                      aspectRatio: 1,
-                                      opacity: opacity,
-                                      transform: [
-                                        {
-                                          scale: opacity.interpolate({
-                                            inputRange: [0, 1.0],
-                                            outputRange: [0.85, 1.0],
-                                          }),
-                                        },
-                                      ],
-                                    }}
-                                    indicatorProps={{
-                                      animated: true,
-                                      borderColor: 'red',
-                                      borderWidth: 2,
-                                      color: '#2b3252',
-                                      direction:
-                                        Platform.os === 'android'
-                                          ? 'clockwise'
-                                          : 'rtl',
-                                      indeterminate: true,
-                                      progress: 100,
-                                      strokeCap: 'butt',
-                                      size: scale(20),
-                                    }}
-                                    onLoad={() => {
-                                      Animated.timing(opacity, {
-                                        toValue: 1.0,
-                                        duration: 200,
-                                        useNativeDriver: true,
-                                      }).start();
-                                    }}
-                                    resizeMode={FastImage.resizeMode.contain}
-                                    threshold={20}
-                                  />
-                                </TouchableOpacity>
-                              );
-                            },
-                          }}
-                        />
-                      </ScrollView>
-                    </View>
-                  );
-                })}
-              </ScrollableTabView>
-            </View>
-          )}
+                        <ScrollView
+                          style={GlobalInclude.AppStyle.fill}
+                          key={index}>
+                          <View
+                            style={[
+                              g.p10,
+                              g.bgWhite,
+                              grid.rowrow,
+                              grid.justifyContent,
+                              grid.alignItems,
+                            ]}>
+                            <View style={[grid.col]}>
+                              <Text
+                                style={{
+                                  fontSize: currentFontSize + scale(2),
+                                  color: '#000000',
+                                  marginBottom: scale(5),
+                                  fontWeight: 'bold',
+                                }}>
+                                {content.header}
+                              </Text>
+                              <Text
+                                style={{
+                                  fontSize: currentFontSize,
+                                  color: '#000000',
+                                  fontWeight: 'bold',
+                                }}>
+                                {content.subTitle}
+                              </Text>
+                            </View>
+                          </View>
+                          <HTML
+                            key={index}
+                            source={{
+                              html:
+                                '<div>' +
+                                content.body
+                                  .replace(/<p[^>]*><br><\/p>/g, '<br>')
+                                  .replace(/<h3[^>]*><br><\/h3>/g, '')
+                                  .replace(/(<br\s*\/?>){1,}/gi, '<br>')
+                                  .replace(/(\r\n|\n|\r)/gm, '')
+                                  .replace(/(<br\s*\/?>)/gi, '') +
+                                '</div>',
+                            }}
+                            baseFontStyle={{fontSize: currentFontSize}}
+                            textSelectable={false}
+                            defaultTextProps={{allowFontScaling: true}}
+                            tagsStyles={richTextStyles}
+                            allowWhitespaceNodes={false}
+                            containerStyle={styles.container}
+                            contentWidth={Dimensions.get('window').width - 30}
+                            computeEmbeddedMaxWidth={computeEmbeddedMaxWidth}
+                            renderers={{
+                              img: (
+                                htmlAttribs,
+                                children,
+                                convertedCSSStyles,
+                                passProps,
+                              ) => {
+                                return (
+                                  <TouchableOpacity
+                                    onPress={() => {
+                                      imageArray = [{url: htmlAttribs.src}];
+                                      setShowImageModal(true);
+                                    }}>
+                                    <ProgressImage
+                                      source={{uri: htmlAttribs.src}}
+                                      style={{aspectRatio: 1}}
+                                      imageStyle={{
+                                        aspectRatio: 1,
+                                        opacity: opacity,
+                                        transform: [
+                                          {
+                                            scale: opacity.interpolate({
+                                              inputRange: [0, 1.0],
+                                              outputRange: [0.85, 1.0],
+                                            }),
+                                          },
+                                        ],
+                                      }}
+                                      indicatorProps={{
+                                        animated: true,
+                                        borderColor: 'red',
+                                        borderWidth: 2,
+                                        color: '#2b3252',
+                                        direction:
+                                          Platform.os === 'android'
+                                            ? 'clockwise'
+                                            : 'rtl',
+                                        indeterminate: true,
+                                        progress: 100,
+                                        strokeCap: 'butt',
+                                        size: scale(20),
+                                      }}
+                                      onLoad={() => {
+                                        Animated.timing(opacity, {
+                                          toValue: 1.0,
+                                          duration: 200,
+                                          useNativeDriver: true,
+                                        }).start();
+                                      }}
+                                      resizeMode={FastImage.resizeMode.contain}
+                                      threshold={20}
+                                    />
+                                  </TouchableOpacity>
+                                );
+                              },
+                            }}
+                          />
+                        </ScrollView>
+                      </View>
+                    );
+                  })}
+                </ScrollableTabView>
+              </View>
+            )}
+          </View>
         </View>
-      </View>
-      <ShareSheet visible={showShare} onCancel={onCancelShare}>
-        <Button
-          iconSrc={{uri: TWITTER_ICON}}
-          onPress={() => {
-            onCancelShare();
-            shareOptions.social = 'twitter';
-            setTimeout(() => {
-              Share.shareSingle(shareOptions, Share.Social.TWITTER);
-            }, 300);
-          }}>
-          Twitter
-        </Button>
-        <Button
-          iconSrc={{uri: FACEBOOK_ICON}}
-          onPress={() => {
-            onCancelShare();
-            shareOptions.social = 'facebook';
-            setTimeout(() => {
-              Share.shareSingle(shareOptions, Share.Social.FACEBOOK);
-            }, 300);
-          }}>
-          Facebook
-        </Button>
-        <Button
-          iconSrc={{uri: WHATSAPP_ICON}}
-          onPress={() => {
-            onCancelShare();
-            shareOptions.social = 'whatsapp';
-            setTimeout(() => {
-              Share.shareSingle(shareOptions, Share.Social.WHATSAPP);
-            }, 300);
-          }}>
-          Whatsapp
-        </Button>
-        <Button
-          iconSrc={{uri: EMAIL_ICON}}
-          onPress={() => {
-            onCancelShare();
-            shareOptions.social = 'email';
-            setTimeout(() => {
-              Share.shareSingle(shareOptions, Share.Social.EMAIL);
-            }, 300);
-          }}>
-          Email
-        </Button>
-        <Button
-          iconSrc={{uri: CLIPBOARD_ICON}}
-          onPress={() => {
-            onCancelShare();
-            setTimeout(() => {
-              if (typeof shareOptions.url !== undefined) {
-                Clipboard.setString(shareOptions.url);
-                if (Platform.OS === 'android') {
-                  ToastAndroid.show('Link Copied', ToastAndroid.SHORT);
-                } else if (Platform.OS === 'ios') {
-                  Alert.alert('Link Copied');
+        <ShareSheet visible={showShare} onCancel={onCancelShare}>
+          <Button
+            iconSrc={{uri: TWITTER_ICON}}
+            onPress={() => {
+              onCancelShare();
+              shareOptions.social = 'twitter';
+              setTimeout(() => {
+                Share.shareSingle(shareOptions, Share.Social.TWITTER);
+              }, 300);
+            }}>
+            Twitter
+          </Button>
+          <Button
+            iconSrc={{uri: FACEBOOK_ICON}}
+            onPress={() => {
+              onCancelShare();
+              shareOptions.social = 'facebook';
+              setTimeout(() => {
+                Share.shareSingle(shareOptions, Share.Social.FACEBOOK);
+              }, 300);
+            }}>
+            Facebook
+          </Button>
+          <Button
+            iconSrc={{uri: WHATSAPP_ICON}}
+            onPress={() => {
+              onCancelShare();
+              shareOptions.social = 'whatsapp';
+              setTimeout(() => {
+                Share.shareSingle(shareOptions, Share.Social.WHATSAPP);
+              }, 300);
+            }}>
+            Whatsapp
+          </Button>
+          <Button
+            iconSrc={{uri: EMAIL_ICON}}
+            onPress={() => {
+              onCancelShare();
+              shareOptions.social = 'email';
+              setTimeout(() => {
+                Share.shareSingle(shareOptions, Share.Social.EMAIL);
+              }, 300);
+            }}>
+            Email
+          </Button>
+          <Button
+            iconSrc={{uri: CLIPBOARD_ICON}}
+            onPress={() => {
+              onCancelShare();
+              setTimeout(() => {
+                if (typeof shareOptions.url !== undefined) {
+                  Clipboard.setString(shareOptions.url);
+                  if (Platform.OS === 'android') {
+                    ToastAndroid.show('Link Copied', ToastAndroid.SHORT);
+                  } else if (Platform.OS === 'ios') {
+                    Alert.alert('Link Copied');
+                  }
                 }
-              }
-            }, 300);
-          }}>
-          Copy Link
-        </Button>
-        <Button
-          iconSrc={{uri: MORE_ICON}}
-          onPress={() => {
-            onCancelShare();
-            setTimeout(() => {
-              Share.open(shareOptions);
-            }, 300);
-          }}>
-          More
-        </Button>
-      </ShareSheet>
+              }, 300);
+            }}>
+            Copy Link
+          </Button>
+          <Button
+            iconSrc={{uri: MORE_ICON}}
+            onPress={() => {
+              onCancelShare();
+              setTimeout(() => {
+                Share.open(shareOptions);
+              }, 300);
+            }}>
+            More
+          </Button>
+        </ShareSheet>
 
-      {showImageModal && (
-        <ZoomImage
-          mediaContent={imageArray}
-          onClose={() => {
-            setShowImageModal(!showImageModal);
-          }}
-        />
-      )}
-    </SafeAreaView>
+        {showImageModal && (
+          <ZoomImage
+            mediaContent={imageArray}
+            onClose={() => {
+              setShowImageModal(!showImageModal);
+            }}
+          />
+        )}
+      </SafeAreaView>
+    </View>
   );
 };
 

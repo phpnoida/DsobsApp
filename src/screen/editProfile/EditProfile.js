@@ -19,6 +19,7 @@ import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
 import {CommonActions} from '@react-navigation/native';
 import Globalinclude from '../../globalInclude/Globalinclude';
+import MyStatusBar from '../../component/MyStatusBar';
 
 import BasicProfile from './BasicProfile';
 import AboutMe from './AboutMe';
@@ -302,7 +303,8 @@ const EditProfile = ({route, navigation}) => {
    */
 
   return (
-    <View style={GlobalInclude.AppStyle.fill}>
+    <View style={GlobalInclude.AppStyle.topSpace}>
+      <MyStatusBar barStyle={'light-content'} />
       <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
         <View
           style={[
@@ -322,6 +324,7 @@ const EditProfile = ({route, navigation}) => {
                   g.p15,
                   g.pl0,
                   g.pb0,
+                  g.pt0,
                 ]}>
                 <View style={grid.flex1}>
                   <TouchableOpacity

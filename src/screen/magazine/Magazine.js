@@ -179,8 +179,8 @@ const Magazine = ({route, navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.fill}>
-      <MyStatusBar barStyle="light-content" />
+    <View style={GlobalInclude.AppStyle.topSpace}>
+      <MyStatusBar barStyle={'light-content'} hidden />
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.parentStyle}>
           <View
