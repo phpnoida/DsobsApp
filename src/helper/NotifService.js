@@ -1,16 +1,16 @@
 import PushNotification from 'react-native-push-notification';
-import NotificationHandler from './NotificationHandler';
+//import NotificationHandler from './NotificationHandler';
 import {APP_NAME} from './Constants';
 
 export default class NotifService {
-  // constructor(onRegister, onNotification) {
+  // constructor(onRegister, ) {
   //   this.lastId = 0;
   //   this.lastChannelCounter = 0;
 
   //   this.createDefaultChannels();
 
   //   NotificationHandler.attachRegister(onRegister);
-  //   NotificationHandler.attachNotification(onNotification);
+  //
 
   //   // Clear badge number at start
   //   PushNotification.getApplicationIconBadgeNumber(function (number) {
@@ -26,6 +26,9 @@ export default class NotifService {
 
   constructor() {
     this.createDefaultChannels();
+    // NotificationHandler.attachNotification((onNotification) => {
+    //   console.log('30', onNotification);
+    // });
   }
 
   createDefaultChannels() {

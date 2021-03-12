@@ -36,7 +36,7 @@ export default class RadioButton extends Component {
                       value: res.key,
                     });
                   }}>
-                  <View style={Globalinclude.AppStyle.fillRow}>
+                  <View style={Globalinclude.AppStyle.fillRowCenter}>
                     <View style={Globalinclude.AppStyle.radioCircle}>
                       {(value === res.key || res.text === defaultSelected) && (
                         <View style={Globalinclude.AppStyle.selectedRb} />

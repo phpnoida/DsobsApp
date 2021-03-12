@@ -23,6 +23,7 @@ import CityListSheet from 'react-native-raw-bottom-sheet';
 import RadioButton from '../../component/RadioButton';
 import BottomSheetHeader from '../../component/BottomSheetHeader';
 import HeaderBar from '../../component/HeaderBar';
+import MyStatusBar from '../../component/MyStatusBar';
 
 let deviceWidth = Dimensions.get('window').width;
 let deviceHeight = Dimensions.get('window').height;
@@ -356,7 +357,7 @@ const DirectoryDetails = ({route, navigation}) => {
                 <View style={{aspectRatio: 3 / 4}} />
               )}
             </View>
-            <View style={[g.bggray3, g.p5, g.w100p, {minHeight: scale(85)}]}>
+            <View style={[g.bggray3, g.p5, g.w100p, {minHeight: scale(80)}]}>
               <Text
                 style={[g.fs12, g.FHNR, g.colorBlack]}
                 numberOfLines={2}
@@ -400,12 +401,39 @@ const DirectoryDetails = ({route, navigation}) => {
 
               {item.profession ? (
                 <Text
-                  style={[g.fs12, g.colorBlack, g.FHNR]}
+                  style={[
+                    g.fs12,
+                    g.colorBlack,
+                    g.FHNR,
+                    {
+                      justifyContent: 'center',
+                      alignContent: 'center',
+                      flex: 1,
+                      textAlignVertical: 'center',
+                    },
+                  ]}
                   numberOfLines={2}
                   ellipsizeMode={'tail'}>
                   {renameProfession(item.profession)}
                 </Text>
-              ) : null}
+              ) : (
+                <Text
+                  style={[
+                    g.fs12,
+                    g.colorBlack,
+                    g.FHNR,
+                    {
+                      justifyContent: 'center',
+                      alignContent: 'center',
+                      flex: 1,
+                      textAlignVertical: 'center',
+                    },
+                  ]}
+                  numberOfLines={2}
+                  ellipsizeMode={'tail'}>
+                  No Profession Selected
+                </Text>
+              )}
 
               {/* <View style={[grid.row, grid.alignItemsBottom, g.mt10]}>
                 <View style={{flexDirection: 'row'}}>
@@ -483,7 +511,6 @@ const DirectoryDetails = ({route, navigation}) => {
         style={{
           paddingHorizontal: scale(15),
           marginBottom: scale(10),
-          paddingTop: scale(15),
         }}>
         {/* search view */}
         <View style={[grid.rowdir, g.mb15, g.mt5]}>
@@ -648,122 +675,126 @@ const DirectoryDetails = ({route, navigation}) => {
   });
 
   return (
-    <TouchableOpacity
-      style={GlobalInclude.AppStyle.fill}
-      activeOpacity={1}
-      onPress={() => {
-        Keyboard.dismiss();
-      }}>
-      <HeaderBar navigation={navigation} />
-      <SafeAreaView
-        style={[GlobalInclude.AppStyle.fill, {backgroundColor: 'white'}]}>
-        {isLoading ? (
-          <View style={GlobalInclude.AppStyle.fillCenter}>
-            <ActivityIndicator size={'small'} color={'#2b3252'} />
-          </View>
-        ) : (
-          <View style={GlobalInclude.AppStyle.fill}>
-            <Animated.ScrollView
-              ref={listRef}
-              onScrollEndDrag={onScrollEndDrag}
-              scrollEventThrottle={16}
-              contentContainerStyle={{
-                marginTop: animatedHeight,
-              }}
-              onScroll={Animated.event(
-                [{nativeEvent: {contentOffset: {y: curY}}}],
-                {useNativeDriver: true, listener: onScroll},
-              )}>
-              {/* searched data */}
-              <View
-                style={{
-                  paddingStart: scale(15),
-                  paddingEnd: scale(15),
-                  paddingBottom: animatedHeight + scale(15),
-                }}>
-                <View style={[grid.rowdir, grid.flexwrap]}>
-                  {searchedUser.map((item, index) => {
-                    return renderProfileSearch(item, index);
-                  })}
-                </View>
+    <View style={GlobalInclude.AppStyle.fill}>
+      <MyStatusBar barStyle={'light-content'} hidden />
+      <SafeAreaView style={GlobalInclude.AppStyle.fill}>
+        <TouchableOpacity
+          style={GlobalInclude.AppStyle.fill}
+          activeOpacity={1}
+          onPress={() => {
+            Keyboard.dismiss();
+          }}>
+          <HeaderBar navigation={navigation} />
+          <View style={GlobalInclude.AppStyle.topSpace}>
+            {isLoading ? (
+              <View style={GlobalInclude.AppStyle.fillCenter}>
+                <ActivityIndicator size={'small'} color={'#2b3252'} />
               </View>
+            ) : (
+              <View style={GlobalInclude.AppStyle.fill}>
+                <Animated.ScrollView
+                  ref={listRef}
+                  onScrollEndDrag={onScrollEndDrag}
+                  scrollEventThrottle={16}
+                  contentContainerStyle={{
+                    marginTop: animatedHeight,
+                  }}
+                  onScroll={Animated.event(
+                    [{nativeEvent: {contentOffset: {y: curY}}}],
+                    {useNativeDriver: true, listener: onScroll},
+                  )}>
+                  {/* searched data */}
+                  <View
+                    style={{
+                      paddingStart: scale(15),
+                      paddingEnd: scale(15),
+                      paddingBottom: animatedHeight + scale(15),
+                    }}>
+                    <View style={[grid.rowdir, grid.flexwrap]}>
+                      {searchedUser.map((item, index) => {
+                        return renderProfileSearch(item, index);
+                      })}
+                    </View>
+                  </View>
 
-              {/* searched data */}
-            </Animated.ScrollView>
+                  {/* searched data */}
+                </Animated.ScrollView>
 
-            <Animated.View
-              style={[
-                g.newHeaderConcept,
-                {
-                  transform: [
+                <Animated.View
+                  style={[
+                    g.newHeaderConcept,
                     {
-                      translateY: headerDistance,
+                      transform: [
+                        {
+                          translateY: headerDistance,
+                        },
+                      ],
                     },
-                  ],
-                },
-              ]}
-              onLayout={({nativeEvent}) => {
-                setAnimatedHeight(nativeEvent.layout.height);
-              }}>
-              <View>{headerComponent()}</View>
-            </Animated.View>
-          </View>
-        )}
+                  ]}
+                  onLayout={({nativeEvent}) => {
+                    setAnimatedHeight(nativeEvent.layout.height);
+                  }}>
+                  <View>{headerComponent()}</View>
+                </Animated.View>
+              </View>
+            )}
 
-        {showScrollTop ? (
-          <View style={[g.btnScrollStrip, grid.alignItems]}>
-            <TouchableOpacity
-              style={{width: scale(70)}}
-              activeOpacity={0.8}
-              onPress={() => {
-                setShowScrollTop(false);
-                if (listRef !== null) {
-                  listRef.current.scrollTo({
-                    animated: true,
-                    y: 0,
-                  });
-                }
+            {showScrollTop ? (
+              <View style={[g.btnScrollStrip, grid.alignItems]}>
+                <TouchableOpacity
+                  style={{width: scale(70)}}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    setShowScrollTop(false);
+                    if (listRef !== null) {
+                      listRef.current.scrollTo({
+                        animated: true,
+                        y: 0,
+                      });
+                    }
+                  }}
+                  hitSlop={{top: 50, bottom: 50, left: 100, right: 100}}>
+                  <Text style={[g.btn, g.btnScrolltoTop, g.fs11]}>
+                    {'Scroll to top'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+          </View>
+          {/* city list sheet */}
+          <CityListSheet
+            ref={(ref) => {
+              cityListSheet = ref;
+            }}
+            height={deviceHeight - 150}
+            minClosingHeight={50}
+            duration={350}
+            closeOnDragDown={true}
+            customStyles={{
+              container: {
+                backgroundColor: '#fff',
+                borderTopLeftRadius: 30,
+                borderTopRightRadius: 30,
+                paddingStart: scale(15),
+                paddingEnd: scale(15),
+                paddingBottom: scale(20),
+              },
+            }}>
+            <BottomSheetHeader title={'Select City'} showSearch={false} />
+
+            <RadioButton
+              defaultSelected={locationFilter}
+              PROP={cityList}
+              capitalize
+              onRadioSelect={(value) => {
+                setLocationFilter(value.text.toString());
+                cityListSheet.close();
               }}
-              hitSlop={{top: 50, bottom: 50, left: 100, right: 100}}>
-              <Text style={[g.btn, g.btnScrolltoTop, g.fs11]}>
-                {'Scroll to top'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
+            />
+          </CityListSheet>
+        </TouchableOpacity>
       </SafeAreaView>
-      {/* city list sheet */}
-      <CityListSheet
-        ref={(ref) => {
-          cityListSheet = ref;
-        }}
-        height={deviceHeight - 150}
-        minClosingHeight={50}
-        duration={350}
-        closeOnDragDown={true}
-        customStyles={{
-          container: {
-            backgroundColor: '#fff',
-            borderTopLeftRadius: 30,
-            borderTopRightRadius: 30,
-            paddingStart: scale(15),
-            paddingEnd: scale(15),
-            paddingBottom: scale(20),
-          },
-        }}>
-        <BottomSheetHeader title={'Select City'} showSearch={false} />
-
-        <RadioButton
-          defaultSelected={locationFilter}
-          PROP={cityList}
-          capitalize
-          onRadioSelect={(value) => {
-            setLocationFilter(value.text.toString());
-            cityListSheet.close();
-          }}
-        />
-      </CityListSheet>
-    </TouchableOpacity>
+    </View>
   );
 };
 

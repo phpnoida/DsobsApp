@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   Image,
   Dimensions,
+  Platform,
 } from 'react-native';
 import {RootNavigators} from './src/route/Route';
 import {NavigationContainer} from '@react-navigation/native';
@@ -23,10 +24,12 @@ import messaging from '@react-native-firebase/messaging';
 import Helper from './src/helper/Helper';
 import {useDispatch} from 'react-redux';
 import {refreshScreen} from './src/reducer/NotificationReducer';
+import PushNotificationIOS from '@react-native-community/push-notification-ios';
 
 let baseRoute = 'AppTour';
 const deviceWidth = Dimensions.get('window').width;
 const appVersion = DeviceInfo.getVersion();
+let appStateValue = '';
 
 const App = () => {
   const [loadingComplete, setLoadingComplete] = useState(false);
@@ -49,11 +52,14 @@ const App = () => {
           setIsConnected(state.isConnected);
         })
         .then(() => {
-          if (currentState === 'active' && global.isLoggedIn) {
-            _sendPresenceStatus();
-          } else {
-            completeLogin();
-          }
+          setTimeout(() => {
+            console.log('appStateValue', appStateValue);
+            if (appStateValue === 'active' && global.isLoggedIn) {
+              _sendPresenceStatus();
+            } else {
+              completeLogin();
+            }
+          }, 300);
         });
     }); // we check this as first priority
 
@@ -62,16 +68,31 @@ const App = () => {
      * Notification start
      *
      */
+
+    if (Platform.OS === 'ios') {
+      PushNotificationIOS.addEventListener('notification', (notification) => {
+        console.log('PushNotificationIOS', notification.getData());
+        if (
+          notification.getData() !== undefined &&
+          notification.getData() !== null
+        ) {
+          let data = notification.getData();
+          let notificationObj = {};
+          notificationObj.data = data;
+          global.isNotificationTap = false;
+          handleNotification('PushNotificationIOS', notificationObj);
+        }
+      });
+    }
+
     const onMessage = messaging().onMessage(async (remoteMessage) => {
-      global.isNotificationTap = true;
+      //global.isNotificationTap = true;
+      console.log('83');
       handleNotification('onMessage', remoteMessage);
     });
 
     messaging().onNotificationOpenedApp((remoteMessage) => {
-      console.log(
-        'Notification caused app to open from background state:',
-        remoteMessage,
-      );
+      console.log('app to open from background state:', remoteMessage);
       global.isNotificationTap = true;
     });
 
@@ -81,7 +102,7 @@ const App = () => {
       .then((remoteMessage) => {
         if (remoteMessage) {
           console.log(
-            'Notification caused app to open from quit state:',
+            'app to open from quit state:',
             remoteMessage.notification,
           );
         }
@@ -98,18 +119,10 @@ const App = () => {
 
     return () => {
       unsubscribe();
-      onMessage();
+      onMessage;
       AppState.removeEventListener('change', _handleAppStateChange);
     };
   }, []);
-
-  const onRegister = (token) => {};
-
-  const onNotif = (remoteData) => {
-    console.log('remoteData', remoteData);
-    handleNotification('onNotif', remoteData);
-    //Alert.alert(notif.title, notif.message);
-  };
 
   const completeLogin = () => {
     setTimeout(() => {
@@ -149,11 +162,31 @@ const App = () => {
   };
 
   const _handleAppStateChange = (nextState) => {
-    if (nextState === 'active' && currentState === 'active') {
-      if (global.notification !== undefined && global.notification !== null) {
-        dispatch(refreshScreen());
+    console.log('170', nextState);
+    appStateValue = nextState;
+    global.nextAppState = nextState;
+    if (global.isLoggedIn) {
+      if (Platform.OS === 'android') {
+        if (nextState === 'active' && currentState === 'active') {
+          if (
+            global.notification !== undefined &&
+            global.notification !== null
+          ) {
+            dispatch(refreshScreen());
+          }
+        }
+      } else {
+        if (nextState === 'active') {
+          if (
+            global.notification !== undefined &&
+            global.notification !== null
+          ) {
+            dispatch(refreshScreen());
+          }
+        }
       }
     }
+
     setCurrentState(nextState);
   };
 
@@ -194,7 +227,7 @@ const App = () => {
       authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
     if (enabled) {
-     // console.log('Authorization status:', authStatus);
+      // console.log('Authorization status:', authStatus);
     }
   }
 

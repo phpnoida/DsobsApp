@@ -5,7 +5,7 @@ import GlobalInclude from '../globalInclude/Globalinclude';
 import grid from '../theme/grid';
 import {scale} from '../theme/Scalling';
 import {CommonActions} from '@react-navigation/native';
-
+import MyStatusBar from '../component/MyStatusBar';
 const slides = [
   {
     key: 'somethun',
@@ -52,7 +52,8 @@ const AppTour = ({navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.fill}>
+    <View style={GlobalInclude.AppStyle.topSpace}>
+      <MyStatusBar backgroundColor={'#fff'} />
       <View style={GlobalInclude.AppStyle.parentStyle}>
         <View style={[grid.rowdir, grid.justifyContentRight]}>
           <TouchableOpacity

@@ -24,7 +24,7 @@ const menuOptions = [
   {screen: '', visible: false, value: 8, label: 'Jobs'},
   {screen: '', visible: false, value: 9, label: 'Offers'},
   {screen: '', visible: false, value: 10, label: 'Footsteps'},
-  {screen: 'Video', visible: true, value: 11, label: 'Videos'},
+  {screen: 'Video', visible: false, value: 11, label: 'Videos'},
   {screen: 'Magazine', visible: true, value: 12, label: 'The Rose Bowl'},
   {screen: '', visible: false, value: 13, label: 'Contributions'},
   {screen: '', visible: false, value: 14, label: 'Masters'},

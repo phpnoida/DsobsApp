@@ -8,6 +8,7 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  SafeAreaView,
 } from 'react-native';
 import {CommonActions} from '@react-navigation/native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
@@ -35,6 +36,7 @@ import Awards from './Awards';
 import MyRelatives from './MyRelatives';
 import MyFamily from './MyFamily';
 import Links from './Links';
+import MyStatusBar from '../../component/MyStatusBar';
 
 import {IconType} from '../../helper/Constants';
 
@@ -299,193 +301,203 @@ const UserProfile = ({route, navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.fill}>
-      <View style={GlobalInclude.AppStyle.parentStyle}>
-        {isLoading ? (
-          <View style={GlobalInclude.AppStyle.fillCenter}>
-            <ActivityIndicator size={'small'} color={'#2b3252'} />
-          </View>
-        ) : (
-          <View style={GlobalInclude.AppStyle.fill}>
-            {profileData !== null && (
-              <View style={GlobalInclude.AppStyle.fill}>
-                <View style={{paddingStart: scale(15), paddingEnd: scale(15)}}>
+    <View style={GlobalInclude.AppStyle.topSpace}>
+      <MyStatusBar barStyle={'light-content'} />
+      <SafeAreaView style={GlobalInclude.AppStyle.fill}>
+        <View style={GlobalInclude.AppStyle.parentStyle}>
+          {isLoading ? (
+            <View style={GlobalInclude.AppStyle.fillCenter}>
+              <ActivityIndicator size={'small'} color={'#2b3252'} />
+            </View>
+          ) : (
+            <View style={GlobalInclude.AppStyle.fill}>
+              {profileData !== null && (
+                <View style={GlobalInclude.AppStyle.fill}>
                   <View
-                    style={[
-                      grid.rowdir,
-                      grid.justifyContent,
-                      grid.alignItems,
-                      g.p15,
-                      g.pl0,
-                      {paddingBottom: 0},
-                    ]}>
-                    <TouchableOpacity
-                      activeOpacity={1}
-                      onPress={() => moveBack(step)}>
-                      <Image
-                        source={GlobalInclude.Assets.Back}
-                        style={styles.back}
-                      />
-                    </TouchableOpacity>
+                    style={{paddingStart: scale(15), paddingEnd: scale(15)}}>
+                    <View
+                      style={[
+                        grid.rowdir,
+                        grid.justifyContent,
+                        grid.alignItems,
+                        g.p15,
+                        g.pl0,
+                        {paddingBottom: 0, paddingTop: 0},
+                      ]}>
+                      <TouchableOpacity
+                        activeOpacity={1}
+                        onPress={() => moveBack(step)}>
+                        <Image
+                          source={GlobalInclude.Assets.Back}
+                          style={styles.back}
+                        />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => {
+                          profileSheet.open();
+                        }}
+                        style={[g.pr5]}
+                        activeOpacity={1}>
+                        <Image
+                          source={GlobalInclude.Assets.Menu}
+                          style={styles.back}
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    <UserProfileHeader
+                      profileImg={profileData.profileImg}
+                      firstName={profileData.firstName}
+                      lastName={profileData.lastName}
+                      schoolNo={profileData.schoolNumber}
+                      section={profileData.section}
+                      batch={profileData.batch}
+                      house={profileData.house}
+                      userId={userId}
+                      profession={profileData.profession}
+                      city={profileData.city}
+                    />
+                  </View>
+
+                  <ScrollableTabView
+                    underlineColor={'#ffffff'}
+                    style={{paddingLeft: 0, paddingRight: 0, margin: 0}}
+                    tabBarActiveTextColor={'#2b3252'}
+                    tabBarInactiveTextColor={'#bababa'}
+                    tabBarTextStyle={{
+                      fontSize: scale(15),
+                      fontFamily: 'Lato-Regular',
+                      margin: -5,
+                    }}
+                    tabBarUnderlineStyle={styles.tabBarUnderlineStyle}
+                    renderTabBar={() => (
+                      <ScrollableTabBar style={styles.tabBarStyle} />
+                    )}
+                    onChangeTab={(tabVal) => {
+                      moveToTab = tabVal.i + 1;
+                    }}>
+                    <Contact
+                      tabLabel={'Contact'}
+                      userId={userId}
+                      phone={profileData.phone}
+                      countryCode={profileData.countryCode}
+                      phoneScope={profileData.phoneScope}
+                      emailScope={profileData.emailScope}
+                      email={profileData.email}
+                      dob={birthDate}
+                      petName={profileData.petName}
+                      secondaryPhone={profileData.secondaryPhone}
+                      secondaryCountryCode={
+                        profileData.secondaryCountryCode !== undefined
+                          ? profileData.secondaryCountryCode
+                          : ''
+                      }
+                      secondaryPhoneScope={profileData.secondaryPhoneScope}
+                      secondaryEmail={profileData.secondaryEmail}
+                      secondaryEmailScope={profileData.secondaryEmailScope}
+                      permanentAddress={profileData.permanentAddress}
+                      correspondenceAddress={profileData.correspondenceAddress}
+                      bloodGroup={
+                        profileData.bloodGroup === "i don't know"
+                          ? "I Don't Know"
+                          : profileData.bloodGroup.toUpperCase()
+                      }
+                    />
+                    <AboutMe
+                      tabLabel={'About Me'}
+                      aboutMe={profileData.aboutMe}
+                      schoolMemories={profileData.schoolMemories}
+                      philosophy={profileData.philosophy}
+                      hobbies={profileData.hobbies}
+                      favMusician={profileData.favMusician}
+                      favMovies={profileData.favMovies}
+                      favBooks={profileData.favBooks}
+                      favPeople={profileData.favPeople}
+                      philanthorpy={profileData.philanthorpy}
+                      favSportsTeams={profileData.favSportsTeams}
+                    />
+                    <UserMedia tabLabel={'Media'} profileData={profileData} />
+                    <SocialMedia
+                      tabLabel={'Social'}
+                      profileData={profileData}
+                    />
+                    <ProfessionalDetail
+                      tabLabel={'Professional Detail'}
+                      profileData={profileData}
+                    />
+                    <Tags tabLabel={'Tags'} profileData={profileData} />
+                    <UserEducational
+                      tabLabel={'Training'}
+                      profileData={profileData}
+                    />
+                    <Awards tabLabel={'Awards'} profileData={profileData} />
+                    <MyRelatives
+                      tabLabel={'Relatives in School'}
+                      profileData={profileData}
+                    />
+                    <MyFamily
+                      tabLabel={'My Family'}
+                      profileData={profileData}
+                    />
+                    {profileData.links &&
+                      profileData.links !== undefined &&
+                      profileData.links.length > 0 && (
+                        <Links tabLabel={'Links'} profileData={profileData} />
+                      )}
+                  </ScrollableTabView>
+
+                  {userId === global.userId ? (
                     <TouchableOpacity
                       onPress={() => {
-                        profileSheet.open();
+                        naviateEditProfile(moveToTab);
                       }}
-                      style={[g.pr5]}
-                      activeOpacity={1}>
-                      <Image
-                        source={GlobalInclude.Assets.Menu}
-                        style={styles.back}
-                        resizeMode="contain"
-                      />
+                      activeOpacity={0.8}
+                      style={styles.absoluteView}>
+                      <View style={styles.floatingButtonContainer}>
+                        <GlobalInclude.BaseIcon
+                          containerStyle={{height: scale(26), width: scale(26)}}
+                          iconColor={'#fff'}
+                          iconName={'pencil'}
+                          iconSize={scale(26)}
+                          iconType={IconType[4]}
+                        />
+                      </View>
                     </TouchableOpacity>
-                  </View>
-                  <UserProfileHeader
-                    profileImg={profileData.profileImg}
-                    firstName={profileData.firstName}
-                    lastName={profileData.lastName}
-                    schoolNo={profileData.schoolNumber}
-                    section={profileData.section}
-                    batch={profileData.batch}
-                    house={profileData.house}
-                    userId={userId}
-                    profession={profileData.profession}
-                    city={profileData.city}
-                  />
+                  ) : null}
                 </View>
-
-                <ScrollableTabView
-                  underlineColor={'#ffffff'}
-                  style={{paddingLeft: 0, paddingRight: 0, margin: 0}}
-                  tabBarActiveTextColor={'#2b3252'}
-                  tabBarInactiveTextColor={'#bababa'}
-                  tabBarTextStyle={{
-                    fontSize: scale(15),
-                    fontFamily: 'Lato-Regular',
-                    margin: -5,
-                  }}
-                  tabBarUnderlineStyle={styles.tabBarUnderlineStyle}
-                  renderTabBar={() => (
-                    <ScrollableTabBar style={styles.tabBarStyle} />
-                  )}
-                  onChangeTab={(tabVal) => {
-                    moveToTab = tabVal.i + 1;
-                  }}>
-                  <Contact
-                    tabLabel={'Contact'}
-                    userId={userId}
-                    phone={profileData.phone}
-                    countryCode={profileData.countryCode}
-                    phoneScope={profileData.phoneScope}
-                    emailScope={profileData.emailScope}
-                    email={profileData.email}
-                    dob={birthDate}
-                    petName={profileData.petName}
-                    secondaryPhone={profileData.secondaryPhone}
-                    secondaryCountryCode={
-                      profileData.secondaryCountryCode !== undefined
-                        ? profileData.secondaryCountryCode
-                        : ''
-                    }
-                    secondaryPhoneScope={profileData.secondaryPhoneScope}
-                    secondaryEmail={profileData.secondaryEmail}
-                    secondaryEmailScope={profileData.secondaryEmailScope}
-                    permanentAddress={profileData.permanentAddress}
-                    correspondenceAddress={profileData.correspondenceAddress}
-                    bloodGroup={
-                      profileData.bloodGroup === "i don't know"
-                        ? "I Don't Know"
-                        : profileData.bloodGroup.toUpperCase()
-                    }
-                  />
-                  <AboutMe
-                    tabLabel={'About Me'}
-                    aboutMe={profileData.aboutMe}
-                    schoolMemories={profileData.schoolMemories}
-                    philosophy={profileData.philosophy}
-                    hobbies={profileData.hobbies}
-                    favMusician={profileData.favMusician}
-                    favMovies={profileData.favMovies}
-                    favBooks={profileData.favBooks}
-                    favPeople={profileData.favPeople}
-                    philanthorpy={profileData.philanthorpy}
-                    favSportsTeams={profileData.favSportsTeams}
-                  />
-                  <UserMedia tabLabel={'Media'} profileData={profileData} />
-                  <SocialMedia tabLabel={'Social'} profileData={profileData} />
-                  <ProfessionalDetail
-                    tabLabel={'Professional Detail'}
-                    profileData={profileData}
-                  />
-                  <Tags tabLabel={'Tags'} profileData={profileData} />
-                  <UserEducational
-                    tabLabel={'Training'}
-                    profileData={profileData}
-                  />
-                  <Awards tabLabel={'Awards'} profileData={profileData} />
-                  <MyRelatives
-                    tabLabel={'Relatives in School'}
-                    profileData={profileData}
-                  />
-                  <MyFamily tabLabel={'My Family'} profileData={profileData} />
-                  {profileData.links &&
-                    profileData.links !== undefined &&
-                    profileData.links.length > 0 && (
-                      <Links tabLabel={'Links'} profileData={profileData} />
-                    )}
-                </ScrollableTabView>
-
-                {userId === global.userId ? (
-                  <TouchableOpacity
-                    onPress={() => {
-                      naviateEditProfile(moveToTab);
-                    }}
-                    activeOpacity={0.8}
-                    style={styles.absoluteView}>
-                    <View style={styles.floatingButtonContainer}>
-                      <GlobalInclude.BaseIcon
-                        containerStyle={{height: scale(26), width: scale(26)}}
-                        iconColor={'#fff'}
-                        iconName={'pencil'}
-                        iconSize={scale(26)}
-                        iconType={IconType[4]}
-                      />
-                    </View>
-                  </TouchableOpacity>
-                ) : null}
-              </View>
-            )}
-          </View>
-        )}
-      </View>
-
-      {/* city list sheet */}
-      <ProfileSheet
-        ref={(ref) => {
-          profileSheet = ref;
-        }}
-        height={390}
-        minClosingHeight={50}
-        duration={350}
-        closeOnDragDown={true}
-        customStyles={{
-          container: {
-            backgroundColor: '#fff',
-            borderTopLeftRadius: 30,
-            borderTopRightRadius: 30,
-            paddingStart: scale(15),
-            paddingEnd: scale(15),
-            paddingBottom: scale(20),
-          },
-        }}>
-        <View>
-          <FlatList
-            keyExtractor={(item, index) => index.toString()}
-            data={profileSheetMenu}
-            renderItem={inflateMenu}
-          />
+              )}
+            </View>
+          )}
         </View>
-      </ProfileSheet>
+
+        {/* city list sheet */}
+        <ProfileSheet
+          ref={(ref) => {
+            profileSheet = ref;
+          }}
+          height={390}
+          minClosingHeight={50}
+          duration={350}
+          closeOnDragDown={true}
+          customStyles={{
+            container: {
+              backgroundColor: '#fff',
+              borderTopLeftRadius: 30,
+              borderTopRightRadius: 30,
+              paddingStart: scale(15),
+              paddingEnd: scale(15),
+              paddingBottom: scale(20),
+            },
+          }}>
+          <View>
+            <FlatList
+              keyExtractor={(item, index) => index.toString()}
+              data={profileSheetMenu}
+              renderItem={inflateMenu}
+            />
+          </View>
+        </ProfileSheet>
+      </SafeAreaView>
     </View>
   );
 };

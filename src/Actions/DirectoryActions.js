@@ -3,6 +3,7 @@ import {SERVER_PATH} from '../../config';
 
 export function getDirectory(searchType, searchQuery, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user/directory?type=${searchType}&s=${searchQuery}`;
+  console.log('requestPath', requestPath);
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
     .then((res) => callback(res))

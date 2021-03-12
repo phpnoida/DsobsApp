@@ -1,14 +1,11 @@
 import PushNotification from 'react-native-push-notification';
-import Helper from './Helper';
+
 class NotificationHandler {
   onNotification(notification) {
     console.log('onNotification:', notification);
-    //global.isNotificationTap = true;
-    //global.notification = notification;
-    //Helper.presentNotification('background-16', notification);
-    // if (typeof this._onNotification === 'function') {
-    //   this._onNotification(notification);
-    // }
+    if (typeof this._onNotification === 'function') {
+      this._onNotification(notification);
+    }
   }
 
   onRegister(token) {

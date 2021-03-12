@@ -53,7 +53,9 @@ const PhotosMedia = (props) => {
   const [showContactUsModal, setShowContactUsModal] = useState(false);
 
   useEffect(() => {
-    setMediaData(profileData.photos);
+    let cloneData = JSON.parse(JSON.stringify(profileData.photos));
+    cloneData = cloneData.reverse();
+    setMediaData(cloneData);
     return () => {};
   }, [profileData]);
 
@@ -243,9 +245,13 @@ const PhotosMedia = (props) => {
    */
   const updateProfileDetails = () => {
     if (global.isConnected) {
+      let cloneData = JSON.parse(JSON.stringify(mediaData));
+      cloneData = cloneData.reverse();
       let requestData = {
-        photos: mediaData,
+        photos: cloneData,
       };
+
+      console.log('json', JSON.stringify(cloneData));
 
       setIsLoading(true);
       updateUserProfile(
@@ -298,7 +304,7 @@ const PhotosMedia = (props) => {
 
               let oldData = mediaData;
 
-              oldData.push(object);
+              oldData.splice(0, 0, object);
               setMediaData([...oldData]);
             }
           }
@@ -458,7 +464,7 @@ const PhotosMedia = (props) => {
       };
       let oldData = mediaData;
 
-      oldData.push(obj);
+      oldData.splice(0, 0, obj);
       setMediaData([...oldData]);
     }
   };

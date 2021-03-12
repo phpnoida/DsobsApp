@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   TouchableNativeFeedback,
-  Image,
   ScrollView,
   Animated,
   Dimensions,
@@ -69,42 +68,9 @@ const ImageGallery = (props) => {
   const _renderPhotos = () => {
     let photosArray = [];
 
-    let imageMedia = [];
-    let videoMedia = [];
-    let docMedia = [];
-
-    mediaContent.map((item) => {
+    mediaContent.map((item, index) => {
       let type = item.type;
-      if (type === 1) {
-        imageMedia.push(item);
-      } else if (type === 2) {
-        videoMedia.push(item);
-      } else if (type === 3) {
-        docMedia.push(item);
-      }
-    });
-
-    // video
-    videoMedia.map((item, index) => {
-      const image = (
-        <View style={[g.mb10, {width: '100%'}]} key={index.toString()}>
-          <YoutubeView
-            link={item.thumbnail}
-            containerStyle={{
-              borderRadius: scale(6),
-              justifyContent: 'center',
-              aspectRatio: 16 / 9,
-            }}
-            iconName={'play-circle-o'}
-            iconType={'font-awesome'}
-          />
-        </View>
-      );
-      photosArray.push(image);
-    });
-
-    imageMedia.map((item, index) => {
-      const image = (
+      const content = (
         <View
           key={index}
           style={{
@@ -114,95 +80,96 @@ const ImageGallery = (props) => {
             marginLeft: 5,
           }}>
           <View style={[g.br3, g.oh, g.bglightGray]}>
-            <TouchableOpacity
-              onPress={() => {
-                setIastIndex(index);
-                setTimeout(() => {
-                  openImage();
-                }, 200);
-              }}
-              onLongPress={() => {
-                openShareOptions();
-              }}
-              style={g.bglightGray}
-              activeOpacity={1}>
-              <ProgressImage
-                source={{uri: item.thumbnail}}
-                style={{aspectRatio: 1 / 1}}
-                imageStyle={{
-                  aspectRatio: 1 / 1,
-                  opacity: opacity,
-                  transform: [
-                    {
-                      scale: opacity.interpolate({
-                        inputRange: [0, 1.0],
-                        outputRange: [0.85, 1.0],
-                      }),
-                    },
-                  ],
+            {type === 1 ? (
+              <TouchableOpacity
+                onPress={() => {
+                  setIastIndex(index);
+                  setTimeout(() => {
+                    openImage();
+                  }, 200);
                 }}
-                indicatorProps={{
-                  animated: true,
-                  borderColor: 'red',
-                  borderWidth: 2,
-                  color: '#2b3252',
-                  direction: Platform.os === 'android' ? 'clockwise' : 'rtl',
-                  indeterminate: true,
-                  progress: 100,
-                  strokeCap: 'butt',
-                  size: scale(20),
+                onLongPress={() => {
+                  openShareOptions();
                 }}
-                onLoad={() => {
-                  Animated.timing(opacity, {
-                    toValue: 1.0,
-                    duration: 200,
-                    useNativeDriver: true,
-                  }).start();
-                }}
-                resizeMode={FastImage.resizeMode.cover}
-                threshold={20}
-              />
-            </TouchableOpacity>
+                activeOpacity={1}>
+                <ProgressImage
+                  source={{uri: item.thumbnail}}
+                  style={{aspectRatio: 1 / 1}}
+                  imageStyle={{
+                    aspectRatio: 1 / 1,
+                    opacity: opacity,
+                    transform: [
+                      {
+                        scale: opacity.interpolate({
+                          inputRange: [0, 1.0],
+                          outputRange: [0.85, 1.0],
+                        }),
+                      },
+                    ],
+                  }}
+                  indicatorProps={{
+                    animated: true,
+                    borderColor: 'red',
+                    borderWidth: 2,
+                    color: '#2b3252',
+                    direction: Platform.os === 'android' ? 'clockwise' : 'rtl',
+                    indeterminate: true,
+                    progress: 100,
+                    strokeCap: 'butt',
+                    size: scale(20),
+                  }}
+                  onLoad={() => {
+                    Animated.timing(opacity, {
+                      toValue: 1.0,
+                      duration: 200,
+                      useNativeDriver: true,
+                    }).start();
+                  }}
+                  resizeMode={FastImage.resizeMode.cover}
+                  threshold={20}
+                />
+              </TouchableOpacity>
+            ) : type === 2 ? (
+              <View>
+                <YoutubeView
+                  link={item.thumbnail}
+                  containerStyle={{
+                    justifyContent: 'center',
+                    aspectRatio: 1 / 1,
+                  }}
+                  iconName={'play-circle-o'}
+                  iconType={'font-awesome'}
+                />
+              </View>
+            ) : (
+              <View>
+                <TouchableOpacity
+                  onPress={() => {
+                    documentItem = item.fileName;
+                    setShowDocViewer(true);
+                  }}
+                  style={[
+                    g.bglightGray,
+                    g.br3,
+                    grid.justifyContentCenter,
+                    grid.alignItems,
+                    {aspectRatio: 1 / 1},
+                  ]}
+                  activeOpacity={1}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(36), width: scale(36)}}
+                    iconColor={'#000'}
+                    iconName={'file-pdf-o'}
+                    iconSize={scale(36)}
+                    iconType={IconType[4]}
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
       );
-      photosArray.push(image);
-    });
-
-    docMedia.map((item, index) => {
-      const image = (
-        <View
-          key={index}
-          style={{
-            width: deviceWidth / 3 - 27,
-            marginTop: 10,
-            marginRight: 5,
-            marginLeft: 5,
-          }}>
-          <TouchableOpacity
-            onPress={() => {
-              documentItem = item.fileName;
-              setShowDocViewer(true);
-            }}
-            style={[
-              g.bglightGray,
-              g.br3,
-              grid.justifyContentCenter,
-              grid.alignItems,
-              {aspectRatio: 1 / 1},
-            ]}
-            activeOpacity={1}>
-            <GlobalInclude.BaseIcon
-              containerStyle={{height: scale(36), width: scale(36)}}
-              iconColor={'#000'}
-              iconName={'file-pdf-o'}
-              iconSize={scale(36)}
-              iconType={IconType[4]}
-            />
-          </TouchableOpacity>
-        </View>
-      );
-      photosArray.push(image);
+      photosArray.push(content);
     });
 
     return photosArray;

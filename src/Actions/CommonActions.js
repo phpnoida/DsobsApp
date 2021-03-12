@@ -80,6 +80,8 @@ export function sendPresenceStatus(callback, errCallback) {
   }
   let requestPath = `${SERVER_PATH}utils/users/online?deviceType=${deviceType}&deviceModelNumber=${modelNumber}`;
 
+  console.log('requestPath', requestPath);
+
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
     .then((res) => {
@@ -95,6 +97,36 @@ export function sendPresenceStatus(callback, errCallback) {
 
 export function getPopNotification(callback, errCallback) {
   let requestPath = `${SERVER_PATH}utils/popFilter`;
+  const request = axios
+    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .then((res) => {
+      callback(res);
+    })
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function doSearchCity(query, size, index, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}user/directory/cities?size=${size}&index=${index}&s=${query}`;
+  const request = axios
+    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .then((res) => {
+      callback(res);
+    })
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function doSearchCompany(query, size, index, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}user/directory/company?size=${size}&index=${index}&s=${query}`;
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
     .then((res) => {
