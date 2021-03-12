@@ -8,7 +8,16 @@ import Icons from 'react-native-vector-icons/FontAwesome';
 const BottomSheetHeader = (props) => {
   return (
     <View style={g.mb15}>
-      <Text style={[g.fs18, g.FHNB, g.txtCenter, g.colorBlack, g.mt5, g.mb15]}>
+      <Text
+        style={[
+          g.fs18,
+          g.FHNB,
+          g.txtCenter,
+          g.colorBlack,
+          g.mt5,
+          g.mb15,
+          props.titleStyle,
+        ]}>
         {props.title}
       </Text>
       {props.showSearch && (

@@ -30,7 +30,14 @@ const menuOptions = [
   {screen: '', visible: false, value: 14, label: 'Masters'},
 ];
 
-const TopHeaderView = ({navigation, index, showBack}) => {
+const TopHeaderView = ({
+  navigation,
+  index,
+  showBack,
+  label,
+  showLabel,
+  onLabelPress,
+}) => {
   const [openDropDown, setOpenDropDown] = useState(false);
   const [selectedTab] = useState(menuOptions[index].label);
   return (
@@ -140,6 +147,21 @@ const TopHeaderView = ({navigation, index, showBack}) => {
                   navigation.goBack();
                 }}>
                 <Image source={GlobalInclude.Assets.Back} style={styles.back} />
+              </TouchableOpacity>
+            )}
+            {showLabel && (
+              <TouchableOpacity
+                style={{
+                  minWidth: scale(50),
+                  alignSelf: 'flex-end',
+                }}
+                activeOpacity={1}
+                onPress={() => {
+                  onLabelPress();
+                }}>
+                <Text style={[g.colorBlue, g.fs12, g.FHNB, g.txtRight]}>
+                  {label}
+                </Text>
               </TouchableOpacity>
             )}
           </View>

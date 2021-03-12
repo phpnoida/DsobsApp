@@ -11,7 +11,7 @@ import {getStatusBarHeight} from 'react-native-iphone-x-helper';
 const MyStatusBar = ({backgroundColor, ...props}) => (
   <View style={[styles.statusBar, {backgroundColor}]}>
     <SafeAreaView>
-      <StatusBar backgroundColor={backgroundColor} {...props} hidden />
+      <StatusBar backgroundColor={backgroundColor} {...props} />
     </SafeAreaView>
   </View>
 );

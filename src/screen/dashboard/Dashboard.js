@@ -784,11 +784,11 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    // bottomSheet.close();
-                    // setTimeout(() => {
-                    //   navigation.navigate('Video');
-                    // }, 200);
-                    Alert.alert('Coming soon...');
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('Video');
+                    }, 200);
+                    //Alert.alert('Coming soon...');
                   }}>
                   <Image
                     source={GlobalInclude.Assets.Video}
