@@ -639,7 +639,11 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    Alert.alert('Coming soon...');
+                    //Alert.alert('Coming soon...');
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('NewsListing');
+                    }, 200);
                   }}>
                   <Image
                     source={GlobalInclude.Assets.News}
@@ -649,6 +653,26 @@ const Dashboard = ({props, navigation}) => {
                   />
                   <View style={styles.menuText}>
                     <Text style={styles.menuStyle}>Dosco News</Text>
+                  </View>
+                </TouchableOpacity>
+                <View style={{margin: scale(5)}} />
+                <TouchableOpacity
+                  style={styles.whiteButtonHorizontal}
+                  activeOpacity={1}
+                  onPress={() => {
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('Video');
+                    }, 200);
+                  }}>
+                  <Image
+                    source={GlobalInclude.Assets.Video}
+                    resizeMode={'contain'}
+                    resizeMethod={'auto'}
+                    style={styles.menuIcon}
+                  />
+                  <View style={styles.menuText}>
+                    <Text style={styles.menuStyle}>Videos</Text>
                   </View>
                 </TouchableOpacity>
                 <View style={{margin: scale(5)}} />
@@ -666,23 +690,6 @@ const Dashboard = ({props, navigation}) => {
                   />
                   <View style={styles.menuText}>
                     <Text style={styles.menuStyle}>Events</Text>
-                  </View>
-                </TouchableOpacity>
-                <View style={{margin: scale(5)}} />
-                <TouchableOpacity
-                  style={styles.whiteButtonHorizontal}
-                  activeOpacity={1}
-                  onPress={() => {
-                    Alert.alert('Coming soon...');
-                  }}>
-                  <Image
-                    source={GlobalInclude.Assets.Groups}
-                    resizeMode={'contain'}
-                    resizeMethod={'auto'}
-                    style={styles.menuIcon}
-                  />
-                  <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Common Room</Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -784,20 +791,16 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    bottomSheet.close();
-                    setTimeout(() => {
-                      navigation.navigate('Video');
-                    }, 200);
-                    //Alert.alert('Coming soon...');
+                    Alert.alert('Coming soon...');
                   }}>
                   <Image
-                    source={GlobalInclude.Assets.Video}
+                    source={GlobalInclude.Assets.Groups}
                     resizeMode={'contain'}
                     resizeMethod={'auto'}
                     style={styles.menuIcon}
                   />
                   <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Videos</Text>
+                    <Text style={styles.menuStyle}>Common Room</Text>
                   </View>
                 </TouchableOpacity>
                 <View style={{margin: scale(5)}} />

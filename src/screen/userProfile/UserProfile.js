@@ -302,7 +302,6 @@ const UserProfile = ({route, navigation}) => {
 
   return (
     <View style={GlobalInclude.AppStyle.topSpace}>
-      <MyStatusBar barStyle={'light-content'} />
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.parentStyle}>
           {isLoading ? (
@@ -313,16 +312,12 @@ const UserProfile = ({route, navigation}) => {
             <View style={GlobalInclude.AppStyle.fill}>
               {profileData !== null && (
                 <View style={GlobalInclude.AppStyle.fill}>
-                  <View
-                    style={{paddingStart: scale(15), paddingEnd: scale(15)}}>
+                  <View style={GlobalInclude.AppStyle.contentSpace}>
                     <View
                       style={[
                         grid.rowdir,
                         grid.justifyContent,
                         grid.alignItems,
-                        g.p15,
-                        g.pl0,
-                        {paddingBottom: 0, paddingTop: 0},
                       ]}>
                       <TouchableOpacity
                         activeOpacity={1}

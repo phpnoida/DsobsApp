@@ -72,7 +72,7 @@ const MagazineDetails = ({route, navigation}) => {
 
   return (
     <View style={GlobalInclude.AppStyle.topSpace}>
-      <MyStatusBar barStyle={'light-content'} hidden />
+      
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.parentStyle}>
           <View style={GlobalInclude.AppStyle.fill}>
@@ -105,16 +105,19 @@ const MagazineDetails = ({route, navigation}) => {
                   initialPage={currentIndex}
                   renderTabBar={() => <View />}>
                   {pageContent.map((content, index) => {
-                    console.log('content', content);
                     return (
-                      <View style={GlobalInclude.AppStyle.fill} key={index}>
+                      <View
+                        style={[
+                          GlobalInclude.AppStyle.fill,
+                          GlobalInclude.AppStyle.contentSpace,
+                        ]}
+                        key={index}>
                         <View
                           style={[
                             GlobalInclude.AppStyle.row,
                             grid.alignItems,
                             grid.justifyContent,
                             g.mb10,
-                            g.ml15,
                           ]}>
                           <View style={grid.col}>
                             <View style={[grid.rowrow, grid.alignItems]}>

@@ -1,9 +1,17 @@
 import React, {useLayoutEffect, useState} from 'react';
-import {View, SafeAreaView, ActivityIndicator, ScrollView} from 'react-native';
+import {
+  View,
+  SafeAreaView,
+  ActivityIndicator,
+  ScrollView,
+  Dimensions,
+} from 'react-native';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import {WebView} from 'react-native-webview';
 import HeaderBar from '../component/HeaderBar';
 import {scale} from '../theme/Scalling';
+
+const {height, width} = Dimensions.get('window');
 
 const CommonWebPage = ({route, navigation}) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -14,9 +22,18 @@ const CommonWebPage = ({route, navigation}) => {
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.parentStyle}>
           <WebView
-            style={{marginTop: scale(10)}}
+            style={{
+              height: height,
+              width,
+              resizeMode: 'cover',
+              flex: 1,
+              marginTop: scale(10),
+            }}
             source={{uri: route.params.link}}
-            scalesPageToFit
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            startInLoadingState={true}
+            scalesPageToFit={false}
             onLoadStart={() => {
               setIsLoading(true);
             }}

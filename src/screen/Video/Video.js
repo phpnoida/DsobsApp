@@ -50,7 +50,7 @@ const Video = ({navigation}) => {
   const [selectedFilter, setselectedFilter] = useState('');
   const [showAddPostModal, setShowAddPostModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
-
+  const [showAddPostLoader, setShowAddPostLoader] = useState(false);
   useEffect(() => {
     getVideoCategory();
     getVideoData('');
@@ -64,7 +64,6 @@ const Video = ({navigation}) => {
    */
 
   const getVideoData = (searchQuery) => {
-    console.log('searchQuery',searchQuery);
     setIsLoading(true);
     getVideos(
       searchQuery,
@@ -131,8 +130,6 @@ const Video = ({navigation}) => {
   const postVideo = () => {
     let userData = global.userDetails;
 
-    //console.log('userData', JSON.stringify(userData));
-
     let requestData = {
       senderId: userData._id,
       firstName: userData.firstName,
@@ -145,15 +142,11 @@ const Video = ({navigation}) => {
       notes: videoNotes,
     };
 
-    let requestPayload = JSON.stringify(requestData);
-
-    console.log('requestPayload', requestPayload);
-
-    setIsLoading(true);
+    setShowAddPostLoader(true);
     doPostUserVideo(
       requestData,
       (response) => {
-        setIsLoading(false);
+        setShowAddPostLoader(false);
         if (response && response !== null) {
           if (
             response.data &&
@@ -162,10 +155,10 @@ const Video = ({navigation}) => {
           ) {
             let data = response.data;
 
-            console.log('data', JSON.stringify(data));
             if (data.status) {
               videoLink = '';
               videoNotes = '';
+              setShowAddPostModal(false);
               setTimeout(() => {
                 getVideoData('');
               }, 300);
@@ -174,6 +167,7 @@ const Video = ({navigation}) => {
         }
       },
       (error) => {
+        setShowAddPostLoader(false);
         setIsLoading(false);
       },
     );
@@ -213,7 +207,7 @@ const Video = ({navigation}) => {
     let videoArray = [];
     videos.map((child, index) => {
       const video = (
-        <View key={index.toString()} style={[grid.c2, g.mb5]}>
+        <View key={index.toString()} style={[grid.c2, g.mb10]}>
           <View style={g.bggray2}>
             <YoutubeView
               link={child.videoLink}
@@ -222,25 +216,25 @@ const Video = ({navigation}) => {
               thumbStyle={style.childThumb}
               playIconstyle={style.playIconstyle}
               playIconContainer={{
-                height: scale(18),
-                width: scale(18),
+                height: scale(14),
+                width: scale(14),
               }}
-              iconSize={scale(18)}
+              iconSize={scale(14)}
             />
           </View>
-          <View style={[g.p10]}>
+          <View>
             <Text
-              style={[g.fs10, g.mt5, g.FHNR, g.colorBlack]}
-              numberOfLines={2}>
+              style={[g.fs10, g.mt5, g.FHNR, g.colorBlack, g.txtLeft]}
+              numberOfLines={1}>
               {child.about}
             </Text>
-            <View style={[grid.rowdir, grid.alignItems, g.mb10]}>
+            <View style={[grid.rowdir, grid.alignItems]}>
               <View
                 style={[
                   grid.rowdir,
                   grid.justifyContentRight,
                   grid.alignItems,
-                  g.mt10,
+                  g.mt5,
                 ]}>
                 <TouchableOpacity
                   style={[grid.rowrow, grid.alignItems, g.ml15]}
@@ -265,15 +259,14 @@ const Video = ({navigation}) => {
                     selectedVideo.url =
                       'https://homepages.cae.wisc.edu/~ece533/images/airplane.png';
 
-                    console.log('selectedVideo', selectedVideo);
                     setShowSharingSheet(true);
                   }}>
                   <GlobalInclude.BaseIcon
-                    containerStyle={{height: scale(20), width: scale(20)}}
+                    containerStyle={{height: scale(11), width: scale(11)}}
                     iconColor={'#2b3252'}
-                    iconName={'sharealt'}
-                    iconSize={scale(20)}
-                    iconType={IconType[10]}
+                    iconName={'share-alt'}
+                    iconSize={scale(11)}
+                    iconType={IconType[4]}
                   />
                   <Text style={[g.fs10, g.ml10]}>SHARE</Text>
                 </TouchableOpacity>
@@ -292,7 +285,7 @@ const Video = ({navigation}) => {
       return (
         <View>
           {item.videos !== undefined && item.videos.length > 0 ? (
-            <View style={[g.bgWhite, g.boxShadow, g.mb15, {margin: scale(5)}]}>
+            <View style={[g.bgWhite, g.boxShadow, g.mb10, g.ml2, g.mr2, g.mt5]}>
               <View style={g.bggray3}>
                 <YoutubeView
                   link={item.videos[0].videoLink}
@@ -300,6 +293,11 @@ const Video = ({navigation}) => {
                   overlayStyle={style.overlayStyle}
                   thumbStyle={style.thumbStyle}
                   playIconstyle={style.playIconstyle}
+                  playIconContainer={{
+                    height: scale(20),
+                    width: scale(20),
+                  }}
+                  iconSize={scale(20)}
                 />
               </View>
               <View style={[g.p15]}>
@@ -312,40 +310,51 @@ const Video = ({navigation}) => {
                   {item.videos[0].about}
                 </Text>
               </View>
-              <View style={[g.pl15, g.pr15, g.pb15]}>
+
+              <View style={[g.pl15, g.pr15, g.pb10, {flexDirection: 'row'}]}>
                 <TouchableOpacity
                   onPress={() => {
                     updateChild(index);
                   }}
-                  style={{
-                    flexDirection: 'row',
-                    width: scale(80),
-                    justifyContent: 'center',
-                    alignContent: 'center',
-                    alignItems: 'center',
-                  }}>
+                  style={[
+                    style.seeMore,
+                    {marginEnd: scale(3), width: scale(80)},
+                  ]}>
                   <GlobalInclude.BaseIcon
-                    containerStyle={{height: scale(20), width: scale(20)}}
+                    containerStyle={{height: scale(14), width: scale(14)}}
                     iconColor={'#2b3252'}
                     iconName={item.isShowing ? 'caretdown' : 'caretright'}
-                    iconSize={scale(20)}
+                    iconSize={scale(14)}
                     iconType={IconType[10]}
                   />
-                  <Text style={[g.fs14, g.FHNR, g.colorBlack, g.ml10]}>
-                    {'See More'}
+                  <Text style={[g.fs10, g.FHNR, g.colorBlack, g.ml10]}>
+                    {item.isShowing ? 'SEE LESS' : 'SEE MORE'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    Alert.alert('Comming soon');
+                  }}
+                  style={[
+                    style.seeMore,
+                    {marginEnd: scale(3), width: scale(130)},
+                  ]}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(14), width: scale(14)}}
+                    iconColor={'#2b3252'}
+                    iconName={'podcast'}
+                    iconSize={scale(14)}
+                    iconType={IconType[4]}
+                  />
+                  <Text style={[g.fs10, g.FHNR, g.colorBlack, g.ml2]}>
+                    {'HEAR AS PODCAST'}
                   </Text>
                 </TouchableOpacity>
               </View>
+
               {item.isShowing && (
-                <View
-                  style={{
-                    marginBottom: 5,
-                    marginTop: 10,
-                    marginLeft: 5,
-                    marginRight: 5,
-                    padding: 5,
-                    paddingBottom: 15,
-                  }}>
+                <View style={style.showChildVideo}>
                   <View style={[grid.rowdir, grid.flexwrap]}>
                     {renderChildVideos(item.videos, item)}
                   </View>
@@ -361,13 +370,13 @@ const Video = ({navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.fill}>
-      <SafeAreaView
-        style={[
-          GlobalInclude.AppStyle.parentStyle,
-          {paddingHorizontal: scale(10)},
-        ]}>
-        <View style={{paddingHorizontal: scale(5)}}>
+    <View style={GlobalInclude.AppStyle.topSpace}>
+      <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
+        <View
+          style={[
+            GlobalInclude.AppStyle.fill,
+            GlobalInclude.AppStyle.contentSpace,
+          ]}>
           <TopHeaderView
             index={11}
             navigation={navigation}
@@ -377,74 +386,74 @@ const Video = ({navigation}) => {
               setShowAddPostModal(true);
             }}
           />
-        </View>
-        <View style={[grid.rowdir, g.mb15, g.mt10, g.ml5, g.mr5]}>
-          <View style={[g.br3, grid.col, g.mr5]}>
-            <View style={[g.inputNew, grid.rowdir]}>
-              <GlobalInclude.BaseIcon
-                containerStyle={style.searchIcon}
-                iconColor={'#dddddd'}
-                iconName={'search'}
-                iconSize={scale(20)}
-                iconType={IconType[4]}
-              />
-              <TextInput
-                underlineColorAndroid="transparent"
-                style={[
-                  g.inputNew,
-                  g.fs18,
-                  grid.col,
-                  grid.justifyContentCenter,
-                ]}
-                keyboardType={'default'}
-                placeholder={'Search'}
-                onChangeText={(text) => {
-                  getVideoData(text);
-                }}
-              />
+          <View style={[grid.rowdir, g.mb10, g.mt10]}>
+            <View style={[g.br3, grid.col, g.mr5]}>
+              <View style={[g.inputNew, grid.rowdir]}>
+                <GlobalInclude.BaseIcon
+                  containerStyle={style.searchIcon}
+                  iconColor={'#dddddd'}
+                  iconName={'search'}
+                  iconSize={scale(20)}
+                  iconType={IconType[4]}
+                />
+                <TextInput
+                  underlineColorAndroid="transparent"
+                  style={[
+                    g.inputNew,
+                    g.fs18,
+                    grid.col,
+                    grid.justifyContentCenter,
+                  ]}
+                  keyboardType={'default'}
+                  placeholder={'Search'}
+                  onChangeText={(text) => {
+                    getVideoData(text);
+                  }}
+                />
+              </View>
             </View>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                filterSheet.open();
+              }}
+              style={[
+                g.fliterBtnNew,
+                grid.alignItems,
+                grid.justifyContentCenter,
+              ]}>
+              <Image
+                source={GlobalInclude.Assets.Filter}
+                resizeMode="contain"
+                style={{width: 16}}
+              />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => {
-              filterSheet.open();
-            }}
-            style={[
-              g.fliterBtnNew,
-              grid.alignItems,
-              grid.justifyContentCenter,
-            ]}>
-            <Image
-              source={GlobalInclude.Assets.Filter}
-              resizeMode="contain"
-              style={{width: 16}}
-            />
-          </TouchableOpacity>
+          {isLoading ? (
+            <View style={GlobalInclude.AppStyle.fillCenter}>
+              <ActivityIndicator size={'small'} color={'#2b3252'} />
+            </View>
+          ) : (
+            <View style={GlobalInclude.AppStyle.fill}>
+              {pageContent === null || pageContent.length === 0 ? (
+                <View style={GlobalInclude.AppStyle.center}>
+                  <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
+                    No Record Found
+                  </Text>
+                </View>
+              ) : (
+                <View style={GlobalInclude.AppStyle.fill}>
+                  <ScrollView
+                    style={[GlobalInclude.AppStyle.fill]}
+                    scrollEventThrottle={1000}
+                    showsVerticalScrollIndicator={false}>
+                    {renderVideos()}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+          )}
         </View>
-        {isLoading ? (
-          <View style={GlobalInclude.AppStyle.fillCenter}>
-            <ActivityIndicator size={'small'} color={'#2b3252'} />
-          </View>
-        ) : (
-          <View style={GlobalInclude.AppStyle.fill}>
-            {pageContent === null || pageContent.length === 0 ? (
-              <View style={GlobalInclude.AppStyle.center}>
-                <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
-                  No Record Found
-                </Text>
-              </View>
-            ) : (
-              <View style={GlobalInclude.AppStyle.fill}>
-                <ScrollView
-                  style={[GlobalInclude.AppStyle.fill]}
-                  scrollEventThrottle={1000}
-                  showsVerticalScrollIndicator={false}>
-                  {renderVideos()}
-                </ScrollView>
-              </View>
-            )}
-          </View>
-        )}
 
         <ShareSheet
           visible={showSharingSheet}
@@ -555,12 +564,9 @@ const Video = ({navigation}) => {
               paddingTop: scale(10),
             },
           }}>
-          <BottomSheetHeader
-            titleStyle={[g.txtLeft, g.colorBlue]}
-            title={'Filter Videos By'}
-            showSearch={false}
-            onSeachQuery={(query) => {}}
-          />
+          <Text style={[g.mt15, g.colorBlue, g.fs15, g.FHNB, style.filterText]}>
+            Filter Videos By
+          </Text>
           <View style={grid.flex1}>
             <ScrollView showsVerticalScrollIndicator={false}>
               {videoCategories.map((item, index) => {
@@ -594,14 +600,7 @@ const Video = ({navigation}) => {
             </ScrollView>
           </View>
 
-          <View
-            style={{
-              justifyContent: 'center',
-              alignItems: 'center',
-              width: scale(150),
-              alignContent: 'center',
-              alignSelf: 'center',
-            }}>
+          <View style={style.filterButton}>
             <CommonButton
               showLoader={false}
               title={'Go'}
@@ -625,13 +624,7 @@ const Video = ({navigation}) => {
           <View style={style.centeredView}>
             <View style={style.modalView}>
               <View style={style.headerView}>
-                <View
-                  style={{
-                    justifyContent: 'flex-end',
-                    alignSelf: 'flex-end',
-                    alignContent: 'flex-end',
-                    flex: 1,
-                  }}>
+                <View style={style.closeButton}>
                   <TouchableOpacity
                     style={{alignSelf: 'flex-end'}}
                     activeOpacity={0.8}
@@ -655,14 +648,7 @@ const Video = ({navigation}) => {
                 </View>
               </View>
               {/* content */}
-              <View
-                style={{
-                  width: '100%',
-                  paddingStart: scale(10),
-                  paddingEnd: scale(10),
-                  paddingTop: scale(5),
-                  paddingBottom: scale(10),
-                }}>
+              <View style={style.contentContainer}>
                 <View style={g.mb15}>
                   <View style={[grid.rowdir, grid.alignItemsTop]}>
                     <Text style={g.labeltext1}>Paste Link To Video</Text>
@@ -706,22 +692,11 @@ const Video = ({navigation}) => {
                   />
                 </View>
 
-                <View
-                  style={{
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    width: scale(150),
-                    alignContent: 'center',
-                    alignSelf: 'center',
-                  }}>
+                <View style={style.submitButton}>
                   <CommonButton
-                    showLoader={false}
+                    showLoader={showAddPostLoader}
                     title={'Submit'}
                     onPress={() => {
-                      console.log(
-                        '!Helper.validateRegex(urlRegex, videoLink)',
-                        !Helper.validateRegex(urlRegex, videoLink),
-                      );
                       setErrorMessage({});
                       if (videoLink.trim() === '') {
                         setErrorMessage({link: 'This field is required!'});
@@ -738,10 +713,8 @@ const Video = ({navigation}) => {
                                 'https://player.vimeo.com/video/',
                               )
                             : '';
-                        setShowAddPostModal(false);
-                        setTimeout(() => {
-                          postVideo();
-                        }, 100);
+
+                        postVideo();
                       }
                     }}
                   />
@@ -847,6 +820,53 @@ const style = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
     alignItems: 'center',
+  },
+  filterText: {
+    paddingTop: 12,
+    paddingBottom: 12,
+    borderTopColor: '#dddddd',
+    borderTopWidth: 1,
+  },
+  seeMore: {
+    flexDirection: 'row',
+
+    justifyContent: 'center',
+    alignContent: 'center',
+    alignItems: 'center',
+  },
+  showChildVideo: {
+    marginBottom: 5,
+    marginLeft: 5,
+    marginRight: 5,
+    padding: 5,
+    paddingBottom: 15,
+  },
+  submitButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: scale(150),
+    alignContent: 'center',
+    alignSelf: 'center',
+  },
+  contentContainer: {
+    width: '100%',
+    paddingStart: scale(10),
+    paddingEnd: scale(10),
+    paddingTop: scale(5),
+    paddingBottom: scale(10),
+  },
+  closeButton: {
+    justifyContent: 'flex-end',
+    alignSelf: 'flex-end',
+    alignContent: 'flex-end',
+    flex: 1,
+  },
+  filterButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: scale(150),
+    alignContent: 'center',
+    alignSelf: 'center',
   },
 });
 

@@ -7,16 +7,19 @@ import Color from '../theme/Colors';
 export default StyleSheet.create({
   topSpace: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? scale(15) : getStatusBarHeight(),
-    backgroundColor: '#fff',
+    paddingTop: Platform.OS === 'android' ? 0 : getStatusBarHeight(),
+    backgroundColor: 'white',
+  },
+  contentSpace: {
+    paddingStart: scale(15),
+    paddingEnd: scale(15),
+    paddingTop: scale(15),
   },
   ViewStyle: {
     flex: 1,
     backgroundColor: 'white',
   },
   parentStyle: {
-    //paddingTop: Platform.OS === 'android' ? scale(5) : getStatusBarHeight(),
-    paddingTop: Platform.OS === 'android' ? 0 : 0,
     flex: 1,
     backgroundColor: '#fff',
   },

@@ -304,28 +304,15 @@ const EditProfile = ({route, navigation}) => {
 
   return (
     <View style={GlobalInclude.AppStyle.topSpace}>
-      <MyStatusBar barStyle={'light-content'} />
       <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
         <View
           style={[
             GlobalInclude.AppStyle.fill,
-            {
-              paddingStart: scale(12),
-              paddingEnd: scale(12),
-            },
+            GlobalInclude.AppStyle.contentSpace,
           ]}>
           {profileData !== null && (
             <View style={GlobalInclude.AppStyle.fill}>
-              <View
-                style={[
-                  grid.rowdir,
-                  grid.justifyContent,
-                  grid.alignItems,
-                  g.p15,
-                  g.pl0,
-                  g.pb0,
-                  g.pt0,
-                ]}>
+              <View style={[grid.rowdir, grid.justifyContent, grid.alignItems]}>
                 <View style={grid.flex1}>
                   <TouchableOpacity
                     activeOpacity={1}

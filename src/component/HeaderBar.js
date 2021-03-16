@@ -20,11 +20,12 @@ const HeaderBar = ({title, navigation}) => {
         shadowColor: '#000',
         shadowOffset: {
           width: 0,
-          height: 1,
+          height: 0,
         },
-        shadowOpacity: 0.22,
-        shadowRadius: 2.22,
+        shadowOpacity: 0.1,
+        shadowRadius: 1.22,
         elevation: 3,
+        backgroundColor: 'white',
       }}>
       <View style={headerStyle.topContainer} />
       <View style={headerStyle.container}>
@@ -57,6 +58,13 @@ const headerStyle = StyleSheet.create({
     alignContent: 'center',
     alignItems: 'center',
     elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
   },
   shadowView: {
     backgroundColor: 'white',

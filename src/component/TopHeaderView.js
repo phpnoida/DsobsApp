@@ -16,7 +16,7 @@ const menuOptions = [
   {screen: '', visible: false, value: 0, label: 'Chat'},
   {screen: '', visible: false, value: 1, label: 'Events'},
   {screen: 'SearchDirectory', visible: true, value: 2, label: 'Directory'},
-  {screen: '', visible: false, value: 3, label: 'News'},
+  {screen: 'NewsListing', visible: true, value: 3, label: 'News'},
   {screen: '', visible: false, value: 4, label: 'Ventures'},
   {screen: '', visible: false, value: 5, label: 'Common Room'},
   {screen: '', visible: false, value: 6, label: 'Store'},
@@ -24,7 +24,7 @@ const menuOptions = [
   {screen: '', visible: false, value: 8, label: 'Jobs'},
   {screen: '', visible: false, value: 9, label: 'Offers'},
   {screen: '', visible: false, value: 10, label: 'Footsteps'},
-  {screen: 'Video', visible: false, value: 11, label: 'Videos'},
+  {screen: 'Video', visible: true, value: 11, label: 'Videos'},
   {screen: 'Magazine', visible: true, value: 12, label: 'The Rose Bowl'},
   {screen: '', visible: false, value: 13, label: 'Contributions'},
   {screen: '', visible: false, value: 14, label: 'Masters'},
@@ -74,13 +74,11 @@ const TopHeaderView = ({
                     activeOpacity={1}
                     onPress={() => {
                       setOpenDropDown(false);
-                      setTimeout(() => {
-                        if (item.screen !== '') {
-                          if (index !== item.value) {
-                            navigation.navigate(item.screen);
-                          }
+                      if (item.screen !== '') {
+                        if (index !== item.value) {
+                          navigation.navigate(item.screen);
                         }
-                      }, 200);
+                      }
                     }}>
                     <Text style={arrayStyle}>{item.label}</Text>
                   </TouchableOpacity>
@@ -159,7 +157,7 @@ const TopHeaderView = ({
                 onPress={() => {
                   onLabelPress();
                 }}>
-                <Text style={[g.colorBlue, g.fs12, g.FHNB, g.txtRight]}>
+                <Text style={[g.colorBlue, g.fs14, g.FHNB, g.txtRight]}>
                   {label}
                 </Text>
               </TouchableOpacity>

@@ -165,7 +165,6 @@ const Summary = ({route, navigation}) => {
 
   return (
     <View style={GlobalInclude.AppStyle.topSpace}>
-      <MyStatusBar barStyle={'light-content'} hidden />
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.parentStyle}>
           <View
@@ -196,7 +195,7 @@ const Summary = ({route, navigation}) => {
                     <View
                       style={[
                         GlobalInclude.AppStyle.fill,
-                        {paddingStart: scale(15), paddingEnd: scale(15)},
+                        GlobalInclude.AppStyle.contentSpace,
                       ]}>
                       <View
                         style={[

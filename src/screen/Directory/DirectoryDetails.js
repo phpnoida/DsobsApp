@@ -13,6 +13,7 @@ import {
   Keyboard,
   Alert,
   SafeAreaView,
+  Platform,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
@@ -70,13 +71,6 @@ const DirectoryDetails = ({route, navigation}) => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [curY, setCurY] = useState(new Animated.Value(0));
   const [animatedHeight, setAnimatedHeight] = useState(0);
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      header: () => <HeaderBar navigation={navigation} />,
-    });
-    return () => {};
-  }, [navigation]);
 
   useEffect(() => {
     if (oldData.length > 0) {
@@ -509,11 +503,19 @@ const DirectoryDetails = ({route, navigation}) => {
     return (
       <View
         style={{
+          ...Platform.select({
+            android: {
+              paddingTop: scale(15),
+            },
+            ios: {
+              paddingTop: scale(10),
+            },
+          }),
           paddingHorizontal: scale(15),
           marginBottom: scale(10),
         }}>
         {/* search view */}
-        <View style={[grid.rowdir, g.mb15, g.mt5]}>
+        <View style={[grid.rowdir, g.mb15]}>
           <View style={[g.br3, grid.col, g.mr5]}>
             <View style={[g.inputNew, grid.rowdir]}>
               <GlobalInclude.BaseIcon
@@ -676,16 +678,15 @@ const DirectoryDetails = ({route, navigation}) => {
 
   return (
     <View style={GlobalInclude.AppStyle.fill}>
-      <MyStatusBar barStyle={'light-content'} hidden />
-      <SafeAreaView style={GlobalInclude.AppStyle.fill}>
+      <HeaderBar navigation={navigation} />
+      <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
         <TouchableOpacity
           style={GlobalInclude.AppStyle.fill}
           activeOpacity={1}
           onPress={() => {
             Keyboard.dismiss();
           }}>
-          <HeaderBar navigation={navigation} />
-          <View style={GlobalInclude.AppStyle.topSpace}>
+          <View style={GlobalInclude.AppStyle.fill}>
             {isLoading ? (
               <View style={GlobalInclude.AppStyle.fillCenter}>
                 <ActivityIndicator size={'small'} color={'#2b3252'} />
@@ -738,60 +739,7 @@ const DirectoryDetails = ({route, navigation}) => {
                 </Animated.View>
               </View>
             )}
-
-            {showScrollTop ? (
-              <View style={[g.btnScrollStrip, grid.alignItems]}>
-                <TouchableOpacity
-                  style={{width: scale(70)}}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    setShowScrollTop(false);
-                    if (listRef !== null) {
-                      listRef.current.scrollTo({
-                        animated: true,
-                        y: 0,
-                      });
-                    }
-                  }}
-                  hitSlop={{top: 50, bottom: 50, left: 100, right: 100}}>
-                  <Text style={[g.btn, g.btnScrolltoTop, g.fs11]}>
-                    {'Scroll to top'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ) : null}
           </View>
-          {/* city list sheet */}
-          <CityListSheet
-            ref={(ref) => {
-              cityListSheet = ref;
-            }}
-            height={deviceHeight - 150}
-            minClosingHeight={50}
-            duration={350}
-            closeOnDragDown={true}
-            customStyles={{
-              container: {
-                backgroundColor: '#fff',
-                borderTopLeftRadius: 30,
-                borderTopRightRadius: 30,
-                paddingStart: scale(15),
-                paddingEnd: scale(15),
-                paddingBottom: scale(20),
-              },
-            }}>
-            <BottomSheetHeader title={'Select City'} showSearch={false} />
-
-            <RadioButton
-              defaultSelected={locationFilter}
-              PROP={cityList}
-              capitalize
-              onRadioSelect={(value) => {
-                setLocationFilter(value.text.toString());
-                cityListSheet.close();
-              }}
-            />
-          </CityListSheet>
         </TouchableOpacity>
       </SafeAreaView>
     </View>

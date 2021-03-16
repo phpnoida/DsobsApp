@@ -162,7 +162,6 @@ const App = () => {
   };
 
   const _handleAppStateChange = (nextState) => {
-    console.log('170', nextState);
     appStateValue = nextState;
     global.nextAppState = nextState;
     if (global.isLoggedIn) {

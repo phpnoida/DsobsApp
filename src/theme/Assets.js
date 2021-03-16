@@ -44,6 +44,7 @@ import ShareFacebook from '../../Assets/Icon/share_facebook.png';
 import ShareEmail from '../../Assets/Icon/share_email.png';
 import ShareMore from '../../Assets/Icon/share_more.png';
 import ShareClipboard from '../../Assets/Icon/share_clipboard.png';
+import DefaultImage from '../../Assets/Icon/default_image.png';
 export default {
   AppLogo: AppLogo,
   Alumbus: Alumbus,
@@ -91,4 +92,5 @@ export default {
   ShareEmail: ShareEmail,
   ShareMore: ShareMore,
   ShareClipboard: ShareClipboard,
+  DefaultImage: DefaultImage,
 };

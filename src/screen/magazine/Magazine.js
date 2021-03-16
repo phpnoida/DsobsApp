@@ -180,16 +180,12 @@ const Magazine = ({route, navigation}) => {
 
   return (
     <View style={GlobalInclude.AppStyle.topSpace}>
-      <MyStatusBar barStyle={'light-content'} hidden />
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.parentStyle}>
           <View
             style={[
               GlobalInclude.AppStyle.fill,
-              {
-                paddingStart: scale(15),
-                paddingEnd: scale(15),
-              },
+              GlobalInclude.AppStyle.contentSpace,
             ]}>
             {isLoading ? (
               <View style={GlobalInclude.AppStyle.fillCenter}>

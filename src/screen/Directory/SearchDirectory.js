@@ -182,8 +182,6 @@ const SearchDirectory = ({route, navigation}) => {
                 navigation.navigate('DirectoryDetails', {data: data.data});
               }
             } else {
-              console.log('searchVal', searchVal);
-              console.log('dataLength', data.data.length);
               if (searchVal.length > 0) {
                 setSearchedUser([...data.data]);
               } else {
@@ -540,7 +538,6 @@ const SearchDirectory = ({route, navigation}) => {
 
   return (
     <View style={GlobalInclude.AppStyle.topSpace}>
-      <MyStatusBar barStyle={'light-content'} hidden />
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <TouchableOpacity
           style={GlobalInclude.AppStyle.fill}
@@ -550,20 +547,14 @@ const SearchDirectory = ({route, navigation}) => {
           }}>
           <View style={GlobalInclude.AppStyle.fill}>
             <View style={GlobalInclude.AppStyle.parentStyle}>
-              <View
-                style={[
-                  GlobalInclude.AppStyle.fill,
-                  {
-                    paddingBottom: scale(15),
-                  },
-                ]}>
+              <View style={GlobalInclude.AppStyle.fill}>
                 {isLoading ? (
                   <View style={GlobalInclude.AppStyle.fillCenter}>
                     <ActivityIndicator size={'small'} color={'#2b3252'} />
                   </View>
                 ) : (
                   <View style={GlobalInclude.AppStyle.fill}>
-                    <View style={{paddingHorizontal: scale(15)}}>
+                    <View style={GlobalInclude.AppStyle.contentSpace}>
                       <TopHeaderView
                         navigation={navigation}
                         index={2}

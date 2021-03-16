@@ -18,6 +18,7 @@ import AppRepresentives from '../screen/CmsPages/AppRepresentives';
 import AppChapters from '../screen/CmsPages/AppChapters';
 import CommonWebPage from '../screen/CommonWebPage';
 import Video from '../screen/Video/Video';
+import NewsListing from '../screen/News/NewsListing';
 
 const Stack = createStackNavigator();
 
@@ -112,6 +113,11 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="Video"
         component={Video}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="NewsListing"
+        component={NewsListing}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

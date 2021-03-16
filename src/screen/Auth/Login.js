@@ -433,7 +433,7 @@ const Login = ({navigation}) => {
 
   return (
     <TouchableOpacity
-      style={GlobalInclude.AppStyle.fill}
+      style={GlobalInclude.AppStyle.topSpace}
       activeOpacity={1}
       onPress={() => {
         Keyboard.dismiss();
