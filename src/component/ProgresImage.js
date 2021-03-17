@@ -26,14 +26,12 @@ const ProgresImage = ({source, containerStyle, imageStyle, mode}) => (
     }}
     indicatorProps={{
       animated: true,
-      borderColor: 'red',
-      borderWidth: 2,
       color: '#2b3252',
       direction: Platform.os === 'android' ? 'clockwise' : 'rtl',
       indeterminate: true,
       progress: 100,
       strokeCap: 'butt',
-      size: scale(20),
+      size: scale(24),
     }}
     onLoad={() => {
       Animated.timing(opacity, {

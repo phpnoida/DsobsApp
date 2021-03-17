@@ -31,14 +31,7 @@ import ScrollableTabView from 'react-native-scrollable-tab-view';
 import HTML from 'react-native-render-html';
 import Share, {ShareSheet, Button} from 'react-native-share';
 import ZoomImage from '../../component/ZoomImage';
-import FastImage from 'react-native-fast-image';
-import {createImageProgress} from 'react-native-image-progress';
-import MyStatusBar from '../../component/MyStatusBar';
-
-const AnimatedFastImage = Animated.createAnimatedComponent(FastImage);
-const ProgressImage = createImageProgress(AnimatedFastImage);
-
-let opacity = new Animated.Value(0.0);
+import ProgresImage from '../../component/ProgresImage';
 
 let magazineData = null;
 let currentIndex = 0;
@@ -216,6 +209,7 @@ const MagazineDetails = ({route, navigation}) => {
                           </View>
                         </View>
                         <ScrollView
+                          showsVerticalScrollIndicator={false}
                           style={GlobalInclude.AppStyle.fill}
                           key={index}>
                           <View
@@ -280,44 +274,17 @@ const MagazineDetails = ({route, navigation}) => {
                                       imageArray = [{url: htmlAttribs.src}];
                                       setShowImageModal(true);
                                     }}>
-                                    <ProgressImage
-                                      source={{uri: htmlAttribs.src}}
-                                      style={{aspectRatio: 1}}
+                                    <ProgresImage
+                                      source={
+                                        htmlAttribs.src != null &&
+                                        htmlAttribs.src !== ''
+                                          ? {uri: htmlAttribs.src}
+                                          : GlobalInclude.Assets.DefaultImage
+                                      }
+                                      containerStyle={{aspectRatio: 1}}
                                       imageStyle={{
                                         aspectRatio: 1,
-                                        opacity: opacity,
-                                        transform: [
-                                          {
-                                            scale: opacity.interpolate({
-                                              inputRange: [0, 1.0],
-                                              outputRange: [0.85, 1.0],
-                                            }),
-                                          },
-                                        ],
                                       }}
-                                      indicatorProps={{
-                                        animated: true,
-                                        borderColor: 'red',
-                                        borderWidth: 2,
-                                        color: '#2b3252',
-                                        direction:
-                                          Platform.os === 'android'
-                                            ? 'clockwise'
-                                            : 'rtl',
-                                        indeterminate: true,
-                                        progress: 100,
-                                        strokeCap: 'butt',
-                                        size: scale(20),
-                                      }}
-                                      onLoad={() => {
-                                        Animated.timing(opacity, {
-                                          toValue: 1.0,
-                                          duration: 200,
-                                          useNativeDriver: true,
-                                        }).start();
-                                      }}
-                                      resizeMode={FastImage.resizeMode.contain}
-                                      threshold={20}
                                     />
                                   </TouchableOpacity>
                                 );

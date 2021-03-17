@@ -445,9 +445,8 @@ const Login = ({navigation}) => {
         <View
           style={[
             GlobalInclude.AppStyle.fill,
+            GlobalInclude.AppStyle.contentSpace,
             {
-              paddingStart: scale(15),
-              paddingEnd: scale(15),
               paddingBottom: scale(15),
             },
           ]}>

@@ -557,7 +557,7 @@ const SearchDirectory = ({route, navigation}) => {
                     <View style={GlobalInclude.AppStyle.contentSpace}>
                       <TopHeaderView
                         navigation={navigation}
-                        index={2}
+                        index={0}
                         showBack={true}
                       />
                     </View>

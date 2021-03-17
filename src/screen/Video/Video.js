@@ -31,6 +31,7 @@ import Helper from '../../helper/Helper';
 import BottomSheetHeader from '../../component/BottomSheetHeader';
 import FilterSheet from 'react-native-raw-bottom-sheet';
 import CommonButton from '../../component/CommonButton';
+import RNFetchBlob from 'rn-fetch-blob';
 
 let deviceHeight = Dimensions.get('window').height;
 let windowWidth = Dimensions.get('window').width;
@@ -52,6 +53,7 @@ const Video = ({navigation}) => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [showAddPostLoader, setShowAddPostLoader] = useState(false);
   useEffect(() => {
+    setIsLoading(true);
     getVideoCategory();
     getVideoData('');
     return () => {};
@@ -64,7 +66,6 @@ const Video = ({navigation}) => {
    */
 
   const getVideoData = (searchQuery) => {
-    setIsLoading(true);
     getVideos(
       searchQuery,
       (response) => {
@@ -179,6 +180,17 @@ const Video = ({navigation}) => {
    * ************************************************
    */
 
+  const shareImage = (item) => {
+    RNFetchBlob.fetch('GET', `https://example.com/example.png`)
+      .then((resp) => {
+        console.log('response : ', resp);
+        console.log(resp.data);
+        let base64image = resp.data;
+        share('data:image/png;base64,' + base64image);
+      })
+      .catch((err) => errorHandler(err));
+  };
+
   const resetFilter = () => {
     let pushArray = videoCategories;
     pushArray.map((child) => {
@@ -205,7 +217,7 @@ const Video = ({navigation}) => {
 
   const renderChildVideos = (videos, parent) => {
     let videoArray = [];
-    videos.map((child, index) => {
+    videos.slice(1).map((child, index) => {
       const video = (
         <View key={index.toString()} style={[grid.c2, g.mb10]}>
           <View style={g.bggray2}>
@@ -283,9 +295,18 @@ const Video = ({navigation}) => {
   const renderVideos = () => {
     return pageContent.map((item, index) => {
       return (
-        <View>
+        <View key={index.toString()}>
           {item.videos !== undefined && item.videos.length > 0 ? (
-            <View style={[g.bgWhite, g.boxShadow, g.mb10, g.ml2, g.mr2, g.mt5]}>
+            <View
+              style={[
+                g.bgWhite,
+                g.boxShadow,
+                g.mb10,
+                g.ml2,
+                g.mr2,
+                g.mt5,
+                {borderRadius: scale(15)},
+              ]}>
               <View style={g.bggray3}>
                 <YoutubeView
                   link={item.videos[0].videoLink}
@@ -312,26 +333,27 @@ const Video = ({navigation}) => {
               </View>
 
               <View style={[g.pl15, g.pr15, g.pb10, {flexDirection: 'row'}]}>
-                <TouchableOpacity
-                  onPress={() => {
-                    updateChild(index);
-                  }}
-                  style={[
-                    style.seeMore,
-                    {marginEnd: scale(3), width: scale(80)},
-                  ]}>
-                  <GlobalInclude.BaseIcon
-                    containerStyle={{height: scale(14), width: scale(14)}}
-                    iconColor={'#2b3252'}
-                    iconName={item.isShowing ? 'caretdown' : 'caretright'}
-                    iconSize={scale(14)}
-                    iconType={IconType[10]}
-                  />
-                  <Text style={[g.fs10, g.FHNR, g.colorBlack, g.ml10]}>
-                    {item.isShowing ? 'SEE LESS' : 'SEE MORE'}
-                  </Text>
-                </TouchableOpacity>
-
+                {item.videos.length > 1 && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      updateChild(index);
+                    }}
+                    style={[
+                      style.seeMore,
+                      {marginEnd: scale(3), width: scale(80)},
+                    ]}>
+                    <GlobalInclude.BaseIcon
+                      containerStyle={{height: scale(14), width: scale(14)}}
+                      iconColor={'#2b3252'}
+                      iconName={item.isShowing ? 'caretdown' : 'caretright'}
+                      iconSize={scale(14)}
+                      iconType={IconType[10]}
+                    />
+                    <Text style={[g.fs10, g.FHNR, g.colorBlack, g.ml10]}>
+                      {item.isShowing ? 'SEE LESS' : 'SEE MORE'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity
                   onPress={() => {
                     Alert.alert('Comming soon');
@@ -347,9 +369,50 @@ const Video = ({navigation}) => {
                     iconSize={scale(14)}
                     iconType={IconType[4]}
                   />
-                  <Text style={[g.fs10, g.FHNR, g.colorBlack, g.ml2]}>
+                  <Text style={[g.fs10, g.FHNR, g.colorBlack, g.ml10]}>
                     {'HEAR AS PODCAST'}
                   </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    style.seeMore,
+                    {marginStart: scale(3), width: scale(130)},
+                  ]}
+                  onPress={() => {
+                    selectedVideo = {};
+                    let title =
+                      item.title !== undefined && item.title !== null
+                        ? item.title
+                        : `Hey,Check out The ${APP_NAME}`;
+
+                    let subject = item.videos[0].about.substring(0, 30);
+                    let youtubeId = Helper.GetYoutubeId(
+                      item.videos[0].videoLink,
+                    );
+                    let attachment =
+                      youtubeId !== undefined
+                        ? Helper.loadYoutubeThumb(youtubeId)
+                        : null;
+
+                    selectedVideo.title = title;
+                    selectedVideo.message = subject;
+                    selectedVideo.type =
+                      attachment !== null ? 'image/*' : 'text/plain';
+                    selectedVideo.url =
+                      'https://homepages.cae.wisc.edu/~ece533/images/airplane.png';
+
+                    setShowSharingSheet(true);
+
+                    shareImage(title,);
+                  }}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(11), width: scale(11)}}
+                    iconColor={'#2b3252'}
+                    iconName={'share-alt'}
+                    iconSize={scale(11)}
+                    iconType={IconType[4]}
+                  />
+                  <Text style={[g.fs10, g.ml10]}>SHARE</Text>
                 </TouchableOpacity>
               </View>
 
@@ -378,7 +441,7 @@ const Video = ({navigation}) => {
             GlobalInclude.AppStyle.contentSpace,
           ]}>
           <TopHeaderView
-            index={11}
+            index={3}
             navigation={navigation}
             label={'Post Video'}
             showLabel={true}
@@ -400,12 +463,12 @@ const Video = ({navigation}) => {
                   underlineColorAndroid="transparent"
                   style={[
                     g.inputNew,
-                    g.fs18,
+                    g.fs16,
                     grid.col,
                     grid.justifyContentCenter,
                   ]}
                   keyboardType={'default'}
-                  placeholder={'Search'}
+                  placeholder={'Search by(Title)'}
                   onChangeText={(text) => {
                     getVideoData(text);
                   }}
@@ -564,9 +627,18 @@ const Video = ({navigation}) => {
               paddingTop: scale(10),
             },
           }}>
-          <Text style={[g.mt15, g.colorBlue, g.fs15, g.FHNB, style.filterText]}>
+          <Text
+            style={[
+              g.mt15,
+              g.colorBlue,
+              g.fs15,
+              g.FHNB,
+              style.filterText,
+              g.mb15,
+            ]}>
             Filter Videos By
           </Text>
+
           <View style={grid.flex1}>
             <ScrollView showsVerticalScrollIndicator={false}>
               {videoCategories.map((item, index) => {
@@ -586,7 +658,7 @@ const Video = ({navigation}) => {
                       }}>
                       <Text
                         style={[
-                          g.fs12,
+                          g.fs13,
                           g.FHNB,
                           g.colorBlack,
                           item.isSelected ? g.colorBlue : g.colorGray5,
@@ -657,7 +729,7 @@ const Video = ({navigation}) => {
                   <TextInput
                     underlineColorAndroid="transparent"
                     style={[g.inputWhite]}
-                    autoCapitalize="words"
+                    autoCapitalize={'none'}
                     placeholder={'Paste link here'}
                     onChangeText={(value) => {
                       videoLink = value;
@@ -684,7 +756,7 @@ const Video = ({navigation}) => {
                       g.inputWhite,
                       {height: 100, textAlignVertical: 'top'},
                     ]}
-                    autoCapitalize="words"
+                    autoCapitalize={'sentences'}
                     placeholder="Enter your text here"
                     onChangeText={(value) => {
                       videoNotes = value;
@@ -752,7 +824,7 @@ const style = StyleSheet.create({
   videoContainer: {
     height: scale(200),
     width: '100%',
-    borderRadius: scale(6),
+    borderRadius: scale(15),
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
     justifyContent: 'center',
@@ -767,8 +839,10 @@ const style = StyleSheet.create({
     zIndex: 1,
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
+    borderRadius: scale(15),
   },
   thumbStyle: {
+    borderRadius: scale(15),
     height: scale(200),
     width: '100%',
     borderBottomLeftRadius: 0,
@@ -826,11 +900,11 @@ const style = StyleSheet.create({
     paddingBottom: 12,
     borderTopColor: '#dddddd',
     borderTopWidth: 1,
+    borderBottomColor: '#dddddd',
+    borderBottomWidth: 1,
   },
   seeMore: {
     flexDirection: 'row',
-
-    justifyContent: 'center',
     alignContent: 'center',
     alignItems: 'center',
   },

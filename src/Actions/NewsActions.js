@@ -9,6 +9,8 @@ export function getNews(searchQuery, index, size, callback, errCallback) {
     requestPath = `${SERVER_PATH}news?index=${index}&size=${size}`;
   }
 
+  console.log('News', requestPath);
+
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
     .then((res) => callback(res))

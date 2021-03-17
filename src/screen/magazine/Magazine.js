@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   Text,
   View,
@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
   Dimensions,
   StyleSheet,
-  Animated,
   PermissionsAndroid,
   SafeAreaView,
   Platform,
@@ -23,20 +22,13 @@ import {IconType} from '../../helper/Constants';
 import {getMagazines} from '../../Actions/RoseBowlActions';
 import RNFetchBlob from 'rn-fetch-blob';
 import TopHeaderView from '../../component/TopHeaderView';
-import MyStatusBar from '../../component/MyStatusBar';
-import FastImage from 'react-native-fast-image';
-import {createImageProgress} from 'react-native-image-progress';
-
-const AnimatedFastImage = Animated.createAnimatedComponent(FastImage);
-const ProgressImage = createImageProgress(AnimatedFastImage);
-const windowWidth = Dimensions.get('window').width;
-let opacity = new Animated.Value(0.0);
+import ProgresImage from '../../component/ProgresImage';
 
 const {config, fs} = RNFetchBlob;
 let PictureDir = fs.dirs.PictureDir;
 let responseMessage = '';
 let selectedId = '';
-
+let defaultPosition = 0;
 let downloadOptions = {
   fileCache: true,
   addAndroidDownloads: {
@@ -67,6 +59,8 @@ const monthNames = [
   'Dec',
 ];
 const Magazine = ({route, navigation}) => {
+  const scrollViewRef = useRef();
+  const [dataSourceCords, setDataSourceCords] = useState([]);
   const [pageContent, setPageContent] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -102,6 +96,33 @@ const Magazine = ({route, navigation}) => {
                 data.data !== null &&
                 data.data.length > 0
               ) {
+                //console.log('content', JSON.stringify(data.data));
+                let resData = data.data;
+                let currentYear = new Date().getFullYear();
+                let currentMonth = new Date().getMonth() + 1;
+
+                console.log('currentMonth', currentMonth);
+
+                for (let i = 0; i < resData.length; i++) {
+                  const element = resData[i];
+
+                  if (
+                    element.publishYear.toString() === currentYear.toString() &&
+                    element.publishMonth.toString() === currentMonth.toString()
+                  ) {
+                    defaultPosition = i;
+                    break;
+                  }
+                }
+                setTimeout(() => {
+                  if (defaultPosition < dataSourceCords.length) {
+                    scrollViewRef.current.scrollTo({
+                      x: 0,
+                      y: dataSourceCords[defaultPosition],
+                      animated: true,
+                    });
+                  }
+                }, 300);
                 setPageContent(data.data);
               } else {
                 setPageContent(null);
@@ -118,12 +139,6 @@ const Magazine = ({route, navigation}) => {
       },
     );
   };
-
-  /*
-   * ************************************************
-   * API Section End
-   * ************************************************
-   */
 
   const _downloadContent = async (file) => {
     if (Platform.OS === 'android') {
@@ -178,6 +193,12 @@ const Magazine = ({route, navigation}) => {
       });
   };
 
+  /*
+   * ************************************************
+   * API Section End
+   * ************************************************
+   */
+
   return (
     <View style={GlobalInclude.AppStyle.topSpace}>
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
@@ -205,7 +226,7 @@ const Magazine = ({route, navigation}) => {
                   </View>
                 ) : (
                   <View style={GlobalInclude.AppStyle.fill}>
-                    <TopHeaderView index={12} navigation={navigation} />
+                    <TopHeaderView index={1} navigation={navigation} />
                     <View style={[g.br3, g.mb15, g.mt5]}>
                       <View style={[g.inputNew, grid.rowdir]}>
                         <GlobalInclude.BaseIcon
@@ -226,11 +247,20 @@ const Magazine = ({route, navigation}) => {
                       </View>
                     </View>
                     {/* Magazine */}
-                    <ScrollView showsVerticalScrollIndicator={false}>
+                    <ScrollView
+                      contentInsetAdjustmentBehavior={'automatic'}
+                      showsVerticalScrollIndicator={false}
+                      ref={scrollViewRef}>
                       <View style={[grid.alignItems]}>
                         {pageContent.map((item, index) => {
                           return (
-                            <View key={index}>
+                            <View
+                              key={index}
+                              onLayout={(event) => {
+                                const layout = event.nativeEvent.layout;
+                                dataSourceCords[index] = layout.y;
+                                setDataSourceCords(dataSourceCords);
+                              }}>
                               <TouchableOpacity
                                 activeOpacity={1}
                                 onPress={() => {
@@ -240,9 +270,14 @@ const Magazine = ({route, navigation}) => {
                                 }}
                                 style={[g.mb15]}>
                                 <View style={[g.br3, g.oh]}>
-                                  <ProgressImage
-                                    source={{uri: item.contentImage.file}}
-                                    style={[
+                                  <ProgresImage
+                                    source={
+                                      item.contentImage.file != null &&
+                                      item.contentImage.file !== ''
+                                        ? {uri: item.contentImage.file}
+                                        : GlobalInclude.Assets.DefaultImage
+                                    }
+                                    containerStyle={[
                                       g.oh,
                                       g.bglightGray,
                                       {
@@ -251,40 +286,6 @@ const Magazine = ({route, navigation}) => {
                                         width: deviceWidth - 70,
                                       },
                                     ]}
-                                    imageStyle={{
-                                      opacity: opacity,
-                                      transform: [
-                                        {
-                                          scale: opacity.interpolate({
-                                            inputRange: [0, 1.0],
-                                            outputRange: [0.85, 1.0],
-                                          }),
-                                        },
-                                      ],
-                                    }}
-                                    indicatorProps={{
-                                      animated: true,
-                                      borderColor: 'red',
-                                      borderWidth: 2,
-                                      color: '#2b3252',
-                                      direction:
-                                        Platform.os === 'android'
-                                          ? 'clockwise'
-                                          : 'rtl',
-                                      indeterminate: true,
-                                      progress: 100,
-                                      strokeCap: 'butt',
-                                      size: scale(20),
-                                    }}
-                                    onLoad={() => {
-                                      Animated.timing(opacity, {
-                                        toValue: 1.0,
-                                        duration: 200,
-                                        useNativeDriver: true,
-                                      }).start();
-                                    }}
-                                    resizeMode={FastImage.resizeMode.cover}
-                                    threshold={20}
                                   />
                                 </View>
 
@@ -379,7 +380,7 @@ const style = StyleSheet.create({
     alignItems: 'center',
   },
   modalView: {
-    width: windowWidth - 50,
+    width: deviceWidth - 50,
     backgroundColor: 'white',
     borderRadius: scale(6),
     padding: scale(7),

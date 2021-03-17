@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useLayoutEffect} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   Text,
   View,
@@ -20,11 +20,8 @@ import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
 import {IconType} from '../../helper/Constants';
-import CityListSheet from 'react-native-raw-bottom-sheet';
-import RadioButton from '../../component/RadioButton';
-import BottomSheetHeader from '../../component/BottomSheetHeader';
 import HeaderBar from '../../component/HeaderBar';
-import MyStatusBar from '../../component/MyStatusBar';
+
 
 let deviceWidth = Dimensions.get('window').width;
 let deviceHeight = Dimensions.get('window').height;

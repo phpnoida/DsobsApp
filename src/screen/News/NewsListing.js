@@ -12,6 +12,7 @@ import {
   Dimensions,
   FlatList,
   Modal,
+  Keyboard,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -50,7 +51,6 @@ let newsLink = '',
 let filteredRegion = [];
 let filteredIndustry = [];
 let filteredTopic = [];
-let filterQuery = '';
 
 const NewsListing = ({navigation}) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -63,10 +63,21 @@ const NewsListing = ({navigation}) => {
   const [showAddPostModal, setShowAddPostModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [showAddNewsLoader, setShowAddNewsLoader] = useState(false);
+  const [filterQuery, setfilterQuery] = useState('');
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
   );
   useEffect(() => {
+    newsIndex = 0;
+    newsSize = 10;
+    totalCount = 0;
+    newsLink = '';
+    newsAbout = '';
+
+    filteredRegion = [];
+    filteredIndustry = [];
+    filteredTopic = [];
+
     setIsLoading(true);
     getFilterCategory();
     getNewsListing('');
@@ -261,7 +272,7 @@ const NewsListing = ({navigation}) => {
     doPostNews(
       requestData,
       (response) => {
-        setShowAddNewsLoader(true);
+        setShowAddNewsLoader(false);
         if (response && response !== null) {
           if (
             response.data &&
@@ -273,16 +284,17 @@ const NewsListing = ({navigation}) => {
               newsLink = '';
               newsAbout = '';
               newsIndex = 0;
+              setfilterQuery('');
               setShowAddPostModal(false);
               setTimeout(() => {
-                getNewsListing(filterQuery);
+                getNewsListing('');
               }, 300);
             }
           }
         }
       },
       (error) => {
-        setShowAddNewsLoader(true);
+        setShowAddNewsLoader(false);
         setIsLoading(false);
       },
     );
@@ -346,6 +358,7 @@ const NewsListing = ({navigation}) => {
     console.log('onEndReached()');
     if (pageContent.length === totalCount) {
       setPaginationStatus(PaginationStatus.allLoaded);
+      return;
     }
     if (paginationStatus === PaginationStatus.waiting) {
       onPaginate();
@@ -354,7 +367,6 @@ const NewsListing = ({navigation}) => {
 
   const handleRefresh = () => {
     newsIndex = 0;
-
     getNewsListing(filterQuery);
   };
 
@@ -457,12 +469,66 @@ const NewsListing = ({navigation}) => {
               />
             )}
           </View>
-          <Text style={style.userName}>{concatName(row)}</Text>
+          <View style={{padding: scale(3)}}>
+            <Text style={style.userNameView}>{concatName(row)}</Text>
+            {row.batch ? (
+              <Text
+                style={[
+                  g.fs10,
+                  g.colorBlack,
+                  g.FHNR,
+                  {marginTop: scale(2), marginBottom: scale(2)},
+                ]}>
+                {row.batch}
+              </Text>
+            ) : null}
+            {row.schoolNumber ? (
+              <Text
+                style={[
+                  g.fs10,
+                  g.colorBlack,
+                  g.FHNR,
+                  {marginTop: scale(2), marginBottom: scale(2)},
+                ]}>
+                {row.schoolNumber}
+              </Text>
+            ) : null}
+            <View
+              style={{
+                flexDirection: 'row',
+                marginTop: scale(2),
+                marginBottom: scale(2),
+              }}>
+              {row.house ? (
+                <Text
+                  style={[
+                    g.fs10,
+                    g.colorBlack,
+                    g.FHNR,
+                    {marginRight: scale(2)},
+                  ]}>
+                  {row.house.toLowerCase().charAt(0).toUpperCase() +
+                    row.house.toLowerCase().slice(1)}
+                </Text>
+              ) : null}
+              {row.section ? (
+                <Text
+                  style={[
+                    g.fs10,
+                    g.colorBlack,
+                    g.FHNR,
+                    {marginLeft: scale(2)},
+                  ]}>
+                  {row.section}
+                </Text>
+              ) : null}
+            </View>
+          </View>
         </TouchableOpacity>
       );
     });
     return (
-      <View style={[g.AutoCompleteList1, g.AutoCompleteHeight1, g.p10]}>
+      <View style={[g.AutoCompleteList1, g.p10]}>
         <Text style={[g.colordarkGray, g.fs16, g.FHNM, g.pb5]}>Suggestion</Text>
         <ScrollView
           keyboardShouldPersistTaps="handled"
@@ -478,7 +544,7 @@ const NewsListing = ({navigation}) => {
     var data = selectedUsers.map((row, index) => {
       return (
         <View key={index} style={style.selectedUserContainer}>
-          <View style={[g.bggray2, g.br3, {height: scale(75)}]}>
+          <View style={[g.bggray2, g.br3, {height: scale(65)}]}>
             {row.profileImg != null && row.profileImg !== '' && (
               <ProgresImage
                 source={
@@ -514,7 +580,61 @@ const NewsListing = ({navigation}) => {
               />
             </TouchableOpacity>
           </View>
-          <Text style={style.userNameView}>{concatName(row)}</Text>
+          <View style={{padding: scale(3)}}>
+            <Text style={style.userNameView}>{concatName(row)}</Text>
+            {row.batch ? (
+              <Text
+                style={[
+                  g.fs10,
+                  g.colorBlack,
+                  g.FHNR,
+                  {marginTop: scale(2), marginBottom: scale(2)},
+                ]}>
+                {row.batch}
+              </Text>
+            ) : null}
+            {row.schoolNumber ? (
+              <Text
+                style={[
+                  g.fs10,
+                  g.colorBlack,
+                  g.FHNR,
+                  {marginTop: scale(2), marginBottom: scale(2)},
+                ]}>
+                {row.schoolNumber}
+              </Text>
+            ) : null}
+            <View
+              style={{
+                flexDirection: 'row',
+                marginTop: scale(2),
+                marginBottom: scale(2),
+              }}>
+              {row.house ? (
+                <Text
+                  style={[
+                    g.fs10,
+                    g.colorBlack,
+                    g.FHNR,
+                    {marginRight: scale(2)},
+                  ]}>
+                  {row.house.toLowerCase().charAt(0).toUpperCase() +
+                    row.house.toLowerCase().slice(1)}
+                </Text>
+              ) : null}
+              {row.section ? (
+                <Text
+                  style={[
+                    g.fs10,
+                    g.colorBlack,
+                    g.FHNR,
+                    {marginLeft: scale(2)},
+                  ]}>
+                  {row.section}
+                </Text>
+              ) : null}
+            </View>
+          </View>
         </View>
       );
     });
@@ -605,7 +725,7 @@ const NewsListing = ({navigation}) => {
             GlobalInclude.AppStyle.contentSpace,
           ]}>
           <TopHeaderView
-            index={3}
+            index={2}
             navigation={navigation}
             label={'Post News'}
             showLabel={true}
@@ -630,35 +750,59 @@ const NewsListing = ({navigation}) => {
                   underlineColorAndroid="transparent"
                   style={[
                     g.inputNew,
-                    g.fs18,
+                    g.fs16,
                     grid.col,
                     grid.justifyContentCenter,
                   ]}
                   keyboardType={'default'}
-                  placeholder={'Search'}
+                  placeholder={'Search by(Name/Title/Tags)'}
                   onChangeText={(text) => {
-                    filterQuery = text;
-                    getNewsListing(text);
+                    setfilterQuery(text);
+
+                    if (text.trim().length === 0) {
+                      Keyboard.dismiss();
+                      handleRefresh();
+                    }
                   }}
                 />
               </View>
             </View>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                filterSheet.open();
-              }}
-              style={[
-                g.fliterBtnNew,
-                grid.alignItems,
-                grid.justifyContentCenter,
-              ]}>
-              <Image
-                source={GlobalInclude.Assets.Filter}
-                resizeMode="contain"
-                style={{width: 16}}
-              />
-            </TouchableOpacity>
+            {filterQuery.length <= 3 ? (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  filterSheet.open();
+                }}
+                style={[
+                  g.fliterBtnNew,
+                  grid.alignItems,
+                  grid.justifyContentCenter,
+                ]}>
+                <Image
+                  source={GlobalInclude.Assets.Filter}
+                  resizeMode="contain"
+                  style={{width: 16}}
+                />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  newsIndex = 0;
+                  newsSize = 10;
+                  totalCount = 0;
+                  Keyboard.dismiss();
+                  getNewsListing(filterQuery);
+                }}
+                style={[
+                  g.fliterBtnNew,
+                  grid.alignItems,
+                  grid.justifyContentCenter,
+                  g.bgBlue,
+                ]}>
+                <Text style={[g.colorWhite, g.FHNM, g.fs16]}>Go</Text>
+              </TouchableOpacity>
+            )}
           </View>
           {isLoading ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
@@ -845,7 +989,7 @@ const NewsListing = ({navigation}) => {
                     <TextInput
                       underlineColorAndroid="transparent"
                       style={[g.inputWhite]}
-                      autoCapitalize="words"
+                      autoCapitalize={'none'}
                       placeholder={'Paste link here'}
                       onChangeText={(value) => {
                         newsLink = value;
@@ -867,7 +1011,7 @@ const NewsListing = ({navigation}) => {
                     <TextInput
                       underlineColorAndroid="transparent"
                       style={[g.inputWhite]}
-                      autoCapitalize="words"
+                      autoCapitalize={'words'}
                       value={searchUserQuery}
                       placeholder={'Search user here'}
                       onChangeText={(value) => {
@@ -904,7 +1048,7 @@ const NewsListing = ({navigation}) => {
                         g.inputWhite,
                         {height: 100, textAlignVertical: 'top'},
                       ]}
-                      autoCapitalize="words"
+                      autoCapitalize={'sentences'}
                       placeholder="Enter your text here"
                       onChangeText={(value) => {
                         newsAbout = value;
@@ -917,6 +1061,7 @@ const NewsListing = ({navigation}) => {
                       showLoader={showAddNewsLoader}
                       title={'Submit'}
                       onPress={() => {
+                        setErrorMessage({});
                         if (newsLink.trim() === '') {
                           setErrorMessage({link: 'This field is required!'});
                         } else if (!Helper.validateRegex(urlRegex, newsLink)) {
@@ -1059,7 +1204,7 @@ const style = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'center',
     alignContent: 'center',
-    textAlign: 'center',
+    textAlign: 'left',
     fontSize: scale(10),
     color: '#333333',
     fontFamily: 'Lato-Regular',
@@ -1102,6 +1247,11 @@ const style = StyleSheet.create({
     alignSelf: 'flex-end',
     alignContent: 'flex-end',
     flex: 1,
+  },
+  userProfiileView: {
+    height: '100%',
+    width: '100%',
+    borderRadius: scale(6),
   },
 });
 

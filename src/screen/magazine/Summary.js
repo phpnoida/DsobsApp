@@ -10,9 +10,7 @@ import {
   StyleSheet,
   Linking,
   Alert,
-  Animated,
   SafeAreaView,
-  Platform,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
@@ -20,14 +18,7 @@ import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
 import {IconType} from '../../helper/Constants';
 import {getMagazineDetail} from '../../Actions/RoseBowlActions';
-import FastImage from 'react-native-fast-image';
-import {createImageProgress} from 'react-native-image-progress';
-import MyStatusBar from '../../component/MyStatusBar';
-
-const AnimatedFastImage = Animated.createAnimatedComponent(FastImage);
-const ProgressImage = createImageProgress(AnimatedFastImage);
-
-let opacity = new Animated.Value(0.0);
+import ProgresImage from '../../component/ProgresImage';
 
 let magazineId = null;
 let editorContact = null;
@@ -238,45 +229,20 @@ const Summary = ({route, navigation}) => {
                       {/* Magazine */}
                       <ScrollView showsVerticalScrollIndicator={false}>
                         <View>
-                          <ProgressImage
-                            source={{uri: pageContent.coverImage.file}}
-                            style={{
+                          <ProgresImage
+                            source={
+                              pageContent.coverImage.file != null &&
+                              pageContent.coverImage.file !== ''
+                                ? {uri: pageContent.coverImage.file}
+                                : GlobalInclude.Assets.DefaultImage
+                            }
+                            containerStyle={{
                               height: scale(105),
                               maxWidth: '100%',
                             }}
                             imageStyle={{
-                              opacity: opacity,
                               borderRadius: scale(13),
-                              transform: [
-                                {
-                                  scale: opacity.interpolate({
-                                    inputRange: [0, 1.0],
-                                    outputRange: [0.85, 1.0],
-                                  }),
-                                },
-                              ],
                             }}
-                            indicatorProps={{
-                              animated: true,
-                              borderColor: 'red',
-                              borderWidth: 2,
-                              color: '#2b3252',
-                              direction:
-                                Platform.OS === 'android' ? 'clockwise' : 'rtl',
-                              indeterminate: true,
-                              progress: 100,
-                              strokeCap: 'butt',
-                              size: scale(20),
-                            }}
-                            onLoad={() => {
-                              Animated.timing(opacity, {
-                                toValue: 1.0,
-                                duration: 200,
-                                useNativeDriver: true,
-                              }).start();
-                            }}
-                            resizeMode={FastImage.resizeMode.cover}
-                            threshold={20}
                           />
 
                           {pageContent.tableOfContents !== null &&
