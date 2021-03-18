@@ -180,13 +180,30 @@ const Video = ({navigation}) => {
    * ************************************************
    */
 
-  const shareImage = (item) => {
-    RNFetchBlob.fetch('GET', `https://example.com/example.png`)
+  const shareImage = (title, subject, attachment) => {
+    let base64image = '';
+    RNFetchBlob.fetch('GET', attachment)
       .then((resp) => {
         console.log('response : ', resp);
         console.log(resp.data);
-        let base64image = resp.data;
-        share('data:image/png;base64,' + base64image);
+        base64image = resp.data;
+        base64image = 'data:image/png;base64,' + base64image;
+      })
+      .then(() => {
+        selectedVideo = {};
+        selectedVideo.title = title;
+        selectedVideo.message = subject;
+        if (
+          base64image !== undefined &&
+          base64image !== null &&
+          base64image !== ''
+        ) {
+          selectedVideo.type = 'image/*';
+          selectedVideo.url = base64image;
+        } else {
+          selectedVideo.type = 'text/plain';
+        }
+        setShowSharingSheet(true);
       })
       .catch((err) => errorHandler(err));
   };
@@ -264,14 +281,7 @@ const Video = ({navigation}) => {
                         ? Helper.loadYoutubeThumb(youtubeId)
                         : null;
 
-                    selectedVideo.title = title;
-                    selectedVideo.message = subject;
-                    selectedVideo.type =
-                      attachment !== null ? 'image/*' : 'text/plain';
-                    selectedVideo.url =
-                      'https://homepages.cae.wisc.edu/~ece533/images/airplane.png';
-
-                    setShowSharingSheet(true);
+                    shareImage(title, subject, attachment);
                   }}>
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(11), width: scale(11)}}
@@ -379,7 +389,6 @@ const Video = ({navigation}) => {
                     {marginStart: scale(3), width: scale(130)},
                   ]}
                   onPress={() => {
-                    selectedVideo = {};
                     let title =
                       item.title !== undefined && item.title !== null
                         ? item.title
@@ -394,16 +403,7 @@ const Video = ({navigation}) => {
                         ? Helper.loadYoutubeThumb(youtubeId)
                         : null;
 
-                    selectedVideo.title = title;
-                    selectedVideo.message = subject;
-                    selectedVideo.type =
-                      attachment !== null ? 'image/*' : 'text/plain';
-                    selectedVideo.url =
-                      'https://homepages.cae.wisc.edu/~ece533/images/airplane.png';
-
-                    setShowSharingSheet(true);
-
-                    shareImage(title,);
+                    shareImage(title, subject, attachment);
                   }}>
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(11), width: scale(11)}}

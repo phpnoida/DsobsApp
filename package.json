@@ -14,7 +14,8 @@
     "clean:ios": "cd ios && xcodebuild clean && cd -",
     "copy:android": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res",
     "assemble:android": "cd android && ./gradlew clean && ./gradlew assembledebug",
-    "build:ios": "react-native bundle --entry-file='index.js' --bundle-output='./ios/main.jsbundle' --dev=false --platform='ios'"
+    "build:ios": "react-native bundle --entry-file='index.js' --bundle-output='./ios/main.jsbundle' --dev=false --platform='ios'",
+    "update:android": "cd android && ./gradlew cleanBuildCache && ./gradlew clean && react-native bundle --platform android --dev false --entry-file index.js --bundle-output app/src/main/assets/index.android.bundle --assets-dest app/src/main/res && cd -"
   },
   "dependencies": {
     "@react-native-community/async-storage": "^1.12.1",

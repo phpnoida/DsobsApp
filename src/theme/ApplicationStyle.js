@@ -10,6 +10,10 @@ export default StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? 0 : getStatusBarHeight(),
     backgroundColor: 'white',
   },
+  topSpaceWithoutFlex: {
+    paddingTop: Platform.OS === 'android' ? 0 : getStatusBarHeight(),
+    backgroundColor: 'white',
+  },
   contentSpace: {
     paddingStart: scale(15),
     paddingEnd: scale(15),
