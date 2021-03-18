@@ -79,13 +79,23 @@ const Video = ({navigation}) => {
             let data = response.data;
 
             if (data.status) {
-              let records = data.data;
-
-              console.log('records', JSON.stringify(records));
+              let records = data.data;            
 
               records.map((child) => {
+                let videos = child.videos;
+                var i = videos.length;
+                while (i--) {
+                  if (
+                    videos[i].videoLink === undefined ||
+                    videos[i].videoLink === null ||
+                    videos[i].videoLink === ''
+                  ) {
+                    videos.splice(i, 1);
+                  }
+                }
                 child.isShowing = false;
               });
+              //console.log('records', JSON.stringify(records));
               setPageContent([...records]);
             }
           }

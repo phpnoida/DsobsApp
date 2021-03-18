@@ -546,11 +546,14 @@ const SearchDirectory = ({route, navigation}) => {
           ref={scrollRef}
           style={{minHeight: deviceHeight}}
           showsVerticalScrollIndicator={false}>
-          <View style={GlobalInclude.AppStyle.fill}>
+          <View
+            style={GlobalInclude.AppStyle.fill}
+            onLayout={(event) => {
+              const layout = event.nativeEvent.layout;
+            }}>
             <View
               style={{
                 paddingHorizontal: scale(15),
-                paddingTop: scale(5),
               }}>
               <View style={[grid.rowdir, grid.alignItems, g.mt5]}>
                 <Text style={[g.fs16, g.FHNR, g.colordarkGray, grid.col]}>
@@ -808,10 +811,15 @@ const SearchDirectory = ({route, navigation}) => {
                             }
 
                             setTimeout(() => {
-                              scrollRef.current.scrollTo({
-                                y: searchedUser.length > 0 ? 430 : 140,
-                                animated: true,
-                              });
+                              if (
+                                scrollRef !== null &&
+                                scrollRef.current !== null
+                              ) {
+                                scrollRef.current.scrollTo({
+                                  y: searchedUser.length > 0 ? 500 : 170,
+                                  animated: true,
+                                });
+                              }
                             }, 300);
                           }}
                           key={index}
@@ -835,15 +843,13 @@ const SearchDirectory = ({route, navigation}) => {
                   </View>
                 </View>
               )}
-
-              {selectedGroup !== '' ? (
-                <View style={[g.pl10, g.pr10]}>
-                  <View style={[style.tabbarheight, g.mt15]}>
-                    {renderTabs()}
-                  </View>
-                </View>
-              ) : null}
             </View>
+            {selectedGroup !== '' ? (
+              <View style={[g.pl10, g.pr10]}>
+                <View style={[style.tabbarheight, g.mt15]}>{renderTabs()}</View>
+              </View>
+            ) : null}
+            <View style={{height: scale(100)}} />
           </View>
         </ScrollView>
       </SafeAreaView>

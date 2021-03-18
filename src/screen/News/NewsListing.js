@@ -51,7 +51,7 @@ let newsLink = '',
 let filteredRegion = [];
 let filteredIndustry = [];
 let filteredTopic = [];
-
+let searchVal = '';
 const NewsListing = ({navigation}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -101,7 +101,11 @@ const NewsListing = ({navigation}) => {
             response.data !== null
           ) {
             let data = response.data;
-            setSearchedUser([...data.data]);
+            if (searchVal.length > 0) {
+              setSearchedUser([...data.data]);
+            } else {
+              setSearchedUser([]);
+            }
           }
         }
       },
@@ -369,7 +373,7 @@ const NewsListing = ({navigation}) => {
     newsIndex = 0;
     getNewsListing(filterQuery);
   };
-  
+
   const handleBlank = () => {
     newsIndex = 0;
     getNewsListing('');
@@ -454,6 +458,7 @@ const NewsListing = ({navigation}) => {
             let oldData = selectedUsers;
 
             if (oldData.length < 3) {
+              searchVal = '';
               oldData.push(row);
               setSearchUserQuery('');
               setSelectedUsers([...oldData]);
@@ -736,6 +741,7 @@ const NewsListing = ({navigation}) => {
             label={'Post News'}
             showLabel={true}
             onLabelPress={() => {
+              searchVal = '';
               setSearchedUser([]);
               setSelectedUsers([]);
               setSearchUserQuery('');
@@ -764,7 +770,6 @@ const NewsListing = ({navigation}) => {
                   placeholder={'Search by(Name/Title/Tags)'}
                   onChangeText={(text) => {
                     setfilterQuery(text);
-
                     if (text.trim().length === 0) {
                       setfilterQuery('');
                       Keyboard.dismiss();
@@ -1022,6 +1027,7 @@ const NewsListing = ({navigation}) => {
                       value={searchUserQuery}
                       placeholder={'Search user here'}
                       onChangeText={(value) => {
+                        searchVal = value;
                         setSearchUserQuery(value);
                         if (value.length > 0) {
                           doSearchUser(value);
