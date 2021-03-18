@@ -717,7 +717,10 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    Alert.alert('Coming soon...');
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('GalleryListing');
+                    }, 200);
                   }}>
                   <Image
                     source={GlobalInclude.Assets.Gallery}
@@ -726,7 +729,7 @@ const Dashboard = ({props, navigation}) => {
                     style={styles.menuIcon}
                   />
                   <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Melaram Gallery</Text>
+                    <Text style={styles.menuStyle}>Gallery</Text>
                   </View>
                 </TouchableOpacity>
               </View>

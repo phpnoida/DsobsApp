@@ -81,8 +81,6 @@ const Video = ({navigation}) => {
             if (data.status) {
               let records = data.data;
 
-              //console.log('records', JSON.stringify(records));
-
               records.map((child) => {
                 child.isShowing = false;
               });
