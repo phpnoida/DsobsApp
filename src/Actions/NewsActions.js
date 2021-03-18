@@ -58,6 +58,8 @@ export function doPostNews(payload, callback, errCallback) {
 export function doFilterNews(filters, index, size, callback, errCallback) {
   let requestPath = `${SERVER_PATH}news/filter?${filters}&index=${index}&size=${size}`;
 
+  //console.log('filter request', requestPath);
+
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
     .then((res) => callback(res))

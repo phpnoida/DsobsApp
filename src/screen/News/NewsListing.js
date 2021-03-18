@@ -369,6 +369,11 @@ const NewsListing = ({navigation}) => {
     newsIndex = 0;
     getNewsListing(filterQuery);
   };
+  
+  const handleBlank = () => {
+    newsIndex = 0;
+    getNewsListing('');
+  };
 
   const getSelectedFilteres = () => {
     filterSheet.close();
@@ -471,17 +476,6 @@ const NewsListing = ({navigation}) => {
           </View>
           <View style={{padding: scale(3)}}>
             <Text style={style.userNameView}>{concatName(row)}</Text>
-            {row.batch ? (
-              <Text
-                style={[
-                  g.fs10,
-                  g.colorBlack,
-                  g.FHNR,
-                  {marginTop: scale(2), marginBottom: scale(2)},
-                ]}>
-                {row.batch}
-              </Text>
-            ) : null}
             {row.schoolNumber ? (
               <Text
                 style={[
@@ -493,6 +487,7 @@ const NewsListing = ({navigation}) => {
                 {row.schoolNumber}
               </Text>
             ) : null}
+
             <View
               style={{
                 flexDirection: 'row',
@@ -523,6 +518,17 @@ const NewsListing = ({navigation}) => {
                 </Text>
               ) : null}
             </View>
+            {row.batch ? (
+              <Text
+                style={[
+                  g.fs10,
+                  g.colorBlack,
+                  g.FHNR,
+                  {marginTop: scale(2), marginBottom: scale(2)},
+                ]}>
+                {row.batch}
+              </Text>
+            ) : null}
           </View>
         </TouchableOpacity>
       );
@@ -582,17 +588,6 @@ const NewsListing = ({navigation}) => {
           </View>
           <View style={{padding: scale(3)}}>
             <Text style={style.userNameView}>{concatName(row)}</Text>
-            {row.batch ? (
-              <Text
-                style={[
-                  g.fs10,
-                  g.colorBlack,
-                  g.FHNR,
-                  {marginTop: scale(2), marginBottom: scale(2)},
-                ]}>
-                {row.batch}
-              </Text>
-            ) : null}
             {row.schoolNumber ? (
               <Text
                 style={[
@@ -634,6 +629,17 @@ const NewsListing = ({navigation}) => {
                 </Text>
               ) : null}
             </View>
+            {row.batch ? (
+              <Text
+                style={[
+                  g.fs10,
+                  g.colorBlack,
+                  g.FHNR,
+                  {marginTop: scale(2), marginBottom: scale(2)},
+                ]}>
+                {row.batch}
+              </Text>
+            ) : null}
           </View>
         </View>
       );
@@ -760,8 +766,9 @@ const NewsListing = ({navigation}) => {
                     setfilterQuery(text);
 
                     if (text.trim().length === 0) {
+                      setfilterQuery('');
                       Keyboard.dismiss();
-                      handleRefresh();
+                      handleBlank();
                     }
                   }}
                 />

@@ -21,7 +21,9 @@ import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
 import {IconType} from '../../helper/Constants';
 import HeaderBar from '../../component/HeaderBar';
-
+import CityListSheet from 'react-native-raw-bottom-sheet';
+import BottomSheetHeader from '../../component/BottomSheetHeader';
+import RadioButton from '../../component/RadioButton';
 
 let deviceWidth = Dimensions.get('window').width;
 let deviceHeight = Dimensions.get('window').height;
@@ -739,6 +741,60 @@ const DirectoryDetails = ({route, navigation}) => {
           </View>
         </TouchableOpacity>
       </SafeAreaView>
+
+      {showScrollTop ? (
+        <View style={[g.btnScrollStrip, grid.alignItems]}>
+          <TouchableOpacity
+            style={{width: scale(90)}}
+            activeOpacity={0.8}
+            onPress={() => {
+              setShowScrollTop(false);
+              if (listRef !== null) {
+                listRef.current.scrollTo({
+                  animated: true,
+                  y: 0,
+                });
+              }
+            }}
+            hitSlop={{top: 50, bottom: 50, left: 100, right: 100}}>
+            <Text style={[g.btn, g.btnScrolltoTop, g.fs11]}>
+              {'Scroll to top'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
+      {/* city list sheet */}
+      <CityListSheet
+        ref={(ref) => {
+          cityListSheet = ref;
+        }}
+        height={deviceHeight - 150}
+        minClosingHeight={50}
+        duration={350}
+        closeOnDragDown={true}
+        customStyles={{
+          container: {
+            backgroundColor: '#fff',
+            borderTopLeftRadius: 30,
+            borderTopRightRadius: 30,
+            paddingStart: scale(15),
+            paddingEnd: scale(15),
+            paddingBottom: scale(20),
+          },
+        }}>
+        <BottomSheetHeader title={'Select City'} showSearch={false} />
+
+        <RadioButton
+          defaultSelected={locationFilter}
+          PROP={cityList}
+          capitalize
+          onRadioSelect={(value) => {
+            setLocationFilter(value.text.toString());
+            cityListSheet.close();
+          }}
+        />
+      </CityListSheet>
     </View>
   );
 };
