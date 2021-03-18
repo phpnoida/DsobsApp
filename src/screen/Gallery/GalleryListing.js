@@ -21,20 +21,9 @@ import {IconType, APP_NAME, URL_REGX} from '../../helper/Constants';
 import TopHeaderView from '../../component/TopHeaderView';
 import Helper from '../../helper/Helper';
 import axios from 'axios';
+import ProgresImage from '../../component/ProgresImage';
 
-const dummyData = [
-  {
-    title: 'Doon School Memories',
-    video: [
-      {VideoId: '', image: 'https://picsum.photos/seed/picsum/200/300'},
-      {VideoId: '', image: 'https://picsum.photos/seed/picsum/200/300'},
-      {VideoId: '', image: 'https://picsum.photos/seed/picsum/200/300'},
-      {VideoId: '', image: 'https://picsum.photos/seed/picsum/200/300'},
-      {VideoId: '', image: 'https://picsum.photos/seed/picsum/200/300'},
-      {VideoId: '', image: 'https://picsum.photos/seed/picsum/200/300'},
-    ],
-  },
-];
+const {height, width} = Dimensions.get('window');
 
 const GalleryListing = ({navigation}) => {
   const [pageContent, setPageContent] = useState([]);
@@ -69,35 +58,64 @@ const GalleryListing = ({navigation}) => {
     return () => {};
   }, []);
 
+  const loadFirstSixImages = (imageArray) => {
+    let data = imageArray.slice(0, 6);
+
+    let calloutSection = data.map((item, index) => {
+      return (
+        <View
+          key={index}
+          style={{
+            width: width / 3 - 27,
+            marginTop: 10,
+            marginRight: 5,
+            marginLeft: 5,
+          }}>
+          <View style={[g.br3, g.oh, g.bggray]}>
+            <ProgresImage
+              source={GlobalInclude.Assets.DefaultImage}
+              containerStyle={{aspectRatio: 1 / 1}}
+              imageStyle={{
+                aspectRatio: 1 / 1,
+              }}
+            />
+          </View>
+        </View>
+      );
+    });
+    return calloutSection;
+  };
+
   const generateGalleryView = ({item, index}) => {
     return (
-      <View style={GlobalInclude.AppStyle.fill} key={index}>
+      <View
+        key={index}
+        style={[
+          {marginRight: 15, marginLeft: 15, padding: 10},
+          g.mb5,
+          g.mt10,
+          g.pb15,
+          g.bgWhite,
+          g.boxShadow,
+          {borderRadius: 10, shadowOffset: {width: 2}},
+        ]}>
         <View
           style={[
-            g.mb2,
-            g.mr2,
-            g.ml2,
-            g.mt5,
-            g.p10,
-            g.pb15,
-            g.bgWhite,
-            g.boxShadow,
-            {borderRadius: 10, shadowOffset: {width: 2}},
+            grid.rowdir,
+            grid.alignItemsBottom,
+            grid.justifyContent,
+            g.pl5,
+            g.pr5,
           ]}>
-          <View
-            style={[
-              grid.rowdir,
-              grid.alignItemsBottom,
-              grid.justifyContent,
-              g.pl5,
-              g.pr5,
-            ]}>
-            <View style={[grid.col, g.pr15]}>
-              <Text style={[g.colorBlack, g.fs14, g.FHNM]}>
-                Doon School Memories
-              </Text>
-            </View>
-            <View style={g.w60}></View>
+          <View style={[grid.col, g.pr15]}>
+            <Text style={[g.colorBlack, g.fs14, g.FHNM]}>{item.title}</Text>
+          </View>
+          <View style={g.w60}></View>
+        </View>
+        {/* Pictures */}
+        <View style={[g.oh]}>
+          <View style={[grid.rowdir, grid.flexwrap]}>
+            {loadFirstSixImages(item.video)}
           </View>
         </View>
       </View>
@@ -107,40 +125,38 @@ const GalleryListing = ({navigation}) => {
   return (
     <View style={GlobalInclude.AppStyle.topSpace}>
       <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
-        <View
-          style={[
-            GlobalInclude.AppStyle.fill,
-            GlobalInclude.AppStyle.contentSpace,
-          ]}>
-          <TopHeaderView
-            index={4}
-            navigation={navigation}
-            label={'Upload Photos'}
-            showLabel={true}
-            onLabelPress={() => {}}
-          />
-          <View style={[g.mt10, g.mb100]}>
-            <View style={[g.br3, grid.col, g.mr5]}>
-              <View style={[g.inputNew, grid.rowdir]}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={style.searchIcon}
-                  iconColor={'#dddddd'}
-                  iconName={'search'}
-                  iconSize={scale(20)}
-                  iconType={IconType[4]}
-                />
-                <TextInput
-                  underlineColorAndroid="transparent"
-                  style={[
-                    g.inputNew,
-                    g.fs16,
-                    grid.col,
-                    grid.justifyContentCenter,
-                  ]}
-                  keyboardType={'default'}
-                  placeholder={'Search by(Title)'}
-                  onChangeText={(text) => {}}
-                />
+        <View style={[GlobalInclude.AppStyle.fill]}>
+          <View style={GlobalInclude.AppStyle.contentSpace}>
+            <TopHeaderView
+              index={4}
+              navigation={navigation}
+              label={'Upload Photos'}
+              showLabel={true}
+              onLabelPress={() => {}}
+            />
+            <View style={[grid.rowdir, g.mt10, g.mb10]}>
+              <View style={[g.br3, grid.col, g.mr5]}>
+                <View style={[g.inputNew, grid.rowdir]}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={style.searchIcon}
+                    iconColor={'#dddddd'}
+                    iconName={'search'}
+                    iconSize={scale(20)}
+                    iconType={IconType[4]}
+                  />
+                  <TextInput
+                    underlineColorAndroid="transparent"
+                    style={[
+                      g.inputNew,
+                      g.fs16,
+                      grid.col,
+                      grid.justifyContentCenter,
+                    ]}
+                    keyboardType={'default'}
+                    placeholder={'Search by(Title)'}
+                    onChangeText={(text) => {}}
+                  />
+                </View>
               </View>
             </View>
           </View>
@@ -155,8 +171,11 @@ const GalleryListing = ({navigation}) => {
             ) : (
               <FlatList
                 data={pageContent}
+                showsVerticalScrollIndicator={false}
                 renderItem={generateGalleryView}
                 keyExtractor={(item, index) => index.toString()}
+                style={{marginBottom: scale(15)}}
+                contentContainer={{paddingTop: scale(10)}}
               />
             )}
           </View>

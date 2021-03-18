@@ -109,8 +109,6 @@ const ImageGallery = (props) => {
                   }}
                   indicatorProps={{
                     animated: true,
-                    borderColor: 'red',
-                    borderWidth: 2,
                     color: '#2b3252',
                     direction: Platform.os === 'android' ? 'clockwise' : 'rtl',
                     indeterminate: true,
