@@ -81,7 +81,7 @@ const Video = ({navigation}) => {
             if (data.status) {
               let records = data.data;
 
-              //console.log('records', JSON.stringify(records));
+              console.log('records', JSON.stringify(records));
 
               records.map((child) => {
                 child.isShowing = false;
@@ -184,8 +184,6 @@ const Video = ({navigation}) => {
     let base64image = '';
     RNFetchBlob.fetch('GET', attachment)
       .then((resp) => {
-        console.log('response : ', resp);
-        console.log(resp.data);
         base64image = resp.data;
         base64image = 'data:image/png;base64,' + base64image;
       })
@@ -274,7 +272,10 @@ const Video = ({navigation}) => {
                         ? parent.title
                         : `Hey,Check out The ${APP_NAME}`;
 
-                    let subject = child.about.substring(0, 30);
+                    let subject =
+                      child.about.substring(0, 30) +
+                      `\nFind video from below link\n${child.videoLink}`;
+
                     let youtubeId = Helper.GetYoutubeId(child.videoLink);
                     let attachment =
                       youtubeId !== undefined
@@ -317,7 +318,7 @@ const Video = ({navigation}) => {
                 g.mt5,
                 {borderRadius: scale(15)},
               ]}>
-              <View style={g.bggray3}>
+              <View style={[g.bggray3, {borderRadius: scale(15)}]}>
                 <YoutubeView
                   link={item.videos[0].videoLink}
                   containerStyle={style.videoContainer}
@@ -394,7 +395,10 @@ const Video = ({navigation}) => {
                         ? item.title
                         : `Hey,Check out The ${APP_NAME}`;
 
-                    let subject = item.videos[0].about.substring(0, 30);
+                    let subject =
+                      item.videos[0].about.substring(0, 30) +
+                      `\nFind video from below link\n${item.videos[0].videoLink}`;
+
                     let youtubeId = Helper.GetYoutubeId(
                       item.videos[0].videoLink,
                     );
@@ -631,7 +635,7 @@ const Video = ({navigation}) => {
             style={[
               g.mt15,
               g.colorBlue,
-              g.fs15,
+              g.fs18,
               g.FHNB,
               style.filterText,
               g.mb15,
@@ -658,7 +662,7 @@ const Video = ({navigation}) => {
                       }}>
                       <Text
                         style={[
-                          g.fs13,
+                          g.fs15,
                           g.FHNB,
                           g.colorBlack,
                           item.isSelected ? g.colorBlue : g.colorGray5,

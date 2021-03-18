@@ -83,12 +83,12 @@ const PhotosMedia = (props) => {
       const child = (
         <View
           key={index}
-          style={{
-            width: displayWidth / 2 - 25,
-            marginBottom: scale(5),
-            marginLeft: 5,
-            marginRight: 5,
-          }}>
+          style={[
+            grid.c2,
+            {
+              marginBottom: scale(5),
+            },
+          ]}>
           {item.type === 1 && (
             <View style={[g.b1, g.br3, g.oh]}>
               <View
@@ -472,7 +472,9 @@ const PhotosMedia = (props) => {
   return (
     <View style={GlobalInclude.AppStyle.fill}>
       <View style={GlobalInclude.AppStyle.fill}>
-        <ScrollView keyboardShouldPersistTaps="handled">
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
           <View style={g.pt20}>
             <View style={g.mb15}>
               <TouchableOpacity
