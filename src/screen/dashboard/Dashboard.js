@@ -521,7 +521,7 @@ const Dashboard = ({props, navigation}) => {
         onClose={() => {
           setIsBottomSheetOpen(false);
         }}
-        height={430}
+        height={470}
         minClosingHeight={50}
         duration={350}
         closeOnDragDown={true}

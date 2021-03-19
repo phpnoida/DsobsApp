@@ -52,6 +52,7 @@ const Video = ({navigation}) => {
   const [showAddPostModal, setShowAddPostModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [showAddPostLoader, setShowAddPostLoader] = useState(false);
+
   useEffect(() => {
     setIsLoading(true);
     getVideoCategory();
@@ -81,11 +82,39 @@ const Video = ({navigation}) => {
             if (data.status) {
               let records = data.data;
 
-              console.log('records', JSON.stringify(records));
-
               records.map((child) => {
+                let videos = child.videos;
+                var i = videos.length;
+                while (i--) {
+                  if (
+                    videos[i].videoLink === undefined ||
+                    videos[i].videoLink === null ||
+                    videos[i].videoLink === ''
+                  ) {
+                    videos.splice(i, 1);
+                  }
+                }
                 child.isShowing = false;
               });
+
+              records.map((child) => {
+                let videos = child.videos;
+
+                if (videos.length > 1) {
+                  child.mainVideo = videos[0];
+                  child.subVideo = videos.slice(1);
+                } else {
+                  child.mainVideo = videos[0];
+                  child.subVideo = [videos[0]];
+                }
+              });
+
+              records.map((item) => {
+                delete item.videos;
+              });
+
+              console.log('records', JSON.stringify(records[0]));
+
               setPageContent([...records]);
             }
           }
@@ -180,7 +209,7 @@ const Video = ({navigation}) => {
    * ************************************************
    */
 
-  const shareImage = (title, subject, attachment) => {
+  const shareImage = (title, subject, attachment, videoLink) => {
     let base64image = '';
     RNFetchBlob.fetch('GET', attachment)
       .then((resp) => {
@@ -191,6 +220,7 @@ const Video = ({navigation}) => {
         selectedVideo = {};
         selectedVideo.title = title;
         selectedVideo.message = subject;
+        selectedVideo.attachment = videoLink;
         if (
           base64image !== undefined &&
           base64image !== null &&
@@ -232,7 +262,7 @@ const Video = ({navigation}) => {
 
   const renderChildVideos = (videos, parent) => {
     let videoArray = [];
-    videos.slice(1).map((child, index) => {
+    videos.map((child, index) => {
       const video = (
         <View key={index.toString()} style={[grid.c2, g.mb10]}>
           <View style={g.bggray2}>
@@ -282,7 +312,7 @@ const Video = ({navigation}) => {
                         ? Helper.loadYoutubeThumb(youtubeId)
                         : null;
 
-                    shareImage(title, subject, attachment);
+                    shareImage(title, subject, attachment, child.videoLink);
                   }}>
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(11), width: scale(11)}}
@@ -307,7 +337,7 @@ const Video = ({navigation}) => {
     return pageContent.map((item, index) => {
       return (
         <View key={index.toString()}>
-          {item.videos !== undefined && item.videos.length > 0 ? (
+          {item.mainVideo !== undefined && item.mainVideo !== null ? (
             <View
               style={[
                 g.bgWhite,
@@ -320,7 +350,7 @@ const Video = ({navigation}) => {
               ]}>
               <View style={[g.bggray3, {borderRadius: scale(15)}]}>
                 <YoutubeView
-                  link={item.videos[0].videoLink}
+                  link={item.mainVideo.videoLink}
                   containerStyle={style.videoContainer}
                   overlayStyle={style.overlayStyle}
                   thumbStyle={style.thumbStyle}
@@ -339,32 +369,30 @@ const Video = ({navigation}) => {
                 <Text
                   style={[g.fs14, g.mt5, g.FHNR, g.colorBlack]}
                   numberOfLines={2}>
-                  {item.videos[0].about}
+                  {item.mainVideo.about}
                 </Text>
               </View>
 
               <View style={[g.pl15, g.pr15, g.pb10, {flexDirection: 'row'}]}>
-                {item.videos.length > 1 && (
-                  <TouchableOpacity
-                    onPress={() => {
-                      updateChild(index);
-                    }}
-                    style={[
-                      style.seeMore,
-                      {marginEnd: scale(3), width: scale(80)},
-                    ]}>
-                    <GlobalInclude.BaseIcon
-                      containerStyle={{height: scale(14), width: scale(14)}}
-                      iconColor={'#2b3252'}
-                      iconName={item.isShowing ? 'caretdown' : 'caretright'}
-                      iconSize={scale(14)}
-                      iconType={IconType[10]}
-                    />
-                    <Text style={[g.fs10, g.FHNR, g.colorBlack, g.ml10]}>
-                      {item.isShowing ? 'SEE LESS' : 'SEE MORE'}
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                <TouchableOpacity
+                  onPress={() => {
+                    updateChild(index);
+                  }}
+                  style={[
+                    style.seeMore,
+                    {marginEnd: scale(3), width: scale(80)},
+                  ]}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(14), width: scale(14)}}
+                    iconColor={'#2b3252'}
+                    iconName={item.isShowing ? 'caretdown' : 'caretright'}
+                    iconSize={scale(14)}
+                    iconType={IconType[10]}
+                  />
+                  <Text style={[g.fs10, g.FHNR, g.colorBlack, g.ml10]}>
+                    {item.isShowing ? 'SEE LESS' : 'SEE MORE'}
+                  </Text>
+                </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
                     Alert.alert('Comming soon');
@@ -396,18 +424,23 @@ const Video = ({navigation}) => {
                         : `Hey,Check out The ${APP_NAME}`;
 
                     let subject =
-                      item.videos[0].about.substring(0, 30) +
-                      `\nFind video from below link\n${item.videos[0].videoLink}`;
+                      item.mainVideo.about.substring(0, 30) +
+                      `\nFind video from below link\n${item.mainVideo.videoLink}`;
 
                     let youtubeId = Helper.GetYoutubeId(
-                      item.videos[0].videoLink,
+                      item.mainVideo.videoLink,
                     );
                     let attachment =
                       youtubeId !== undefined
                         ? Helper.loadYoutubeThumb(youtubeId)
                         : null;
 
-                    shareImage(title, subject, attachment);
+                    shareImage(
+                      title,
+                      subject,
+                      attachment,
+                      item.mainVideo.videoLink,
+                    );
                   }}>
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(11), width: scale(11)}}
@@ -423,7 +456,7 @@ const Video = ({navigation}) => {
               {item.isShowing && (
                 <View style={style.showChildVideo}>
                   <View style={[grid.rowdir, grid.flexwrap]}>
-                    {renderChildVideos(item.videos, item)}
+                    {renderChildVideos(item.subVideo, item)}
                   </View>
                 </View>
               )}
@@ -588,8 +621,8 @@ const Video = ({navigation}) => {
             onPress={() => {
               setShowSharingSheet(false);
               setTimeout(() => {
-                if (typeof selectedVideo.url !== undefined) {
-                  Clipboard.setString(selectedVideo.url);
+                if (typeof selectedVideo.attachment !== undefined) {
+                  Clipboard.setString(selectedVideo.attachment);
                   Alert.alert('Link Copied');
                 }
               }, 300);

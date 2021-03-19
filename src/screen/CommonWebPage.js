@@ -33,7 +33,7 @@ const CommonWebPage = ({route, navigation}) => {
             javaScriptEnabled={true}
             domStorageEnabled={true}
             startInLoadingState={true}
-            scalesPageToFit={false}
+            scalesPageToFit={true}
             onLoadStart={() => {
               setIsLoading(true);
             }}

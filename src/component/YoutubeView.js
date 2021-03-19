@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {View, Image, TouchableOpacity, StyleSheet} from 'react-native';
 import {WebView} from 'react-native-webview';
 import g from '../theme/global';
@@ -12,15 +12,19 @@ import {IconType} from '../helper/Constants';
 let youtubeId = '';
 let _youTubeRef = React.createRef();
 const YoutubeView = (props) => {
-  if (props.link !== '') {
-    youtubeId = Helper.GetYoutubeId(props.link);
-  }
   const [playVideo, setPlayVideo] = useState(false);
-  const [thumbnail] = useState(Helper.loadYoutubeThumb(youtubeId));
+  const [thumbnail, setThumbnail] = useState('');
 
-  // const [thumbnail] = useState(
-  //   youtubeId !== undefined ? Helper.loadYoutubeThumb(youtubeId) : null,
-  // );
+  useEffect(() => {
+    if (props.link !== '') {
+      console.log('link', props.link);
+      youtubeId = Helper.GetYoutubeId(props.link);
+      console.log('youtubeId', youtubeId);
+      setThumbnail(Helper.loadYoutubeThumb(youtubeId));
+    }
+
+    return () => {};
+  }, [props.link]);
 
   return (
     <View>
@@ -39,7 +43,8 @@ const YoutubeView = (props) => {
         />
       ) : (
         <View>
-          {thumbnail !== undefined && thumbnail !== null ? (
+          {console.log('thumbnail', thumbnail)}
+          {thumbnail !== undefined && thumbnail !== null && thumbnail !== '' ? (
             <View
               style={
                 props.containerStyle ? props.containerStyle : style.container

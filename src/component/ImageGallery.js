@@ -31,7 +31,7 @@ let documentItem = '';
 const deviceWidth = Dimensions.get('window').width;
 const tablet = deviceWidth >= 768;
 let opacity = new Animated.Value(0.0);
-
+let selectedKey = '';
 const ImageGallery = (props) => {
   const [showModal, setShowModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -52,11 +52,19 @@ const ImageGallery = (props) => {
       imageArray = [];
       mediaContent.map((item) => {
         if (item.type === 1) {
-          imageArray.push({url: item.thumbnail});
+          imageArray.push({url: item.thumbnail, key: item.key});
         }
       });
     }
     if (imageArray.length > 0) {
+      for (let i = 0; i < imageArray.length; i++) {
+        const item = imageArray[i];
+        console.log('item.key', item.key);
+        if (item.key === selectedKey) {
+          setIastIndex(i);
+          break;
+        }
+      }
       setShowModal(!showModal);
     }
   };
@@ -83,7 +91,8 @@ const ImageGallery = (props) => {
             {type === 1 ? (
               <TouchableOpacity
                 onPress={() => {
-                  setIastIndex(index);
+                  selectedKey = item.key;
+
                   setTimeout(() => {
                     openImage();
                   }, 200);

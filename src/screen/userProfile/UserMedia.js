@@ -12,6 +12,10 @@ const SocialMedia = (props) => {
   let cloneData = JSON.parse(JSON.stringify(photos));
   cloneData = cloneData.reverse();
 
+  cloneData.map((item, index) => {
+    item.key = index;
+  });
+
   console.log('photos', photos);
 
   return (
