@@ -33,10 +33,22 @@ import ScrollableTabView, {
 
 let deviceWidth = Dimensions.get('window').width;
 let deviceHeight = Dimensions.get('window').height;
+const tablet = deviceWidth >= 768;
+
+const isX =
+  Platform.OS === 'ios' && (deviceHeight > 800 || deviceHeight > 800)
+    ? true
+    : false;
+const isL =
+  Platform.OS === 'android' && (deviceHeight > 1920 || deviceHeight > 1920)
+    ? true
+    : false;
+
 let professionSheet = null;
 let professionListMain = [];
 let searchBy = 1;
 let searchVal = '';
+let positionY = Platform.OS === 'ios' ? 130 : 180;
 
 const myInput = React.createRef();
 const scrollRef = React.createRef();
@@ -210,13 +222,7 @@ const SearchDirectory = ({route, navigation}) => {
         key={`${name}_${page}`}
         onPress={() => onPressHandler(page)}
         onLayout={onLayoutHandler}>
-        <Text
-          style={[
-            style.tabBarText,
-            g.FHNB,
-            g.fs16,
-            isTabActive && [g.colorBlue],
-          ]}>
+        <Text style={[style.tabBarText, g.FHNB, isTabActive && [g.colorBlue]]}>
           {name ? name.toUpperCase() : 'dasa'}
         </Text>
       </TouchableOpacity>
@@ -273,7 +279,12 @@ const SearchDirectory = ({route, navigation}) => {
                               }, 500);
                             }}
                             key={subindex}>
-                            <Text style={[g.fs15, g.FHNR, g.p5, g.colorBlue]}>
+                            <Text
+                              style={[
+                                {fontSize: 15, padding: 5},
+                                g.FHNR,
+                                g.colorBlue,
+                              ]}>
                               {sublinks}
                             </Text>
                           </TouchableOpacity>
@@ -298,9 +309,8 @@ const SearchDirectory = ({route, navigation}) => {
                                   onPressOut={() => {}}>
                                   <Text
                                     style={[
-                                      g.fs15,
+                                      {fontSize: 15, padding: 5},
                                       g.FHNR,
-                                      g.p5,
                                       g.colorLightGray,
                                     ]}>
                                     {sublinks}
@@ -544,7 +554,16 @@ const SearchDirectory = ({route, navigation}) => {
         </View>
         <ScrollView
           ref={scrollRef}
-          style={{minHeight: deviceHeight}}
+          style={{
+            minHeight:
+              Platform.OS === 'ios'
+                ? isX
+                  ? deviceHeight - 0
+                  : 0
+                : isL
+                ? deviceHeight - 10
+                : deviceHeight - 5,
+          }}
           showsVerticalScrollIndicator={false}>
           <View
             style={GlobalInclude.AppStyle.fill}
@@ -554,15 +573,23 @@ const SearchDirectory = ({route, navigation}) => {
             <View
               style={{
                 paddingHorizontal: scale(15),
+                paddingBottom: 15,
               }}>
-              <View style={[grid.rowdir, grid.alignItems, g.mt5]}>
+              <View style={[grid.rowdir, grid.alignItems, g.mt10]}>
                 <Text style={[g.fs16, g.FHNR, g.colordarkGray, grid.col]}>
                   {'Search By'}
                 </Text>
               </View>
               {/* search container */}
 
-              <View style={[grid.rowdir, grid.alignItems, g.mt10, g.mb10]}>
+              <View
+                style={[
+                  grid.rowdir,
+                  grid.alignItems,
+                  g.mt10,
+                  g.mb10,
+                  tablet && g.pt10,
+                ]}>
                 <View style={{width: scale(113)}}>
                   <View style={[grid.rowdir, grid.alignItems]}>
                     <CheckBoxIOS
@@ -686,7 +713,7 @@ const SearchDirectory = ({route, navigation}) => {
                 </View>
               </View>
               {/* search view */}
-              <View style={[grid.rowdir, g.mb5]}>
+              <View style={[grid.rowdir, g.mb5, g.pt15]}>
                 <View style={[g.br3, grid.col, g.mr5]}>
                   <View style={[g.inputNew, grid.rowdir]}>
                     <GlobalInclude.BaseIcon
@@ -781,7 +808,13 @@ const SearchDirectory = ({route, navigation}) => {
               </View>
               {/* below contents */}
               {professionList.length > 0 && (
-                <View style={GlobalInclude.AppStyle.fullWidth}>
+                <View
+                  style={GlobalInclude.AppStyle.fullWidth}
+                  onLayout={(event) => {
+                    const layout = event.nativeEvent.layout;
+                    console.log('layout', layout);
+                    positionY = layout.y;
+                  }}>
                   <View style={[grid.rowdir]}>
                     <Text
                       style={[
@@ -815,8 +848,13 @@ const SearchDirectory = ({route, navigation}) => {
                                 scrollRef !== null &&
                                 scrollRef.current !== null
                               ) {
+                                // scrollRef.current.scrollTo({
+                                //   y: searchedUser.length > 0 ? 393 : positionY,
+                                //   animated: true,
+                                // });
+
                                 scrollRef.current.scrollTo({
-                                  y: searchedUser.length > 0 ? 500 : 170,
+                                  y: positionY,
                                   animated: true,
                                 });
                               }
@@ -923,7 +961,7 @@ const style = StyleSheet.create({
     color: '#333333',
     paddingLeft: 10,
     paddingRight: 10,
-    fontSize: 14,
+    fontSize: 16,
   },
   tabSpace: {
     paddingRight: deviceWidth - 105,

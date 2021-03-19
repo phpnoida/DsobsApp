@@ -26,6 +26,7 @@ import {
   doFilterNews,
 } from '../../Actions/NewsActions';
 import {searchUser} from '../../Actions/UserActions';
+import {getDirectory} from '../../Actions/DirectoryActions'
 import ProgresImage from '../../component/ProgresImage';
 import TopHeaderView from '../../component/TopHeaderView';
 import FilterSheet from 'react-native-raw-bottom-sheet';
@@ -91,7 +92,8 @@ const NewsListing = ({navigation}) => {
    */
 
   const doSearchUser = (searchQuery) => {
-    searchUser(
+    getDirectory(
+      "1",
       searchQuery,
       (response) => {
         if (response && response !== null) {
@@ -1213,10 +1215,7 @@ const style = StyleSheet.create({
     borderRadius: scale(30),
   },
   userNameView: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'center',
-    alignContent: 'center',
+    justifyContent: 'flex-start',
     textAlign: 'left',
     fontSize: scale(10),
     color: '#333333',
