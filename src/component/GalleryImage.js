@@ -1,0 +1,132 @@
+import React, {Component} from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  SafeAreaView,
+  Image,
+  Text,
+  ActivityIndicator,
+  TouchableOpacity,
+  Dimensions,
+  Alert,
+  FlatList,
+} from 'react-native';
+import ProgresImage from './ProgresImage';
+import {scale} from '../theme/Scalling';
+import g from '../theme/global';
+import grid from '../theme/grid';
+const {height, width} = Dimensions.get('window');
+
+class GalleryImage extends Component {
+  constructor(props) {
+    super(props);
+  }
+
+  renderImages = (data) => {
+    let calloutSection = data.map((item, index) => {
+      return (
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => {
+            this.props.onImagePress(data, index);
+          }}
+          key={index}
+          style={{
+            width: width / 3 - 27,
+            marginTop: 10,
+            marginRight: 5,
+            marginLeft: 5,
+          }}>
+          <View style={[g.br3, g.oh, g.bggray]}>
+            <ProgresImage
+              source={{uri: 'https://picsum.photos/seed/picsum/200'}}
+              containerStyle={{aspectRatio: 1 / 1}}
+              imageStyle={{
+                aspectRatio: 1 / 1,
+              }}
+            />
+          </View>
+        </TouchableOpacity>
+      );
+    });
+    return calloutSection;
+  };
+
+  loadFirstSixImages = (imageArray) => {
+    let data = imageArray.slice(0, 6);
+    return this.renderImages(data);
+  };
+
+  loadRemainImages = (imageArray) => {
+    let data = imageArray.slice(5);
+    return this.renderImages(data);
+  };
+
+  shouldComponentUpdate(nextProps, nextState) {
+    const {isExpanded} = nextProps;
+    const {isExpanded: oldLiked} = this.props;
+    return isExpanded !== oldLiked;
+  }
+
+  render() {
+    return (
+      <View
+        style={[
+          {
+            marginRight: 15,
+            marginLeft: 15,
+            padding: 10,
+            borderRadius: 10,
+            shadowOffset: {width: 2},
+          },
+          g.mb5,
+          g.mt10,
+          g.pb15,
+          g.bgWhite,
+          g.boxShadow,
+        ]}>
+        <View
+          style={[
+            grid.rowdir,
+            grid.alignItemsBottom,
+            grid.justifyContent,
+            g.pl5,
+            g.pr5,
+          ]}>
+          <View style={[grid.col, g.pr15]}>
+            <Text style={[g.colorBlack, g.fs14, g.FHNM]}>
+              {this.props.title}
+            </Text>
+          </View>
+          <View style={{width: scale(60)}}>
+            {this.props.images.length < 6 ? null : (
+              <TouchableOpacity
+                onPress={() => {
+                  this.props.expandSelectedPanel();
+                }}>
+                <Text style={[g.colorBlue1, g.fs13]}>
+                  +
+                  {this.props.images && this.props.images.length > 5
+                    ? this.props.images.length - 6
+                    : 0}{' '}
+                  More
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+        {/* Pictures */}
+        <View style={[g.oh]}>
+          <View style={[grid.rowdir, grid.flexwrap]}>
+            {this.loadFirstSixImages(this.props.images)}
+            {this.props.isExpanded && this.loadRemainImages(this.props.images)}
+          </View>
+        </View>
+      </View>
+    );
+  }
+}
+
+export default GalleryImage;

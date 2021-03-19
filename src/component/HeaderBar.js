@@ -11,8 +11,16 @@ import GlobalInclude from '../globalInclude/Globalinclude';
 import {getStatusBarHeight} from 'react-native-iphone-x-helper';
 import {scale} from '../theme/Scalling';
 import g from '../theme/global';
+import grid from '../theme/grid';
 
-const HeaderBar = ({title, navigation}) => {
+const HeaderBar = ({
+  title,
+  navigation,
+  showBack,
+  label,
+  showLabel,
+  onLabelPress,
+}) => {
   return (
     <View
       style={{
@@ -29,19 +37,41 @@ const HeaderBar = ({title, navigation}) => {
       }}>
       <View style={headerStyle.topContainer} />
       <View style={headerStyle.container}>
-        <TouchableOpacity
-          onPress={() => {
-            navigation.goBack();
-          }}>
-          <Image source={GlobalInclude.Assets.Back} style={headerStyle.back} />
-        </TouchableOpacity>
-        {title && (
-          <View style={GlobalInclude.AppStyle.fillCenter}>
-            <Text style={[g.fs16, g.FHNB, g.colordarkGray, g.txtCenter]}>
-              {title}
-            </Text>
+        <View style={[grid.col, grid.rowdir]}>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.goBack();
+            }}>
+            <Image
+              source={GlobalInclude.Assets.Back}
+              style={headerStyle.back}
+            />
+          </TouchableOpacity>
+          <View style={[grid.col, grid.justifyContentCenter]}>
+            {title && (
+              <Text style={[g.fs16, g.FHNB, g.colordarkGray, g.txtCenter]}>
+                {title}
+              </Text>
+            )}
           </View>
-        )}
+        </View>
+        <View>
+          {showLabel && (
+            <TouchableOpacity
+              style={{
+                minWidth: scale(50),
+                alignSelf: 'flex-end',
+              }}
+              activeOpacity={1}
+              onPress={() => {
+                onLabelPress();
+              }}>
+              <Text style={[g.colorBlue, g.fs14, g.FHNB, g.txtRight]}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       <View style={headerStyle.shadowView} />
     </View>

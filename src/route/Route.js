@@ -20,6 +20,7 @@ import CommonWebPage from '../screen/CommonWebPage';
 import Video from '../screen/Video/Video';
 import NewsListing from '../screen/News/NewsListing';
 import GalleryListing from '../screen/Gallery/GalleryListing';
+import GalleryDetail from '../screen/Gallery/GalleryDetail';
 
 const Stack = createStackNavigator();
 
@@ -124,6 +125,11 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="GalleryListing"
         component={GalleryListing}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="GalleryDetail"
+        component={GalleryDetail}
         options={{headerShown: false}}
       />
     </Stack.Navigator>
