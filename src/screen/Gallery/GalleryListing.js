@@ -26,6 +26,7 @@ import GalleryImage from '../../component/GalleryImage';
 import CheckBoxIOS from 'react-native-check-box';
 import FilterSheet from 'react-native-raw-bottom-sheet';
 import CommonButton from '../../component/CommonButton';
+import ImageShareModal from '../../component/ImageShareModal';
 
 const {height, width} = Dimensions.get('window');
 const tablet = width >= 768;
@@ -34,36 +35,48 @@ let userData = null;
 const GalleryListing = ({navigation}) => {
   const [pageContent, setPageContent] = useState([]);
   const [filterQuery, setFilterQuery] = useState('');
-
+  const [showShareModal, setShowShareModal] = useState(false);
   useEffect(() => {
     userData = global.userDetails;
     let dummyArray = [];
-    axios.get('https://picsum.photos/v2/list?page=1&limit=200').then((res) => {
-      let data = res.data;
-      var result = data.reduce((resultArray, item, index) => {
-        const chunkIndex = Math.floor(index / 25);
 
-        if (!resultArray[chunkIndex]) {
-          resultArray[chunkIndex] = []; // start a new chunk
-        }
+    let array = [];
+    for (let i = 0; i < 23; i++) {
+      array.push(`https://picsum.photos/1024/720.jpg?random=${i + 1}`);
+    }
 
-        resultArray[chunkIndex].push(item);
+    let dummyData = {
+      title: `Doon School Memories - 0`,
+      images: array,
+      isExpanded: false,
+    };
+    dummyArray.push(dummyData);
 
-        return resultArray;
-      }, []);
-      for (let i = 0; i < result.length; i++) {
-        const element = result[i];
+    array = [];
+    for (let i = 0; i < 16; i++) {
+      array.push(`https://picsum.photos/1024/720.jpg?random=${i + 1}`);
+    }
 
-        const dummyData = {
-          title: `Doon School Memories - ${i}`,
-          images: element,
-          isExpanded: false,
-        };
-        dummyArray.push(dummyData);
-      }
+    dummyData = {
+      title: `Doon School Memories - 1`,
+      images: array,
+      isExpanded: false,
+    };
+    dummyArray.push(dummyData);
 
-      setPageContent(dummyArray);
-    });
+    array = [];
+    for (let i = 0; i < 6; i++) {
+      array.push(`https://picsum.photos/1024/720.jpg?random=${i + 1}`);
+    }
+
+    dummyData = {
+      title: `Doon School Memories - 2`,
+      images: array,
+      isExpanded: false,
+    };
+    dummyArray.push(dummyData);
+
+    setPageContent(dummyArray);
     return () => {};
   }, []);
 
@@ -121,6 +134,9 @@ const GalleryListing = ({navigation}) => {
           };
           navigation.navigate('GalleryDetail', payload);
         }}
+        onLongPress={() => {
+          setShowShareModal(true);
+        }}
       />
     );
   };
@@ -143,8 +159,12 @@ const GalleryListing = ({navigation}) => {
               showLabel={true}
               onLabelPress={() => {
                 if (userData !== undefined && userData !== null) {
+                  let house =
+                    userData.house.toLowerCase().charAt(0).toUpperCase() +
+                    userData.house.slice(1);
+
                   Linking.openURL(
-                    `mailto:info@alumbus.com?subject=Photos from ${APP_NAME} ${userData.firstName} ${userData.lastName}, ${userData.schoolNumber}, ${userData.house}, ${userData.batch} &body=Please send us a note about the photographs.Upload photos upto 20 MB here for larger photos please use Google Drive or a WeTransfer link to send images.`,
+                    `mailto:info@alumbus.com?subject=Photos from ${APP_NAME} ${userData.firstName} ${userData.lastName}, ${userData.schoolNumber}, ${house}, ${userData.batch} &body=Please send us a note about the photographs.Upload photos upto 20 MB here for larger photos please use Google Drive or a WeTransfer link to send images.`,
                   );
                 } else {
                   Linking.openURL(
@@ -161,26 +181,39 @@ const GalleryListing = ({navigation}) => {
             {/* search container */}
 
             <View
-              style={[grid.rowdir, grid.alignItems, g.mt10, tablet && g.pt10]}>
-              <View style={{width: scale(120)}}>
+              style={[
+                grid.rowdir,
+                grid.alignItems,
+                g.mt10,
+                g.mb10,
+                tablet && g.pt10,
+              ]}>
+              <View
+                style={{
+                  width: scale(120),
+                }}>
                 {drawCheckbox('Name/Batch/House/Number', false, () => {})}
               </View>
               <View
                 style={{
-                  width: scale(90),
+                  width: scale(80),
                   marginStart: scale(3),
                   marginEnd: scale(3),
                 }}>
-                {drawCheckbox('Album Name', false, () => {})}
+                {drawCheckbox('Album', false, () => {})}
               </View>
-              <View style={{width: scale(45)}}>
+              <View
+                style={{
+                  width: scale(70),
+                }}>
                 {drawCheckbox('Year', false, () => {})}
               </View>
               <View style={[grid.col, {marginStart: scale(3)}]}>
-                {drawCheckbox('Tag', false, () => {})}
+                {drawCheckbox('Tags', false, () => {})}
               </View>
             </View>
-            <View style={[grid.rowdir, g.mt10, g.mb5]}>
+
+            <View style={[grid.rowdir, g.mb5, g.pt15]}>
               <View style={[g.br3, grid.col, g.mr5]}>
                 <View style={[g.inputNew, grid.rowdir]}>
                   <GlobalInclude.BaseIcon
@@ -194,12 +227,13 @@ const GalleryListing = ({navigation}) => {
                     underlineColorAndroid="transparent"
                     style={[
                       g.inputNew,
-                      g.fs14,
+                      g.pl0,
+                      g.fs18,
                       grid.col,
                       grid.justifyContentCenter,
                     ]}
                     keyboardType={'default'}
-                    placeholder={'Search by(Title)'}
+                    placeholder={'Search Photo'}
                     onChangeText={(text) => {
                       setFilterQuery(text);
                     }}
@@ -307,6 +341,16 @@ const GalleryListing = ({navigation}) => {
         </View>
       </FilterSheet>
       {/* filter sheet */}
+
+      {/* image share modal */}
+      {showShareModal && (
+        <ImageShareModal
+          status={showShareModal}
+          onCloseAction={(type) => {
+            setShowShareModal(!showShareModal);
+          }}
+        />
+      )}
     </View>
   );
 };
@@ -325,6 +369,14 @@ const style = StyleSheet.create({
     width: scale(150),
     alignContent: 'center',
     alignSelf: 'center',
+  },
+  filterText: {
+    paddingTop: 12,
+    paddingBottom: 12,
+    borderTopColor: '#dddddd',
+    borderTopWidth: 1,
+    borderBottomColor: '#dddddd',
+    borderBottomWidth: 1,
   },
 });
 

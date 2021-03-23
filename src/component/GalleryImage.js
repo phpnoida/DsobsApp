@@ -32,6 +32,9 @@ class GalleryImage extends Component {
           onPress={() => {
             this.props.onImagePress(data, index);
           }}
+          onLongPress={() => {
+            this.props.onLongPress(item, index);
+          }}
           key={index}
           style={{
             width: width / 3 - 27,
@@ -41,7 +44,9 @@ class GalleryImage extends Component {
           }}>
           <View style={[g.br3, g.oh, g.bggray]}>
             <ProgresImage
-              source={{uri: 'https://picsum.photos/seed/picsum/200'}}
+              source={{
+                uri: item,
+              }}
               containerStyle={{aspectRatio: 1 / 1}}
               imageStyle={{
                 aspectRatio: 1 / 1,
@@ -93,14 +98,17 @@ class GalleryImage extends Component {
             grid.alignItemsBottom,
             grid.justifyContent,
             g.pl5,
-            g.pr5,
           ]}>
           <View style={[grid.col, g.pr15]}>
             <Text style={[g.colorBlack, g.fs14, g.FHNM]}>
               {this.props.title}
             </Text>
           </View>
-          <View style={{width: scale(60)}}>
+          <View
+            style={[
+              {width: scale(60)},
+              grid.alignItems,
+            ]}>
             {this.props.images.length < 6 ? null : (
               <TouchableOpacity
                 onPress={() => {

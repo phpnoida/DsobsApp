@@ -296,7 +296,10 @@ const DirectoryDetails = ({route, navigation}) => {
             }}
             style={[grid.rowdir, grid.alignItems, g.br3, g.whiteSelect]}>
             <Text style={[grid.col, g.fs12, g.FHNM]} numberOfLines={1}>
-              {locationFilter.length > 0 ? locationFilter : 'Select'}
+              {locationFilter.length > 0
+                ? locationFilter.toLowerCase().charAt(0).toUpperCase() +
+                  locationFilter.slice(1)
+                : 'Select'}
             </Text>
             <View style={style.triangleShape} />
           </TouchableOpacity>

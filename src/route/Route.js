@@ -21,6 +21,8 @@ import Video from '../screen/Video/Video';
 import NewsListing from '../screen/News/NewsListing';
 import GalleryListing from '../screen/Gallery/GalleryListing';
 import GalleryDetail from '../screen/Gallery/GalleryDetail';
+import TagUser from '../screen/Gallery/TagUser';
+import AboutPhoto from '../screen/Gallery/AboutPhoto';
 
 const Stack = createStackNavigator();
 
@@ -130,6 +132,16 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="GalleryDetail"
         component={GalleryDetail}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="TagUser"
+        component={TagUser}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="AboutPhoto"
+        component={AboutPhoto}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

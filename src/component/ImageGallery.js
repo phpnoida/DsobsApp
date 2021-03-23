@@ -59,7 +59,6 @@ const ImageGallery = (props) => {
     if (imageArray.length > 0) {
       for (let i = 0; i < imageArray.length; i++) {
         const item = imageArray[i];
-        console.log('item.key', item.key);
         if (item.key === selectedKey) {
           setIastIndex(i);
           break;
@@ -186,45 +185,22 @@ const ImageGallery = (props) => {
     <View style={GlobalInclude.AppStyle.fill}>
       <ScrollView>
         <View style={GlobalInclude.AppStyle.fill}>
-          {tablet ? (
-            <View
-              style={[
-                {
-                  marginBottom: 5,
-                  marginTop: 10,
-                  marginLeft: 15,
-                  marginRight: 15,
-                  padding: 10,
-                  paddingBottom: 15,
-                },
-                g.bgWhite,
-                g.boxShadow,
-                g.br3,
-              ]}>
-              <View style={[grid.rowdir, grid.flexwrap]}>
-                {_renderPhotos()}
-              </View>
-            </View>
-          ) : (
-            <View
-              style={[
-                {
-                  marginBottom: 5,
-                  marginTop: 10,
-                  marginLeft: 15,
-                  marginRight: 15,
-                  padding: 10,
-                  paddingBottom: 15,
-                },
-                g.bgWhite,
-                g.boxShadow,
-                g.br3,
-              ]}>
-              <View style={[grid.rowdir, grid.flexwrap]}>
-                {_renderPhotos()}
-              </View>
-            </View>
-          )}
+          <View
+            style={[
+              {
+                marginBottom: 5,
+                marginTop: 10,
+                marginLeft: 15,
+                marginRight: 15,
+                padding: 10,
+                paddingBottom: 15,
+              },
+              g.bgWhite,
+              g.boxShadow,
+              g.br3,
+            ]}>
+            <View style={[grid.rowdir, grid.flexwrap]}>{_renderPhotos()}</View>
+          </View>
         </View>
         <View style={{height: 100}} />
       </ScrollView>

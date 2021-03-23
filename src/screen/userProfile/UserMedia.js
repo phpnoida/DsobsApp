@@ -16,8 +16,6 @@ const SocialMedia = (props) => {
     item.key = index;
   });
 
-  console.log('photos', photos);
-
   return (
     <View style={{flex: 1}}>
       {photos.length > 0 ? (
