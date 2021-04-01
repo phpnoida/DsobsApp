@@ -316,11 +316,15 @@ PODS:
     - React-Core
   - react-native-netinfo (5.9.10):
     - React-Core
+  - react-native-orientation-locker (1.2.0):
+    - React
   - react-native-pdf (6.3.0):
     - React-Core
   - react-native-progress-bar-android (1.0.4):
     - React
   - react-native-progress-view (1.2.4):
+    - React
+  - react-native-safari-view (1.0.0):
     - React
   - react-native-safe-area-context (3.1.9):
     - React-Core
@@ -493,9 +497,11 @@ DEPENDENCIES:
   - react-native-document-picker (from `../node_modules/react-native-document-picker`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
+  - react-native-orientation-locker (from `../node_modules/react-native-orientation-locker`)
   - react-native-pdf (from `../node_modules/react-native-pdf`)
   - "react-native-progress-bar-android (from `../node_modules/@react-native-community/progress-bar-android`)"
   - "react-native-progress-view (from `../node_modules/@react-native-community/progress-view`)"
+  - react-native-safari-view (from `../node_modules/react-native-safari-view`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-splash-screen (from `../node_modules/react-native-splash-screen`)
   - react-native-video (from `../node_modules/react-native-video`)
@@ -603,12 +609,16 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-image-picker"
   react-native-netinfo:
     :path: "../node_modules/@react-native-community/netinfo"
+  react-native-orientation-locker:
+    :path: "../node_modules/react-native-orientation-locker"
   react-native-pdf:
     :path: "../node_modules/react-native-pdf"
   react-native-progress-bar-android:
     :path: "../node_modules/@react-native-community/progress-bar-android"
   react-native-progress-view:
     :path: "../node_modules/@react-native-community/progress-view"
+  react-native-safari-view:
+    :path: "../node_modules/react-native-safari-view"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-splash-screen:
@@ -717,9 +727,11 @@ SPEC CHECKSUMS:
   react-native-document-picker: 20f652c2402d3ddc81f396d8167c3bd978add4a2
   react-native-image-picker: 64d12e81f3d9dad0af107fe6536b295d51932ec0
   react-native-netinfo: 30fb89fa913c342be82a887b56e96be6d71201dd
+  react-native-orientation-locker: 47aaa55d59bfc1613804dc22f159e6bb1cca5f30
   react-native-pdf: ef641e79a6d550cfabe5d7ec1916799726514c43
   react-native-progress-bar-android: be43138ab7da30d51fc038bafa98e9ed594d0c40
   react-native-progress-view: 5e9560b491a149035b869d63603d4fc7f9258cb1
+  react-native-safari-view: 955d7160d159241b8e9395d12d10ea0ef863dcdd
   react-native-safe-area-context: b6e0e284002381d2ff29fa4fff42b4d8282e3c94
   react-native-splash-screen: 200d11d188e2e78cea3ad319964f6142b6384865
   react-native-video: 0bb76b6d6b77da3009611586c7dbf817b947f30e
