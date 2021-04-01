@@ -15,6 +15,23 @@ export function getDirectory(searchType, searchQuery, callback, errCallback) {
   };
 }
 
+export function doFilterDirectory(filterQuery, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}user/directory`;
+
+  const request = axios
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
+      params: filterQuery,
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
 export function handleError(err, errCallback) {
   if (
     err.response &&
