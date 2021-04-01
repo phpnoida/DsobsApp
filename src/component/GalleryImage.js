@@ -17,6 +17,7 @@ import ProgresImage from './ProgresImage';
 import {scale} from '../theme/Scalling';
 import g from '../theme/global';
 import grid from '../theme/grid';
+import Assets from '../theme/Assets';
 const {height, width} = Dimensions.get('window');
 
 class GalleryImage extends Component {
@@ -44,9 +45,15 @@ class GalleryImage extends Component {
           }}>
           <View style={[g.br3, g.oh, g.bggray]}>
             <ProgresImage
-              source={{
-                uri: item,
-              }}
+              source={
+                item.imagesLink !== undefined &&
+                item.imagesLink !== null &&
+                item.imagesLink !== ''
+                  ? {
+                      uri: item.imagesLink,
+                    }
+                  : Assets.DefaultImage
+              }
               containerStyle={{aspectRatio: 1 / 1}}
               imageStyle={{
                 aspectRatio: 1 / 1,
@@ -104,11 +111,7 @@ class GalleryImage extends Component {
               {this.props.title}
             </Text>
           </View>
-          <View
-            style={[
-              {width: scale(60)},
-              grid.alignItems,
-            ]}>
+          <View style={[{width: scale(60)}, grid.alignItems]}>
             {this.props.images.length < 6 ? null : (
               <TouchableOpacity
                 onPress={() => {
