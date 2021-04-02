@@ -190,6 +190,10 @@ const Magazine = ({route, navigation}) => {
         responseMessage = 'Error while downloading content!';
         setIsDownloading(false);
         setShowModal(true);
+
+        setTimeout(() => {
+          setShowModal(false);
+        }, 2000);
       });
   };
 

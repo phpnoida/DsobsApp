@@ -23,6 +23,7 @@ import GalleryListing from '../screen/Gallery/GalleryListing';
 import GalleryDetail from '../screen/Gallery/GalleryDetail';
 import TagUser from '../screen/Gallery/TagUser';
 import AboutPhoto from '../screen/Gallery/AboutPhoto';
+import FilteredResult from '../screen/Gallery/FilteredResult';
 
 const Stack = createStackNavigator();
 
@@ -142,6 +143,11 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="AboutPhoto"
         component={AboutPhoto}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="FilteredResult"
+        component={FilteredResult}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

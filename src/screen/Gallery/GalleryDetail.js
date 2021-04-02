@@ -10,11 +10,10 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Dimensions,
-  Alert,
-  FlatList,
   Modal,
   PermissionsAndroid,
   TouchableNativeFeedback,
+  CameraRoll,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -33,6 +32,10 @@ import ScreenOrientation, {
   PORTRAIT,
   LANDSCAPE,
 } from 'react-native-orientation-locker/ScreenOrientation';
+import {
+  getSingleImageFromAlbum,
+  doUpdateImageInformation,
+} from '../../Actions/GalleryActions';
 
 const {height, width} = Dimensions.get('window');
 
@@ -44,63 +47,70 @@ let pageTitle = '';
 let arrayItems = [];
 let optionsSheet = null;
 let imageWidth = width;
-let imageHeight = height;
-let ratio = 0;
 let responseMessage = '';
 let selectedId = '';
 let currentOriantation = '';
 let imageArray = [];
-let downloadOptions = {
-  fileCache: true,
-  addAndroidDownloads: {
-    useDownloadManager: true,
-    notification: true,
-    path:
-      PictureDir +
-      '/me_' +
-      Math.floor(new Date().getTime() + new Date().getSeconds() / 2),
-    description: 'Downloading image.',
-  },
-};
+let reportText = '';
 
 const GalleryDetail = ({route, navigation}) => {
-  if (route !== undefined && route !== null) {
-    arrayItems = route.params.data;
-    pageTitle = route.params.title;
-    index = route.params.index;
-  }
-
-  const [title, setTitle] = useState(pageTitle);
-  const [data, setData] = useState([...arrayItems]);
-  const [lastIndex, setIastIndex] = useState(index);
+  const [title, setTitle] = useState('');
+  const [data, setData] = useState([]);
+  const [imageData, setImageData] = useState(null);
+  const [lastIndex, setIastIndex] = useState(0);
   const [isFetching, setIsFetching] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState({});
   const [isReporting, setIsReporting] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [tmpIndex, setTmpIndex] = useState(0);
 
   useEffect(() => {
-    updateImage();
+    index = 0;
+    pageTitle = '';
+    arrayItems = [];
+    optionsSheet = null;
+    imageWidth = width;
+    responseMessage = '';
+    selectedId = '';
+    currentOriantation = '';
+    imageArray = [];
+    reportText = '';
+
+    if (route !== undefined && route !== null) {
+      arrayItems = route.params.data;
+      pageTitle = route.params.title;
+      index = route.params.index;
+
+      setTitle(pageTitle);
+      setData([...arrayItems]);
+      setIastIndex(index);
+    }
+
+    const unsubscribe = navigation.addListener('focus', () => {
+      getImageDetail(arrayItems[index]._id);
+    });
 
     currentOriantation = Orientation.getInitialOrientation();
 
     Orientation.addOrientationListener(_orientationDidChange);
     return () => {
+      unsubscribe();
       Orientation.removeOrientationListener(_orientationDidChange);
     };
   }, []);
 
   const _orientationDidChange = (orientation) => {
     currentOriantation = orientation;
-    console.log('orientation', orientation);
   };
 
-  const updateImage = () => {
-    let image = data[index];
+  const updateImage = (image) => {
     Image.getSize(image, (height, width) => {
       if (width !== undefined && width !== null) {
+        console.log('imageWidth', imageWidth);
+        console.log('width', width);
         if (imageWidth > width) {
           imageWidth = width;
         }
@@ -109,20 +119,125 @@ const GalleryDetail = ({route, navigation}) => {
     });
   };
 
-  const onSubmitReport = () => {};
+  const onSubmitReport = () => {
+    if (reportText.trim() === '') {
+      setErrorMessage({reportContent: 'This field is required'});
+    } else {
+      let reportedData = imageData.reported;
+
+      reportedData.push({
+        id: global.userId,
+        note: reportText,
+      });
+      let requestData = {
+        imageKey: imageData.imageKey,
+        reported: reportedData,
+        isReported: true,
+      };
+
+      setIsFetching(true);
+      doUpdateImageInformation(
+        imageData.id,
+        requestData,
+        (response) => {
+          setIsFetching(false);
+          if (response && response !== null) {
+            if (
+              response.data &&
+              response.data !== undefined &&
+              response.data !== null
+            ) {
+              let data = response.data;
+              if (data.status) {
+                responseMessage = 'Image reported successfully!';
+              } else {
+                responseMessage = 'Error while reporting!';
+              }
+              setShowReportModal(false);
+
+              setShowModal(true);
+
+              setTimeout(() => {
+                setShowModal(false);
+                getImageDetail(imageData._id);
+              }, 2000);
+            }
+          }
+        },
+        (error) => {
+          responseMessage = 'Error while reporting!';
+          setShowModal(true);
+          setIsFetching(false);
+
+          setTimeout(() => {
+            setShowModal(false);
+          }, 2000);
+        },
+      );
+    }
+  };
 
   const closeImageViewer = () => {
     Orientation.lockToPortrait();
     setShowImageModal(false);
     setIastIndex(index);
     setIsFetching(true);
-    updateImage();
+
+    pageTitle = '';
+    imageWidth = width;
+    currentOriantation = '';
+    getImageDetail(arrayItems[index]._id);
   };
 
   /**
    *
    * API Section
    */
+
+  const getImageDetail = (imageId) => {
+    getSingleImageFromAlbum(
+      {id: imageId},
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              if (
+                data.data !== null &&
+                data.data !== undefined &&
+                data.data.length > 0
+              ) {
+                let itemObject = data.data[0];
+                setImageData(itemObject);
+                updateImage(itemObject.imagesLink);
+                console.log('====================================');
+                console.log('itemObject', JSON.stringify(itemObject));
+                console.log('====================================');
+              } else {
+                setIsFetching(false);
+              }
+            } else {
+              setIsFetching(false);
+            }
+          } else {
+            setIsFetching(false);
+          }
+        } else {
+          setIsFetching(false);
+        }
+      },
+      (error) => {
+        setIsFetching(false);
+        setImageData(null);
+        console.log('error', error);
+      },
+    );
+  };
 
   const _downloadContent = async (file) => {
     if (Platform.OS === 'android') {
@@ -140,7 +255,6 @@ const GalleryDetail = ({route, navigation}) => {
           },
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log('You can use the camera');
           setIsDownloading(true);
           downloadData(file);
         } else {
@@ -156,25 +270,54 @@ const GalleryDetail = ({route, navigation}) => {
   };
 
   const downloadData = (file) => {
-    config(downloadOptions)
-      .fetch('GET', file)
-      .then((res) => {
-        // do some magic here
-        console.log('res', res);
-        selectedId = '';
-        responseMessage = 'Content downloaded successfully!';
-        setIsDownloading(false);
-        setShowModal(true);
+    let newImgUri = file.lastIndexOf('/');
+    let imageName = file.substring(newImgUri);
 
-        setTimeout(() => {
-          setShowModal(false);
-        }, 2000);
-      })
-      .catch(() => {
-        responseMessage = 'Error while downloading content!';
-        setIsDownloading(false);
-        setShowModal(true);
-      });
+    let extension = imageName.split('.')[1];
+
+    let dirs = RNFetchBlob.fs.dirs;
+    let path =
+      Platform.OS === 'ios'
+        ? dirs['MainBundleDir'] + imageName
+        : dirs.PictureDir + imageName;
+
+    let downloadOptions = {
+      fileCache: true,
+      appendExt: extension,
+      indicator: true,
+      IOSBackgroundTask: true,
+      path: path,
+      addAndroidDownloads: {
+        useDownloadManager: true,
+        notification: true,
+        path: path,
+        description: 'Image',
+      },
+    };
+    console.log(file);
+    if (Platform.OS === 'android') {
+      config(downloadOptions)
+        .fetch('GET', file)
+        .then((res) => {
+          // do some magic here
+          console.log('res', res);
+          selectedId = '';
+          responseMessage = 'Content downloaded successfully!';
+          setIsDownloading(false);
+          setShowModal(true);
+
+          setTimeout(() => {
+            setShowModal(false);
+          }, 2000);
+        })
+        .catch(() => {
+          responseMessage = 'Error while downloading content!';
+          setIsDownloading(false);
+          setShowModal(true);
+        });
+    } else {
+      CameraRoll.saveToCameraRoll(imgUrl);
+    }
   };
 
   /**
@@ -185,15 +328,34 @@ const GalleryDetail = ({route, navigation}) => {
   const openImage = () => {
     imageArray = [];
     data.map((item) => {
-      imageArray.push({url: item});
+      imageArray.push({url: item.imagesLink});
     });
+    setTmpIndex(index);
     setShowImageModal(true);
   };
 
-  const showTaggedUsers = () => {
+  const concatName = (item) => {
+    let fullName = '';
+
+    if (
+      item.firstName &&
+      item.firstName !== undefined &&
+      item.firstName !== ''
+    ) {
+      fullName += item.firstName;
+    }
+
+    if (item.lastName && item.lastName !== undefined && item.lastName !== '') {
+      fullName += ' ' + item.lastName;
+    }
+    return fullName;
+  };
+
+  const showTaggedUsers = (userTag) => {
     let componentArray = [];
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < userTag.length; i++) {
+      let item = userTag[i];
       const component = (
         <View
           key={i}
@@ -210,7 +372,10 @@ const GalleryDetail = ({route, navigation}) => {
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => {}}
-            style={{justifyContent: 'center', alignSelf: 'center'}}>
+            style={{
+              justifyContent: 'center',
+              alignSelf: 'center',
+            }}>
             <View
               style={[
                 g.bglightGray,
@@ -222,8 +387,18 @@ const GalleryDetail = ({route, navigation}) => {
                 },
               ]}>
               <Image
-                source={GlobalInclude.Assets.DefaultProfile}
-                style={{aspectRatio: 1 / 1}}
+                source={
+                  item.profileImg !== null && item.profileImg !== ''
+                    ? {uri: item.profileImg}
+                    : GlobalInclude.Assets.DefaultProfile
+                }
+                style={{
+                  aspectRatio: 1 / 1,
+                  height: scale(70),
+                  alignSelf: 'center',
+                  justifyContent: 'center',
+                  alignSelf: 'center',
+                }}
                 resizeMode="cover"
               />
             </View>
@@ -231,10 +406,10 @@ const GalleryDetail = ({route, navigation}) => {
               <Text
                 style={[g.fs14, g.FHNR, g.txtCenter, g.colorBlack, g.mt10]}
                 numberOfLines={2}>
-                Rahul
+                {concatName(item)}
               </Text>
               <Text style={[g.fs14, g.FHNR, g.txtCenter, g.colorGray1]}>
-                {'Batch 2021'}
+                {`Batch ${item.batch}`}
               </Text>
             </View>
           </TouchableOpacity>
@@ -250,89 +425,137 @@ const GalleryDetail = ({route, navigation}) => {
     <View style={GlobalInclude.AppStyle.topSpace}>
       <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
         <View style={GlobalInclude.AppStyle.fill}>
-          <HeaderBar
-            navigation={navigation}
-            title={title}
-            showLabel={true}
-            label={'Tag'}
-            onLabelPress={() => {
-              navigation.navigate('TagUser');
-            }}
-          />
           {isFetching ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
               <ActivityIndicator size={'small'} color={'#2b3252'} />
             </View>
           ) : (
-            <View>
-              <ScreenOrientation
-                orientation={PORTRAIT}
-                onChange={(orientation) => console.log('onChange', orientation)}
-                onDeviceChange={(orientation) =>
-                  console.log('onDeviceChange', orientation)
-                }
+            <View style={GlobalInclude.AppStyle.fill}>
+              <HeaderBar
+                navigation={navigation}
+                title={title}
+                showLabel={true}
+                label={'Tag'}
+                onLabelPress={() => {
+                  let payload = {
+                    id: imageData._id,
+                    imageKey: imageData.imageKey,
+                    userTag: imageData.userTag,
+                  };
+                  navigation.navigate('TagUser', payload);
+                }}
               />
-              <ScrollView showsVerticalScrollIndicator={false}>
-                <TouchableOpacity
-                  onPress={() => {
-                    setTimeout(() => {
-                      openImage();
-                    }, 200);
-                  }}>
-                  <ProgresImage
-                    source={{uri: data[lastIndex]}}
-                    containerStyle={{aspectRatio: 16 / 9, width: imageWidth}}
-                    imageStyle={{
-                      aspectRatio: 16 / 9,
-                      width: imageWidth,
-                    }}
+              {imageData === null ? (
+                <View style={GlobalInclude.AppStyle.center}>
+                  <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
+                    No Record Found
+                  </Text>
+                </View>
+              ) : (
+                <View style={GlobalInclude.AppStyle.fill}>
+                  <ScreenOrientation
+                    orientation={PORTRAIT}
+                    onChange={(orientation) =>
+                      console.log('onChange', orientation)
+                    }
+                    onDeviceChange={(orientation) =>
+                      console.log('onDeviceChange', orientation)
+                    }
                   />
-                </TouchableOpacity>
-
-                <Text style={[g.fs14, g.FHNR, g.colorGray1, g.p15, g.pt5]}>
-                  About This Image
-                </Text>
-
-                <View style={[g.p15, g.pt0]}>
-                  <View
-                    style={[
-                      grid.rowrow,
-                      grid.alignItems,
-                      grid.justifyContentCenter,
-                      grid.justifyContent,
-                      g.mb10,
-                    ]}>
-                    <Text
-                      style={[
-                        g.fs16,
-                        g.FHNB,
-                        g.colordarkGray,
-                        g.ml10,
-                        grid.alignItems,
-                        grid.justifyContentCenter,
-                        g.txtCenter,
-                      ]}>
-                      People in the image
-                    </Text>
+                  <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{flexGrow: 1}}>
                     <TouchableOpacity
-                      activeOpacity={0.8}
                       onPress={() => {
-                        if (optionsSheet !== null) {
-                          optionsSheet.open();
-                        }
+                        setTimeout(() => {
+                          openImage();
+                        }, 200);
                       }}>
-                      <Image
-                        source={GlobalInclude.Assets.Menu}
-                        style={styles.back}
-                        resizeMode="contain"
+                      <ProgresImage
+                        source={{uri: imageData.imagesLink}}
+                        containerStyle={{
+                          aspectRatio: 16 / 9,
+                          width: imageWidth,
+                        }}
+                        imageStyle={{
+                          aspectRatio: 16 / 9,
+                          width: imageWidth,
+                        }}
                       />
                     </TouchableOpacity>
-                  </View>
-                  <View style={[grid.row, g.mt10, grid.flexwrap]}>
-                    {showTaggedUsers()}
-                  </View>
+
+                    {imageData.about !== undefined &&
+                    imageData.about !== null &&
+                    imageData.about !== '' ? (
+                      <Text
+                        style={[g.fs14, g.FHNR, g.colorGray1, g.p15, g.pt5]}>
+                        {imageData.about}
+                      </Text>
+                    ) : (
+                      <Text
+                        style={[g.fs14, g.FHNR, g.colorGray1, g.p15, g.pt5]}>
+                        No information Found
+                      </Text>
+                    )}
+
+                    <View style={[g.p15, g.pt0, grid.flex1]}>
+                      <View
+                        style={[
+                          grid.rowrow,
+                          grid.alignItems,
+                          grid.justifyContentCenter,
+                          grid.justifyContent,
+                          g.mb10,
+                        ]}>
+                        <Text
+                          style={[
+                            g.fs16,
+                            g.FHNB,
+                            g.colordarkGray,
+                            g.ml10,
+                            grid.alignItems,
+                            grid.justifyContentCenter,
+                            g.txtCenter,
+                          ]}>
+                          People in the image
+                        </Text>
+                        <TouchableOpacity
+                          activeOpacity={0.8}
+                          onPress={() => {
+                            if (optionsSheet !== null) {
+                              optionsSheet.open();
+                            }
+                          }}>
+                          <Image
+                            source={GlobalInclude.Assets.Menu}
+                            style={styles.back}
+                            resizeMode="contain"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                      {imageData.userTag !== undefined &&
+                      imageData.userTag !== null &&
+                      imageData.userTag.length > 0 ? (
+                        <View style={[grid.row, g.mt10, grid.flexwrap]}>
+                          {showTaggedUsers(imageData.userTag)}
+                        </View>
+                      ) : (
+                        <View style={GlobalInclude.AppStyle.fillCenter}>
+                          <Text
+                            style={[
+                              g.colorBlack,
+                              g.FHNM,
+                              g.fs12,
+                              g.textCenter,
+                            ]}>
+                            No people tagged in photo
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </ScrollView>
                 </View>
-              </ScrollView>
+              )}
             </View>
           )}
         </View>
@@ -368,7 +591,12 @@ const GalleryDetail = ({route, navigation}) => {
                 onPress={() => {
                   optionsSheet.close();
                   setTimeout(() => {
-                    navigation.navigate('TagUser');
+                    let payload = {
+                      id: imageData._id,
+                      imageKey: imageData.imageKey,
+                      userTag: imageData.userTag,
+                    };
+                    navigation.navigate('TagUser', payload);
                   }, 200);
                 }}>
                 <GlobalInclude.BaseIcon
@@ -400,7 +628,14 @@ const GalleryDetail = ({route, navigation}) => {
                 onPress={() => {
                   optionsSheet.close();
                   setTimeout(() => {
-                    navigation.navigate('AboutPhoto');
+                    let payload = {
+                      id: imageData._id,
+                      imageKey: imageData.imageKey,
+                      about: imageData.about,
+                      category: imageData.category,
+                      year: imageData.year,
+                    };
+                    navigation.navigate('AboutPhoto', payload);
                   }, 200);
                 }}>
                 <GlobalInclude.BaseIcon
@@ -432,8 +667,8 @@ const GalleryDetail = ({route, navigation}) => {
                 onPress={() => {
                   optionsSheet.close();
                   if (!isDownloading) {
-                    selectedId = item._id;
-                    _downloadContent(item.pdf.file);
+                    selectedId = imageData._id;
+                    _downloadContent(imageData.imagesLink);
                   }
                 }}>
                 <GlobalInclude.BaseIcon
@@ -502,7 +737,7 @@ const GalleryDetail = ({route, navigation}) => {
             <View style={[g.bgWhite, g.p15, g.br3]}>
               <View style={[grid.rowdir, grid.alignItems]}>
                 <Text style={[g.fs12, g.colorBlack, grid.col]}>
-                  {'Photo Id:1234654'}
+                  {`Photo Id:${imageData !== null ? imageData.imageId : ''}`}
                 </Text>
                 <TouchableOpacity
                   activeOpacity={0.8}
@@ -535,7 +770,9 @@ const GalleryDetail = ({route, navigation}) => {
                   g.textareaStyle,
                   {minHeight: 100, maxHeight: 100, height: 100},
                 ]}
-                onChangeText={(comment) => {}}
+                onChangeText={(comment) => {
+                  reportText = comment;
+                }}
               />
               {errorMessage.reportContent &&
                 errorMessage.reportContent.length > 0 && (
@@ -586,7 +823,9 @@ const GalleryDetail = ({route, navigation}) => {
                 flex: 1,
               }}>
               <Text style={[g.fs14, g.colorWhite, g.FHNB, grid.col]}>
-                {'Photo Id:1234654'}
+                {`Photo Id: ${
+                  data !== null && data.length > 0 ? data[tmpIndex].imageId : ''
+                } `}
               </Text>
             </View>
 
@@ -656,6 +895,7 @@ const GalleryDetail = ({route, navigation}) => {
             imageUrls={imageArray}
             index={lastIndex}
             onChange={(newIndex) => {
+              setTmpIndex(newIndex);
               index = newIndex;
             }}
             backgroundColor={'#000000'}
@@ -669,6 +909,23 @@ const GalleryDetail = ({route, navigation}) => {
           />
         </View>
       </Modal>
+
+      {showModal && (
+        <Modal
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => {
+            setShowModal(!showModal);
+          }}
+          hardwareAccelerated={true}
+          visible={showModal}>
+          <View style={styles.centeredView}>
+            <View style={styles.responseMessage}>
+              <Text style={styles.headerText}>{responseMessage}</Text>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 };
@@ -693,6 +950,34 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(62,62,62,0.5)',
     flex: 1,
     width: '100%',
+  },
+  responseMessage: {
+    width: width - 50,
+    backgroundColor: 'white',
+    borderRadius: scale(6),
+    padding: scale(7),
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    minHeight: scale(60),
+    alignContent: 'center',
+  },
+  headerText: {
+    justifyContent: 'center',
+    alignContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    fontSize: scale(16),
+    textAlign: 'center',
+    ...g.FHNR,
+    ...g.colorBlue,
   },
 });
 

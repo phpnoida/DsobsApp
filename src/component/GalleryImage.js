@@ -25,16 +25,20 @@ class GalleryImage extends Component {
     super(props);
   }
 
-  renderImages = (data) => {
+  renderImages = (data, expanded) => {
+    let component = [];
+
+    let loopTill = expanded ? 5 : 0;
+
     let calloutSection = data.map((item, index) => {
       return (
         <TouchableOpacity
           activeOpacity={1}
           onPress={() => {
-            this.props.onImagePress(data, index);
+            this.props.onImagePress(data, index + loopTill);
           }}
           onLongPress={() => {
-            this.props.onLongPress(item, index);
+            this.props.onLongPress(item, index + loopTill);
           }}
           key={index}
           style={{
@@ -68,12 +72,12 @@ class GalleryImage extends Component {
 
   loadFirstSixImages = (imageArray) => {
     let data = imageArray.slice(0, 6);
-    return this.renderImages(data);
+    return this.renderImages(data, false);
   };
 
   loadRemainImages = (imageArray) => {
     let data = imageArray.slice(5);
-    return this.renderImages(data);
+    return this.renderImages(data, true);
   };
 
   shouldComponentUpdate(nextProps, nextState) {

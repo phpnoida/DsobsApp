@@ -5,7 +5,7 @@ import {
   ScrollView,
   TextInput,
   SafeAreaView,
-  Image,
+  Modal,
   Text,
   ActivityIndicator,
   TouchableOpacity,
@@ -13,6 +13,7 @@ import {
   Alert,
   FlatList,
   Linking,
+  TouchableNativeFeedback,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -20,28 +21,34 @@ import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {IconType, APP_NAME, URL_REGX} from '../../helper/Constants';
 import HeaderBar from '../../component/HeaderBar';
-import Helper from '../../helper/Helper';
-import axios from 'axios';
-import GalleryImage from '../../component/GalleryImage';
-import CheckBoxIOS from 'react-native-check-box';
-import OptionsSheet from 'react-native-raw-bottom-sheet';
-import CommonButton from '../../component/CommonButton';
 import ProgresImage from '../../component/ProgresImage';
 import {getDirectory} from '../../Actions/DirectoryActions';
+import {doUpdateImageInformation} from '../../Actions/GalleryActions';
+import CommonButton from '../../component/CommonButton';
 
-const {height, width} = Dimensions.get('window');
-
-const pt_android = Platform.OS === 'ios' ? g.pt0 : g.pt15;
-const isX =
-  Platform.OS === 'ios' && (height > 800 || height > 800) ? true : false;
+const {width} = Dimensions.get('window');
 
 let searchVal = '';
-
-const TagUser = ({navigation}) => {
+let imageId = '';
+let imageKey = '';
+let responseMessage = '';
+const TagUser = ({route, navigation}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchedUser, setSearchedUser] = useState([]);
   const [taggedUsers, setTaggedUsers] = useState([]);
   const [errorMessage, setErrorMessage] = useState({});
+  const [showLoader, setShowLoader] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    if (route.params !== undefined && route.params !== null) {
+      imageId = route.params.id;
+      imageKey = route.params.imageKey;
+      setTaggedUsers([...route.params.userTag]);
+    }
+    return () => {};
+  }, []);
+
   /**
    * API section
    */
@@ -72,7 +79,70 @@ const TagUser = ({navigation}) => {
   };
 
   const submitData = () => {
-      navigation.goBack();
+    if (taggedUsers.length === 0) {
+      setErrorMessage({emptyTag: 'You must need to add people to tag.'});
+    } else {
+      let taggedIds = [];
+      taggedUsers.map((user) => {
+        taggedIds.push({
+          id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          batch: user.batch,
+          schoolNumber: user.schoolNumber,
+          house: user.house,
+          section: user.section,
+          phone: user.phone,
+          countryCode: user.countryCode,
+          profileImg: user.profileImg,
+        });
+      });
+      let requestData = {
+        userTag: taggedIds,
+        imageKey: imageKey,
+      };
+
+      setShowLoader(true);
+      doUpdateImageInformation(
+        imageId,
+        requestData,
+        (response) => {
+          setShowLoader(false);
+          if (response && response !== null) {
+            if (
+              response.data &&
+              response.data !== undefined &&
+              response.data !== null
+            ) {
+              let data = response.data;
+              if (data.status) {
+                responseMessage = 'User tagged successfully!';
+              } else {
+                responseMessage = 'Error while tagging!';
+              }
+              setShowModal(true);
+
+              setTimeout(() => {
+                setShowModal(false);
+
+                setTimeout(() => {
+                  navigation.goBack();
+                }, 100);
+              }, 2000);
+            }
+          }
+        },
+        (error) => {
+          responseMessage = 'Error while tagging!';
+          setShowModal(true);
+          setShowLoader(false);
+
+          setTimeout(() => {
+            setShowModal(false);
+          }, 2000);
+        },
+      );
+    }
   };
 
   /**
@@ -91,7 +161,14 @@ const TagUser = ({navigation}) => {
     let oldItem = taggedUsers;
 
     oldItem.push(item);
+    setSearchQuery('');
     setSearchedUser([]);
+    setTaggedUsers([...oldItem]);
+  };
+
+  const removeUser = (index) => {
+    let oldItem = taggedUsers;
+    oldItem.splice(index, 1);
     setTaggedUsers([...oldItem]);
   };
 
@@ -180,7 +257,7 @@ const TagUser = ({navigation}) => {
                 value={searchQuery}
                 placeholder={'Tag People in the Photo'}
                 underlineColorAndroid="transparent"
-                placeholderTextColor={g.bggray}
+                placeholderTextColor={'#202020'}
                 style={[g.inputWhite, {color: 'black'}]}
                 onChangeText={(value) => {
                   searchVal = value;
@@ -221,44 +298,65 @@ const TagUser = ({navigation}) => {
                           marginLeft: 10,
                           width: width / 3 - 40,
                           marginRight: taggedUsers.length > 2 ? 10 : 20,
+                          paddingTop: scale(15),
                         },
                       ]}>
-                      <TouchableOpacity activeOpacity={0.8}>
-                        <View
-                          style={[g.bglightGray, g.oh, {borderRadius: 100}]}>
-                          <ProgresImage
-                            source={
-                              item.profileImg != null && item.profileImg !== ''
-                                ? {uri: item.profileImg}
-                                : GlobalInclude.Assets.DefaultProfile
-                            }
-                            containerStyle={{
-                              aspectRatio: 1 / 1,
-                            }}
-                            mode={'cover'}
-                          />
-                        </View>
-                        <View style={{height: 80}}>
-                          <Text
-                            style={[
-                              {fontSize: 14, marginTop: 10},
-                              g.FHNR,
-                              g.txtCenter,
-                              g.colorBlack,
-                            ]}
-                            numberOfLines={2}>
-                            {concatName(item)}
-                          </Text>
-                          <Text
-                            style={[
-                              {fontSize: 14},
-                              g.FHNR,
-                              g.txtCenter,
-                              g.colorGray1,
-                            ]}>
-                            {'Batch ' + `${item.batch}`}
-                          </Text>
-                        </View>
+                      <View style={[g.bglightGray, g.oh, {borderRadius: 100}]}>
+                        <ProgresImage
+                          source={
+                            item.profileImg != null && item.profileImg !== ''
+                              ? {uri: item.profileImg}
+                              : GlobalInclude.Assets.DefaultProfile
+                          }
+                          containerStyle={{
+                            aspectRatio: 1 / 1,
+                          }}
+                          mode={'cover'}
+                        />
+                      </View>
+                      <View style={{height: 80}}>
+                        <Text
+                          style={[
+                            {fontSize: 14, marginTop: 10},
+                            g.FHNR,
+                            g.txtCenter,
+                            g.colorBlack,
+                          ]}
+                          numberOfLines={2}>
+                          {concatName(item)}
+                        </Text>
+                        <Text
+                          style={[
+                            {fontSize: 14},
+                            g.FHNR,
+                            g.txtCenter,
+                            g.colorGray1,
+                          ]}>
+                          {'Batch ' + `${item.batch}`}
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => {
+                          removeUser(index);
+                        }}
+                        style={{
+                          height: scale(18),
+                          width: scale(18),
+                          justifyContent: 'flex-end',
+                          alignItems: 'flex-end',
+                          alignSelf: 'flex-end',
+                          position: 'absolute',
+                          top: 0,
+                          right: 0,
+                        }}
+                        background={TouchableNativeFeedback.SelectableBackground()}>
+                        <GlobalInclude.BaseIcon
+                          containerStyle={{height: scale(18), width: scale(18)}}
+                          iconColor={'#2b3252'}
+                          iconName={'close'}
+                          iconSize={scale(16)}
+                          iconType={IconType[4]}
+                        />
                       </TouchableOpacity>
                     </View>
                   );
@@ -281,15 +379,33 @@ const TagUser = ({navigation}) => {
                 bottom: 0,
               },
             ]}>
-            <TouchableOpacity
-              onPress={() => submitData()}
-              activeOpacity={1}
-              style={[grid.col, g.btnL, g.w115, {height: 45}]}>
-              <Text style={[g.colorWhite, g.txtCenter]}>Update</Text>
-            </TouchableOpacity>
+            <CommonButton
+              showLoader={showLoader}
+              title={'Update'}
+              onPress={() => {
+                submitData();
+              }}
+            />
           </View>
         </View>
       </SafeAreaView>
+
+      {showModal && (
+        <Modal
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => {
+            setShowModal(!showModal);
+          }}
+          hardwareAccelerated={true}
+          visible={showModal}>
+          <View style={style.centeredView}>
+            <View style={style.modalView}>
+              <Text style={style.headerText}>{responseMessage}</Text>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 };
@@ -303,6 +419,39 @@ const style = StyleSheet.create({
     fontSize: 12,
     color: '#000000',
     marginTop: scale(3),
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalView: {
+    width: width - 50,
+    backgroundColor: 'white',
+    borderRadius: scale(6),
+    padding: scale(7),
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    minHeight: scale(60),
+    alignContent: 'center',
+  },
+  headerText: {
+    justifyContent: 'center',
+    alignContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    fontSize: scale(16),
+    textAlign: 'center',
+    ...g.FHNR,
+    ...g.colorBlue,
   },
 });
 

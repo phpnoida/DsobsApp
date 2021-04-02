@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Dimensions,
-  Alert,
   FlatList,
   Linking,
 } from 'react-native';
@@ -20,18 +19,23 @@ import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {IconType, APP_NAME, URL_REGX} from '../../helper/Constants';
 import TopHeaderView from '../../component/TopHeaderView';
-import Helper from '../../helper/Helper';
 import GalleryImage from '../../component/GalleryImage';
 import CheckBoxIOS from 'react-native-check-box';
 import FilterSheet from 'react-native-raw-bottom-sheet';
 import CommonButton from '../../component/CommonButton';
 import ImageShareModal from '../../component/ImageShareModal';
-import {getAlbums, getGalleryCategory} from '../../Actions/GalleryActions';
+import {
+  getAlbums,
+  getGalleryCategory,
+  doFilterGallery,
+} from '../../Actions/GalleryActions';
+import AutoCompleteSearch from '../../component/AutoCompleteSearch';
 
 const {height, width} = Dimensions.get('window');
 const tablet = width >= 768;
 let filterSheet = null;
 let userData = null;
+let categoryName = null;
 const PaginationStatus = {
   firstLoad: 0,
   waiting: 1,
@@ -52,9 +56,11 @@ const GalleryListing = ({navigation}) => {
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
   );
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     userData = global.userDetails;
+    getFilterCategory();
     getAlbumList();
     return () => {};
   }, []);
@@ -127,11 +133,57 @@ const GalleryListing = ({navigation}) => {
     );
   };
 
+  const getFilterGalleryData = (filterBy, pageTitle) => {
+    doFilterGallery(
+      filterBy,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              console.log('====================================');
+              console.log('data.data', JSON.stringify(data));
+              console.log('====================================');
+              let results = data.data;
+              if (results !== undefined && results !== null) {
+                navigation.navigate('FilteredResult', {
+                  filterBy: filterBy,
+                  data: results,
+                  pageTitle: pageTitle,
+                  totalCount: data.totalCount,
+                });
+              }
+            }
+          }
+        }
+      },
+      (error, message) => {
+        console.log('error', message);
+      },
+    );
+  };
+
   /**
    *
    * API Section
    *
    */
+
+  const selectCategory = (index) => {
+    let oldData = filterCategory;
+
+    oldData.map((item) => {
+      item.isSelected = false;
+    });
+    oldData[index].isSelected = true;
+
+    setFilterCategory([...oldData]);
+  };
 
   const onPaginate = () => {
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
@@ -154,7 +206,7 @@ const GalleryListing = ({navigation}) => {
   };
 
   const handleRefresh = () => {
-    newsIndex = 0;
+    filterObject.index = 0;
     getAlbumList();
   };
 
@@ -219,6 +271,24 @@ const GalleryListing = ({navigation}) => {
     );
   };
 
+  const renderFooter = () => {
+    return (
+      <View style={style.footerView}>
+        {pageContent.length === totalCount ? (
+          <View />
+        ) : (
+          <View style={{height: scale(30)}}>
+            {paginationStatus === PaginationStatus.waiting ? (
+              <View style={g.p10}>
+                <ActivityIndicator size={'small'} color={'#2b3252'} />
+              </View>
+            ) : null}
+          </View>
+        )}
+      </View>
+    );
+  };
+
   return (
     <View style={GlobalInclude.AppStyle.topSpace}>
       <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
@@ -251,6 +321,7 @@ const GalleryListing = ({navigation}) => {
                 }
               }}
             />
+
             <View style={[grid.rowdir, grid.alignItems, g.mt10]}>
               <Text style={[g.fs16, g.FHNR, g.colordarkGray, grid.col]}>
                 {'Search By'}
@@ -366,11 +437,16 @@ const GalleryListing = ({navigation}) => {
                 </View>
               ) : (
                 <FlatList
+                  showsVerticalScrollIndicator={false}
                   extraData={pageContent}
                   data={pageContent}
-                  showsVerticalScrollIndicator={false}
                   renderItem={generateGalleryView}
                   keyExtractor={(item, index) => index.toString()}
+                  onEndReachedThreshold={0.1}
+                  onEndReached={onEndReached}
+                  refreshing={isRefreshing}
+                  onRefresh={handleRefresh}
+                  ListFooterComponent={renderFooter}
                 />
               )}
             </View>
@@ -425,8 +501,8 @@ const GalleryListing = ({navigation}) => {
                       grid.justifyContent,
                     ]}
                     onPress={() => {
-                      setselectedFilter(item.label);
-                      selectFilter(index);
+                      categoryName = item.label;
+                      selectCategory(index);
                     }}>
                     <Text
                       style={[
@@ -450,6 +526,10 @@ const GalleryListing = ({navigation}) => {
             title={'Go'}
             onPress={() => {
               filterSheet.close();
+              getFilterGalleryData(
+                {category: categoryName, index: 0, size: 10},
+                `Search By: ${categoryName}`,
+              );
             }}
           />
         </View>
@@ -500,6 +580,11 @@ const style = StyleSheet.create({
     borderTopWidth: 1,
     borderBottomColor: '#dddddd',
     borderBottomWidth: 1,
+  },
+  footerView: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
   },
 });
 
