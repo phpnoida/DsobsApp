@@ -14,6 +14,7 @@ import {
   Alert,
   SafeAreaView,
   Platform,
+  FlatList,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
@@ -24,13 +25,18 @@ import HeaderBar from '../../component/HeaderBar';
 import CityListSheet from 'react-native-raw-bottom-sheet';
 import BottomSheetHeader from '../../component/BottomSheetHeader';
 import RadioButton from '../../component/RadioButton';
+import {doFilterDirectory} from '../../Actions/DirectoryActions';
 
 let deviceWidth = Dimensions.get('window').width;
 let deviceHeight = Dimensions.get('window').height;
 let cityListSheet = null;
 let offset = 0;
+let filterObject = {};
+let searchVal = ''; //default search value from previous page
+let searchBy = ''; //default search type from previous page
+let searchQuery = ''; //search value from text input
 let isAtbottom = false;
-let oldData = [];
+let currentShowing = 1;
 let sortBy = [
   {
     value: '1',
@@ -50,150 +56,224 @@ var tabList = [
   {tabName: 'Gender', value: 'gender'},
   {tabName: 'Location', value: 'location'},
 ];
+
+const PaginationStatus = {
+  firstLoad: 0,
+  waiting: 1,
+  allLoaded: 2,
+};
+
+let dataIndex = 0;
+let dataSize = 10;
+let totalCount = 0;
+let result = '';
 var cityList = [];
 var filteredCount = -1;
 var listRef = React.createRef();
+
 const DirectoryDetails = ({route, navigation}) => {
-  if (route.params !== undefined && route.params !== null) {
-    if (route.params.data !== undefined && route.params.data !== null) {
-      oldData = route.params.data;
-    }
-  }
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [lookingFor, setLookingFor] = useState('');
   const [searchedUser, setSearchedUser] = useState([]);
   const [showFilter, setShowFilter] = useState(false);
   const [sortedBy, setSortedBy] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('gender');
-  const [genderFilter, setGenderFilter] = useState([]);
+  const [genderFilter, setGenderFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [curY, setCurY] = useState(new Animated.Value(0));
   const [animatedHeight, setAnimatedHeight] = useState(0);
-
+  const [paginationStatus, setPaginationStatus] = useState(
+    PaginationStatus.firstLoad,
+  );
+  const [showLoader, setShowLoader] = useState(false);
   useEffect(() => {
-    if (oldData.length > 0) {
-      cityList = [];
-      oldData.map((data) => {
-        if (data.city !== '') {
-          const found = cityList.some((el) => el.text === data.city);
-          if (!found) {
-            cityList.push({key: data._id, text: data.city});
-          }
-        }
-      });
+    dataIndex = 0;
+    dataSize = 10;
+    totalCount = 0;
+    currentShowing = 1;
 
-      cityList.sort(function (a, b) {
-        if (a.text < b.text) {
-          return -1;
-        }
-        if (a.text > b.text) {
-          return 1;
-        }
-        return 0;
-      });
+    filterObject.index = dataIndex;
+    filterObject.size = dataSize;
 
-      setSearchedUser([...oldData]);
+    if (route.params !== undefined && route.params !== null) {
+      if (
+        route.params.searchBy !== undefined &&
+        route.params.searchBy !== null
+      ) {
+        searchBy = route.params.searchBy;
+        filterObject.type = searchBy;
+      }
+
+      if (
+        route.params.searchVal !== undefined &&
+        route.params.searchVal !== null
+      ) {
+        searchVal = route.params.searchVal;
+        filterObject.s = route.params.searchVal;
+      }
     }
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-
+    getFilterDirectory();
     return () => {};
   }, []);
 
-  const applyFilter = () => {
-    let mainResult = oldData;
-    let filteredResult = [];
-
-    if (locationFilter === '' && genderFilter.length === 0) {
-      clearFilter();
-    } else {
-      mainResult.map((item) => {
-        if (locationFilter !== '' && genderFilter.length > 0) {
+  const getFilterDirectory = () => {
+    setShowLoader(true);
+    doFilterDirectory(
+      filterObject,
+      (response) => {
+        if (response && response !== null) {
           if (
-            item.city.toString().toLowerCase() === locationFilter &&
-            genderFilter.includes(item.gender)
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
           ) {
-            const found = filteredResult.some((el) => el._id === item._id);
-            if (!found) {
-              filteredResult.push(item);
+            let data = response.data;
+
+            if (dataIndex === 0) {
+              totalCount = data.totalCount;
             }
-          }
-        } else if (locationFilter !== '') {
-          if (item.city.toString().toLowerCase() === locationFilter) {
-            const found = filteredResult.some((el) => el._id === item._id);
-            if (!found) {
-              filteredResult.push(item);
-            }
-          }
-        } else if (genderFilter.length > 0) {
-          if (genderFilter.includes(item.gender)) {
-            const found = filteredResult.some((el) => el._id === item._id);
-            if (!found) {
-              filteredResult.push(item);
+
+            if (data.status) {
+              saveData(data);
             }
           }
         }
-      });
-      filteredCount = filteredResult.length;
-      setSearchedUser([...filteredResult]);
+        setShowLoader(false);
+        if (dataIndex === 0) {
+          setIsLoading(false);
+        }
+      },
+      (error) => {
+        if (dataIndex === 0) {
+          setSearchedUser(null);
+          setIsLoading(false);
+        }
+        setShowLoader(false);
+      },
+    );
+  };
+
+  const saveData = (data) => {
+    let records = data.data;
+    cityList = [];
+    data.uniqueCity.map((item) => {
+      cityList.push({key: item, text: item});
+    });
+    if (dataIndex === 0) {
+      setSearchedUser([...records]);
+      result = `${currentShowing}-${dataSize}`;
+
+    } else {
+      currentShowing = dataIndex * 10;
+      result = `${currentShowing}-${records.length < 10 ? currentShowing+records.length : currentShowing+dataSize }`;
+
+      setSearchedUser([...searchedUser, ...records]);
+    }
+    setPaginationStatus(PaginationStatus.waiting);
+  };
+
+  const applyFilter = () => {
+    if (locationFilter === '' && genderFilter === '') {
+      clearFilter();
+    } else {
+      if (locationFilter !== '' && genderFilter !== '') {
+        filterObject.city = locationFilter;
+        filterObject.gender = genderFilter;
+      } else if (locationFilter !== '') {
+        filterObject.city = locationFilter;
+      } else if (genderFilter !== '') {
+        filterObject.gender = genderFilter;
+      }
       setShowFilter(!showFilter);
+      setTimeout(() => {
+        resetCount();
+      }, 100);
     }
   };
 
   const applySorting = (type) => {
-    let tmpData = searchedUser;
-    if (type === 0) {
-      tmpData.sort(function (a, b) {
-        if (b.batch < a.batch) {
-          return -1;
-        }
-        if (b.batch > a.batch) {
-          return 1;
-        }
-        return 0;
-      });
-      setSearchedUser([...tmpData]);
-    } else if (type === 1) {
-      tmpData.sort(function (a, b) {
-        if (a.firstName < b.firstName) {
-          return -1;
-        }
-        if (a.firstName > b.firstName) {
-          return 1;
-        }
-        return 0;
-      });
-      setSearchedUser([...tmpData]);
-    } else {
-      Alert.alert('Coming soon!');
-    }
+    filterObject.sortBy = type;
+
+    setTimeout(() => {
+      resetCount();
+    }, 100);
+  };
+
+  const resetCount = () => {
+    dataIndex = 0;
+    dataSize = 10;
+    totalCount = 0;
+    filterObject.index = dataIndex;
+    getFilterDirectory();
   };
 
   const clearFilter = () => {
     filteredCount = -1;
-    setGenderFilter([]);
+    setGenderFilter('');
     setLocationFilter('');
+    setLookingFor('');
     setShowFilter(!showFilter);
-    setSearchedUser([...oldData]);
+
+    delete filterObject.sortBy;
+    delete filterObject.city;
+    delete filterObject.gender;
+    filterObject.s = searchVal;
+    setTimeout(() => {
+      resetCount();
+    }, 200);
   };
 
-  const doSearchUser = (searchText) => {
-    let oldContent = searchedUser;
-    var list = [];
+  const handleSearch = (text) => {
+    searchQuery = text;
+    setLookingFor(text);
+  };
 
-    if (searchText.length > 0) {
-      list = oldContent.filter(function (element) {
-        return element.firstName
-          .toLowerCase()
-          .startsWith(searchText.toLowerCase());
-      });
-
-      setSearchedUser([...list]);
-    } else {
-      setSearchedUser([...oldData]);
+  const onPaginate = () => {
+    if (paginationStatus !== PaginationStatus.allLoaded && !showLoader) {
+      console.log('onPaginate()');
+      setPaginationStatus(PaginationStatus.waiting);
+      dataIndex = parseInt(dataIndex, 10) + 1;
+      filterObject.index = dataIndex;
+      getFilterDirectory();
     }
+  };
+
+  const onEndReached = () => {
+    console.log('onEndReached()');
+    if (searchedUser.length === totalCount) {
+      setPaginationStatus(PaginationStatus.allLoaded);
+      return;
+    }
+    if (paginationStatus === PaginationStatus.waiting) {
+      onPaginate();
+    }
+  };
+
+  const handleRefresh = () => {
+    resetCount();
+  };
+
+  const onScrollEndDrag = (event) => {
+    if (isAtbottom) {
+      setShowScrollTop(true);
+    } else {
+      setShowScrollTop(false);
+    }
+  };
+
+  const onScroll = (event) => {
+    const currentOffset = event.nativeEvent.contentOffset.y;
+    const dif = currentOffset - (offset || 0);
+
+    if (Math.abs(dif) < 3) {
+    } else if (dif < 0) {
+      isAtbottom = false;
+    } else {
+      isAtbottom = true;
+    }
+
+    offset = currentOffset;
   };
 
   const concatName = (item) => {
@@ -245,20 +325,11 @@ const DirectoryDetails = ({route, navigation}) => {
               style={[
                 g.fs12,
                 g.mb5,
-                genderFilter.includes(1) ? g.colorBlue : g.colorWhite,
+                genderFilter === 1 ? g.colorBlue : g.colorWhite,
               ]}
               numberOfLines={1}
               onPress={() => {
-                let tempData = genderFilter;
-                if (tempData.includes(1)) {
-                  const index = tempData.indexOf(1);
-                  if (index > -1) {
-                    tempData.splice(index, 1);
-                  }
-                } else {
-                  tempData.push(1);
-                }
-                setGenderFilter([...tempData]);
+                setGenderFilter(1);
               }}>
               {'Male'}
             </Text>
@@ -266,20 +337,11 @@ const DirectoryDetails = ({route, navigation}) => {
               style={[
                 g.fs12,
                 g.mb5,
-                genderFilter.includes(0) ? g.colorBlue : g.colorWhite,
+                genderFilter === 0 ? g.colorBlue : g.colorWhite,
               ]}
               numberOfLines={1}
               onPress={() => {
-                let tempData = genderFilter;
-                if (tempData.includes(0)) {
-                  const index = tempData.indexOf(0);
-                  if (index > -1) {
-                    tempData.splice(index, 1);
-                  }
-                } else {
-                  tempData.push(0);
-                }
-                setGenderFilter([...tempData]);
+                setGenderFilter(0);
               }}>
               {'Female'}
             </Text>
@@ -309,7 +371,7 @@ const DirectoryDetails = ({route, navigation}) => {
     return <View />;
   };
 
-  const renderProfileSearch = (item, index) => {
+  const renderItem = ({item, index}) => {
     return (
       <TouchableOpacity
         key={index}
@@ -475,32 +537,6 @@ const DirectoryDetails = ({route, navigation}) => {
     );
   };
 
-  const onScrollEndDrag = (event) => {
-    if (isAtbottom) {
-      setShowScrollTop(true);
-    } else {
-      setShowScrollTop(false);
-    }
-  };
-
-  const onScroll = (event) => {
-    const currentOffset = event.nativeEvent.contentOffset.y;
-    const dif = currentOffset - (offset || 0);
-
-    if (Math.abs(dif) < 3) {
-    } else if (dif < 0) {
-      isAtbottom = false;
-    } else {
-      isAtbottom = true;
-    }
-
-    offset = currentOffset;
-  };
-
-  const handleSearch = (text) => {
-    doSearchUser(text);
-  };
-
   const headerComponent = () => {
     return (
       <View
@@ -529,6 +565,7 @@ const DirectoryDetails = ({route, navigation}) => {
               />
               <TextInput
                 underlineColorAndroid="transparent"
+                value={lookingFor}
                 style={[
                   g.inputNew,
                   g.fs18,
@@ -543,6 +580,15 @@ const DirectoryDetails = ({route, navigation}) => {
           </View>
           <TouchableOpacity
             activeOpacity={0.8}
+            onPress={() => {
+              if (searchQuery.trim().length > 0) {
+                Keyboard.dismiss();
+                filterObject.s = searchQuery;
+                setTimeout(() => {
+                  resetCount();
+                }, 200);
+              }
+            }}
             style={[
               g.fliterBtnNew,
               grid.alignItems,
@@ -662,11 +708,11 @@ const DirectoryDetails = ({route, navigation}) => {
 
         {/* filter result */}
         <Text style={[g.fs10, g.FHNR, g.colorBlack, g.mt10]}>
-          {'ALL RESULTS'}: {oldData.length} {'Profiles'}
+          {'ALL RESULTS'}: {totalCount} {'Profiles'}
         </Text>
         <Text style={[g.fs10, g.FHNR, g.colorBlack, g.pt2]}>
-          {'CURRENT RESULTS'}:
-          {filteredCount > 0 ? filteredCount : oldData.length} {'Profiles'}
+          {'CURRENT RESULTS'}:{result}
+          {'Profiles'}
         </Text>
         {/* filter result */}
       </View>
@@ -695,33 +741,28 @@ const DirectoryDetails = ({route, navigation}) => {
               </View>
             ) : (
               <View style={GlobalInclude.AppStyle.fill}>
-                <Animated.ScrollView
+                <Animated.FlatList
                   ref={listRef}
-                  onScrollEndDrag={onScrollEndDrag}
-                  scrollEventThrottle={16}
+                  numColumns={2}
+                  extraData={searchedUser}
+                  data={searchedUser}
+                  onEndReachedThreshold={0.1}
+                  onEndReached={onEndReached}
+                  renderItem={renderItem}
                   contentContainerStyle={{
                     marginTop: animatedHeight,
+                    paddingStart: scale(15),
+                    paddingEnd: scale(15),
+                    paddingBottom: animatedHeight,
                   }}
+                  keyExtractor={(v, i) => i.toString()}
+                  onScrollEndDrag={onScrollEndDrag}
+                  scrollEventThrottle={16}
                   onScroll={Animated.event(
                     [{nativeEvent: {contentOffset: {y: curY}}}],
                     {useNativeDriver: true, listener: onScroll},
-                  )}>
-                  {/* searched data */}
-                  <View
-                    style={{
-                      paddingStart: scale(15),
-                      paddingEnd: scale(15),
-                      paddingBottom: animatedHeight + scale(15),
-                    }}>
-                    <View style={[grid.rowdir, grid.flexwrap]}>
-                      {searchedUser.map((item, index) => {
-                        return renderProfileSearch(item, index);
-                      })}
-                    </View>
-                  </View>
-
-                  {/* searched data */}
-                </Animated.ScrollView>
+                  )}
+                />
 
                 <Animated.View
                   style={[
