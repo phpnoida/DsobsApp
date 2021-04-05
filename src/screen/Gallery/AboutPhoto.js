@@ -430,7 +430,7 @@ const AboutPhoto = ({route, navigation}) => {
           Select Batch
         </Text>
         <RadioButton
-          PROP={Helper.getYearList()}
+          PROP={Helper.generateYearList(false,-1)}
           onRadioSelect={(value) => {
             setSelectedYear(value.text.toString());
             batchSheet.close();

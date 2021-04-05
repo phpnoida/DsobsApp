@@ -807,7 +807,7 @@ const Register = (props) => {
           Select Batch
         </Text>
         <RadioButton
-          PROP={Helper.getYearList()}
+          PROP={Helper.generateYearList(false,-1)}
           onRadioSelect={(value) => {
             setSelectedBatch(value.text.toString());
             batchSheet.close();

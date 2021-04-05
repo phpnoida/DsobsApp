@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   StyleSheet,
@@ -20,7 +20,6 @@ import grid from '../../theme/grid';
 import {IconType, APP_NAME, URL_REGX} from '../../helper/Constants';
 import TopHeaderView from '../../component/TopHeaderView';
 import GalleryImage from '../../component/GalleryImage';
-import CheckBoxIOS from 'react-native-check-box';
 import FilterSheet from 'react-native-raw-bottom-sheet';
 import CommonButton from '../../component/CommonButton';
 import ImageShareModal from '../../component/ImageShareModal';
@@ -29,13 +28,18 @@ import {
   getGalleryCategory,
   doFilterGallery,
 } from '../../Actions/GalleryActions';
+import {getDirectory} from '../../Actions/DirectoryActions';
+
 import AutoCompleteSearch from '../../component/AutoCompleteSearch';
+import YearSelection from '../../component/YearSelectionSheet';
 
 const {height, width} = Dimensions.get('window');
 const tablet = width >= 768;
 let filterSheet = null;
 let userData = null;
 let categoryName = null;
+let searchVal = '';
+let searchType = 1;
 const PaginationStatus = {
   firstLoad: 0,
   waiting: 1,
@@ -47,6 +51,8 @@ let filterObject = {
   size: 10,
 };
 const GalleryListing = ({navigation}) => {
+  const refRBSheet = useRef();
+
   const [firstTimeLoad, setFirstTimeLoad] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [pageContent, setPageContent] = useState([]);
@@ -57,6 +63,9 @@ const GalleryListing = ({navigation}) => {
     PaginationStatus.firstLoad,
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [checkedType, setCheckedType] = useState(1);
+  const [searchedUser, setSearchedUser] = useState([]);
+  const [otherSearch, setotherSearch] = useState([]);
 
   useEffect(() => {
     userData = global.userDetails;
@@ -133,9 +142,11 @@ const GalleryListing = ({navigation}) => {
     );
   };
 
-  const getFilterGalleryData = (filterBy, pageTitle) => {
-    doFilterGallery(
-      filterBy,
+  // Filter section
+  const doSearchUser = (query) => {
+    getDirectory(
+      '1',
+      query,
       (response) => {
         if (response && response !== null) {
           if (
@@ -145,25 +156,17 @@ const GalleryListing = ({navigation}) => {
           ) {
             let data = response.data;
 
-            if (data.status) {
-              console.log('====================================');
-              console.log('data.data', JSON.stringify(data));
-              console.log('====================================');
-              let results = data.data;
-              if (results !== undefined && results !== null) {
-                navigation.navigate('FilteredResult', {
-                  filterBy: filterBy,
-                  data: results,
-                  pageTitle: pageTitle,
-                  totalCount: data.totalCount,
-                });
-              }
+            if (searchVal.length > 0) {
+              setSearchedUser([...data.data]);
+            } else {
+              setSearchedUser([]);
             }
           }
         }
       },
-      (error, message) => {
-        console.log('error', message);
+      (error) => {
+        setSearchedUser([]);
+        console.log('error', error);
       },
     );
   };
@@ -208,34 +211,6 @@ const GalleryListing = ({navigation}) => {
   const handleRefresh = () => {
     filterObject.index = 0;
     getAlbumList();
-  };
-
-  const drawCheckbox = (title, checked, onClick) => {
-    return (
-      <View style={[grid.rowdir, grid.alignItems]}>
-        <CheckBoxIOS
-          checkBoxColor={'#2b3252'}
-          style={[g.mr2, g.br3, {maxWidth: 23, height: 20}]}
-          onClick={() => {
-            onClick();
-          }}
-          isChecked={checked}
-          checkedImage={
-            <Image
-              source={GlobalInclude.Assets.CheckboxChecked}
-              style={{maxWidth: 20, height: 20}}
-            />
-          }
-          unCheckedImage={
-            <Image
-              source={GlobalInclude.Assets.CheckboxDefault}
-              style={{maxWidth: 20, height: 20}}
-            />
-          }
-        />
-        <Text style={[g.colordarkGray, g.FHNR, grid.col, g.fs12]}>{title}</Text>
-      </View>
-    );
   };
 
   const expandSelectedPanel = (index) => {
@@ -321,107 +296,44 @@ const GalleryListing = ({navigation}) => {
                 }
               }}
             />
-
-            <View style={[grid.rowdir, grid.alignItems, g.mt10]}>
-              <Text style={[g.fs16, g.FHNR, g.colordarkGray, grid.col]}>
-                {'Search By'}
-              </Text>
-            </View>
             {/* search container */}
-
-            <View
-              style={[
-                grid.rowdir,
-                grid.alignItems,
-                g.mt10,
-                g.mb10,
-                tablet && g.pt10,
-              ]}>
-              <View
-                style={{
-                  width: scale(120),
-                }}>
-                {drawCheckbox('Name/Batch/House/Number', false, () => {})}
-              </View>
-              <View
-                style={{
-                  width: scale(75),
-                  marginStart: scale(3),
-                  marginEnd: scale(3),
-                }}>
-                {drawCheckbox('Album', false, () => {})}
-              </View>
-              <View
-                style={{
-                  width: scale(65),
-                }}>
-                {drawCheckbox('Year', false, () => {})}
-              </View>
-              <View style={[grid.col, {marginStart: scale(3)}]}>
-                {drawCheckbox('Tags', false, () => {})}
-              </View>
-            </View>
-
-            <View style={[grid.rowdir, g.mb5, g.pt15]}>
-              <View style={[g.br3, grid.col, g.mr5]}>
-                <View style={[g.inputNew, grid.rowdir]}>
-                  <GlobalInclude.BaseIcon
-                    containerStyle={style.searchIcon}
-                    iconColor={'#dddddd'}
-                    iconName={'search'}
-                    iconSize={scale(20)}
-                    iconType={IconType[4]}
-                  />
-                  <TextInput
-                    underlineColorAndroid="transparent"
-                    style={[
-                      g.inputNew,
-                      g.pl0,
-                      g.fs18,
-                      grid.col,
-                      grid.justifyContentCenter,
-                    ]}
-                    keyboardType={'default'}
-                    placeholder={'Search Photo'}
-                    onChangeText={(text) => {
-                      setFilterQuery(text);
-                    }}
-                  />
-                </View>
-              </View>
-              {filterQuery.length <= 3 ? (
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    if (filterSheet !== null) {
-                      filterSheet.open();
-                    }
-                  }}
-                  style={[
-                    g.fliterBtnNew,
-                    grid.alignItems,
-                    grid.justifyContentCenter,
-                  ]}>
-                  <Image
-                    source={GlobalInclude.Assets.Filter}
-                    resizeMode="contain"
-                    style={{width: 16}}
-                  />
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => {}}
-                  style={[
-                    g.fliterBtnNew,
-                    grid.alignItems,
-                    grid.justifyContentCenter,
-                    g.bgBlue,
-                  ]}>
-                  <Text style={[g.colorWhite, g.FHNM, g.fs16]}>Go</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+            <AutoCompleteSearch
+              mainTitle={'Search By'}
+              chkType={checkedType}
+              chkOneTitle={'Name/Batch/House/Number'}
+              chkTwoTitle={'Album'}
+              ChkThreeTitle={'Year'}
+              ChkFourTitle={'Tags'}
+              onChecked={(type) => {
+                searchType = type;
+                setCheckedType(type);
+                if (type === 3) {
+                  setTimeout(() => {
+                    refRBSheet.current.open();
+                  }, 100);
+                }
+              }}
+              onFilterPress={() => {
+                if (filterSheet !== null) {
+                  filterSheet.open();
+                }
+              }}
+              changeText={(text) => {
+                searchVal = text;
+                setFilterQuery(text);
+                if (text.length > 3) {
+                  if (searchType === 1) {
+                    setSearchedUser([]);
+                    doSearchUser(text);
+                  }
+                }
+              }}
+              filterQuery={filterQuery}
+              searchedUser={searchedUser}
+              onUserSelected={(row,index) =>{
+                
+              }}
+            />
           </View>
           {firstTimeLoad ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
@@ -526,10 +438,11 @@ const GalleryListing = ({navigation}) => {
             title={'Go'}
             onPress={() => {
               filterSheet.close();
-              getFilterGalleryData(
-                {category: categoryName, index: 0, size: 10},
-                `Search By: ${categoryName}`,
-              );
+
+              navigation.navigate('FilteredResult', {
+                filterBy: {category: categoryName, index: 0, size: 10},
+                pageTitle: `Search By: ${categoryName}`,
+              });
             }}
           />
         </View>
@@ -554,6 +467,23 @@ const GalleryListing = ({navigation}) => {
           </View>
         </View>
       )}
+
+      {/* year select */}
+      <YearSelection
+        refRBSheet={refRBSheet}
+        title={'Select Year'}
+        onSelect={(value) => {
+          refRBSheet.current.close();
+          setCheckedType(-1);
+          setTimeout(() => {
+            navigation.navigate('FilteredResult', {
+              filterBy: {year: value.text.toString(), index: 0, size: 10},
+              pageTitle: `Search By: ${value.text.toString()}`,
+            });
+          }, 100);
+        }}
+      />
+      {/* year select */}
     </View>
   );
 };

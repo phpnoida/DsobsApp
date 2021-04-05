@@ -16,19 +16,6 @@ const Helpers = {
     var bool = found && found.length;
     return bool;
   },
-
-  getYearList: function () {
-    let year = '';
-    let yearList = [];
-    let cYear = new Date().getFullYear();
-    let sYear = 1920;
-    for (let i = 0; i <= cYear - sYear; i++) {
-      year = sYear + i;
-      yearList.push({key: year, text: year});
-    }
-    return yearList.reverse();
-  },
-
   getBloodGroup: function () {
     let bloodGroups = [
       {key: 0, text: 'O+'},
@@ -252,6 +239,48 @@ const Helpers = {
       }
     }
     return Promise.resolve();
+  },
+  concatName: function (item) {
+    let fullName = '';
+
+    if (
+      item.firstName &&
+      item.firstName !== undefined &&
+      item.firstName !== ''
+    ) {
+      fullName += item.firstName;
+    }
+
+    if (item.lastName && item.lastName !== undefined && item.lastName !== '') {
+      fullName += ' ' + item.lastName;
+    }
+    return fullName;
+  },
+
+  generateYearList: function (onGoing, defaultChecked) {
+    let year = '';
+    let yearList = [];
+    let cYear = new Date().getFullYear();
+    let sYear = 1920;
+
+    for (let i = 0; i <= cYear - sYear; i++) {
+      year = sYear + i;
+      yearList.push({
+        key: year,
+        text: year,
+        selected: year === defaultChecked ? true : false,
+      });
+    }
+    yearList.reverse();
+
+    if (onGoing) {
+      yearList.splice(0, 0, {
+        key: 'Ongoing',
+        text: 'Ongoing',
+        selected: defaultChecked === 'Ongoing' ? true : false,
+      });
+    }
+    return yearList;
   },
 };
 

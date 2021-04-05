@@ -53,14 +53,12 @@ const FilteredResult = ({navigation, route}) => {
 
   useEffect(() => {
     if (route.params !== undefined && route.params !== null) {
-      let data = route.params.data;
       pageTitle = route.params.pageTitle;
       filterObject = route.params.filterBy;
-      totalCount = route.params.totalCount;
-      console.log(totalCount);
-      console.log(data.length);
-      setImageData([...data]);
-      setLoading(false);
+
+      setTimeout(() => {
+        getGalleryData();
+      }, 100);
     }
     return () => {};
   }, []);
@@ -72,6 +70,7 @@ const FilteredResult = ({navigation, route}) => {
     doFilterGallery(
       filterObject,
       (response) => {
+        setLoading(false);
         if (response && response !== null) {
           if (
             response.data &&
@@ -98,6 +97,11 @@ const FilteredResult = ({navigation, route}) => {
         }
       },
       (error, message) => {
+        setLoading(false);
+        if (error === 404) {
+          setPaginationStatus(PaginationStatus.allLoaded);
+          setImageData(null);
+        }
         console.log('error', message);
       },
     );
@@ -189,18 +193,26 @@ const FilteredResult = ({navigation, route}) => {
                   paddingTop: scale(15),
                   paddingBottom: scale(35),
                 }}>
-                <FlatList
-                  showsVerticalScrollIndicator={false}
-                  extraData={imageData}
-                  data={imageData}
-                  renderItem={generateGalleryView}
-                  keyExtractor={(item, index) => index.toString()}
-                  onEndReachedThreshold={0.1}
-                  onEndReached={onEndReached}
-                  refreshing={isRefreshing}
-                  onRefresh={handleRefresh}
-                  ListFooterComponent={renderFooter}
-                />
+                {imageData === null || imageData.length === 0 ? (
+                  <View style={GlobalInclude.AppStyle.center}>
+                    <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
+                      No Record Found
+                    </Text>
+                  </View>
+                ) : (
+                  <FlatList
+                    showsVerticalScrollIndicator={false}
+                    extraData={imageData}
+                    data={imageData}
+                    renderItem={generateGalleryView}
+                    keyExtractor={(item, index) => index.toString()}
+                    onEndReachedThreshold={0.1}
+                    onEndReached={onEndReached}
+                    refreshing={isRefreshing}
+                    onRefresh={handleRefresh}
+                    ListFooterComponent={renderFooter}
+                  />
+                )}
               </View>
             </View>
           )}

@@ -29,7 +29,7 @@ const SelectBatch = (props) => {
         Select Batch
       </Text>
       <RadioButton
-        PROP={Helper.getYearList()}
+        PROP={Helper.generateYearList(false,-1)}
         onRadioSelect={(value) => {
           props.setSelectedBatch(value.text.toString());
           props.batchSheet.close();
