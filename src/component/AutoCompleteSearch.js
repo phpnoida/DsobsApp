@@ -38,6 +38,7 @@ const AutoCompleteSearch = ({
   filterQuery,
   searchedUser,
   onUserSelected,
+  onGoPress,
 }) => {
   const drawCheckbox = (title, checked, onClick) => {
     return (
@@ -137,7 +138,9 @@ const AutoCompleteSearch = ({
                 grid.justifyContentCenter,
               ]}
               keyboardType={'default'}
-              placeholder={'Search Photo'}
+              placeholder={
+                chkType === 1 ? 'Type more then 3 characters ' : 'Search Photo'
+              }
               onChangeText={(text) => {
                 changeText(text);
               }}
@@ -159,10 +162,10 @@ const AutoCompleteSearch = ({
               style={{width: 16}}
             />
           </TouchableOpacity>
-        ) : (
+        ) : chkType === 1 ? (
           <TouchableOpacity
             activeOpacity={0.8}
-            onPress={() => {}}
+            onPress={() => onGoPress()}
             style={[
               g.fliterBtnNew,
               grid.alignItems,
@@ -171,6 +174,8 @@ const AutoCompleteSearch = ({
             ]}>
             <Text style={[g.colorWhite, g.FHNM, g.fs16]}>Go</Text>
           </TouchableOpacity>
+        ) : (
+          <View />
         )}
       </View>
 

@@ -2,40 +2,27 @@ import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
-  TextInput,
   SafeAreaView,
-  Image,
   Text,
   ActivityIndicator,
-  TouchableOpacity,
-  Dimensions,
   FlatList,
   Linking,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
-import grid from '../../theme/grid';
-import {IconType, APP_NAME, URL_REGX} from '../../helper/Constants';
+import {APP_NAME} from '../../helper/Constants';
 import TopHeaderView from '../../component/TopHeaderView';
 import GalleryImage from '../../component/GalleryImage';
-import FilterSheet from 'react-native-raw-bottom-sheet';
-import CommonButton from '../../component/CommonButton';
 import ImageShareModal from '../../component/ImageShareModal';
-import {
-  getAlbums,
-  getGalleryCategory,
-  doFilterGallery,
-} from '../../Actions/GalleryActions';
+import {getAlbums, getGalleryCategory} from '../../Actions/GalleryActions';
 import {getDirectory} from '../../Actions/DirectoryActions';
 
 import AutoCompleteSearch from '../../component/AutoCompleteSearch';
 import YearSelection from '../../component/YearSelectionSheet';
+import CategoryFilter from '../../component/CategoryFilterSheet';
+import Helper from '../../helper/Helper';
 
-const {height, width} = Dimensions.get('window');
-const tablet = width >= 768;
-let filterSheet = null;
 let userData = null;
 let categoryName = null;
 let searchVal = '';
@@ -52,6 +39,7 @@ let filterObject = {
 };
 const GalleryListing = ({navigation}) => {
   const refRBSheet = useRef();
+  const refRBFilter = useRef();
 
   const [firstTimeLoad, setFirstTimeLoad] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -314,24 +302,43 @@ const GalleryListing = ({navigation}) => {
                 }
               }}
               onFilterPress={() => {
-                if (filterSheet !== null) {
-                  filterSheet.open();
+                if (refRBFilter.current !== null) {
+                  refRBFilter.current.open();
                 }
               }}
               changeText={(text) => {
                 searchVal = text;
                 setFilterQuery(text);
-                if (text.length > 3) {
-                  if (searchType === 1) {
+                if (searchType === 1) {
+                  if (text.length > 3) {
                     setSearchedUser([]);
                     doSearchUser(text);
+                  } else if (text.length < 4) {
+                    setSearchedUser([]);
                   }
+                } else if (searchType === 2) {
+                  filterObject.s = searchVal;
+                  getAlbumList();
                 }
               }}
               filterQuery={filterQuery}
               searchedUser={searchedUser}
-              onUserSelected={(row,index) =>{
-                
+              onUserSelected={(row, index) => {
+                setFilterQuery('');
+                setCheckedType(-1);
+                searchVal = '';
+
+                navigation.navigate('FilteredResult', {
+                  filterBy: {userId: row._id, index: 0, size: 10},
+                  pageTitle: `Search For: ${Helper.concatName(row)}`,
+                });
+              }}
+              onGoPress={() => {
+                navigation.navigate('DirectoryDetails', {
+                  searchBy: searchType,
+                  searchVal: searchVal,
+                  from: 'Gallery',
+                });
               }}
             />
           </View>
@@ -367,86 +374,24 @@ const GalleryListing = ({navigation}) => {
       </SafeAreaView>
 
       {/* filter sheet */}
-      <FilterSheet
-        ref={(ref) => {
-          filterSheet = ref;
+      <CategoryFilter
+        refRBSheet={refRBFilter}
+        title={'Filter Gallery By'}
+        buttonText={'Apply'}
+        dataList={filterCategory}
+        onPress={(item, index) => {
+          categoryName = item.label;
+          selectCategory(index);
         }}
-        onClose={() => {}}
-        height={height / 2 + 70}
-        minClosingHeight={50}
-        duration={350}
-        closeOnDragDown={true}
-        customStyles={{
-          container: {
-            backgroundColor: '#fff',
-            borderTopLeftRadius: 30,
-            borderTopRightRadius: 30,
-            paddingStart: scale(15),
-            paddingEnd: scale(15),
-            paddingBottom: scale(20),
-            paddingTop: scale(10),
-          },
-        }}>
-        <Text
-          style={[
-            g.mt15,
-            g.colorBlue,
-            g.fs18,
-            g.FHNB,
-            style.filterText,
-            g.mb15,
-          ]}>
-          Filter Gallery By
-        </Text>
+        onSelect={() => {
+          refRBFilter.current.close();
 
-        <View style={grid.flex1}>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {filterCategory.map((item, index) => {
-              return (
-                <View key={index}>
-                  <TouchableOpacity
-                    activeOpacity={1}
-                    style={[
-                      g.mb15,
-                      grid.rowdir,
-                      grid.alignItems,
-                      grid.justifyContent,
-                    ]}
-                    onPress={() => {
-                      categoryName = item.label;
-                      selectCategory(index);
-                    }}>
-                    <Text
-                      style={[
-                        g.fs15,
-                        g.FHNB,
-                        g.colorBlack,
-                        item.isSelected ? g.colorBlue : g.colorGray5,
-                      ]}>
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              );
-            })}
-          </ScrollView>
-        </View>
-
-        <View style={style.filterButton}>
-          <CommonButton
-            showLoader={false}
-            title={'Go'}
-            onPress={() => {
-              filterSheet.close();
-
-              navigation.navigate('FilteredResult', {
-                filterBy: {category: categoryName, index: 0, size: 10},
-                pageTitle: `Search By: ${categoryName}`,
-              });
-            }}
-          />
-        </View>
-      </FilterSheet>
+          navigation.navigate('FilteredResult', {
+            filterBy: {category: categoryName, index: 0, size: 10},
+            pageTitle: `Search By: ${categoryName}`,
+          });
+        }}
+      />
       {/* filter sheet */}
 
       {/* image share modal */}

@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   StyleSheet,
@@ -28,22 +28,20 @@ import YoutubeView from '../../component/YoutubeView';
 import TopHeaderView from '../../component/TopHeaderView';
 import Share, {ShareSheet, Button} from 'react-native-share';
 import Helper from '../../helper/Helper';
-import BottomSheetHeader from '../../component/BottomSheetHeader';
-import FilterSheet from 'react-native-raw-bottom-sheet';
 import CommonButton from '../../component/CommonButton';
 import RNFetchBlob from 'rn-fetch-blob';
-
-let deviceHeight = Dimensions.get('window').height;
+import CategoryFilter from '../../component/CategoryFilterSheet';
 let windowWidth = Dimensions.get('window').width;
 
 let selectedVideo = {};
-let filterSheet = null;
 let videoLink = '',
   videoNotes = '';
 
 const {urlRegex} = URL_REGX;
 
 const Video = ({navigation}) => {
+  const refRBFilter = useRef();
+
   const [isLoading, setIsLoading] = useState(false);
   const [pageContent, setPageContent] = useState([]);
   const [showSharingSheet, setShowSharingSheet] = useState(false);
@@ -515,7 +513,9 @@ const Video = ({navigation}) => {
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => {
-                filterSheet.open();
+                if (refRBFilter.current !== null) {
+                  refRBFilter.current.open();
+                }
               }}
               style={[
                 g.fliterBtnNew,
@@ -642,86 +642,26 @@ const Video = ({navigation}) => {
         </ShareSheet>
 
         {/* filter sheet */}
-        <FilterSheet
-          ref={(ref) => {
-            filterSheet = ref;
-          }}
+        <CategoryFilter
+          refRBSheet={refRBFilter}
+          title={'Filter Videos By'}
+          buttonText={'Apply'}
+          dataList={videoCategories}
           onClose={() => {
             resetFilter();
           }}
-          height={deviceHeight / 2 + 70}
-          minClosingHeight={50}
-          duration={350}
-          closeOnDragDown={true}
-          customStyles={{
-            container: {
-              backgroundColor: '#fff',
-              borderTopLeftRadius: 30,
-              borderTopRightRadius: 30,
-              paddingStart: scale(15),
-              paddingEnd: scale(15),
-              paddingBottom: scale(20),
-              paddingTop: scale(10),
-            },
-          }}>
-          <Text
-            style={[
-              g.mt15,
-              g.colorBlue,
-              g.fs18,
-              g.FHNB,
-              style.filterText,
-              g.mb15,
-            ]}>
-            Filter Videos By
-          </Text>
+          onPress={(item, index) => {
+            setselectedFilter(item.label);
+            selectFilter(index);
+          }}
+          onSelect={() => {
+            refRBFilter.current.close();
 
-          <View style={grid.flex1}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {videoCategories.map((item, index) => {
-                return (
-                  <View key={index}>
-                    <TouchableOpacity
-                      activeOpacity={1}
-                      style={[
-                        g.mb15,
-                        grid.rowdir,
-                        grid.alignItems,
-                        grid.justifyContent,
-                      ]}
-                      onPress={() => {
-                        setselectedFilter(item.label);
-                        selectFilter(index);
-                      }}>
-                      <Text
-                        style={[
-                          g.fs15,
-                          g.FHNB,
-                          g.colorBlack,
-                          item.isSelected ? g.colorBlue : g.colorGray5,
-                        ]}>
-                        {item.label}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                );
-              })}
-            </ScrollView>
-          </View>
-
-          <View style={style.filterButton}>
-            <CommonButton
-              showLoader={false}
-              title={'Go'}
-              onPress={() => {
-                filterSheet.close();
-                setTimeout(() => {
-                  getVideoData(selectedFilter);
-                }, 100);
-              }}
-            />
-          </View>
-        </FilterSheet>
+            setTimeout(() => {
+              getVideoData(selectedFilter);
+            }, 100);
+          }}
+        />
         {/* filter sheet */}
 
         {/* post video modal */}
@@ -932,14 +872,6 @@ const style = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
   },
-  filterText: {
-    paddingTop: 12,
-    paddingBottom: 12,
-    borderTopColor: '#dddddd',
-    borderTopWidth: 1,
-    borderBottomColor: '#dddddd',
-    borderBottomWidth: 1,
-  },
   seeMore: {
     flexDirection: 'row',
     alignContent: 'center',
@@ -971,13 +903,6 @@ const style = StyleSheet.create({
     alignSelf: 'flex-end',
     alignContent: 'flex-end',
     flex: 1,
-  },
-  filterButton: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: scale(150),
-    alignContent: 'center',
-    alignSelf: 'center',
   },
 });
 

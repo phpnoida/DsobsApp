@@ -25,7 +25,7 @@ import ProgresImage from '../../component/ProgresImage';
 import {getDirectory} from '../../Actions/DirectoryActions';
 import {doUpdateImageInformation} from '../../Actions/GalleryActions';
 import CommonButton from '../../component/CommonButton';
-
+import Helper from '../../helper/Helper';
 const {width} = Dimensions.get('window');
 
 let searchVal = '';
@@ -172,22 +172,6 @@ const TagUser = ({route, navigation}) => {
     setTaggedUsers([...oldItem]);
   };
 
-  const concatName = (item) => {
-    let fullName = '';
-
-    if (
-      item.firstName &&
-      item.firstName !== undefined &&
-      item.firstName !== ''
-    ) {
-      fullName += item.firstName;
-    }
-
-    if (item.lastName && item.lastName !== undefined && item.lastName !== '') {
-      fullName += ' ' + item.lastName;
-    }
-    return fullName;
-  };
   const renderAutoSuggest = () => {
     var data = searchedUser.map((row, index) => {
       return (
@@ -213,7 +197,7 @@ const TagUser = ({route, navigation}) => {
             )}
           </View>
           <View style={{padding: scale(3)}}>
-            <Text style={style.userNameView}>{concatName(row)}</Text>
+            <Text style={style.userNameView}>{Helper.concatName(row)}</Text>
             {row.batch ? (
               <Text style={style.userNameView}>{row.batch}</Text>
             ) : null}
@@ -323,7 +307,7 @@ const TagUser = ({route, navigation}) => {
                             g.colorBlack,
                           ]}
                           numberOfLines={2}>
-                          {concatName(item)}
+                          {Helper.concatName(item)}
                         </Text>
                         <Text
                           style={[

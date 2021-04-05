@@ -25,13 +25,14 @@ import {
   doPostNews,
   doFilterNews,
 } from '../../Actions/NewsActions';
-import {searchUser} from '../../Actions/UserActions';
-import {getDirectory} from '../../Actions/DirectoryActions'
+
+import {getDirectory} from '../../Actions/DirectoryActions';
 import ProgresImage from '../../component/ProgresImage';
 import TopHeaderView from '../../component/TopHeaderView';
 import FilterSheet from 'react-native-raw-bottom-sheet';
 import CommonButton from '../../component/CommonButton';
 import Helper from '../../helper/Helper';
+import AutoSuggestUser from '../../component/AutoSuggestUser';
 
 const {width, height} = Dimensions.get('window');
 const PaginationStatus = {
@@ -93,7 +94,7 @@ const NewsListing = ({navigation}) => {
 
   const doSearchUser = (searchQuery) => {
     getDirectory(
-      "1",
+      '1',
       searchQuery,
       (response) => {
         if (response && response !== null) {
@@ -447,110 +448,6 @@ const NewsListing = ({navigation}) => {
       fullName += ' ' + item.lastName;
     }
     return fullName;
-  };
-
-  const renderAutoSuggest = () => {
-    var data = searchedUser.map((row, index) => {
-      return (
-        <TouchableOpacity
-          key={index}
-          activeOpacity={1}
-          style={style.suggestionContainer}
-          onPress={() => {
-            let oldData = selectedUsers;
-
-            if (oldData.length < 3) {
-              searchVal = '';
-              oldData.push(row);
-              setSearchUserQuery('');
-              setSelectedUsers([...oldData]);
-              setSearchedUser([]);
-            }
-          }}>
-          <View style={[g.bggray2, g.br3, {height: scale(65)}]}>
-            {row.profileImg != null && row.profileImg !== '' && (
-              <ProgresImage
-                source={
-                  row.profileImg != null && row.profileImg !== ''
-                    ? {uri: row.profileImg}
-                    : GlobalInclude.Assets.DefaultImage
-                }
-                containerStyle={style.userProfileContainer}
-                imageStyle={style.userProfiileView}
-                mode={'cover'}
-              />
-            )}
-          </View>
-          <View style={{padding: scale(3)}}>
-            <Text style={style.userNameView}>{concatName(row)}</Text>
-            {row.schoolNumber ? (
-              <Text
-                style={[
-                  g.fs10,
-                  g.colorBlack,
-                  g.FHNR,
-                  {marginTop: scale(2), marginBottom: scale(2)},
-                ]}>
-                {row.schoolNumber}
-              </Text>
-            ) : null}
-
-            <View
-              style={{
-                flexDirection: 'row',
-                marginTop: scale(2),
-                marginBottom: scale(2),
-              }}>
-              {row.house ? (
-                <Text
-                  style={[
-                    g.fs10,
-                    g.colorBlack,
-                    g.FHNR,
-                    {marginRight: scale(2)},
-                  ]}>
-                  {row.house.toLowerCase().charAt(0).toUpperCase() +
-                    row.house.toLowerCase().slice(1)}
-                </Text>
-              ) : null}
-              {row.section ? (
-                <Text
-                  style={[
-                    g.fs10,
-                    g.colorBlack,
-                    g.FHNR,
-                    {marginLeft: scale(2)},
-                  ]}>
-                  {row.section}
-                </Text>
-              ) : null}
-            </View>
-            {row.batch ? (
-              <Text
-                style={[
-                  g.fs10,
-                  g.colorBlack,
-                  g.FHNR,
-                  {marginTop: scale(2), marginBottom: scale(2)},
-                ]}>
-                {row.batch}
-              </Text>
-            ) : null}
-          </View>
-        </TouchableOpacity>
-      );
-    });
-    return (
-      <View style={[g.AutoCompleteList1, g.p10]}>
-        <Text style={[g.colordarkGray, g.fs16, g.FHNM, g.pb5]}>Suggestion</Text>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          horizontal={true}
-          showsHorizontalScrollIndicator={false}>
-          {data}
-        </ScrollView>
-      </View>
-    );
   };
 
   const renderSelectedUsers = () => {
@@ -1040,7 +937,22 @@ const NewsListing = ({navigation}) => {
                     />
                   </View>
 
-                  {searchedUser.length > 0 && renderAutoSuggest()}
+                  {searchedUser.length > 0 && (
+                    <AutoSuggestUser
+                      searchedUser={searchedUser}
+                      onPress={(row, index) => {
+                        let oldData = selectedUsers;
+
+                        if (oldData.length < 3) {
+                          searchVal = '';
+                          oldData.push(row);
+                          setSearchUserQuery('');
+                          setSelectedUsers([...oldData]);
+                          setSearchedUser([]);
+                        }
+                      }}
+                    />
+                  )}
 
                   {selectedUsers.length > 0 && (
                     <View style={g.mb15}>

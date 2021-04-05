@@ -26,6 +26,7 @@ import CityListSheet from 'react-native-raw-bottom-sheet';
 import BottomSheetHeader from '../../component/BottomSheetHeader';
 import RadioButton from '../../component/RadioButton';
 import {doFilterDirectory} from '../../Actions/DirectoryActions';
+import Helper from '../../helper/Helper';
 
 let deviceWidth = Dimensions.get('window').width;
 let deviceHeight = Dimensions.get('window').height;
@@ -70,6 +71,7 @@ let result = '';
 var cityList = [];
 var filteredCount = -1;
 var listRef = React.createRef();
+var lastRequestFrom = ''; //You will get this from SearchDirectory or GalleryListing
 
 const DirectoryDetails = ({route, navigation}) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -111,6 +113,9 @@ const DirectoryDetails = ({route, navigation}) => {
       ) {
         searchVal = route.params.searchVal;
         filterObject.s = route.params.searchVal;
+      }
+      if (route.params.from !== undefined && route.params.from !== null) {
+        lastRequestFrom = route.params.from;
       }
     }
     getFilterDirectory();
@@ -163,10 +168,13 @@ const DirectoryDetails = ({route, navigation}) => {
     if (dataIndex === 0) {
       setSearchedUser([...records]);
       result = `${currentShowing}-${dataSize}`;
-
     } else {
       currentShowing = dataIndex * 10;
-      result = `${currentShowing}-${records.length < 10 ? currentShowing+records.length : currentShowing+dataSize }`;
+      result = `${currentShowing}-${
+        records.length < 10
+          ? currentShowing + records.length
+          : currentShowing + dataSize
+      }`;
 
       setSearchedUser([...searchedUser, ...records]);
     }
@@ -276,23 +284,6 @@ const DirectoryDetails = ({route, navigation}) => {
     offset = currentOffset;
   };
 
-  const concatName = (item) => {
-    let fullName = '';
-
-    if (
-      item.firstName &&
-      item.firstName !== undefined &&
-      item.firstName !== ''
-    ) {
-      fullName += item.firstName;
-    }
-
-    if (item.lastName && item.lastName !== undefined && item.lastName !== '') {
-      fullName += ' ' + item.lastName;
-    }
-    return fullName;
-  };
-
   const concateLocation = (item) => {
     let fullName = '';
 
@@ -377,9 +368,16 @@ const DirectoryDetails = ({route, navigation}) => {
         key={index}
         activeOpacity={1}
         onPress={() => {
-          navigation.navigate('UserProfile', {
-            userId: item._id,
-          });
+          if (lastRequestFrom === 'Gallery') {
+            navigation.navigate('FilteredResult', {
+              filterBy: {userId: item._id, index: 0, size: 10},
+              pageTitle: `Search For: ${Helper.concatName(item)}`,
+            });
+          } else {
+            navigation.navigate('UserProfile', {
+              userId: item._id,
+            });
+          }
         }}
         style={{
           overflow: 'hidden',
@@ -420,7 +418,7 @@ const DirectoryDetails = ({route, navigation}) => {
                 style={[g.fs12, g.FHNR, g.colorBlack]}
                 numberOfLines={2}
                 ellipsizeMode={'tail'}>
-                {concatName(item)}
+                {Helper.concatName(item)}
               </Text>
 
               <View

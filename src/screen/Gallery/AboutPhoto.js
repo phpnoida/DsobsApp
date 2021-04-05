@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   StyleSheet,
@@ -15,11 +15,9 @@ import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import HeaderBar from '../../component/HeaderBar';
-import Helper from '../../helper/Helper';
-import RadioButton from '../../component/RadioButton';
-import RBSheet from 'react-native-raw-bottom-sheet';
 import CommonButton from '../../component/CommonButton';
-import YearSelection from '../../component/YearSelection';
+import YearSelection from '../../component/YearSelectionSheet';
+import CategoryFilter from '../../component/CategoryFilterSheet';
 import FilterSheet from 'react-native-raw-bottom-sheet';
 import {
   getGalleryCategory,
@@ -27,44 +25,18 @@ import {
 } from '../../Actions/GalleryActions';
 
 let filterSheet = null;
-let batchSheet = null;
 
 const {height, width} = Dimensions.get('window');
-
-const generateYearList = (onGoing, defaultChecked) => {
-  let year = '';
-  let yearList = [];
-  let cYear = new Date().getFullYear();
-  let sYear = 1920;
-
-  for (let i = 0; i <= cYear - sYear; i++) {
-    year = sYear + i;
-    yearList.push({
-      key: year,
-      text: year,
-      selected: year === defaultChecked ? true : false,
-    });
-  }
-  yearList.reverse();
-
-  if (onGoing) {
-    yearList.splice(0, 0, {
-      key: 'Ongoing',
-      text: 'Ongoing',
-      selected: defaultChecked === 'Ongoing' ? true : false,
-    });
-  }
-  return yearList;
-};
 
 let imageId = '';
 let imageKey = '';
 let responseMessage = '';
 let selectedCategoryName = '';
 const AboutPhoto = ({route, navigation}) => {
+  const refRBSheet = useRef();
+  const refRBFilter = useRef();
   const [about, setAbout] = useState('');
   const [errorMessage, seterrorMessage] = useState({});
-  const [showStatus, setShowStatus] = useState(false);
   const [selectedYear, setSelectedYear] = useState(-1);
   const [selectedCategory, setSelectedCategory] = useState('Select Category');
   const [filterCategory, setFilterCategory] = useState([]);
@@ -173,10 +145,6 @@ const AboutPhoto = ({route, navigation}) => {
         imageKey: imageKey,
       };
 
-      console.log('====================================');
-      console.log(requestData);
-      console.log('====================================');
-
       setShowLoader(true);
 
       doUpdateImageInformation(
@@ -224,19 +192,6 @@ const AboutPhoto = ({route, navigation}) => {
   return (
     <View style={GlobalInclude.AppStyle.topSpace}>
       <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
-        {showStatus && (
-          <YearSelection
-            title={'Select Year'}
-            yearList={generateYearList(false, selectedYear)}
-            onItemSelect={(value) => {
-              setSelectedYear(value.key);
-              setShowStatus(false);
-            }}
-            onCloseAction={() => {
-              setShowStatus(false);
-            }}
-          />
-        )}
         <View style={GlobalInclude.AppStyle.fill}>
           <HeaderBar
             navigation={navigation}
@@ -283,8 +238,8 @@ const AboutPhoto = ({route, navigation}) => {
               <TouchableOpacity
                 activeOpacity={1}
                 onPress={() => {
-                  if (batchSheet !== null) {
-                    batchSheet.open();
+                  if (refRBSheet.current !== null) {
+                    refRBSheet.current.open();
                   }
                 }}
                 style={[grid.rowdir, grid.alignItems, g.inputWhite, g.mt15]}>
@@ -302,8 +257,8 @@ const AboutPhoto = ({route, navigation}) => {
               <TouchableOpacity
                 activeOpacity={1}
                 onPress={() => {
-                  if (filterSheet !== null) {
-                    filterSheet.open();
+                  if (refRBFilter.current !== null) {
+                    refRBFilter.current.open();
                   }
                 }}
                 style={[grid.rowdir, grid.alignItems, g.inputWhite, g.mt15]}>
@@ -331,112 +286,30 @@ const AboutPhoto = ({route, navigation}) => {
       </SafeAreaView>
 
       {/* filter sheet */}
-      <FilterSheet
-        ref={(ref) => {
-          filterSheet = ref;
+      <CategoryFilter
+        refRBSheet={refRBFilter}
+        title={'Select Category'}
+        buttonText={'Okay'}
+        dataList={filterCategory}
+        onPress={(item, index) => {
+          setSelectedCategory(item.label);
+          selectCategory(index);
         }}
-        onClose={() => {}}
-        height={height / 2 + 70}
-        minClosingHeight={50}
-        duration={350}
-        closeOnDragDown={true}
-        customStyles={{
-          container: {
-            backgroundColor: '#fff',
-            borderTopLeftRadius: 30,
-            borderTopRightRadius: 30,
-            paddingStart: scale(15),
-            paddingEnd: scale(15),
-            paddingBottom: scale(20),
-            paddingTop: scale(10),
-          },
-        }}>
-        <Text
-          style={[
-            g.mt15,
-            g.colorBlue,
-            g.fs18,
-            g.FHNB,
-            styles.filterText,
-            g.mb15,
-          ]}>
-          Select Category
-        </Text>
-
-        <View style={grid.flex1}>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {filterCategory.map((item, index) => {
-              return (
-                <View key={index}>
-                  <TouchableOpacity
-                    activeOpacity={1}
-                    style={[
-                      g.mb15,
-                      grid.rowdir,
-                      grid.alignItems,
-                      grid.justifyContent,
-                    ]}
-                    onPress={() => {
-                      setSelectedCategory(item.label);
-                      selectCategory(index);
-                    }}>
-                    <Text
-                      style={[
-                        g.fs15,
-                        g.FHNB,
-                        g.colorBlack,
-                        item.isSelected ? g.colorBlue : g.colorGray5,
-                      ]}>
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              );
-            })}
-          </ScrollView>
-        </View>
-
-        <View style={styles.filterButton}>
-          <CommonButton
-            showLoader={false}
-            title={'Select'}
-            onPress={() => {
-              filterSheet.close();
-            }}
-          />
-        </View>
-      </FilterSheet>
+        onSelect={() => {
+          refRBFilter.current.close();
+        }}
+      />
       {/* filter sheet */}
 
-      {/* select batch sheet */}
-      <RBSheet
-        ref={(ref) => {
-          batchSheet = ref;
+      {/* year select */}
+      <YearSelection
+        refRBSheet={refRBSheet}
+        title={'Select Year'}
+        onSelect={(value) => {
+          refRBSheet.current.close();
+          setSelectedYear(value.text.toString());
         }}
-        height={height / 2}
-        minClosingHeight={50}
-        duration={350}
-        closeOnDragDown={true}
-        customStyles={{
-          container: {
-            backgroundColor: '#fff',
-            borderTopLeftRadius: 30,
-            borderTopRightRadius: 30,
-            padding: 20,
-          },
-        }}>
-        <Text
-          style={[g.fs18, g.FHNB, g.txtCenter, g.colorBlack, g.mt5, g.mb15]}>
-          Select Batch
-        </Text>
-        <RadioButton
-          PROP={Helper.generateYearList(false,-1)}
-          onRadioSelect={(value) => {
-            setSelectedYear(value.text.toString());
-            batchSheet.close();
-          }}
-        />
-      </RBSheet>
+      />
 
       {showModal && (
         <Modal
@@ -471,21 +344,6 @@ const styles = StyleSheet.create({
     borderRightColor: 'transparent',
     borderTopColor: '#dddddd',
     marginLeft: 8,
-  },
-  filterButton: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: scale(150),
-    alignContent: 'center',
-    alignSelf: 'center',
-  },
-  filterText: {
-    paddingTop: 12,
-    paddingBottom: 12,
-    borderTopColor: '#dddddd',
-    borderTopWidth: 1,
-    borderBottomColor: '#dddddd',
-    borderBottomWidth: 1,
   },
   centeredView: {
     flex: 1,

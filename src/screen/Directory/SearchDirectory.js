@@ -25,7 +25,7 @@ import {getDirectory} from '../../Actions/DirectoryActions';
 import BottomSheetHeader from '../../component/BottomSheetHeader';
 import ProfessionSheet from 'react-native-raw-bottom-sheet';
 import RadioButton from '../../component/RadioButton';
-import MyStatusBar from '../../component/MyStatusBar';
+import AutoSuggestUser from '../../component/AutoSuggestUser';
 
 import ScrollableTabView, {
   ScrollableTabBar,
@@ -191,7 +191,11 @@ const SearchDirectory = ({route, navigation}) => {
 
             if (searchBy === 5) {
               if (data.data.length > 0) {
-                navigation.navigate('DirectoryDetails', {data: data.data,searchBy:searchBy,searchVal:searchVal});
+                navigation.navigate('DirectoryDetails', {
+                  searchBy: searchBy,
+                  searchVal: searchVal,
+                  from: 'Directory',
+                });
               }
             } else {
               if (searchVal.length > 0) {
@@ -331,97 +335,6 @@ const SearchDirectory = ({route, navigation}) => {
       );
     }
     return <View />;
-  };
-
-  const concatName = (item) => {
-    let fullName = '';
-
-    if (
-      item.firstName &&
-      item.firstName !== undefined &&
-      item.firstName !== ''
-    ) {
-      fullName += item.firstName;
-    }
-
-    if (item.lastName && item.lastName !== undefined && item.lastName !== '') {
-      fullName += ' ' + item.lastName;
-    }
-    return fullName;
-  };
-
-  const renderAutoSuggest = () => {
-    var data = searchedUser.map((row, index) => {
-      return (
-        <TouchableOpacity
-          key={index}
-          activeOpacity={1}
-          style={style.suggestionContainer}
-          onPress={() => {
-            navigation.navigate('UserProfile', {
-              userId: row._id,
-            });
-          }}>
-          <View
-            style={{
-              backgroundColor: '#323232',
-              borderRadius: scale(10),
-              height: scale(93),
-            }}>
-            {row.profileImg !== '' ? (
-              <Image
-                style={{
-                  width: '100%',
-                  height: scale(93),
-                  borderRadius: scale(10),
-                }}
-                source={{uri: row.profileImg}}
-                resizeMode={'cover'}
-              />
-            ) : (
-              <View />
-            )}
-          </View>
-          <Text style={style.userName}>{concatName(row)}</Text>
-          {row.batch ? (
-            <Text style={[g.fs12, g.colorBlack, g.FHNR, {margin: scale(2)}]}>
-              {row.batch}
-            </Text>
-          ) : null}
-          {row.schoolNumber ? (
-            <Text style={[g.fs12, g.colorBlack, g.FHNR, {margin: scale(2)}]}>
-              {row.schoolNumber}
-            </Text>
-          ) : null}
-          <View style={{flexDirection: 'row'}}>
-            {row.house ? (
-              <Text style={[g.fs12, g.colorBlack, g.FHNR, {margin: scale(2)}]}>
-                {row.house.toLowerCase().charAt(0).toUpperCase() +
-                  row.house.toLowerCase().slice(1)}
-              </Text>
-            ) : null}
-            {row.section ? (
-              <Text style={[g.fs12, g.colorBlack, g.FHNR, {margin: scale(2)}]}>
-                {row.section}
-              </Text>
-            ) : null}
-          </View>
-        </TouchableOpacity>
-      );
-    });
-    return (
-      <View style={[g.AutoCompleteList1, g.p10]}>
-        <Text style={[g.colordarkGray, g.fs12, g.FHNM, g.pb5]}>
-          Search Suggestion:
-        </Text>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          horizontal={true}
-          showsHorizontalScrollIndicator={false}>
-          {data}
-        </ScrollView>
-      </View>
-    );
   };
 
   const searchProfession = (searchText) => {
@@ -787,9 +700,9 @@ const SearchDirectory = ({route, navigation}) => {
                     activeOpacity={0.8}
                     onPress={() => {
                       navigation.navigate('DirectoryDetails', {
-                        data: searchedUser,
-                        searchBy:searchBy,
-                        searchVal:searchVal
+                        searchBy: searchBy,
+                        searchVal: searchVal,
+                        from: 'Directory',
                       });
                     }}
                     style={[
@@ -806,7 +719,16 @@ const SearchDirectory = ({route, navigation}) => {
               <View>
                 {searchedCityCompany.length > 0
                   ? renderAutoSuggestCityCompany()
-                  : searchedUser.length > 0 && renderAutoSuggest()}
+                  : searchedUser.length > 0 && (
+                      <AutoSuggestUser
+                        searchedUser={searchedUser}
+                        onPress={(row, index) => {
+                          navigation.navigate('UserProfile', {
+                            userId: row._id,
+                          });
+                        }}
+                      />
+                    )}
               </View>
               {/* below contents */}
               {professionList.length > 0 && (
