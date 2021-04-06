@@ -139,7 +139,11 @@ const AutoCompleteSearch = ({
               ]}
               keyboardType={'default'}
               placeholder={
-                chkType === 1 ? 'Type more then 3 characters ' : 'Search Photo'
+                chkType === 1
+                  ? 'Type more then 3 characters '
+                  : chkType === 4
+                  ? 'Type anything...'
+                  : 'Search Photo'
               }
               onChangeText={(text) => {
                 changeText(text);
@@ -162,7 +166,7 @@ const AutoCompleteSearch = ({
               style={{width: 16}}
             />
           </TouchableOpacity>
-        ) : chkType === 1 ? (
+        ) : chkType === 1 || chkType === 4 ? (
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => onGoPress()}

@@ -334,11 +334,18 @@ const GalleryListing = ({navigation}) => {
                 });
               }}
               onGoPress={() => {
-                navigation.navigate('DirectoryDetails', {
-                  searchBy: searchType,
-                  searchVal: searchVal,
-                  from: 'Gallery',
-                });
+                if (searchType === 4) {
+                  navigation.navigate('FilteredResult', {
+                    filterBy: {tag: searchVal, index: 0, size: 10},
+                    pageTitle: `Search For: ${searchVal}`,
+                  });
+                } else if (searchType === 1) {
+                  navigation.navigate('DirectoryDetails', {
+                    searchBy: searchType,
+                    searchVal: searchVal,
+                    from: 'Gallery',
+                  });
+                }
               }}
             />
           </View>
