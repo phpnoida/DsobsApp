@@ -163,10 +163,13 @@ const DirectoryDetails = ({route, navigation}) => {
     if (dataIndex === 0) {
       setSearchedUser([...records]);
       result = `${currentShowing}-${dataSize}`;
-
     } else {
       currentShowing = dataIndex * 10;
-      result = `${currentShowing}-${records.length < 10 ? currentShowing+records.length : currentShowing+dataSize }`;
+      result = `${currentShowing}-${
+        records.length < 10
+          ? currentShowing + records.length
+          : currentShowing + dataSize
+      }`;
 
       setSearchedUser([...searchedUser, ...records]);
     }
@@ -358,7 +361,10 @@ const DirectoryDetails = ({route, navigation}) => {
             }}
             style={[grid.rowdir, grid.alignItems, g.br3, g.whiteSelect]}>
             <Text style={[grid.col, g.fs12, g.FHNM]} numberOfLines={1}>
-              {locationFilter.length > 0 ? locationFilter : 'Select'}
+              {locationFilter.length > 0
+                ? locationFilter.toLowerCase().charAt(0).toUpperCase() +
+                  locationFilter.toLowerCase().slice(1)
+                : 'Select'}
             </Text>
             <View style={style.triangleShape} />
           </TouchableOpacity>
@@ -634,8 +640,12 @@ const DirectoryDetails = ({route, navigation}) => {
                         sortedBy === item.value && g.colorWhite,
                       ]}
                       onPress={() => {
-                        setSortedBy(item.value);
-                        applySorting(i);
+                        if (i === 2) {
+                          alert('Coming soon.');
+                        } else {
+                          setSortedBy(item.value);
+                          applySorting(i + 1);
+                        }
                       }}>
                       {item.label}
                     </Text>

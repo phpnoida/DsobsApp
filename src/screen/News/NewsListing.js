@@ -843,6 +843,7 @@ const NewsListing = ({navigation}) => {
                     refreshing={isRefreshing}
                     onRefresh={handleRefresh}
                     ListFooterComponent={renderFooter}
+                    contentContainerStyle={{paddingBottom: scale(70)}}
                   />
                 </View>
               )}

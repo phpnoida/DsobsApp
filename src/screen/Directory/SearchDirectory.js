@@ -191,7 +191,11 @@ const SearchDirectory = ({route, navigation}) => {
 
             if (searchBy === 5) {
               if (data.data.length > 0) {
-                navigation.navigate('DirectoryDetails', {data: data.data,searchBy:searchBy,searchVal:searchVal});
+                navigation.navigate('DirectoryDetails', {
+                  data: data.data,
+                  searchBy: searchBy,
+                  searchVal: query,
+                });
               }
             } else {
               if (searchVal.length > 0) {
@@ -788,8 +792,8 @@ const SearchDirectory = ({route, navigation}) => {
                     onPress={() => {
                       navigation.navigate('DirectoryDetails', {
                         data: searchedUser,
-                        searchBy:searchBy,
-                        searchVal:searchVal
+                        searchBy: searchBy,
+                        searchVal: searchVal,
                       });
                     }}
                     style={[

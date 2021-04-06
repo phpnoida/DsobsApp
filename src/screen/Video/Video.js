@@ -13,6 +13,7 @@ import {
   Clipboard,
   Alert,
   Modal,
+  Linking,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -113,7 +114,7 @@ const Video = ({navigation}) => {
                 delete item.videos;
               });
 
-              console.log('records', JSON.stringify(records[0]));
+              console.log('records', JSON.stringify(records));
 
               setPageContent([...records]);
             }
@@ -393,29 +394,46 @@ const Video = ({navigation}) => {
                     {item.isShowing ? 'SEE LESS' : 'SEE MORE'}
                   </Text>
                 </TouchableOpacity>
+                {item.mainVideo.podcast !== undefined &&
+                  item.mainVideo.podcast !== null &&
+                  item.mainVideo.podcast !== '' && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        Linking.canOpenURL(item.mainVideo.podcast)
+                          .then((supported) => {
+                            if (!supported) {
+                              Alert.alert('Link not supported');
+                            } else {
+                              return Linking.openURL(item.mainVideo.podcast);
+                            }
+                          })
+                          .catch(() => console.log(''));
+                      }}
+                      style={[
+                        style.seeMore,
+                        {
+                          marginEnd: scale(3),
+                          marginStart: scale(3),
+                          width: scale(125),
+                        },
+                      ]}>
+                      <GlobalInclude.BaseIcon
+                        containerStyle={{height: scale(14), width: scale(14)}}
+                        iconColor={'#2b3252'}
+                        iconName={'podcast'}
+                        iconSize={scale(14)}
+                        iconType={IconType[4]}
+                      />
+                      <Text style={[g.fs10, g.FHNR, g.colorBlack, g.ml10]}>
+                        {'HEAR AS PODCAST'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+
                 <TouchableOpacity
-                  onPress={() => {
-                    Alert.alert('Comming soon');
-                  }}
                   style={[
                     style.seeMore,
-                    {marginEnd: scale(3), width: scale(130)},
-                  ]}>
-                  <GlobalInclude.BaseIcon
-                    containerStyle={{height: scale(14), width: scale(14)}}
-                    iconColor={'#2b3252'}
-                    iconName={'podcast'}
-                    iconSize={scale(14)}
-                    iconType={IconType[4]}
-                  />
-                  <Text style={[g.fs10, g.FHNR, g.colorBlack, g.ml10]}>
-                    {'HEAR AS PODCAST'}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    style.seeMore,
-                    {marginStart: scale(3), width: scale(130)},
+                    {width: scale(130)},
                   ]}
                   onPress={() => {
                     let title =
@@ -546,6 +564,7 @@ const Video = ({navigation}) => {
                   <ScrollView
                     style={[GlobalInclude.AppStyle.fill]}
                     scrollEventThrottle={1000}
+                    contentContainerStyle={{paddingBottom: scale(70)}}
                     showsVerticalScrollIndicator={false}>
                     {renderVideos()}
                   </ScrollView>
