@@ -635,8 +635,12 @@ const DirectoryDetails = ({route, navigation}) => {
                         sortedBy === item.value && g.colorWhite,
                       ]}
                       onPress={() => {
-                        setSortedBy(item.value);
-                        applySorting(i);
+                        if (i === 2) {
+                          alert('Coming soon.');
+                        } else {
+                          setSortedBy(item.value);
+                          applySorting(i + 1);
+                        }
                       }}>
                       {item.label}
                     </Text>

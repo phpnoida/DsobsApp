@@ -254,6 +254,7 @@ const Magazine = ({route, navigation}) => {
                     <ScrollView
                       contentInsetAdjustmentBehavior={'automatic'}
                       showsVerticalScrollIndicator={false}
+                      contentContainerStyle={{paddingBottom: scale(70)}}
                       ref={scrollViewRef}>
                       <View style={[grid.alignItems]}>
                         {pageContent.map((item, index) => {

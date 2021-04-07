@@ -17,7 +17,9 @@ export function getDirectory(searchType, searchQuery, callback, errCallback) {
 
 export function doFilterDirectory(filterQuery, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user/directory`;
-
+  console.log('====================================');
+  console.log(filterQuery);
+  console.log('====================================');
   const request = axios
     .get(requestPath, {
       headers: {Authorization: global.accessToken},
