@@ -20,6 +20,8 @@ const HeaderBar = ({
   label,
   showLabel,
   onLabelPress,
+  customIcon,
+  customIconPress,
 }) => {
   return (
     <View
@@ -38,15 +40,17 @@ const HeaderBar = ({
       <View style={headerStyle.topContainer} />
       <View style={headerStyle.container}>
         <View style={[grid.col, grid.rowdir]}>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.goBack();
-            }}>
-            <Image
-              source={GlobalInclude.Assets.Back}
-              style={headerStyle.back}
-            />
-          </TouchableOpacity>
+          {showBack && (
+            <TouchableOpacity
+              onPress={() => {
+                navigation.goBack();
+              }}>
+              <Image
+                source={GlobalInclude.Assets.Back}
+                style={headerStyle.back}
+              />
+            </TouchableOpacity>
+          )}
           <View style={[grid.col, grid.justifyContentCenter]}>
             {title && (
               <Text style={[g.fs16, g.FHNB, g.colordarkGray, g.txtCenter]}>
@@ -69,6 +73,17 @@ const HeaderBar = ({
               <Text style={[g.colorBlue, g.fs14, g.FHNB, g.txtRight]}>
                 {label}
               </Text>
+            </TouchableOpacity>
+          )}
+          {customIcon && (
+            <TouchableOpacity onPress={() => customIconPress()}>
+              <GlobalInclude.BaseIcon
+                containerStyle={customIcon.containerStyle}
+                iconColor={customIcon.iconColor}
+                iconName={customIcon.iconName}
+                iconSize={customIcon.size}
+                iconType={customIcon.type}
+              />
             </TouchableOpacity>
           )}
         </View>

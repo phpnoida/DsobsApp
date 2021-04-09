@@ -18,16 +18,7 @@ const menuOptions = [
   {screen: 'NewsListing', visible: true, value: 2, label: 'News'},
   {screen: 'Video', visible: true, value: 3, label: 'Videos'},
   {screen: 'GalleryListing', visible: true, value: 4, label: 'Gallery'},
-  {screen: '', visible: false, value: 5, label: 'Chat'},
-  {screen: '', visible: false, value: 6, label: 'Events'},
-  {screen: '', visible: false, value: 7, label: 'Ventures'},
-  {screen: '', visible: false, value: 8, label: 'Common Room'},
-  {screen: '', visible: false, value: 9, label: 'Store'},
-  {screen: '', visible: false, value: 10, label: 'Jobs'},
-  {screen: '', visible: false, value: 11, label: 'Offers'},
-  {screen: '', visible: false, value: 12, label: 'Footsteps'},
-  {screen: '', visible: false, value: 13, label: 'Contributions'},
-  {screen: '', visible: false, value: 14, label: 'Masters'},
+  {screen: 'YellowPages', visible: true, value: 5, label: 'Yello Page'},
 ];
 
 const TopHeaderView = ({

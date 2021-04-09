@@ -13,7 +13,7 @@ import grid from '../theme/grid';
 import Helper from '../helper/Helper';
 import ProgresImage from './ProgresImage';
 
-const AutoSuggestUser = ({searchedUser, onPress}) => {
+const AutoSuggestUser = ({searchedUser, onPress, onLongPress}) => {
   const loadSuggestions = () => {
     var data = searchedUser.map((row, index) => {
       return (
@@ -21,6 +21,11 @@ const AutoSuggestUser = ({searchedUser, onPress}) => {
           key={index}
           activeOpacity={1}
           style={style.suggestionContainer}
+          onLongPress={() => {
+            if (onLongPress) {
+              onLongPress(row, index);
+            }
+          }}
           onPress={() => {
             onPress(row, index);
           }}>

@@ -292,6 +292,7 @@ const GalleryListing = ({navigation}) => {
               chkTwoTitle={'Album'}
               ChkThreeTitle={'Year'}
               ChkFourTitle={'Tags'}
+              withFilter={true}
               onChecked={(type) => {
                 searchType = type;
                 setCheckedType(type);

@@ -39,6 +39,7 @@ const AutoCompleteSearch = ({
   searchedUser,
   onUserSelected,
   onGoPress,
+  withFilter
 }) => {
   const drawCheckbox = (title, checked, onClick) => {
     return (
@@ -85,37 +86,45 @@ const AutoCompleteSearch = ({
           g.mb10,
           tablet && g.pt10,
         ]}>
-        <View
-          style={{
-            width: scale(120),
-          }}>
-          {drawCheckbox(chkOneTitle, chkType === 1 ? true : false, () => {
-            onChecked(1);
-          })}
-        </View>
-        <View
-          style={{
-            width: scale(75),
-            marginStart: scale(3),
-            marginEnd: scale(3),
-          }}>
-          {drawCheckbox(chkTwoTitle, chkType === 2 ? true : false, () => {
-            onChecked(2);
-          })}
-        </View>
-        <View
-          style={{
-            width: scale(65),
-          }}>
-          {drawCheckbox(ChkThreeTitle, chkType === 3 ? true : false, () => {
-            onChecked(3);
-          })}
-        </View>
-        <View style={[grid.col, {marginStart: scale(3)}]}>
-          {drawCheckbox(ChkFourTitle, chkType === 4 ? true : false, () => {
-            onChecked(4);
-          })}
-        </View>
+        {chkOneTitle && (
+          <View
+            style={{
+              width: scale(120),
+            }}>
+            {drawCheckbox(chkOneTitle, chkType === 1 ? true : false, () => {
+              onChecked(1);
+            })}
+          </View>
+        )}
+        {chkTwoTitle && (
+          <View
+            style={{
+              width: scale(75),
+              marginStart: scale(3),
+              marginEnd: scale(3),
+            }}>
+            {drawCheckbox(chkTwoTitle, chkType === 2 ? true : false, () => {
+              onChecked(2);
+            })}
+          </View>
+        )}
+        {ChkThreeTitle && (
+          <View
+            style={{
+              width: scale(65),
+            }}>
+            {drawCheckbox(ChkThreeTitle, chkType === 3 ? true : false, () => {
+              onChecked(3);
+            })}
+          </View>
+        )}
+        {ChkFourTitle && (
+          <View style={[grid.col, {marginStart: scale(3)}]}>
+            {drawCheckbox(ChkFourTitle, chkType === 4 ? true : false, () => {
+              onChecked(4);
+            })}
+          </View>
+        )}
       </View>
 
       <View style={[grid.rowdir, g.mb5, g.pt15]}>

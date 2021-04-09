@@ -18,7 +18,7 @@ const CommonWebPage = ({route, navigation}) => {
 
   return (
     <View style={GlobalInclude.AppStyle.fill}>
-      <HeaderBar navigation={navigation} />
+      <HeaderBar navigation={navigation} showBack={true} />
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.parentStyle}>
           <WebView
