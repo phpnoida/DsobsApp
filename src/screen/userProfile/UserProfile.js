@@ -351,6 +351,7 @@ const UserProfile = ({route, navigation}) => {
                       userId={userId}
                       profession={profileData.profession}
                       city={profileData.city}
+                      lastseen={profileData.lastseen}
                     />
                   </View>
 
