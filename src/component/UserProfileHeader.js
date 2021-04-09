@@ -13,6 +13,42 @@ import grid from '../theme/grid';
 import {scale} from '../theme/Scalling';
 
 const UserProfileHeader = (props) => {
+  const showLastSeen = (timestamp) => {
+    let month_names = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    if (timestamp > 0) {
+      console.log(timestamp);
+      var dateVal = new Date(timestamp * 1000);
+      var date = dateVal.getDate();
+      var month = dateVal.getMonth();
+      var year = dateVal.getFullYear();
+      var hours = dateVal.getHours();
+      var minutes = dateVal.getMinutes();
+      var newformat = hours >= 12 ? 'PM' : 'AM';
+
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      hours = hours < 10 ? '0' + hours : hours;
+      minutes = minutes < 10 ? '0' + minutes : minutes;
+
+      return `${month_names[month]} ${date}, ${year} ${hours}: ${minutes} ${newformat}`;
+    } else {
+      return 'Not Logged In Yet';
+    }
+  };
+
   return (
     <View style={styles.headerContainer}>
       {props.profileImg !== '' ? (
@@ -70,6 +106,9 @@ const UserProfileHeader = (props) => {
         </Text>
         <Text style={[g.colorLightGray, g.fs14, g.FHNR, g.mt5]}>
           {props.city.charAt(0).toUpperCase() + props.city.slice(1)}
+        </Text>
+        <Text style={[g.colorLightGray, g.fs14, g.FHNR, g.mt5]}>
+          {showLastSeen(props.lastseen)}
         </Text>
       </View>
     </View>
