@@ -469,7 +469,6 @@ const DirectoryDetails = ({route, navigation}) => {
                 ]}>
                 {concateLocation(item)}
               </Text>
-
               {item.profession ? (
                 <Text
                   style={[

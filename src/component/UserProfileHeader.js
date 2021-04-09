@@ -43,7 +43,7 @@ const UserProfileHeader = (props) => {
       hours = hours < 10 ? '0' + hours : hours;
       minutes = minutes < 10 ? '0' + minutes : minutes;
 
-      return `${month_names[month]} ${date}, ${year} ${hours}: ${minutes} ${newformat}`;
+      return `Last seen: ${month_names[month]} ${date}, ${year}`;
     } else {
       return 'Not Logged In Yet';
     }
