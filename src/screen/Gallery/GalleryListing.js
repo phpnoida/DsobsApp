@@ -56,6 +56,16 @@ const GalleryListing = ({navigation}) => {
   const [otherSearch, setotherSearch] = useState([]);
 
   useEffect(() => {
+    userData = null;
+    categoryName = null;
+    searchVal = '';
+    searchType = 1;
+    totalCount = 0;
+    filterObject = {
+      index: 0,
+      size: 10,
+    };
+
     userData = global.userDetails;
     getFilterCategory();
     getAlbumList();
@@ -110,6 +120,10 @@ const GalleryListing = ({navigation}) => {
             response.data !== null
           ) {
             let data = response.data;
+
+            console.log('====================================');
+            console.log('data', data);
+            console.log('====================================');
 
             if (data.status) {
               if (filterObject.index === 0) {
@@ -198,6 +212,7 @@ const GalleryListing = ({navigation}) => {
 
   const handleRefresh = () => {
     filterObject.index = 0;
+    setPageContent([]);
     getAlbumList();
   };
 
@@ -318,6 +333,7 @@ const GalleryListing = ({navigation}) => {
                   }
                 } else if (searchType === 2) {
                   filterObject.s = searchVal;
+                  setPageContent([]);
                   getAlbumList();
                 }
               }}

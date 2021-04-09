@@ -14,6 +14,7 @@ import {
   PermissionsAndroid,
   TouchableNativeFeedback,
   CameraRoll,
+  Platform,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -107,12 +108,12 @@ const GalleryDetail = ({route, navigation}) => {
   };
 
   const updateImage = (image) => {
-    Image.getSize(image, (height, width) => {
-      if (width !== undefined && width !== null) {
+    Image.getSize(image, (height, w) => {
+      if (w !== undefined && w !== null) {
         console.log('imageWidth', imageWidth);
-        console.log('width', width);
-        if (imageWidth > width) {
-          imageWidth = width;
+        console.log('width', w);
+        if (imageWidth > w) {
+          imageWidth = w;
         }
       }
       setIsFetching(false);
@@ -147,8 +148,8 @@ const GalleryDetail = ({route, navigation}) => {
               response.data !== undefined &&
               response.data !== null
             ) {
-              let data = response.data;
-              if (data.status) {
+              let responseData = response.data;
+              if (responseData.status) {
                 responseMessage = 'Image reported successfully!';
               } else {
                 responseMessage = 'Error while reporting!';
@@ -204,20 +205,30 @@ const GalleryDetail = ({route, navigation}) => {
             response.data !== undefined &&
             response.data !== null
           ) {
-            let data = response.data;
+            let imageData = response.data;
 
-            if (data.status) {
+            if (imageData.status) {
               if (
-                data.data !== null &&
-                data.data !== undefined &&
-                data.data.length > 0
+                imageData.data !== null &&
+                imageData.data !== undefined &&
+                imageData.data.length > 0
               ) {
-                let itemObject = data.data[0];
+                let itemObject = imageData.data[0];
+
+                itemObject.userTag.sort((a, b) =>
+                  a.firstName > b.firstName
+                    ? 1
+                    : b.firstName > a.firstName
+                    ? -1
+                    : 0,
+                );
+
+                itemObject.userTag.sort((a, b) =>
+                  a.batch > b.batch ? 1 : b.batch > a.batch ? -1 : 0,
+                );
+
                 setImageData(itemObject);
                 updateImage(itemObject.imagesLink);
-                console.log('====================================');
-                console.log('itemObject', JSON.stringify(itemObject));
-                console.log('====================================');
               } else {
                 setIsFetching(false);
               }
@@ -302,7 +313,7 @@ const GalleryDetail = ({route, navigation}) => {
           // do some magic here
           console.log('res', res);
           selectedId = '';
-          responseMessage = 'Content downloaded successfully!';
+          responseMessage = 'Image Downloaded Successfully!';
           setIsDownloading(false);
           setShowModal(true);
 
@@ -316,7 +327,7 @@ const GalleryDetail = ({route, navigation}) => {
           setShowModal(true);
         });
     } else {
-      CameraRoll.saveToCameraRoll(imgUrl);
+      CameraRoll.saveToCameraRoll(file, 'photo');
     }
   };
 

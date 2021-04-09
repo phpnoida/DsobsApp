@@ -19,7 +19,7 @@ import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
-import {IconType, APP_NAME, URL_REGX} from '../../helper/Constants';
+import {IconType} from '../../helper/Constants';
 import HeaderBar from '../../component/HeaderBar';
 import ProgresImage from '../../component/ProgresImage';
 import {getDirectory} from '../../Actions/DirectoryActions';
@@ -32,6 +32,7 @@ let searchVal = '';
 let imageId = '';
 let imageKey = '';
 let responseMessage = '';
+let isRemoved = false;
 const TagUser = ({route, navigation}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchedUser, setSearchedUser] = useState([]);
@@ -116,7 +117,12 @@ const TagUser = ({route, navigation}) => {
             ) {
               let data = response.data;
               if (data.status) {
-                responseMessage = 'User tagged successfully!';
+                if (isRemoved) {
+                  isRemoved = false;
+                  responseMessage = 'User removed successfully!';
+                } else {
+                  responseMessage = 'User tagged successfully!';
+                }
               } else {
                 responseMessage = 'Error while tagging!';
               }
@@ -163,7 +169,38 @@ const TagUser = ({route, navigation}) => {
     oldItem.push(item);
     setSearchQuery('');
     setSearchedUser([]);
+
+    oldItem.sort((a, b) =>
+      a.firstName > b.firstName ? 1 : b.firstName > a.firstName ? -1 : 0,
+    );
+
+    oldItem.sort((a, b) =>
+      a.batch > b.batch ? 1 : b.batch > a.batch ? -1 : 0,
+    );
+
     setTaggedUsers([...oldItem]);
+  };
+
+  const removeIndex = (index) => {
+    Alert.alert(
+      'Are you sure you want to delete it?',
+      '',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {
+          text: 'Ok',
+          onPress: () => {
+            isRemoved = true;
+            removeUser(index);
+          },
+        },
+      ],
+      {cancelable: false},
+    );
   };
 
   const removeUser = (index) => {
@@ -240,7 +277,6 @@ const TagUser = ({route, navigation}) => {
                 underlineColorAndroid="transparent"
                 value={searchQuery}
                 placeholder={'Tag People in the Photo'}
-                underlineColorAndroid="transparent"
                 placeholderTextColor={'#202020'}
                 style={[g.inputWhite, {color: 'black'}]}
                 onChangeText={(value) => {
@@ -321,7 +357,7 @@ const TagUser = ({route, navigation}) => {
                       </View>
                       <TouchableOpacity
                         onPress={() => {
-                          removeUser(index);
+                          removeIndex(index);
                         }}
                         style={{
                           height: scale(18),
