@@ -93,8 +93,8 @@ const Video = ({navigation}) => {
           style={[
             g.bgWhite,
             g.boxShadow,
-            g.ml2,
-            g.mr2,
+            g.ml5,
+            g.mr5,
             {borderRadius: scale(10)},
           ]}>
           <View style={[g.bggray3, {borderRadius: scale(10)}]}>

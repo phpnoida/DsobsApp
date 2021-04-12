@@ -150,24 +150,16 @@ const TabOne = ({onSaveTab}) => {
 
           <View style={g.mb15}>
             {generateHeader('Business Location', false)}
-            <TouchableOpacity
+            <TextInput
+              underlineColorAndroid="transparent"
               style={g.inputWhite}
-              onPress={() => {
-                if (refRBSheetLocation.current !== null) {
-                  refRBSheetLocation.current.open();
-                }
-              }}>
-              <Text
-                style={[
-                  grid.col,
-                  g.FHNR,
-                  grid.justifyContentCenter,
-                  {textAlignVertical: 'center'},
-                ]}
-                numberOfLines={1}>
-                Select Location
-              </Text>
-            </TouchableOpacity>
+              maxLength={100}
+              keyboardType={'default'}
+              autoCapitalize={'words'}
+              returnKeyType={'done'}
+              placeholder={'Paste Map Link Here'}
+              onChangeText={(value) => {}}
+            />
           </View>
         </View>
       </KeyboardAwareScrollView>

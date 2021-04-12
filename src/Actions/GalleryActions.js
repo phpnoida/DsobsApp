@@ -1,14 +1,13 @@
 import axios from 'axios';
 import {SERVER_PATH} from '../../config';
 
-export function getAlbums(params, callback, errCallback) {
+export function getAlbums(params, cancelRequest, callback, errCallback) {
   let requestPath = `${SERVER_PATH}imageGallery`;
-  console.log('params', params);
-  console.log('requestPath', requestPath);
   const request = axios
     .get(requestPath, {
       headers: {Authorization: global.accessToken},
       params: params,
+      cancelToken: cancelRequest.token,
     })
     .then((res) => callback(res))
     .catch((err) => {

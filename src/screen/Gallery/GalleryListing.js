@@ -17,6 +17,7 @@ import GalleryImage from '../../component/GalleryImage';
 import ImageShareModal from '../../component/ImageShareModal';
 import {getAlbums, getGalleryCategory} from '../../Actions/GalleryActions';
 import {getDirectory} from '../../Actions/DirectoryActions';
+import axios from 'axios';
 
 import AutoCompleteSearch from '../../component/AutoCompleteSearch';
 import YearSelection from '../../component/YearSelectionSheet';
@@ -37,6 +38,9 @@ let filterObject = {
   index: 0,
   size: 10,
 };
+
+const cancelAlbum = axios.CancelToken.source();
+
 const GalleryListing = ({navigation}) => {
   const refRBSheet = useRef();
   const refRBFilter = useRef();
@@ -53,7 +57,6 @@ const GalleryListing = ({navigation}) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [checkedType, setCheckedType] = useState(1);
   const [searchedUser, setSearchedUser] = useState([]);
-  const [otherSearch, setotherSearch] = useState([]);
 
   useEffect(() => {
     userData = null;
@@ -112,6 +115,7 @@ const GalleryListing = ({navigation}) => {
   const getAlbumList = () => {
     getAlbums(
       filterObject,
+      cancelAlbum,
       (response) => {
         if (response && response !== null) {
           if (
@@ -332,6 +336,7 @@ const GalleryListing = ({navigation}) => {
                 } else if (searchType === 2) {
                   filterObject.s = searchVal;
                   setPageContent([]);
+
                   getAlbumList();
                 }
               }}

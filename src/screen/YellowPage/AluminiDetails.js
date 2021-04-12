@@ -79,9 +79,14 @@ const showTaggedUsers = (userTag) => {
 };
 
 const AluminiDetails = ({params}) => (
-  <View style={[g.pl15, g.pr15]} showsVerticalScrollIndicator={false}>
-    <View style={[grid.row, grid.flexwrap]}>{showTaggedUsers(7)}</View>
-  </View>
+  <ScrollView
+    style={[g.pl10, g.pr10, grid.flex1]}
+    contentContainerStyle={g.pb30}
+    showsVerticalScrollIndicator={false}>
+    <View style={g.p5}>
+      <View style={[grid.row, grid.flexwrap]}>{showTaggedUsers(7)}</View>
+    </View>
+  </ScrollView>
 );
 
 export default AluminiDetails;

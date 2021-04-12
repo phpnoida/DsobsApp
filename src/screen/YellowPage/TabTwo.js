@@ -51,9 +51,7 @@ const TabTwo = ({
               autoCapitalize="words"
               placeholder="Enter your text here"
               keyboardType={'default'}
-              autoCapitalize={'words'}
               returnKeyType={'done'}
-              placeholder={'Enter your text here'}
               onChangeText={(value) => {}}
             />
           </View>

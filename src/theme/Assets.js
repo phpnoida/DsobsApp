@@ -46,6 +46,10 @@ import ShareMore from '../../Assets/Icon/share_more.png';
 import ShareClipboard from '../../Assets/Icon/share_clipboard.png';
 import DefaultImage from '../../Assets/Icon/default_image.png';
 import DefaultProfile from '../../Assets/Icon/default_profile.png';
+import DummyMap from '../../Assets/Icon/dummy_map.jpeg';
+import EmailIcon from '../../Assets/Icon/email.png';
+import WebSite from '../../Assets/Icon/globe.png';
+import WhatsAppIcon from '../../Assets/Icon/whatsapp.png';
 export default {
   AppLogo: AppLogo,
   Alumbus: Alumbus,
@@ -95,4 +99,8 @@ export default {
   ShareClipboard: ShareClipboard,
   DefaultImage: DefaultImage,
   DefaultProfile: DefaultProfile,
+  DummyMap: DummyMap,
+  EmailIcon: EmailIcon,
+  WebSite: WebSite,
+  WhatsAppIcon: WhatsAppIcon,
 };

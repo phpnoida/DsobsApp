@@ -1,13 +1,16 @@
-import React, {useState} from 'react';
+import React, {useState, useRef} from 'react';
 import {
   Text,
   View,
   StyleSheet,
   ActivityIndicator,
+  Dimensions,
   SafeAreaView,
+  TouchableOpacity,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
+import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
 import ScrollableTabView, {
   ScrollableTabBar,
@@ -21,9 +24,14 @@ import CompanyPhotos from './CompanyPhotos';
 import Location from './Location';
 import AluminiDetails from './AluminiDetails';
 import Tags from './Tags';
-import {ScrollView} from 'react-native';
+import RbSheet from 'react-native-raw-bottom-sheet';
+import CommonButton from '../../component/CommonButton';
+
+const {height, width} = Dimensions.get('window');
 
 const BusinessDetails = ({navigation}) => {
+  const refRBSheet = useRef();
+
   const [isLoading, setIsLoading] = useState(false);
 
   return (
@@ -49,18 +57,18 @@ const BusinessDetails = ({navigation}) => {
               <ActivityIndicator size={'small'} color={'#2b3252'} />
             </View>
           ) : (
-            <ScrollView style={[GlobalInclude.AppStyle.fill]}>
+            <View style={GlobalInclude.AppStyle.fill}>
               <View
                 style={[
                   g.bggray3,
-                  g.mt20,
-                  g.ml15,
-                  g.mr15,
+                  g.mt15,
+                  g.ml10,
+                  g.mr10,
                   {borderRadius: scale(10)},
                 ]}>
                 <ProgresImage
                   source={GlobalInclude.Assets.DefaultImage}
-                  containerStyle={{height: scale(230), borderRadius: scale(10)}}
+                  containerStyle={{height: scale(200), borderRadius: scale(10)}}
                   imageStyle={{
                     aspectRatio: 1 / 1,
                     borderRadius: scale(10),
@@ -95,12 +103,11 @@ const BusinessDetails = ({navigation}) => {
                 <Text
                   style={[g.fs12, g.mt5, g.FHNR, g.colorBlack]}
                   numberOfLines={2}>
-                  Montréal
+                  Montréal - New Delhi - Sydney - Jaipur - Ontario
                 </Text>
               </View>
               <ScrollableTabView
                 underlineColor={'#ffffff'}
-                style={{flex: 1}}
                 initialPage={0}
                 tabBarActiveTextColor={'#2b3252'}
                 tabBarInactiveTextColor={'#bababa'}
@@ -123,10 +130,106 @@ const BusinessDetails = ({navigation}) => {
                   productTags={['help', 'structure', 'helo']}
                 />
               </ScrollableTabView>
-            </ScrollView>
+            </View>
           )}
         </View>
+
+        <View
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: scale(125),
+            paddingTop: scale(10),
+            paddingBottom: scale(10),
+            alignContent: 'center',
+            alignSelf: 'center',
+            position: 'absolute',
+            bottom: scale(2),
+          }}>
+          <CommonButton
+            showLoader={false}
+            title={'Contact Us'}
+            onPress={() => {
+              if (refRBSheet && refRBSheet.current != null) {
+                refRBSheet.current.open();
+              }
+            }}
+          />
+        </View>
       </SafeAreaView>
+
+      {/* bottom sheet */}
+      <RbSheet
+        ref={refRBSheet}
+        height={210}
+        minClosingHeight={50}
+        duration={350}
+        closeOnDragDown={true}
+        customStyles={{
+          container: {
+            backgroundColor: '#fff',
+            borderTopLeftRadius: 30,
+            borderTopRightRadius: 30,
+            padding: 20,
+          },
+        }}>
+        <Text style={[g.fs24, g.FHNB, g.txtLeft, g.colorBlue, g.mb5]}>
+          Elon Musk
+        </Text>
+        <Text style={[g.fs18, g.FHNR, g.txtLeft, g.colorBlack, g.mb10]}>
+          CEO
+        </Text>
+
+        <View style={[grid.rowdir, grid.justifyContentCenter, g.mt10]}>
+          <TouchableOpacity onPress={() => {}} activeOpacity={1}>
+            <ProgresImage
+              source={GlobalInclude.Assets.ContactUs}
+              containerStyle={{height: scale(40), width: scale(40)}}
+              imageStyle={{
+                height: scale(40),
+                width: scale(40),
+              }}
+              mode={'contain'}
+            />
+          </TouchableOpacity>
+          <View style={{marginHorizontal: scale(10)}} />
+          <TouchableOpacity onPress={() => {}} activeOpacity={1}>
+            <ProgresImage
+              source={GlobalInclude.Assets.WhatsAppIcon}
+              containerStyle={{height: scale(40), width: scale(40)}}
+              imageStyle={{
+                height: scale(40),
+                width: scale(40),
+              }}
+              mode={'contain'}
+            />
+          </TouchableOpacity>
+          <View style={{marginHorizontal: scale(10)}} />
+          <TouchableOpacity onPress={() => {}} activeOpacity={1}>
+            <ProgresImage
+              source={GlobalInclude.Assets.EmailIcon}
+              containerStyle={{height: scale(40), width: scale(40)}}
+              imageStyle={{
+                height: scale(40),
+                width: scale(40),
+              }}
+              mode={'contain'}
+            />
+          </TouchableOpacity>
+          <View style={{marginHorizontal: scale(10)}} />
+          <TouchableOpacity onPress={() => {}} activeOpacity={1}>
+            <ProgresImage
+              source={GlobalInclude.Assets.WebSite}
+              containerStyle={{height: scale(40), width: scale(40)}}
+              imageStyle={{
+                height: scale(40),
+                width: scale(40),
+              }}
+              mode={'contain'}
+            />
+          </TouchableOpacity>
+        </View>
+      </RbSheet>
     </View>
   );
 };

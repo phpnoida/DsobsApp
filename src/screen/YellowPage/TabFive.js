@@ -6,7 +6,7 @@ import {scale} from '../../theme/Scalling';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import NextPreviousButton from '../../component/NextPreviousButton';
-import ModelAlert from '../../component/ModalAlert';
+import CommonButton from '../../component/CommonButton';
 
 let selectedIndex = -1;
 const TabFive = ({onSaveTab, onPreviousTab}) => {
@@ -102,8 +102,6 @@ const TabFive = ({onSaveTab, onPreviousTab}) => {
                 g.inputWhite,
                 {height: scale(100), textAlignVertical: 'top'},
               ]}
-              autoCapitalize="words"
-              placeholder="Enter your text here"
               keyboardType={'default'}
               autoCapitalize={'words'}
               returnKeyType={'done'}
@@ -111,19 +109,39 @@ const TabFive = ({onSaveTab, onPreviousTab}) => {
               onChangeText={(value) => {}}
             />
           </View>
+          <View style={g.mb15}>
+            {generateHeader('Website Link', false)}
+            <TextInput
+              underlineColorAndroid="transparent"
+              style={g.inputWhite}
+              maxLength={100}
+              keyboardType={'default'}
+              autoCapitalize={'words'}
+              returnKeyType={'done'}
+              placeholder={'Paste Web-Link here'}
+              onChangeText={(value) => {}}
+            />
+          </View>
         </View>
       </KeyboardAwareScrollView>
-      <NextPreviousButton
-        isLoading={false}
-        nextTitle={'Pay'}
-        prviousTitle={'Save'}
-        onPreviuosTab={() => {
-          onPreviousTab();
-        }}
-        onSaveTab={() => {
-          onSaveTab();
-        }}
-      />
+      <View
+        style={{
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: scale(150),
+          paddingTop: scale(10),
+          paddingBottom: scale(10),
+          alignContent: 'center',
+          alignSelf: 'center',
+        }}>
+        <CommonButton
+          showLoader={false}
+          title={'Save'}
+          onPress={() => {
+            onSaveTab();
+          }}
+        />
+      </View>
     </View>
   );
 };

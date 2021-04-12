@@ -11,6 +11,7 @@ import {
   StyleSheet,
   Keyboard,
   SafeAreaView,
+  Platform,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
@@ -118,8 +119,8 @@ const ListMyBusiness = ({route, navigation}) => {
             onSaveTab={() => validateAndMoveNextTab()}
             onPreviousTab={() => goPreviousTab()}
             tag={tag}
-            setTag={(tag) => {
-              setTag(tag);
+            setTag={(value) => {
+              setTag(value);
             }}
             productTags={productTags}
             addTag={() => {
@@ -164,14 +165,8 @@ const ListMyBusiness = ({route, navigation}) => {
       case 5:
         return (
           <TabFive
-            onSaveTab={() => validateAndMoveNextTab()}
-            onPreviousTab={() => goPreviousTab()}
-          />
-        );
-      case 6:
-        return (
-          <TabSix
             onSaveTab={() => navigation.goBack()}
+            onPreviousTab={() => goPreviousTab()}
           />
         );
     }
