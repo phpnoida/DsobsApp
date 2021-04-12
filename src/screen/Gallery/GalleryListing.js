@@ -56,6 +56,16 @@ const GalleryListing = ({navigation}) => {
   const [otherSearch, setotherSearch] = useState([]);
 
   useEffect(() => {
+    userData = null;
+    categoryName = null;
+    searchVal = '';
+    searchType = 1;
+    totalCount = 0;
+    filterObject = {
+      index: 0,
+      size: 10,
+    };
+
     userData = global.userDetails;
     getFilterCategory();
     getAlbumList();
@@ -125,7 +135,8 @@ const GalleryListing = ({navigation}) => {
         setFirstTimeLoad(false);
       },
       (error, message) => {
-        console.log('error', message);
+        console.log('message', message);
+        console.log('error', error);
       },
     );
   };
@@ -198,6 +209,7 @@ const GalleryListing = ({navigation}) => {
 
   const handleRefresh = () => {
     filterObject.index = 0;
+    setPageContent([]);
     getAlbumList();
   };
 
@@ -275,11 +287,11 @@ const GalleryListing = ({navigation}) => {
                     userData.house.slice(1);
 
                   Linking.openURL(
-                    `mailto:info@alumbus.com?subject=Photos from ${APP_NAME} ${userData.firstName} ${userData.lastName}, ${userData.schoolNumber}, ${house}, ${userData.batch} &body=Please send us a note about the photographs.Upload photos upto 20 MB here for larger photos please use Google Drive or a WeTransfer link to send images.`,
+                    `mailto:info@alumbus.com?subject=Photos from ${APP_NAME} user ${userData.firstName} ${userData.lastName}, ${userData.schoolNumber}, ${house}, ${userData.batch} &body=Please send us a note about the photographs. Upload photos upto 20MB here. For larger photos please use Google Drive or a WeTransfer link to send images.`,
                   );
                 } else {
                   Linking.openURL(
-                    `mailto:info@alumbus.com?subject=Photos from ${APP_NAME} FullName: School No: House: Batch: &body=Please send us a note about the photographs.Upload photos upto 20 MB here for larger photos please use Google Drive or a WeTransfer link to send images.`,
+                    `mailto:info@alumbus.com?subject=Photos from ${APP_NAME} user FullName: School No: House: Batch: &body=Please send us a note about the photographs. Upload photos upto 20MB here. For larger photos please use Google Drive or a WeTransfer link to send images.`,
                   );
                 }
               }}
@@ -319,6 +331,7 @@ const GalleryListing = ({navigation}) => {
                   }
                 } else if (searchType === 2) {
                   filterObject.s = searchVal;
+                  setPageContent([]);
                   getAlbumList();
                 }
               }}

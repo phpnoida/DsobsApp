@@ -14,39 +14,33 @@ import {
   PermissionsAndroid,
   TouchableNativeFeedback,
   CameraRoll,
+  Platform,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
-import {IconType, APP_NAME, URL_REGX} from '../../helper/Constants';
+import {IconType} from '../../helper/Constants';
 import HeaderBar from '../../component/HeaderBar';
-import Helper from '../../helper/Helper';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
-import CommonButton from '../../component/CommonButton';
 import ProgresImage from '../../component/ProgresImage';
 import RNFetchBlob from 'rn-fetch-blob';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import Orientation from 'react-native-orientation-locker';
 import ScreenOrientation, {
   PORTRAIT,
-  LANDSCAPE,
 } from 'react-native-orientation-locker/ScreenOrientation';
 import {
   getSingleImageFromAlbum,
   doUpdateImageInformation,
 } from '../../Actions/GalleryActions';
 
-const {height, width} = Dimensions.get('window');
-
-const {config, fs} = RNFetchBlob;
-let PictureDir = fs.dirs.PictureDir;
-
+const {width} = Dimensions.get('window');
+const {config} = RNFetchBlob;
 let index = 0;
 let pageTitle = '';
 let arrayItems = [];
 let optionsSheet = null;
-let imageWidth = width;
 let responseMessage = '';
 let selectedId = '';
 let currentOriantation = '';
@@ -66,13 +60,14 @@ const GalleryDetail = ({route, navigation}) => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [tmpIndex, setTmpIndex] = useState(0);
+  const [imageWidth, setImageWidth] = useState(0);
+  const [imageHeight, setImageHeight] = useState(0);
 
   useEffect(() => {
     index = 0;
     pageTitle = '';
     arrayItems = [];
     optionsSheet = null;
-    imageWidth = width;
     responseMessage = '';
     selectedId = '';
     currentOriantation = '';
@@ -107,13 +102,14 @@ const GalleryDetail = ({route, navigation}) => {
   };
 
   const updateImage = (image) => {
-    Image.getSize(image, (height, width) => {
-      if (width !== undefined && width !== null) {
-        console.log('imageWidth', imageWidth);
-        console.log('width', width);
-        if (imageWidth > width) {
-          imageWidth = width;
-        }
+    Image.getSize(image, (height, w) => {
+      if (w !== undefined && w !== null) {
+        const screenWidth = width;
+        const scaleFactor = w / screenWidth;
+        const imgHeight = height / scaleFactor;
+
+        setImageHeight(imgHeight);
+        setImageWidth(screenWidth);
       }
       setIsFetching(false);
     });
@@ -123,32 +119,42 @@ const GalleryDetail = ({route, navigation}) => {
     if (reportText.trim() === '') {
       setErrorMessage({reportContent: 'This field is required'});
     } else {
-      let reportedData = imageData.reported;
-
+      let reportedData = [];
+      reportedData = imageData.reported;
+      let user = global.userDetails;
       reportedData.push({
         id: global.userId,
         note: reportText,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        batch: user.batch,
+        schoolNumber: user.schoolNumber,
+        house: user.house,
+        section: user.section,
+        phone: user.phone,
+        countryCode: user.countryCode,
       });
+
       let requestData = {
         imageKey: imageData.imageKey,
         reported: reportedData,
         isReported: true,
       };
 
-      setIsFetching(true);
+      setIsReporting(true);
       doUpdateImageInformation(
-        imageData.id,
+        imageData._id,
         requestData,
         (response) => {
-          setIsFetching(false);
+          setIsReporting(false);
           if (response && response !== null) {
             if (
               response.data &&
               response.data !== undefined &&
               response.data !== null
             ) {
-              let data = response.data;
-              if (data.status) {
+              let responseData = response.data;
+              if (responseData.status) {
                 responseMessage = 'Image reported successfully!';
               } else {
                 responseMessage = 'Error while reporting!';
@@ -167,7 +173,7 @@ const GalleryDetail = ({route, navigation}) => {
         (error) => {
           responseMessage = 'Error while reporting!';
           setShowModal(true);
-          setIsFetching(false);
+          setIsReporting(false);
 
           setTimeout(() => {
             setShowModal(false);
@@ -184,7 +190,7 @@ const GalleryDetail = ({route, navigation}) => {
     setIsFetching(true);
 
     pageTitle = '';
-    imageWidth = width;
+    setImageWidth(width);
     currentOriantation = '';
     getImageDetail(arrayItems[index]._id);
   };
@@ -204,20 +210,30 @@ const GalleryDetail = ({route, navigation}) => {
             response.data !== undefined &&
             response.data !== null
           ) {
-            let data = response.data;
+            let responseData = response.data;
 
-            if (data.status) {
+            if (responseData.status) {
               if (
-                data.data !== null &&
-                data.data !== undefined &&
-                data.data.length > 0
+                responseData.data !== null &&
+                responseData.data !== undefined &&
+                responseData.data.length > 0
               ) {
-                let itemObject = data.data[0];
+                let itemObject = responseData.data[0];
+
+                itemObject.userTag.sort((a, b) =>
+                  a.firstName > b.firstName
+                    ? 1
+                    : b.firstName > a.firstName
+                    ? -1
+                    : 0,
+                );
+
+                itemObject.userTag.sort((a, b) =>
+                  a.batch > b.batch ? 1 : b.batch > a.batch ? -1 : 0,
+                );
+
                 setImageData(itemObject);
                 updateImage(itemObject.imagesLink);
-                console.log('====================================');
-                console.log('itemObject', JSON.stringify(itemObject));
-                console.log('====================================');
               } else {
                 setIsFetching(false);
               }
@@ -302,7 +318,7 @@ const GalleryDetail = ({route, navigation}) => {
           // do some magic here
           console.log('res', res);
           selectedId = '';
-          responseMessage = 'Content downloaded successfully!';
+          responseMessage = 'Image Downloaded Successfully!';
           setIsDownloading(false);
           setShowModal(true);
 
@@ -316,7 +332,7 @@ const GalleryDetail = ({route, navigation}) => {
           setShowModal(true);
         });
     } else {
-      CameraRoll.saveToCameraRoll(imgUrl);
+      CameraRoll.saveToCameraRoll(file, 'photo');
     }
   };
 
@@ -481,6 +497,7 @@ const GalleryDetail = ({route, navigation}) => {
                           aspectRatio: 16 / 9,
                           width: imageWidth,
                         }}
+                        mode={'contain'}
                       />
                     </TouchableOpacity>
 
@@ -859,7 +876,10 @@ const GalleryDetail = ({route, navigation}) => {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
-                  closeImageViewer();
+                  if (!isDownloading) {
+                    selectedId = data[tmpIndex]._id;
+                    _downloadContent(data[tmpIndex].imagesLink);
+                  }
                 }}
                 style={[
                   styles.buttonCircle,

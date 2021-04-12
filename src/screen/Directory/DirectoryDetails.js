@@ -291,10 +291,10 @@ const DirectoryDetails = ({route, navigation}) => {
       fullName += item.city.charAt(0).toUpperCase() + item.city.slice(1);
     }
 
-    if (item.country && item.country !== undefined && item.country !== '') {
-      fullName +=
-        ' ' + item.country.charAt(0).toUpperCase() + item.country.slice(1);
-    }
+    // if (item.country && item.country !== undefined && item.country !== '') {
+    //   fullName +=
+    //     ' ' + item.country.charAt(0).toUpperCase() + item.country.slice(1);
+    // }
     return fullName;
   };
 
@@ -425,7 +425,7 @@ const DirectoryDetails = ({route, navigation}) => {
                 style={{
                   flexDirection: 'row',
                   marginTop: scale(6),
-                  marginBottom: scale(8),
+                  marginBottom: scale(5),
                 }}>
                 <View style={{flex: 1, flexDirection: 'row'}}>
                   {item.schoolNumber ? (
@@ -454,7 +454,16 @@ const DirectoryDetails = ({route, navigation}) => {
                   </Text>
                 ) : null}
               </View>
-
+              <Text
+                style={[
+                  g.fs11,
+                  g.colorBlack,
+                  g.justifyContentCenter,
+                  grid.alignContent,
+                  g.mb5,
+                ]}>
+                {concateLocation(item)}
+              </Text>
               {item.profession ? (
                 <Text
                   style={[

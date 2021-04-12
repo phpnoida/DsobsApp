@@ -3,6 +3,8 @@ import {SERVER_PATH} from '../../config';
 
 export function getAlbums(params, callback, errCallback) {
   let requestPath = `${SERVER_PATH}imageGallery`;
+  console.log('params', params);
+  console.log('requestPath', requestPath);
   const request = axios
     .get(requestPath, {
       headers: {Authorization: global.accessToken},
