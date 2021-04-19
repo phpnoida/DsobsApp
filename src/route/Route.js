@@ -25,9 +25,10 @@ import TagUser from '../screen/Gallery/TagUser';
 import AboutPhoto from '../screen/Gallery/AboutPhoto';
 import FilteredResult from '../screen/Gallery/FilteredResult';
 import YellowPages from '../screen/YellowPage/YellowPages';
-import ListMyBusiness from '../screen/YellowPage/ListMyBusiness';
+import ListMyBusiness from '../screen/YellowPage/AddPage/ListMyBusiness';
 import YellowPageListing from '../screen/YellowPage/YellowPageListing';
 import BusinessDetails from '../screen/YellowPage/BusinessDetails';
+import AboutYellowPage from '../screen/YellowPage/AboutYellowPage';
 
 const Stack = createStackNavigator();
 
@@ -172,6 +173,11 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="BusinessDetails"
         component={BusinessDetails}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="AboutYellowPage"
+        component={AboutYellowPage}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

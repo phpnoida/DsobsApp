@@ -11,6 +11,8 @@ import {
   StyleSheet,
   Keyboard,
   SafeAreaView,
+  Platform,
+  FlatList,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
@@ -20,13 +22,11 @@ import {IconType, APP_NAME} from '../../helper/Constants';
 import HeaderBar from '../../component/HeaderBar';
 import Helper from '../../helper/Helper';
 import YellowPageSearch from '../../component/YellowPageSearch';
-
+import ProfessionalSheetFilter from '../../component/ProfessionalSheetFilter';
+import ProgresImage from '../../component/ProgresImage';
+import Slideshow from '../../component/Slideshow.js';
 import BottomSheetAbout from 'react-native-raw-bottom-sheet';
-import ScrollableTabView, {
-  ScrollableTabBar,
-} from 'react-native-scrollable-tab-view';
-
-import {doGetProfessionList} from '../../Actions/UserActions';
+import {getProfessionList} from '../../Actions/UserActions';
 
 const {height, width} = Dimensions.get('window');
 const tablet = width >= 768;
@@ -44,14 +44,36 @@ let positionY = Platform.OS === 'ios' ? 130 : 180;
 const myInput = React.createRef();
 const scrollRef = React.createRef();
 
+let sortBy = [
+  {
+    value: '1',
+    label: 'Newest',
+  },
+  {
+    value: '5',
+    label: 'Alphabetical A-Z',
+  },
+  {
+    value: '7',
+    label: 'Most Bookmarked',
+  },
+];
+
 const YellowPages = ({navigation}) => {
   const refRBSheet = useRef();
+  const refProfessionalSheet = useRef();
+
   const [checkedType, setCheckedType] = useState(1);
   const [filterQuery, setFilterQuery] = useState('');
   const [professionList, setProfessionList] = useState([]);
-  const [selectedGroup, setSelectedGroup] = useState('');
-  const [professions, setProfessions] = useState([]);
+  const [selectedProfession, setSelectedProfession] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [sortedBy, setSortedBy] = useState('');
+  const [pageContent, setPageContent] = useState([
+    {item: 1},
+    {item: 1},
+    {item: 1},
+  ]);
 
   useEffect(() => {
     professionSheet = null;
@@ -60,7 +82,7 @@ const YellowPages = ({navigation}) => {
     searchVal = '';
 
     if (global.isConnected) {
-      getProfessionList();
+      getProfession();
     }
     return () => {};
   }, []);
@@ -71,11 +93,9 @@ const YellowPages = ({navigation}) => {
    *
    */
 
-  const getProfessionList = () => {
-    setIsLoading(true);
-    doGetProfessionList(
+  const getProfession = () => {
+    getProfessionList(
       (response) => {
-        setIsLoading(false);
         if (response && response !== null) {
           if (
             response.data &&
@@ -85,26 +105,19 @@ const YellowPages = ({navigation}) => {
             let data = response.data;
 
             if (data.status) {
-              let dataList = [];
-
-              data.data.map((item) => {
-                item.children.map((child) => {
-                  child.children.map((sub, index) => {
-                    dataList.push({key: index, text: sub});
-                  });
+              let professionArray = [];
+              if (data.data !== null) {
+                data.data.map((item, index) => {
+                  professionArray.push({key: index, text: item});
                 });
-              });
-              professionListMain = dataList;
-              setProfessions([...dataList]);
-              setProfessionList([...data.data]);
+              }
+              professionListMain = professionArray;
+              setProfessionList(professionArray);
             }
           }
         }
       },
-      (code, error) => {
-        setIsLoading(false);
-        console.log('error', error);
-      },
+      (error) => {},
     );
   };
 
@@ -114,134 +127,80 @@ const YellowPages = ({navigation}) => {
    *
    */
 
-  /*****
-   * Tab
-   */
-  const renderTab = (
-    name,
-    page,
-    isTabActive,
-    onPressHandler,
-    onLayoutHandler,
-  ) => {
+  const searchProfession = (searchText) => {
+    let oldContent = professionList;
+    var list = [];
+    if (searchText.length > 0) {
+      oldContent.forEach((element) => {
+        if (element.text.toLowerCase().includes(searchText.toLowerCase())) {
+          list.push(element);
+        }
+      });
+      setProfessionList([...list]);
+    } else {
+      //console.log('professionListMain', professionListMain.length);
+      setProfessionList([...professionListMain]);
+    }
+  };
+
+  const renderItem = ({item, index}) => {
     return (
-      <TouchableOpacity
-        key={`${name}_${page}`}
-        onPress={() => onPressHandler(page)}
-        onLayout={onLayoutHandler}>
-        <Text style={[style.tabBarText, g.FHNB, isTabActive && [g.colorBlue]]}>
-          {name ? name.toUpperCase() : ''}
-        </Text>
-      </TouchableOpacity>
+      <View style={{marginBottom: scale(15)}}>
+        <View
+          style={[
+            g.bgWhite,
+            g.boxShadow,
+            g.ml5,
+            g.mr5,
+            {borderRadius: scale(10)},
+          ]}>
+          <View style={[g.bggray3, {borderRadius: scale(10)}]}>
+            {/* <FlatListSlider data={imageArray} /> */}
+            {index === 0 ? (
+              <Slideshow
+                dataSource={[
+                  {url: 'http://placeimg.com/640/480/any'},
+                  {url: 'http://placeimg.com/640/480/any'},
+                  {url: 'http://placeimg.com/640/480/any'},
+                ]}
+              />
+            ) : (
+              <ProgresImage
+                source={GlobalInclude.Assets.DefaultImage}
+                containerStyle={{aspectRatio: 16 / 9, borderRadius: scale(10)}}
+                imageStyle={{
+                  aspectRatio: 16 / 9,
+                  borderRadius: scale(10),
+                  borderBottomLeftRadius: 0,
+                  borderBottomRightRadius: 0,
+                }}
+                mode={'cover'}
+              />
+            )}
+          </View>
+          <TouchableOpacity
+            style={[g.p15]}
+            onPress={() => {
+              navigation.navigate('BusinessDetails');
+            }}>
+            <Text style={[g.FHNB, g.fs16, g.colorBlue]}>
+              Incred Applications Pvt. Ltd.
+            </Text>
+            <Text
+              style={[g.fs14, g.mt5, g.FHNR, g.colorBlack]}
+              numberOfLines={2}>
+              IT/Information Technology
+            </Text>
+            <Text
+              style={[g.fs12, g.mt5, g.FHNR, g.colorBlack]}
+              numberOfLines={2}>
+              Montréal
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     );
   };
-
-  const handleChangeTab = ({i, ref, from}) => {};
-
-  const renderTabs = () => {
-    let data = [];
-    professionList.map((listItem, index) => {
-      if (selectedGroup === listItem.group) {
-        if (
-          listItem.children &&
-          listItem.children !== null &&
-          listItem.children.length > 0
-        ) {
-          listItem.children.map((sub, subIndex) => {
-            data.push({data: sub, id: subIndex});
-          });
-        }
-      }
-    });
-    if (data.length > 0) {
-      return (
-        <ScrollableTabView
-          activeTab={1}
-          ref={myInput}
-          tabBarUnderlineStyle={{height: 0}}
-          renderTabBar={() => (
-            <ScrollableTabBar
-              style={{borderColor: '#ffffff', height: 38, borderWidth: 0}}
-              renderTab={renderTab}
-              onChangeTab={handleChangeTab}
-              tabsContainerStyle={style.tabSpace}
-            />
-          )}>
-          {data.map((category, index) => {
-            return (
-              <View tabLabel={category.data.group} key={index}>
-                <View style={grid.rowdir}>
-                  <View style={{width: '60%', height: height - 130}}>
-                    <View style={[g.pl5, g.pr5]}>
-                      {category.data.children.map((sublinks, subindex) => {
-                        return (
-                          <TouchableOpacity
-                            activeOpacity={1}
-                            onPress={() => {
-                              // setSearchQuery(sublinks);
-                              // searchBy = 5;
-                              // setSearchIndex(5);
-                              // setTimeout(() => {
-                              //   doSearchUser(sublinks);
-                              // }, 500);
-                            }}
-                            key={subindex}>
-                            <Text
-                              style={[
-                                {fontSize: 15, padding: 5},
-                                g.FHNR,
-                                g.colorBlue,
-                              ]}>
-                              {sublinks}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  </View>
-                  <View style={grid.col}>
-                    <View style={[g.pl5, g.pr5]}>
-                      {data.map((dummyList, dummyIndex) => {
-                        if (dummyList.id === category.id + 1) {
-                          return dummyList.data.children.map(
-                            (sublinks, subindex) => {
-                              return (
-                                <TouchableOpacity
-                                  activeOpacity={1}
-                                  onPress={() => {
-                                    myInput.current.goToPage(index + 1);
-                                  }}
-                                  key={subindex}
-                                  onPressIn={() => {}}
-                                  onPressOut={() => {}}>
-                                  <Text
-                                    style={[
-                                      {fontSize: 15, padding: 5},
-                                      g.FHNR,
-                                      g.colorLightGray,
-                                    ]}>
-                                    {sublinks}
-                                  </Text>
-                                </TouchableOpacity>
-                              );
-                            },
-                          );
-                        }
-                      })}
-                    </View>
-                  </View>
-                </View>
-              </View>
-            );
-          })}
-        </ScrollableTabView>
-      );
-    }
-    return <View />;
-  };
-  /****
-   * Tab
-   */
 
   return (
     <View style={GlobalInclude.AppStyle.topSpace}>
@@ -290,9 +249,10 @@ const YellowPages = ({navigation}) => {
                   scrollRef={scrollRef}
                   mainTitle={'Search By'}
                   chkType={checkedType}
-                  chkOneTitle={'Company Name'}
-                  chkTwoTitle={'Tags'}
-                  ChkThreeTitle={'Location'}
+                  chkOneTitle={'Category'}
+                  chkTwoTitle={'Company'}
+                  ChkThreeTitle={'Tags'}
+                  ChkFourTitle={'Location'}
                   onChecked={(type) => {
                     searchType = type;
                     setCheckedType(type);
@@ -305,87 +265,59 @@ const YellowPages = ({navigation}) => {
                   onGoPress={() => {
                     navigation.navigate('YellowPageListing');
                   }}
+                  onFilterPress={() => {
+                    if (
+                      refProfessionalSheet.current !== undefined &&
+                      refProfessionalSheet.current !== null
+                    ) {
+                      refProfessionalSheet.current.open();
+                    }
+                  }}
                 />
               </View>
-              <View
-                style={GlobalInclude.AppStyle.fullWidth}
-                onLayout={(event) => {
-                  const layout = event.nativeEvent.layout;
-                  positionY = layout.y;
-                }}>
-                <View
-                  style={{
-                    paddingLeft: 15,
-                    paddingRight: 15,
-                  }}>
-                  <View style={[grid.rowdir]}>
-                    <Text
+
+              <View style={[grid.row, g.ml15, g.mr15, g.mt10]}>
+                {sortBy.map((item, i) => {
+                  return (
+                    <View
                       style={[
-                        g.fs14,
-                        g.colordarkGray,
-                        grid.col,
-                        g.pr10,
-                        g.mt10,
-                      ]}>
-                      Business Category
-                    </Text>
-                  </View>
-                  <View
-                    style={{
-                      marginTop: scale(3),
-                      flexWrap: 'wrap',
-                      flexDirection: 'row',
-                    }}>
-                    {professionList.map((listItem, index) => {
-                      return (
-                        <TouchableOpacity
-                          activeOpacity={1}
-                          onPress={() => {
-                            setSelectedGroup(listItem.group);
-                            if (myInput.current !== null) {
-                              myInput.current.goToPage(0);
-                            }
-                            setTimeout(() => {
-                              if (
-                                scrollRef !== null &&
-                                scrollRef.current !== null
-                              ) {
-                                scrollRef.current.scrollTo({
-                                  y: positionY,
-                                  animated: true,
-                                });
-                              }
-                            }, 300);
-                          }}
-                          key={index}
-                          style={g.p3}
-                          onPressIn={() => {}}>
-                          <Text
-                            style={[
-                              style.tabsbut,
-                              g.FHNB,
-                              g.fs12,
-                              g.pt7,
-                              g.pb7,
-                              selectedGroup === listItem.group &&
-                                style.bbtbgnactive,
-                            ]}>
-                            {listItem.group ? listItem.group.toUpperCase() : ''}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </View>
+                        g.btnsort,
+                        sortedBy === item.value && g.darkBlue,
+                        i === 0 && g.ml0,
+                      ]}
+                      key={i}>
+                      <Text
+                        style={[
+                          g.colorGray,
+                          g.fs12,
+                          sortedBy === item.value && g.colorWhite,
+                        ]}
+                        onPress={() => {
+                          setSortedBy(item.value);
+                        }}>
+                        {item.label}
+                      </Text>
+                    </View>
+                  );
+                })}
               </View>
-              {selectedGroup !== '' ? (
-                <View style={[g.pl10, g.pr10]}>
-                  <View style={[style.tabbarheight, g.mt15]}>
-                    {renderTabs()}
-                  </View>
-                </View>
-              ) : null}
-              <View style={{height: scale(100)}} />
+              <View
+                style={[
+                  GlobalInclude.AppStyle.fill,
+                  GlobalInclude.AppStyle.contentSpace,
+                ]}>
+                <FlatList
+                  showsVerticalScrollIndicator={false}
+                  data={pageContent}
+                  onEndReachedThreshold={0.1}
+                  renderItem={renderItem}
+                  keyExtractor={(v, i) => i.toString()}
+                  contentContainerStyle={{
+                    paddingBottom: scale(70),
+                    paddingTop: scale(10),
+                  }}
+                />
+              </View>
             </View>
           </ScrollView>
         </View>
@@ -393,7 +325,7 @@ const YellowPages = ({navigation}) => {
 
       <BottomSheetAbout
         ref={refRBSheet}
-        height={height / 2 - 110}
+        height={height / 2 - 80}
         minClosingHeight={50}
         duration={350}
         closeOnDragDown={true}
@@ -417,15 +349,35 @@ const YellowPages = ({navigation}) => {
         </TouchableOpacity>
 
         <Text style={[g.fs16, g.FHNR, g.txtLeft, g.colorBlack, g.mb15]}>
-          Edit My Business-1
+          Edit Incred Applications Pvt Ltd
         </Text>
         <Text style={[g.fs16, g.FHNR, g.txtLeft, g.colorBlack, g.mb15]}>
-          Edit My Business-2
+          Edit Embrace Cinema Pvt Ltd
         </Text>
-        <Text style={[g.fs16, g.FHNM, g.txtLeft, g.colorBlack, g.mb15]}>
-          About YellowPages
-        </Text>
+        <TouchableOpacity
+          onPress={() => {
+            refRBSheet.current.close();
+            navigation.navigate('AboutYellowPage');
+          }}>
+          <Text style={[g.fs16, g.FHNM, g.txtLeft, g.colorBlack, g.mb15]}>
+            About YellowPages
+          </Text>
+        </TouchableOpacity>
       </BottomSheetAbout>
+
+      <ProfessionalSheetFilter
+        refRBSheet={refProfessionalSheet}
+        dataList={professionList}
+        searchProfession={(query) => {
+          searchProfession(query);
+        }}
+        selectedProfession={selectedProfession}
+        setSelectedProfession={(value) => {
+          setSelectedProfession(value);
+          refProfessionalSheet.current.close();
+        }}
+        onClose={() => {}}
+      />
     </View>
   );
 };

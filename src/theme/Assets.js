@@ -50,6 +50,7 @@ import DummyMap from '../../Assets/Icon/dummy_map.jpeg';
 import EmailIcon from '../../Assets/Icon/email.png';
 import WebSite from '../../Assets/Icon/globe.png';
 import WhatsAppIcon from '../../Assets/Icon/whatsapp.png';
+import MapLocation from '../../Assets/Icon/map_location.png';
 export default {
   AppLogo: AppLogo,
   Alumbus: Alumbus,
@@ -103,4 +104,5 @@ export default {
   EmailIcon: EmailIcon,
   WebSite: WebSite,
   WhatsAppIcon: WhatsAppIcon,
+  MapLocation: MapLocation,
 };

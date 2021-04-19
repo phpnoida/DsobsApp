@@ -1,45 +1,23 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
-  Text,
   View,
-  TouchableOpacity,
-  Image,
-  TextInput,
-  ScrollView,
-  ActivityIndicator,
   Dimensions,
   StyleSheet,
   Keyboard,
   SafeAreaView,
   Platform,
 } from 'react-native';
-import GlobalInclude from '../../globalInclude/Globalinclude';
-import g from '../../theme/global';
-import {scale} from '../../theme/Scalling';
-import grid from '../../theme/grid';
-import {IconType, APP_NAME} from '../../helper/Constants';
-import HeaderBar from '../../component/HeaderBar';
-import Helper from '../../helper/Helper';
-import TabOne from './TabOne';
-import TabTwo from './TabTwo';
-import TabThree from './TabThree';
-import TabFour from './TabFour';
-import TabFive from './TabFive';
-import TabSix from './TabSix';
-import {getDirectory} from '../../Actions/DirectoryActions';
-
-const {height, width} = Dimensions.get('window');
-const tablet = width >= 768;
-const isX =
-  Platform.OS === 'ios' && (height > 800 || height > 800) ? true : false;
-const isL =
-  Platform.OS === 'android' && (height > 1920 || height > 1920) ? true : false;
-
-let searchType = '';
+import GlobalInclude from '../../../globalInclude/Globalinclude';
+import HeaderBar from '../../../component/HeaderBar';
+import TabOne from '../TabOne';
+import TabTwo from '../TabTwo';
+import TabThree from '../TabThree';
+import TabFour from '../TabFour';
+import TabFive from '../TabFive';
+import {getDirectory} from '../../../Actions/DirectoryActions';
+import {doSearchCity} from '../../../Actions/CommonActions';
+import {getProfessionList} from '../../../Actions/UserActions';
 let searchVal = '';
-let professionSheet = null;
-let professionListMain = [];
-let positionY = Platform.OS === 'ios' ? 130 : 180;
 
 let inEditMode = false;
 const ListMyBusiness = ({route, navigation}) => {
@@ -48,16 +26,88 @@ const ListMyBusiness = ({route, navigation}) => {
   }
 
   const [step, setStep] = useState(1);
+
+  /**Tab one */
+  const [businessName, setBusinessName] = useState('');
+  const [professionList, setProfessionList] = useState([]);
+
   const [productTags, setProductTags] = useState([]);
   const [tag, setTag] = useState('');
   const [errorMessage, setErrorMessage] = useState({});
   const [searchedUser, setSearchedUser] = useState([]);
   const [filterQuery, setFilterQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState([]);
+  const [cityList, setCityList] = useState([]);
+
   useEffect(() => {
+    if (global.isConnected) {
+      getProfession();
+    }
     return () => {};
   }, []);
 
+  /*****
+   *
+   * API Section
+   *
+   */
+
+  const getProfession = () => {
+    getProfessionList(
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              let professionArray = [];
+              if (data.data !== null) {
+                data.data.map((item, index) => {
+                  professionArray.push({key: index, text: item});
+                });
+              }
+              setProfessionList(professionArray);
+            }
+          }
+        }
+      },
+      (error) => {},
+    );
+  };
+
+  const getSearchDataByCity = (query) => {
+    doSearchCity(
+      query,
+      10,
+      0,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              if (searchVal.length > 0) {
+                setCityList([...data.data]);
+              } else {
+                setCityList([]);
+              }
+            }
+          }
+        }
+      },
+      (code, error) => {
+        setCityList([]);
+      },
+    );
+  };
   /*****
    *
    * API Section
@@ -109,10 +159,23 @@ const ListMyBusiness = ({route, navigation}) => {
     }
   };
 
+  const handleInput = (key, value) => {
+    if (key === 'businessName') {
+      setBusinessName(value);
+    }
+  };
+
   const loadTab = (page) => {
     switch (page) {
       case 1:
-        return <TabOne onSaveTab={() => validateAndMoveNextTab()} />;
+        return (
+          <TabOne
+            businessName={businessName}
+            professionList={professionList}
+            handleInput={handleInput}
+            onSaveTab={() => validateAndMoveNextTab()}
+          />
+        );
       case 2:
         return (
           <TabTwo

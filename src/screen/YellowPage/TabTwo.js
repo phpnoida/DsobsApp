@@ -65,8 +65,6 @@ const TabTwo = ({
                 g.inputWhite,
                 {height: scale(100), textAlignVertical: 'top'},
               ]}
-              autoCapitalize="words"
-              placeholder="Enter your text here"
               keyboardType={'default'}
               autoCapitalize={'words'}
               returnKeyType={'done'}

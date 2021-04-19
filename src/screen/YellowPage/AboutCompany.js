@@ -7,7 +7,7 @@ import GlobalInclude from '../../globalInclude/Globalinclude';
 
 const AboutCompany = ({params}) => (
   <ScrollView style={grid.flex1} showsVerticalScrollIndicator={false}>
-    <View style={{padding: scale(10)}}>
+    <View style={{padding: scale(10), paddingBottom: scale(70)}}>
       <View style={[g.boxShadow, g.bgWhite, g.br3, g.p5]}>
         <View style={[grid.rowdir, grid.alignItems]}>
           <View style={[grid.col, g.p10]}>

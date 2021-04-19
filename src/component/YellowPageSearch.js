@@ -29,11 +29,13 @@ const YellowPageSearch = ({
   chkOneTitle,
   chkTwoTitle,
   ChkThreeTitle,
+  ChkFourTitle,
   chkType,
   onChecked,
   changeText,
   filterQuery,
   onGoPress,
+  onFilterPress,
 }) => {
   return (
     <View>
@@ -54,7 +56,7 @@ const YellowPageSearch = ({
         ]}>
         <View
           style={{
-            width: scale(120),
+            width: scale(85),
           }}>
           <DrawCheckbox
             title={chkOneTitle}
@@ -64,7 +66,7 @@ const YellowPageSearch = ({
         </View>
         <View
           style={{
-            width: scale(60),
+            width: scale(85),
             marginStart: scale(3),
             marginEnd: scale(3),
           }}>
@@ -76,12 +78,22 @@ const YellowPageSearch = ({
         </View>
         <View
           style={{
-            width: scale(70),
+            width: scale(65),
           }}>
           <DrawCheckbox
             title={ChkThreeTitle}
             onClick={() => onChecked(3)}
             checked={chkType === 3}
+          />
+        </View>
+        <View
+          style={{
+            width: scale(70),
+          }}>
+          <DrawCheckbox
+            title={ChkFourTitle}
+            onClick={() => onChecked(4)}
+            checked={chkType === 4}
           />
         </View>
       </View>
@@ -108,7 +120,7 @@ const YellowPageSearch = ({
               keyboardType={'default'}
               placeholder={
                 chkType === 1
-                  ? 'Type more then 3 characters '
+                  ? 'Type more than 3 characters '
                   : 'Type anything...'
               }
               onChangeText={(text) => {
@@ -117,17 +129,36 @@ const YellowPageSearch = ({
             />
           </View>
         </View>
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => onGoPress()}
-          style={[
-            g.fliterBtnNew,
-            grid.alignItems,
-            grid.justifyContentCenter,
-            g.bgBlue,
-          ]}>
-          <Text style={[g.colorWhite, g.FHNM, g.fs16]}>Go</Text>
-        </TouchableOpacity>
+        {filterQuery.length <= 3 ? (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => onFilterPress()}
+            style={[
+              g.fliterBtnNew,
+              grid.alignItems,
+              grid.justifyContentCenter,
+            ]}>
+            <Image
+              source={GlobalInclude.Assets.Filter}
+              resizeMode="contain"
+              style={{width: 16}}
+            />
+          </TouchableOpacity>
+        ) : chkType === 1 || chkType === 4 ? (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => onGoPress()}
+            style={[
+              g.fliterBtnNew,
+              grid.alignItems,
+              grid.justifyContentCenter,
+              g.bgBlue,
+            ]}>
+            <Text style={[g.colorWhite, g.FHNM, g.fs16]}>Go</Text>
+          </TouchableOpacity>
+        ) : (
+          <View />
+        )}
       </View>
     </View>
   );

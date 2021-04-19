@@ -15,8 +15,7 @@ import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import ProgresImage from '../../component/ProgresImage';
-import LinearGradient from 'react-native-linear-gradient';
-const {height, width} = Dimensions.get('window');
+import Slideshow from '../../component/Slideshow.js';
 
 const PaginationStatus = {
   firstLoad: 0,
@@ -84,11 +83,7 @@ const Video = ({navigation}) => {
 
   const renderItem = ({item, index}) => {
     return (
-      <TouchableOpacity
-        style={{marginBottom: scale(15)}}
-        onPress={() => {
-          navigation.navigate('BusinessDetails');
-        }}>
+      <View style={{marginBottom: scale(15)}}>
         <View
           style={[
             g.bgWhite,
@@ -98,37 +93,34 @@ const Video = ({navigation}) => {
             {borderRadius: scale(10)},
           ]}>
           <View style={[g.bggray3, {borderRadius: scale(10)}]}>
-            <ProgresImage
-              source={GlobalInclude.Assets.DefaultImage}
-              containerStyle={{height: scale(230), borderRadius: scale(10)}}
-              imageStyle={{
-                aspectRatio: 1 / 1,
-                borderRadius: scale(10),
-                borderBottomLeftRadius: 0,
-                borderBottomRightRadius: 0,
-              }}
-              mode={'cover'}
-            />
-            <ProgresImage
-              source={{
-                uri: `https://picsum.photos/seed/${new Date().getMilliseconds()}/200/300`,
-              }}
-              containerStyle={{
-                height: scale(75),
-                width: scale(75),
-                borderRadius: scale(8),
-                position: 'absolute',
-                top: scale(10),
-                left: scale(10),
-              }}
-              imageStyle={{
-                aspectRatio: 1 / 1,
-                borderRadius: scale(8),
-              }}
-              mode={'cover'}
-            />
+            {/* <FlatListSlider data={imageArray} /> */}
+            {index === 0 ? (
+              <Slideshow
+                dataSource={[
+                  {url: 'http://placeimg.com/640/480/any'},
+                  {url: 'http://placeimg.com/640/480/any'},
+                  {url: 'http://placeimg.com/640/480/any'},
+                ]}
+              />
+            ) : (
+              <ProgresImage
+                source={GlobalInclude.Assets.DefaultImage}
+                containerStyle={{aspectRatio: 16 / 9, borderRadius: scale(10)}}
+                imageStyle={{
+                  aspectRatio: 16 / 9,
+                  borderRadius: scale(10),
+                  borderBottomLeftRadius: 0,
+                  borderBottomRightRadius: 0,
+                }}
+                mode={'cover'}
+              />
+            )}
           </View>
-          <View style={[g.p15]}>
+          <TouchableOpacity
+            style={[g.p15]}
+            onPress={() => {
+              navigation.navigate('BusinessDetails');
+            }}>
             <Text style={[g.FHNB, g.fs16, g.colorBlue]}>
               Incred Applications Pvt. Ltd.
             </Text>
@@ -142,9 +134,9 @@ const Video = ({navigation}) => {
               numberOfLines={2}>
               Montréal
             </Text>
-          </View>
+          </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 

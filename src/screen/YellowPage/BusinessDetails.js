@@ -68,28 +68,13 @@ const BusinessDetails = ({navigation}) => {
                 ]}>
                 <ProgresImage
                   source={GlobalInclude.Assets.DefaultImage}
-                  containerStyle={{height: scale(200), borderRadius: scale(10)}}
-                  imageStyle={{
-                    aspectRatio: 1 / 1,
+                  containerStyle={{
+                    aspectRatio: 16 / 9,
                     borderRadius: scale(10),
                   }}
-                  mode={'cover'}
-                />
-                <ProgresImage
-                  source={{
-                    uri: `https://picsum.photos/seed/${new Date().getMilliseconds()}/200/300`,
-                  }}
-                  containerStyle={{
-                    height: scale(75),
-                    width: scale(75),
-                    borderRadius: scale(8),
-                    position: 'absolute',
-                    top: scale(10),
-                    left: scale(10),
-                  }}
                   imageStyle={{
-                    aspectRatio: 1 / 1,
-                    borderRadius: scale(8),
+                    aspectRatio: 16 / 9,
+                    borderRadius: scale(10),
                   }}
                   mode={'cover'}
                 />
@@ -120,9 +105,9 @@ const BusinessDetails = ({navigation}) => {
                 renderTabBar={() => (
                   <ScrollableTabBar style={styles.tabBarStyle} />
                 )}>
-                <AboutCompany tabLabel={'AboutCompany'} />
+                <AboutCompany tabLabel={'About'} />
                 <ProductServices tabLabel={'ProductServices'} />
-                <CompanyPhotos tabLabel={'CompanyPhotos'} />
+                <CompanyPhotos tabLabel={'Media'} />
                 <Location tabLabel={'Location'} />
                 <AluminiDetails tabLabel={'AluminiDetails'} />
                 <Tags
