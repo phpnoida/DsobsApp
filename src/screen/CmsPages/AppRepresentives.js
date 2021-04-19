@@ -6,11 +6,15 @@ import {AppRepresentivesList} from './Data';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {ScrollView} from 'react-native-gesture-handler';
+import {APP_NAME} from '../../helper/Constants';
 
 const AppRepresentives = ({navigation}) => {
   return (
     <View style={GlobalInclude.AppStyle.fill}>
-      <HeaderBar navigation={navigation} title={'Dsobs Memorandum and Rules'} />
+      <HeaderBar
+        navigation={navigation}
+        title={`${APP_NAME} Batch Representatives`}
+      />
       <SafeAreaView style={GlobalInclude.AppStyle.ViewStyle}>
         <ScrollView
           style={[g.p10, g.bgWhite]}

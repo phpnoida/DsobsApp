@@ -6,11 +6,14 @@ import {AppCommitteeList} from './Data';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {ScrollView} from 'react-native-gesture-handler';
-
+import {APP_NAME} from '../../helper/Constants';
 const AppCommittee = ({navigation}) => {
   return (
     <View style={GlobalInclude.AppStyle.fill}>
-      <HeaderBar navigation={navigation} title={'DSOBS Executive Committee'} />
+      <HeaderBar
+        navigation={navigation}
+        title={`${APP_NAME} Executive Committee`}
+      />
       <SafeAreaView style={GlobalInclude.AppStyle.ViewStyle}>
         <ScrollView
           style={[g.p10, g.bgWhite]}
@@ -21,9 +24,11 @@ const AppCommittee = ({navigation}) => {
                 <Text style={[grid.col, g.fs13, g.FHNM, g.colorBlack, g.pr10]}>
                   {item.name}
                 </Text>
-                <Text style={[g.fs13, g.FHNM, g.colorBlack, g.w60]}>
-                  {item.year}
-                </Text>
+                {item.year !== undefined && (
+                  <Text style={[g.fs13, g.FHNM, g.colorBlack, g.w60]}>
+                    {item.year}
+                  </Text>
+                )}
                 <Text style={[grid.col, g.fs13, g.FHNM, g.colorBlack, g.pr10]}>
                   {item.post}
                 </Text>

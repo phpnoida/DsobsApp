@@ -138,7 +138,7 @@ const BasicProfile = (props) => {
   const [lgbtqia, setLgbtqia] = useState('');
   const [selectedGender, setSelectedGender] = useState('');
   const [profileImg, setProfileImg] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState('N/A');
   const [professionList, setProfessionList] = useState([]);
   const [selectedProfession, setSelectedProfession] = useState('');
   const [designation, setDesignation] = useState('');
@@ -186,6 +186,7 @@ const BasicProfile = (props) => {
     if (
       profileData.dob &&
       profileData.dob !== undefined &&
+      profileData.dob !== '' &&
       profileData.dob !== 'Invalid date'
     ) {
       var formatedDate = new Date(profileData.dob);
@@ -493,9 +494,13 @@ const BasicProfile = (props) => {
 
   const updateProfileDetails = () => {
     setErrorMessage({});
-    if (selectedDate.trim() === '') {
+    /*
+      if (selectedDate.trim() === '') {
       setErrorMessage({emptyBirthDate: 'This field is required!'});
-    } else if (selectedGender === '') {
+    } else
+    */
+
+    if (selectedGender === '') {
       setErrorMessage({emptyGender: 'This field is required!'});
     } else if (selectedProfession === '') {
       setErrorMessage({profession: 'This field is required!'});
@@ -994,14 +999,19 @@ const BasicProfile = (props) => {
             <View style={g.mb15}>
               <View style={grid.rowdir}>
                 <View style={[{width: scale(108)}, g.mr2]}>
-                  {generateHeader('DOB', true)}
+                  {generateHeader('DOB', false)}
                   <TouchableOpacity
                     style={g.inputWhite}
                     onPress={() => {
                       setShowDatePicker(true);
                     }}>
                     <Text
-                      style={[grid.col, g.FHNR, grid.justifyContentCenter,{textAlignVertical:'center'}]}
+                      style={[
+                        grid.col,
+                        g.FHNR,
+                        grid.justifyContentCenter,
+                        {textAlignVertical: 'center'},
+                      ]}
                       numberOfLines={1}>
                       {selectedDate}
                     </Text>

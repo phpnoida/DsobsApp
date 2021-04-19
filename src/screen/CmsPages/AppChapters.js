@@ -10,14 +10,13 @@ import {
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {ScrollView} from 'react-native-gesture-handler';
-
+import {APP_NAME} from '../../helper/Constants';
 const AppChapters = ({navigation}) => {
-
   return (
     <View style={GlobalInclude.AppStyle.fill}>
       <HeaderBar
         navigation={navigation}
-        title={'DSOBS Regional Chapter Reps'}
+        title={`${APP_NAME} Regional Chapter Reps`}
       />
       <SafeAreaView style={GlobalInclude.AppStyle.ViewStyle}>
         <ScrollView
@@ -53,7 +52,7 @@ const AppChapters = ({navigation}) => {
             );
           })}
 
-          {RegionalChapterThree.map((item, i) => {
+          {/* {RegionalChapterThree.map((item, i) => {
             return (
               <View key={i} style={[grid.rowrow, g.pb10]}>
                 <Text style={[grid.col, g.fs13, g.FHNB, g.colorBlack, g.pr10]}>
@@ -66,7 +65,7 @@ const AppChapters = ({navigation}) => {
                 </Text>
               </View>
             );
-          })}
+          })} */}
         </ScrollView>
       </SafeAreaView>
     </View>
