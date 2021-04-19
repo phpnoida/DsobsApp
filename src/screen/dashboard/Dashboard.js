@@ -31,6 +31,7 @@ import {getPopNotification} from '../../Actions/CommonActions';
 import {useDispatch, useSelector, shallowEqual} from 'react-redux';
 import {clearState} from '../../reducer/NotificationReducer';
 import messaging from '@react-native-firebase/messaging';
+import {IconType} from '../../helper/Constants';
 
 let deviceHeight = Dimensions.get('screen').height;
 let deviceWidth = Dimensions.get('screen').width;
@@ -365,28 +366,40 @@ const Dashboard = ({props, navigation}) => {
           </View>
 
           <View style={[GlobalInclude.AppStyle.row]}>
-            <TouchableOpacity>
-              <View style={styles.headIconContainer}>
-                <Image
-                  source={GlobalInclude.Assets.Chat}
-                  style={styles.headIcon}
-                  resizeMode={'contain'}
-                />
-              </View>
-            </TouchableOpacity>
             <TouchableOpacity
-              style={styles.headerIconSpacer}
+              style={styles.headIconContainer}
+              onPress={() => {
+                navigation.navigate('NotificationListing');
+              }}>
+              <GlobalInclude.BaseIcon
+                containerStyle={{height: scale(20), width: scale(20)}}
+                iconColor={'#FFF'}
+                iconName={'bell-o'}
+                iconSize={scale(20)}
+                iconType={IconType[4]}
+              />
+            </TouchableOpacity>
+            <View style={styles.headerIconSpacer} />
+            <TouchableOpacity style={styles.headIconContainer}>
+              <Image
+                source={GlobalInclude.Assets.Chat}
+                style={styles.headIcon}
+                resizeMode={'contain'}
+              />
+            </TouchableOpacity>
+            <View style={styles.headerIconSpacer} />
+            <TouchableOpacity
+              style={styles.headIconContainer}
               onPress={() => {
                 bottomSheetExtraMenu.open();
               }}>
-              <View style={styles.headIconContainer}>
-                <Image
-                  source={GlobalInclude.Assets.DotMenu}
-                  style={styles.headIcon}
-                  resizeMode={'contain'}
-                />
-              </View>
+              <Image
+                source={GlobalInclude.Assets.DotMenu}
+                style={styles.headIcon}
+                resizeMode={'contain'}
+              />
             </TouchableOpacity>
+            <View style={styles.headerIconSpacer} />
             <TouchableOpacity
               style={styles.headIconContainer}
               onPress={() => {
@@ -1070,8 +1083,8 @@ const styles = StyleSheet.create({
     height: scale(24),
   },
   headerIconSpacer: {
-    marginLeft: scale(8),
-    marginRight: scale(8),
+    marginLeft: scale(4),
+    marginRight: scale(4),
   },
   profileMenuContainer: {
     paddingTop: scale(7),

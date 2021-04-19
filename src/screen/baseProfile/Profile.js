@@ -80,7 +80,7 @@ const Profile = ({navigation}) => {
   const [petName, setPetName] = useState('');
 
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState('N/A');
   const [bloodGroup, setBloodGroup] = useState('');
   const [lgbtqia, setLgbtqia] = useState(false);
   const [selectedGender, setSelectedGender] = useState('');
@@ -134,7 +134,11 @@ const Profile = ({navigation}) => {
                   ? data.data[0]
                   : null;
 
-              if (profile.dob && profile.dob !== undefined) {
+              if (
+                profile.dob &&
+                profile.dob !== undefined &&
+                profile.dob !== ''
+              ) {
                 var formatedDate = new Date(profile.dob);
                 let month = '';
                 if (formatedDate.getMonth() + 1 < 10) {
@@ -572,10 +576,16 @@ const Profile = ({navigation}) => {
    */
 
   const validatePersonalInfo = () => {
-    if (selectedDate === '') {
+    /*****
+       * 
+       * if (selectedDate === '') {
       setErrorMessage({emptyBirthDate: 'please select birth date first!'});
       return false;
-    } else if (selectedGender === '') {
+    } else
+       * 
+       */
+
+    if (selectedGender === '') {
       setErrorMessage({emptyGender: 'please select gender first!'});
       return false;
     }

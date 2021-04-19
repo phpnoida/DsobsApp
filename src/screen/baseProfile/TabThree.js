@@ -51,7 +51,6 @@ const TabThree = (props) => {
       <View style={[g.mb15]}>
         <View style={[grid.rowdir, grid.alignItemsTop]}>
           <Text style={[g.labeltext1]}>DOB</Text>
-          <Text style={[g.colorRed]}>*</Text>
         </View>
         <TouchableOpacity
           style={[g.inputWhite]}

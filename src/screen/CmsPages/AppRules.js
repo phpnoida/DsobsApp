@@ -7,11 +7,15 @@ import {scale} from '../../theme/Scalling';
 import HTML from 'react-native-render-html';
 import g from '../../theme/global';
 import {ScrollView} from 'react-native-gesture-handler';
+import {APP_NAME} from '../../helper/Constants';
 
 const AppRules = ({navigation}) => {
   return (
     <View style={GlobalInclude.AppStyle.fill}>
-      <HeaderBar navigation={navigation} title={'Dsobs Memorandum and Rules'} />
+      <HeaderBar
+        navigation={navigation}
+        title={`${APP_NAME} Memorandum and Rules`}
+      />
       <SafeAreaView style={GlobalInclude.AppStyle.ViewStyle}>
         <ScrollView style={g.p10} showsVerticalScrollIndicator={false}>
           <HTML

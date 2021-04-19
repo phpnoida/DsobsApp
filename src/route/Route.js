@@ -29,6 +29,7 @@ import ListMyBusiness from '../screen/YellowPage/AddPage/ListMyBusiness';
 import YellowPageListing from '../screen/YellowPage/YellowPageListing';
 import BusinessDetails from '../screen/YellowPage/BusinessDetails';
 import AboutYellowPage from '../screen/YellowPage/AboutYellowPage';
+import NotificationListing from '../screen/Notification/NotificationListing';
 
 const Stack = createStackNavigator();
 
@@ -177,7 +178,13 @@ export const RootNavigators = (baseRoute) => {
       />
       <Stack.Screen
         name="AboutYellowPage"
+        options={{headerShown: false}}
         component={AboutYellowPage}
+      />
+
+      <Stack.Screen
+        name="NotificationListing"
+        component={NotificationListing}
         options={{headerShown: false}}
       />
     </Stack.Navigator>
