@@ -109,7 +109,15 @@ const MyFamily = (props) => {
           ) : null}
 
           {checkKey(profileData, 'dateOfMarriage')
-            ? generateView('Date of Marriage', profileData.dateOfMarriage)
+            ? generateView(
+                'Date of Marriage',
+                profileData.dateOfMarriage !== undefined &&
+                  profileData.dateOfMarriage !== null &&
+                  profileData.dateOfMarriage !== '' &&
+                  profileData.dateOfMarriage !== 'Invalid date'
+                  ? profileData.dateOfMarriage
+                  : '',
+              )
             : null}
           {checkKey(profileData, 'fatherName')
             ? generateView('Father', profileData.fatherName)

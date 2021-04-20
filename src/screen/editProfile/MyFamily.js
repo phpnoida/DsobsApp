@@ -132,7 +132,14 @@ const MyFamily = (props) => {
     setRelationShipStatus(profileData.relationsheepStatus);
     setSpouseName(profileData.spouseName);
     setSpousePhoto(profileData.spousePhoto);
-    setDateOfMarriage(profileData.dateOfMarriage);
+    setDateOfMarriage(
+      profileData.dateOfMarriage !== undefined &&
+        profileData.dateOfMarriage !== null &&
+        profileData.dateOfMarriage !== '' &&
+        profileData.dateOfMarriage !== 'Invalid date'
+        ? profileData.dateOfMarriage
+        : '',
+    );
     setFatherName(profileData.fatherName);
     setMotherName(profileData.motherName);
     setChildrens(profileData.children);
