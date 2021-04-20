@@ -68,7 +68,7 @@ let dataSize = 10;
 let totalCount = 0;
 let result = '';
 var cityList = [];
-var filteredCount = -1;
+let defaultUsersList = [];
 var listRef = React.createRef();
 
 const DirectoryDetails = ({route, navigation}) => {
@@ -170,9 +170,9 @@ const DirectoryDetails = ({route, navigation}) => {
           ? currentShowing + records.length
           : currentShowing + dataSize
       }`;
-
       setSearchedUser([...searchedUser, ...records]);
     }
+    defaultUsersList = searchedUser;
     setPaginationStatus(PaginationStatus.waiting);
   };
 
@@ -212,7 +212,6 @@ const DirectoryDetails = ({route, navigation}) => {
   };
 
   const clearFilter = () => {
-    filteredCount = -1;
     setGenderFilter('');
     setLocationFilter('');
     setLookingFor('');
@@ -230,6 +229,20 @@ const DirectoryDetails = ({route, navigation}) => {
   const handleSearch = (text) => {
     searchQuery = text;
     setLookingFor(text);
+
+    if (text.length > 0) {
+      let filterTracks = searchedUser.filter((item) => {
+        if (item.firstName.toLowerCase().match(text)) {
+          return item;
+        }
+      });
+      setSearchedUser([...filterTracks]);
+      console.log('====================================');
+      console.log(filterTracks);
+      console.log('====================================');
+    } else {
+      setSearchedUser([...defaultUsersList]);
+    }
   };
 
   const onPaginate = () => {
@@ -591,15 +604,16 @@ const DirectoryDetails = ({route, navigation}) => {
             </View>
           </View>
           <TouchableOpacity
+            enabled={false}
             activeOpacity={0.8}
             onPress={() => {
-              if (searchQuery.trim().length > 0) {
-                Keyboard.dismiss();
-                filterObject.s = searchQuery;
-                setTimeout(() => {
-                  resetCount();
-                }, 200);
-              }
+              // if (searchQuery.trim().length > 0) {
+              //   Keyboard.dismiss();
+              //   filterObject.s = searchQuery;
+              //   setTimeout(() => {
+              //     resetCount();
+              //   }, 200);
+              // }
             }}
             style={[
               g.fliterBtnNew,
