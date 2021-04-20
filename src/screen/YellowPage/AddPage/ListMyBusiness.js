@@ -18,8 +18,10 @@ import {getDirectory} from '../../../Actions/DirectoryActions';
 import {doSearchCity} from '../../../Actions/CommonActions';
 import {getProfessionList} from '../../../Actions/UserActions';
 let searchVal = '';
-
+let cityTitle = '';
+let professionListMain = [];
 let inEditMode = false;
+
 const ListMyBusiness = ({route, navigation}) => {
   if (route.params !== undefined && route.params !== null) {
     inEditMode = route.params.data.inEditMode;
@@ -30,6 +32,10 @@ const ListMyBusiness = ({route, navigation}) => {
   /**Tab one */
   const [businessName, setBusinessName] = useState('');
   const [professionList, setProfessionList] = useState([]);
+  const [selectedProfession, setSelectedProfession] = useState('');
+  const [coverImages, setCoverImages] = useState([]);
+  const [cityList, setCityList] = useState([]);
+  const [selectedCities, setSelectedCities] = useState([]);
 
   const [productTags, setProductTags] = useState([]);
   const [tag, setTag] = useState('');
@@ -37,7 +43,6 @@ const ListMyBusiness = ({route, navigation}) => {
   const [searchedUser, setSearchedUser] = useState([]);
   const [filterQuery, setFilterQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState([]);
-  const [cityList, setCityList] = useState([]);
 
   useEffect(() => {
     if (global.isConnected) {
@@ -70,6 +75,7 @@ const ListMyBusiness = ({route, navigation}) => {
                   professionArray.push({key: index, text: item});
                 });
               }
+              professionListMain = professionArray;
               setProfessionList(professionArray);
             }
           }
@@ -94,7 +100,7 @@ const ListMyBusiness = ({route, navigation}) => {
             let data = response.data;
 
             if (data.status) {
-              if (searchVal.length > 0) {
+              if (cityTitle.length > 0) {
                 setCityList([...data.data]);
               } else {
                 setCityList([]);
@@ -165,6 +171,22 @@ const ListMyBusiness = ({route, navigation}) => {
     }
   };
 
+  const searchProfession = (searchText) => {
+    let oldContent = professionList;
+    var list = [];
+    if (searchText.length > 0) {
+      oldContent.forEach((element) => {
+        if (element.text.toLowerCase().includes(searchText.toLowerCase())) {
+          list.push(element);
+        }
+      });
+      setProfessionList([...list]);
+    } else {
+      //console.log('professionListMain', professionListMain.length);
+      setProfessionList([...professionListMain]);
+    }
+  };
+
   const loadTab = (page) => {
     switch (page) {
       case 1:
@@ -172,6 +194,40 @@ const ListMyBusiness = ({route, navigation}) => {
           <TabOne
             businessName={businessName}
             professionList={professionList}
+            selectedProfession={selectedProfession}
+            searchProfession={(search) => {
+              searchProfession(search);
+            }}
+            onPreofessionSelect={(profession) => {
+              setSelectedProfession(profession);
+            }}
+            coverImages={coverImages}
+            setCoverImages={(image) => {
+              let oldData = coverImages;
+              oldData.push(image);
+              setCoverImages([...oldData]);
+            }}
+            onDeleteImage={(index) => {
+              let oldData = coverImages;
+              oldData.splice(index, 1);
+              setCoverImages([...oldData]);
+            }}
+            cityList={cityList}
+            onSearchCity={(query) => {
+              cityTitle = query;
+              getSearchDataByCity(query);
+            }}
+            selectedCities={selectedCities}
+            setSelectedCities={(city) => {
+              let oldData = selectedCities;
+              oldData.push(city);
+              setSelectedCities([...oldData]);
+            }}
+            onRemoveCity={(index) => {
+              let oldData = selectedCities;
+              oldData.splice(index, 1);
+              setSelectedCities([...oldData]);
+            }}
             handleInput={handleInput}
             onSaveTab={() => validateAndMoveNextTab()}
           />

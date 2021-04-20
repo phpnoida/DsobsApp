@@ -78,7 +78,6 @@ const YellowPages = ({navigation}) => {
   useEffect(() => {
     professionSheet = null;
     professionListMain = [];
-    searchBy = 1;
     searchVal = '';
 
     if (global.isConnected) {
