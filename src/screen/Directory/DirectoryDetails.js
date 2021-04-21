@@ -68,13 +68,13 @@ let dataSize = 10;
 let totalCount = 0;
 let result = '';
 var cityList = [];
-let defaultUsersList = [];
 var listRef = React.createRef();
 
 const DirectoryDetails = ({route, navigation}) => {
   const [isLoading, setIsLoading] = useState(true);
   const [lookingFor, setLookingFor] = useState('');
   const [searchedUser, setSearchedUser] = useState([]);
+  const [defaultUsersList, setDefaultUsers] = useState([]);
   const [showFilter, setShowFilter] = useState(false);
   const [sortedBy, setSortedBy] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('gender');
@@ -162,6 +162,7 @@ const DirectoryDetails = ({route, navigation}) => {
     });
     if (dataIndex === 0) {
       setSearchedUser([...records]);
+      setDefaultUsers([...records]);
       result = `${currentShowing}-${dataSize}`;
     } else {
       currentShowing = dataIndex * 10;
@@ -171,8 +172,8 @@ const DirectoryDetails = ({route, navigation}) => {
           : currentShowing + dataSize
       }`;
       setSearchedUser([...searchedUser, ...records]);
+      setDefaultUsers([...defaultUsersList, ...records]);
     }
-    defaultUsersList = searchedUser;
     setPaginationStatus(PaginationStatus.waiting);
   };
 
@@ -230,19 +231,16 @@ const DirectoryDetails = ({route, navigation}) => {
     searchQuery = text;
     setLookingFor(text);
 
-    if (text.length > 0) {
-      let filterTracks = searchedUser.filter((item) => {
-        if (item.firstName.toLowerCase().match(text)) {
-          return item;
-        }
-      });
-      setSearchedUser([...filterTracks]);
-      console.log('====================================');
-      console.log(filterTracks);
-      console.log('====================================');
-    } else {
-      setSearchedUser([...defaultUsersList]);
-    }
+    // if (text.length > 0) {
+    //   let filterTracks = searchedUser.filter((item) => {
+    //     if (item.firstName.toLowerCase().match(text.toLowerCase())) {
+    //       return item;
+    //     }
+    //   });
+    //   setSearchedUser([...filterTracks]);
+    // } else {
+    //   setSearchedUser([...defaultUsersList]);
+    // }
   };
 
   const onPaginate = () => {
@@ -603,7 +601,7 @@ const DirectoryDetails = ({route, navigation}) => {
               />
             </View>
           </View>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             enabled={false}
             activeOpacity={0.8}
             onPress={() => {
@@ -622,7 +620,7 @@ const DirectoryDetails = ({route, navigation}) => {
               g.bgBlue,
             ]}>
             <Text style={[g.colorWhite, g.FHNM, g.fs16]}>Go</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
         {/* <View>{searchSuggestions.length > 0 && renderAutoSuggest()}</View> */}
 

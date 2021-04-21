@@ -79,7 +79,9 @@ export function handleError(err, errCallback) {
     err.response.data !== null
   ) {
     let errorData = err.response.data;
-    console.log('errorData', errorData);
+    if (err.response.status === 401) {
+      global.logoutAlert.show_loader(true);
+    }
     if (errorData.message) {
       errCallback(err.response.status, errorData.message);
     } else {

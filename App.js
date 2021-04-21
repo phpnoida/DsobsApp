@@ -25,13 +25,14 @@ import Helper from './src/helper/Helper';
 import {useDispatch} from 'react-redux';
 import {refreshScreen} from './src/reducer/NotificationReducer';
 import PushNotificationIOS from '@react-native-community/push-notification-ios';
+import LogoutAlert from './src/component/LogoutAlert';
 
 let baseRoute = 'AppTour';
 const deviceWidth = Dimensions.get('window').width;
 const appVersion = DeviceInfo.getVersion();
 let appStateValue = '';
 
-const App = () => {
+const App = ({navigation}) => {
   const [loadingComplete, setLoadingComplete] = useState(false);
   const [currentState, setCurrentState] = useState(AppState.currentState);
   const [isConnected, setIsConnected] = useState(true);
@@ -243,6 +244,7 @@ const App = () => {
           ref={navigationRef}
           onReady={() => {
             isReadyRef.current = true;
+            global.navigationRef = navigationRef;
           }}>
           {loadingComplete ? (
             RootNavigators(baseRoute)
@@ -283,6 +285,11 @@ const App = () => {
       ) : (
         <Offline />
       )}
+
+      <LogoutAlert
+        ref={(ref) => (global.logoutAlert = ref)}
+        navigation={navigationRef}
+      />
     </View>
   );
 };
