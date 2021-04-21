@@ -287,6 +287,11 @@ const Login = ({navigation}) => {
     global.firstName = userDetails.firstName;
     global.lastName = userDetails.lastName;
     clearInterval(timerInterval);
+
+    console.log('====================================');
+    console.log(fcmTopic);
+    console.log('====================================');
+
     messaging()
       .subscribeToTopic(fcmTopic)
       .then(() => {

@@ -48,6 +48,9 @@ const MagazineDetails = ({route, navigation}) => {
   if (route.params && route.params !== undefined && route.params !== null) {
     magazineData = route.params.data;
     currentIndex = route.params.currentIndex;
+
+    console.log('currentIndex', currentIndex);
+    console.log('length', magazineData.length);
   }
   const [pageContent] = useState(magazineData);
   const [currentFontSize, setCurrentFontSize] = useState(scale(12));
@@ -65,7 +68,6 @@ const MagazineDetails = ({route, navigation}) => {
 
   return (
     <View style={GlobalInclude.AppStyle.topSpace}>
-      
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.parentStyle}>
           <View style={GlobalInclude.AppStyle.fill}>
@@ -95,7 +97,7 @@ const MagazineDetails = ({route, navigation}) => {
                     shareOptions.url = pageContent[index.i].shareLink;
                     console.log('data', pageContent[index.i]);
                   }}
-                  initialPage={currentIndex}
+                  page={parseInt(currentIndex, 10)}
                   renderTabBar={() => <View />}>
                   {pageContent.map((content, index) => {
                     return (

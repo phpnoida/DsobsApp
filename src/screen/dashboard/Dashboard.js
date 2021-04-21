@@ -613,7 +613,7 @@ const Dashboard = ({props, navigation}) => {
                     setTimeout(() => {
                       navigation.navigate('Magazine');
                     }, 200);
-                  }}>
+                                      }}>
                   <Image
                     source={GlobalInclude.Assets.Magazine}
                     resizeMode={'contain'}
