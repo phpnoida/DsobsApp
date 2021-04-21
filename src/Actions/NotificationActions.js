@@ -2,7 +2,7 @@ import axios from 'axios';
 import {SERVER_PATH} from '../../config';
 
 export function getNotifications(index, size, callback, errCallback) {
-  let requestPath = `${SERVER_PATH}utils/pushFilter?index=${index}&size=${size}`;
+  let requestPath = `${SERVER_PATH}utils/notificationLogs?index=${index}&size=${size}`;
 
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})

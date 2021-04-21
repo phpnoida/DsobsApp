@@ -24,11 +24,11 @@ const AppCommittee = ({navigation}) => {
                 <Text style={[grid.col, g.fs13, g.FHNM, g.colorBlack, g.pr10]}>
                   {item.name}
                 </Text>
-                {item.year !== undefined && (
+                {/* {item.year !== undefined && (
                   <Text style={[g.fs13, g.FHNM, g.colorBlack, g.w60]}>
                     {item.year}
                   </Text>
-                )}
+                )} */}
                 <Text style={[grid.col, g.fs13, g.FHNM, g.colorBlack, g.pr10]}>
                   {item.post}
                 </Text>
