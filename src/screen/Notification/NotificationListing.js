@@ -214,7 +214,7 @@ const NotificationListing = ({navigation}) => {
       token = 'ago',
       list_choice = 1;
 
-    if (seconds == 0) {
+    if (seconds === 0) {
       return 'Just now';
     }
     if (seconds < 0) {
@@ -226,7 +226,7 @@ const NotificationListing = ({navigation}) => {
       format;
     while ((format = time_formats[i++])) {
       if (seconds < format[0]) {
-        if (typeof format[2] == 'string') {
+        if (typeof format[2] === 'string') {
           return format[list_choice];
         } else {
           return (
@@ -266,7 +266,9 @@ const NotificationListing = ({navigation}) => {
                 numberOfLines={2}
                 ellipsizeMode={'tail'}
                 style={[g.fs14, g.colorBlue1, g.FHNB, grid.flex1]}>
-                {item.title !== undefined && item.title !== null
+                {item.notification_type === 'pop'
+                  ? 'POP Notification'
+                  : item.title !== undefined && item.title !== null
                   ? item.title
                   : 'N/A'}
               </Text>
@@ -275,7 +277,9 @@ const NotificationListing = ({navigation}) => {
               numberOfLines={2}
               ellipsizeMode={'tail'}
               style={[g.fs14, g.colorBlack, g.FHNR]}>
-              {item.body !== undefined && item.body !== null
+              {item.notification_type === 'pop'
+                ? 'Pop Notification Content'
+                : item.body !== undefined && item.body !== null
                 ? item.body
                 : 'N/A'}
             </Text>

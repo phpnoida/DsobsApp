@@ -380,7 +380,11 @@ const Dashboard = ({props, navigation}) => {
               />
             </TouchableOpacity>
             <View style={styles.headerIconSpacer} />
-            <TouchableOpacity style={styles.headIconContainer}>
+            <TouchableOpacity
+              style={styles.headIconContainer}
+              onPress={() => {
+                Alert.alert('Coming soon...');
+              }}>
               <Image
                 source={GlobalInclude.Assets.Chat}
                 style={styles.headIcon}
@@ -613,7 +617,7 @@ const Dashboard = ({props, navigation}) => {
                     setTimeout(() => {
                       navigation.navigate('Magazine');
                     }, 200);
-                                      }}>
+                  }}>
                   <Image
                     source={GlobalInclude.Assets.Magazine}
                     resizeMode={'contain'}
