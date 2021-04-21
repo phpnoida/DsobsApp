@@ -1,24 +1,33 @@
 import React, {useState, useEffect} from 'react';
-import {Text, View, TouchableOpacity, TextInput} from 'react-native';
-import g from '../../theme/global';
-import grid from '../../theme/grid';
-import {scale} from '../../theme/Scalling';
-import GlobalInclude from '../../globalInclude/Globalinclude';
+import {
+  Text,
+  View,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+} from 'react-native';
+import g from '../../../theme/global';
+import grid from '../../../theme/grid';
+import {scale} from '../../../theme/Scalling';
+import GlobalInclude from '../../../globalInclude/Globalinclude';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import NextPreviousButton from '../../component/NextPreviousButton';
-import ModelAlert from '../../component/ModalAlert';
+import NextPreviousButton from '../../../component/NextPreviousButton';
+import ModelAlert from '../../../component/ModalAlert';
 
 let selectedIndex = -1;
 const TabTwo = ({
   onSaveTab,
   onPreviousTab,
+  aboutBusiness,
+  businessServices,
+  handleInput,
   addTag,
   tag,
   setTag,
   productTags,
   onRemoveTag,
+  errorMessage,
 }) => {
-  const [errorMessage, setErrorMessage] = useState({});
   const [showRemoveAlert, setShowRemoveAlert] = useState(false);
 
   const generateHeader = (title, required) => {
@@ -52,8 +61,17 @@ const TabTwo = ({
               placeholder="Enter your text here"
               keyboardType={'default'}
               returnKeyType={'done'}
-              onChangeText={(value) => {}}
+              value={aboutBusiness}
+              onChangeText={(value) => {
+                handleInput('aboutBusiness', value);
+              }}
             />
+            {errorMessage.aboutBusiness &&
+              errorMessage.aboutBusiness.length > 0 && (
+                <Text style={[g.errorMsg, g.pt5]}>
+                  {errorMessage.aboutBusiness}
+                </Text>
+              )}
           </View>
           <View style={g.mb15}>
             {generateHeader('Product & Services Offered', false)}
@@ -69,8 +87,17 @@ const TabTwo = ({
               autoCapitalize={'words'}
               returnKeyType={'done'}
               placeholder={'Enter your text here'}
-              onChangeText={(value) => {}}
+              value={businessServices}
+              onChangeText={(value) => {
+                handleInput('businessServices', value);
+              }}
             />
+            {errorMessage.businessServices &&
+              errorMessage.businessServices.length > 0 && (
+                <Text style={[g.errorMsg, g.pt5]}>
+                  {errorMessage.businessServices}
+                </Text>
+              )}
           </View>
 
           <View style={g.mb15}>
@@ -89,18 +116,7 @@ const TabTwo = ({
                 activeOpacity={1}
                 disabled={tag.length > 0 ? false : true}
                 onPress={() => addTag()}>
-                <Text
-                  style={{
-                    backgroundColor: '#2b3252',
-                    color: '#ffffff',
-                    textAlign: 'center',
-                    fontSize: scale(16),
-                    padding: scale(8),
-                    borderRadius: scale(8),
-                    overflow: 'hidden',
-                  }}>
-                  Add Tag
-                </Text>
+                <Text style={styles.addTag}>Add Tag</Text>
               </TouchableOpacity>
             </View>
             {errorMessage.tag && errorMessage.tag.length > 0 && (
@@ -160,5 +176,17 @@ const TabTwo = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  addTag: {
+    backgroundColor: '#2b3252',
+    color: '#ffffff',
+    textAlign: 'center',
+    fontSize: scale(16),
+    padding: scale(8),
+    borderRadius: scale(8),
+    overflow: 'hidden',
+  },
+});
 
 export default TabTwo;

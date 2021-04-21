@@ -1,28 +1,26 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState} from 'react';
 import {
   Text,
   View,
   TouchableOpacity,
-  TouchableNativeFeedback,
   TextInput,
-  Alert,
   Dimensions,
   StyleSheet,
 } from 'react-native';
-import g from '../../theme/global';
-import grid from '../../theme/grid';
-import {scale} from '../../theme/Scalling';
-import GlobalInclude from '../../globalInclude/Globalinclude';
+import g from '../../../theme/global';
+import grid from '../../../theme/grid';
+import {scale} from '../../../theme/Scalling';
+import GlobalInclude from '../../../globalInclude/Globalinclude';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import ProgresImage from '../../component/ProgresImage';
-import AutoSuggestUser from '../../component/AutoSuggestUser';
-import {IconType} from '../../helper/Constants';
-import Helper from '../../helper/Helper';
-import ModelAlert from '../../component/ModalAlert';
-import NextPreviousButton from '../../component/NextPreviousButton';
-const {height, width} = Dimensions.get('window');
+import ProgresImage from '../../../component/ProgresImage';
+import AutoSuggestUser from '../../../component/AutoSuggestUser';
+import {IconType} from '../../../helper/Constants';
+import Helper from '../../../helper/Helper';
+import ModelAlert from '../../../component/ModalAlert';
+import NextPreviousButton from '../../../component/NextPreviousButton';
+const {width} = Dimensions.get('window');
 
-let selectedIndex = -1;
+let lastIndex = 1;
 const TabThree = ({
   onSaveTab,
   onPreviousTab,
@@ -30,6 +28,9 @@ const TabThree = ({
   searchedUser,
   onUserSelect,
   selectedAlumini,
+  removeAlumini,
+  errorMessage,
+  searchUserName,
 }) => {
   const [showRemoveAlert, setShowRemoveAlert] = useState(false);
 
@@ -49,9 +50,9 @@ const TabThree = ({
         style={[grid.flex1]}
         showsVerticalScrollIndicator={false}>
         <View style={[grid.flex1, g.pb30]}>
-          <View style={g.mb15}>
+          <View>
             {generateHeader('Alumini In Business', false)}
-            <View style={[grid.rowdir, g.mb5, g.pt15]}>
+            <View style={[grid.rowdir, g.mb5, g.pt10]}>
               <View style={[g.br3, grid.col, g.mr5]}>
                 <View style={[g.inputNew, grid.rowdir]}>
                   <GlobalInclude.BaseIcon
@@ -63,6 +64,7 @@ const TabThree = ({
                   />
                   <TextInput
                     underlineColorAndroid="transparent"
+                    searchUserName={searchUserName}
                     style={[
                       g.inputNew,
                       g.pl0,
@@ -79,25 +81,30 @@ const TabThree = ({
                 </View>
               </View>
             </View>
+            {errorMessage.selectedAlumini &&
+              errorMessage.selectedAlumini.length > 0 && (
+                <Text style={[g.errorMsg, g.pt5]}>
+                  {errorMessage.selectedAlumini}
+                </Text>
+              )}
           </View>
 
-          <AutoSuggestUser
-            searchedUser={searchedUser}
-            onPress={(row, index) => {
-              onUserSelect(row, index);
-            }}
-          />
+          {searchedUser.length > 0 && (
+            <AutoSuggestUser
+              searchedUser={searchedUser}
+              onPress={(row, index) => {
+                onUserSelect(row, index);
+              }}
+            />
+          )}
 
           <View style={g.mt15}>
             {selectedAlumini.length > 0 ? (
-              <Text style={[g.fs16, g.FHNB, g.colordarkGray, g.ml10]}>
-                Selected
-              </Text>
+              <Text style={[g.fs14, g.FHNB, g.colordarkGray]}>Selected</Text>
             ) : null}
             <View
               style={[
                 grid.row,
-                g.mt10,
                 selectedAlumini.length > 2 ? grid.justifyContent : '',
                 grid.flexwrap,
               ]}>
@@ -106,6 +113,7 @@ const TabThree = ({
                   <TouchableOpacity
                     activeOpacity={0.9}
                     onLongPress={() => {
+                      lastIndex = index;
                       setShowRemoveAlert(true);
                     }}
                     key={index}
@@ -114,7 +122,7 @@ const TabThree = ({
                         marginLeft: 10,
                         width: width / 3 - 40,
                         marginRight: selectedAlumini.length > 2 ? 10 : 20,
-                        paddingTop: scale(15),
+                        paddingTop: scale(10),
                       },
                     ]}>
                     <View style={[g.bglightGray, g.oh, {borderRadius: 100}]}>
@@ -133,10 +141,11 @@ const TabThree = ({
                     <View style={{height: 80}}>
                       <Text
                         style={[
-                          {fontSize: 14, marginTop: 10},
                           g.FHNR,
                           g.txtCenter,
                           g.colorBlack,
+                          g.fs14,
+                          g.mt8,
                         ]}
                         numberOfLines={2}>
                         {Helper.concatName(item)}
@@ -166,6 +175,7 @@ const TabThree = ({
           okButton={'Okay'}
           okAction={() => {
             setShowRemoveAlert(false);
+            removeAlumini(lastIndex);
           }}
           cancelButton={'Cancel'}
           cancelAction={() => {

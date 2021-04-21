@@ -10,7 +10,6 @@ const NextPreviousButton = (props) => {
     <View style={styles.buttonContainer}>
       <View style={grid.flex1}>
         <CommonButtonGray
-          showLoader={props.isLoading}
           title={props.prviousTitle ? props.prviousTitle : 'Previous'}
           onPress={() => {
             props.onPreviuosTab();

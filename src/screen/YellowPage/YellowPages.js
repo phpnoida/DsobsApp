@@ -25,6 +25,9 @@ import YellowPageSearch from '../../component/YellowPageSearch';
 import ProfessionalSheetFilter from '../../component/ProfessionalSheetFilter';
 import ProgresImage from '../../component/ProgresImage';
 import Slideshow from '../../component/Slideshow.js';
+import FlatListSlider from '../../component/FlatListSlider';
+import Preview from '../../component/Preview';
+
 import BottomSheetAbout from 'react-native-raw-bottom-sheet';
 import {getProfessionList} from '../../Actions/UserActions';
 
@@ -144,24 +147,42 @@ const YellowPages = ({navigation}) => {
 
   const renderItem = ({item, index}) => {
     return (
-      <View style={{marginBottom: scale(15)}}>
-        <View
-          style={[
-            g.bgWhite,
-            g.boxShadow,
-            g.ml5,
-            g.mr5,
-            {borderRadius: scale(10)},
-          ]}>
-          <View style={[g.bggray3, {borderRadius: scale(10)}]}>
-            {/* <FlatListSlider data={imageArray} /> */}
+      <View style={{marginBottom: scale(15), padding: scale(5)}}>
+        <View style={[g.bgWhite, g.boxShadow, {borderRadius: scale(10)}]}>
+          <View
+            style={[
+              g.bggray3,
+              {
+                borderRadius: scale(10),
+                borderBottomLeftRadius: 0,
+                borderBottomRightRadius: 0,
+                overflow: 'hidden',
+              },
+            ]}>
             {index === 0 ? (
-              <Slideshow
-                dataSource={[
-                  {url: 'http://placeimg.com/640/480/any'},
-                  {url: 'http://placeimg.com/640/480/any'},
-                  {url: 'http://placeimg.com/640/480/any'},
+              <FlatListSlider
+                data={[
+                  {
+                    image:
+                      'https://images.unsplash.com/photo-1567226475328-9d6baaf565cf?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60',
+                    desc:
+                      'Silent Waters in the mountains in midst of Himilayas',
+                  },
+                  {
+                    image:
+                      'https://images.unsplash.com/photo-1455620611406-966ca6889d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1130&q=80',
+                    desc:
+                      'Red fort in India New Delhi is a magnificient masterpeiece of humans',
+                  },
                 ]}
+                component={<Preview />}
+                indicatorActiveWidth={40}
+                contentContainerStyle={{
+                  borderRadius: scale(10),
+                  borderBottomLeftRadius: 0,
+                  borderBottomRightRadius: 0,
+                }}
+                autoscroll={false}
               />
             ) : (
               <ProgresImage

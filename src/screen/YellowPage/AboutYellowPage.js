@@ -16,6 +16,7 @@ import g from '../../theme/global';
 import grid from '../../theme/grid';
 import ProgresImage from '../../component/ProgresImage';
 import Slideshow from '../../component/Slideshow.js';
+import {getYellowPageAbout} from '../../Actions/AddYellowPageActions';
 
 import HTML from 'react-native-render-html';
 
@@ -23,6 +24,46 @@ const contentText =
   "<h1>Href Attribute Example</h1> <p> <a href='https://www.freecodecamp.org/contribute/'>The freeCodeCamp Contribution Page</a> shows you how and where you canontribute to freeCodeCamp's community and growth. </p>";
 
 const AboutYellowPage = ({navigation}) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [pageContent, setPageContent] = useState(null);
+
+  useEffect(() => {
+    const doGetAbout = () => {
+      getYellowPageAbout(
+        (response) => {
+          if (response && response !== null) {
+            if (
+              response.data &&
+              response.data !== undefined &&
+              response.data !== null
+            ) {
+              let data = response.data;
+
+              if (data.status) {
+                let record = data.data;
+                if (
+                  record !== undefined &&
+                  record !== null &&
+                  record.length > 0
+                ) {
+                  console.log('====================================');
+                  console.log(record[0].about);
+                  console.log('====================================');
+                  setPageContent(record[0].about);
+                }
+              }
+            }
+          }
+        },
+        (error) => {
+          //setSearchedUser([]);
+        },
+      );
+    };
+    doGetAbout();
+    return () => {};
+  }, []);
+
   const computeEmbeddedMaxWidth = (availableWidth) => {
     return Math.min(availableWidth, 500);
   };
@@ -35,32 +76,48 @@ const AboutYellowPage = ({navigation}) => {
           navigation={navigation}
           showBack={true}
         />
-        <View
-          style={[
-            GlobalInclude.AppStyle.fill,
-            GlobalInclude.AppStyle.contentSpace,
-          ]}>
-          <HTML
-            source={{
-              html:
-                '<div>' +
-                contentText
-                  .replace(/<p[^>]*><br><\/p>/g, '<br>')
-                  .replace(/<h3[^>]*><br><\/h3>/g, '')
-                  .replace(/(<br\s*\/?>){1,}/gi, '<br>')
-                  .replace(/(\r\n|\n|\r)/gm, '')
-                  .replace(/(<br\s*\/?>)/gi, '') +
-                '</div>',
-            }}
-            textSelectable={false}
-            defaultTextProps={{allowFontScaling: true}}
-            tagsStyles={richTextStyles}
-            allowWhitespaceNodes={false}
-            containerStyle={style.container}
-            contentWidth={Dimensions.get('window').width - 30}
-            computeEmbeddedMaxWidth={computeEmbeddedMaxWidth}
-          />
-        </View>
+        {isLoading ? (
+          <View style={GlobalInclude.AppStyle.fillCenter}>
+            <ActivityIndicator size={'small'} color={'#2b3252'} />
+          </View>
+        ) : (
+          <View style={GlobalInclude.AppStyle.fill}>
+            {pageContent === null ? (
+              <View style={GlobalInclude.AppStyle.center}>
+                <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
+                  No Record Found
+                </Text>
+              </View>
+            ) : (
+              <View
+                style={[
+                  GlobalInclude.AppStyle.fill,
+                  GlobalInclude.AppStyle.contentSpace,
+                ]}>
+                <HTML
+                  source={{
+                    html:
+                      '<div>' +
+                      pageContent
+                        .replace(/<p[^>]*><br><\/p>/g, '<br>')
+                        .replace(/<h3[^>]*><br><\/h3>/g, '')
+                        .replace(/(<br\s*\/?>){1,}/gi, '<br>')
+                        .replace(/(\r\n|\n|\r)/gm, '')
+                        .replace(/(<br\s*\/?>)/gi, '') +
+                      '</div>',
+                  }}
+                  textSelectable={false}
+                  defaultTextProps={{allowFontScaling: true}}
+                  tagsStyles={richTextStyles}
+                  allowWhitespaceNodes={false}
+                  containerStyle={style.container}
+                  contentWidth={Dimensions.get('window').width - 30}
+                  computeEmbeddedMaxWidth={computeEmbeddedMaxWidth}
+                />
+              </View>
+            )}
+          </View>
+        )}
       </SafeAreaView>
     </View>
   );

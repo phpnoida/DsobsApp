@@ -793,7 +793,7 @@ const Login = ({navigation}) => {
               navigation.navigate('Register', {viewType: 'ContactUs'});
             }, 500);
           }}
-          cancelAction={() => {
+          closeAction={() => {
             setShowContactUsModal(!showContactUsModal);
           }}
         />

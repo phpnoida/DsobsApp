@@ -37,7 +37,7 @@ const ModalAlert = (props) => {
             <TouchableOpacity
               onPress={() => {
                 setShowModal(!showModal);
-                props.cancelAction();
+                props.closeAction();
               }}
               style={styles.buttonCircle}
               background={TouchableNativeFeedback.SelectableBackground()}>

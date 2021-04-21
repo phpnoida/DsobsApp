@@ -411,7 +411,7 @@ const MyFamily = (props) => {
                 okAction={() => {
                   setShowContactUsModal(false);
                 }}
-                cancelAction={() => {
+                closeAction={() => {
                   setShowContactUsModal(false);
                 }}
               />

@@ -9,19 +9,19 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
-import g from '../../theme/global';
-import grid from '../../theme/grid';
-import {scale} from '../../theme/Scalling';
-import GlobalInclude from '../../globalInclude/Globalinclude';
+import g from '../../../theme/global';
+import grid from '../../../theme/grid';
+import {scale} from '../../../theme/Scalling';
+import GlobalInclude from '../../../globalInclude/Globalinclude';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import ProfessionalSheet from '../../component/ProfessionalSheetFilter';
-import ProgresImage from '../../component/ProgresImage';
-import CommonButton from '../../component/CommonButton';
-import {IconType} from '../../helper/Constants';
+import ProfessionalSheet from '../../../component/ProfessionalSheetFilter';
+import ProgresImage from '../../../component/ProgresImage';
+import CommonButton from '../../../component/CommonButton';
+import {IconType} from '../../../helper/Constants';
 import ImagePicker from 'react-native-image-crop-picker';
 import RbSheet from 'react-native-raw-bottom-sheet';
-import BottomSheetHeader from '../../component/BottomSheetHeader';
-import ModelAlert from '../../component/ModalAlert';
+import BottomSheetHeader from '../../../component/BottomSheetHeader';
+import ModelAlert from '../../../component/ModalAlert';
 
 const {height, width} = Dimensions.get('window');
 let selectedIndex = -1;
@@ -66,6 +66,8 @@ const TabOne = ({
   selectedCities,
   setSelectedCities,
   onRemoveCity,
+  businessLocation,
+  errorMessage,
 }) => {
   const [showRemoveAlert, setShowRemoveAlert] = useState(false);
 
@@ -133,6 +135,12 @@ const TabOne = ({
                 handleInput('businessName', value);
               }}
             />
+            {errorMessage.businessName &&
+              errorMessage.businessName.length > 0 && (
+                <Text style={[g.errorMsg, g.pt5]}>
+                  {errorMessage.businessName}
+                </Text>
+              )}
           </View>
 
           <View style={g.mb15}>
@@ -153,9 +161,17 @@ const TabOne = ({
                   {textAlignVertical: 'center'},
                 ]}
                 numberOfLines={1}>
-                Select Category
+                {selectedProfession !== ''
+                  ? selectedProfession
+                  : 'Select Category'}
               </Text>
             </TouchableOpacity>
+            {errorMessage.selectedProfession &&
+              errorMessage.selectedProfession.length > 0 && (
+                <Text style={[g.errorMsg, g.pt5]}>
+                  {errorMessage.selectedProfession}
+                </Text>
+              )}
           </View>
 
           <View style={g.mb15}>
@@ -197,7 +213,9 @@ const TabOne = ({
                 mode={'cover'}
               />
             </TouchableOpacity>
-
+            {errorMessage.coverImage && errorMessage.coverImage.length > 0 && (
+              <Text style={[g.errorMsg, g.pt5]}>{errorMessage.coverImage}</Text>
+            )}
             <View>
               <ScrollView
                 horizontal
@@ -212,9 +230,9 @@ const TabOne = ({
                 }}>
                 {coverImages.map((item, index) => {
                   return (
-                    <View style={{margin: scale(5)}}>
+                    <View style={{margin: scale(5)}} key={index}>
                       <ProgresImage
-                        source={{uri: item.path}}
+                        source={{uri: item.thumbnail}}
                         containerStyle={{
                           height: scale(80),
                           width: scale(110),
@@ -249,16 +267,7 @@ const TabOne = ({
               </ScrollView>
 
               {coverImages.length > 0 && (
-                <View
-                  style={{
-                    justifyContent: 'center',
-                    position: 'absolute',
-                    left: 0,
-                    alignItems: 'center',
-                    alignContent: 'center',
-                    top: 0,
-                    bottom: 0,
-                  }}>
+                <View style={style.leftArrowContainer}>
                   <TouchableOpacity
                     style={style.nextIconBox}
                     onPress={() => {
@@ -278,16 +287,7 @@ const TabOne = ({
               )}
 
               {coverImages.length > 0 && (
-                <View
-                  style={{
-                    justifyContent: 'center',
-                    position: 'absolute',
-                    right: 0,
-                    alignItems: 'center',
-                    alignContent: 'center',
-                    top: 0,
-                    bottom: 0,
-                  }}>
+                <View style={style.rightArrowContainer}>
                   <TouchableOpacity
                     disabled={isEndReached}
                     style={style.nextIconBox}
@@ -332,9 +332,17 @@ const TabOne = ({
                   {textAlignVertical: 'center'},
                 ]}
                 numberOfLines={1}>
-                Select City
+                {selectedCities.length > 0
+                  ? selectedCities.toString()
+                  : 'Select City'}
               </Text>
             </TouchableOpacity>
+            {errorMessage.selectedCities &&
+              errorMessage.selectedCities.length > 0 && (
+                <Text style={[g.errorMsg, g.pt5]}>
+                  {errorMessage.selectedCities}
+                </Text>
+              )}
           </View>
 
           <View style={g.mb15}>
@@ -342,26 +350,26 @@ const TabOne = ({
             <TextInput
               underlineColorAndroid="transparent"
               style={g.inputWhite}
+              value={businessLocation}
               maxLength={100}
               keyboardType={'default'}
               autoCapitalize={'words'}
               returnKeyType={'done'}
               placeholder={'Paste Map Link Here'}
-              onChangeText={(value) => {}}
+              onChangeText={(value) => {
+                handleInput('businessLocation', value);
+              }}
             />
+            {errorMessage.businessLocation &&
+              errorMessage.businessLocation.length > 0 && (
+                <Text style={[g.errorMsg, g.pt5]}>
+                  {errorMessage.businessLocation}
+                </Text>
+              )}
           </View>
         </View>
       </KeyboardAwareScrollView>
-      <View
-        style={{
-          justifyContent: 'center',
-          alignItems: 'center',
-          width: scale(150),
-          paddingTop: scale(10),
-          paddingBottom: scale(10),
-          alignContent: 'center',
-          alignSelf: 'center',
-        }}>
+      <View style={style.buttonContainer}>
         <CommonButton
           showLoader={false}
           title={'Save & Next'}
@@ -454,6 +462,7 @@ const TabOne = ({
         setSelectedProfession={(value) => {
           console.log('value', value);
           onPreofessionSelect(value);
+          refProfessionSheet.current.close();
         }}
         onClose={() => {}}
       />
@@ -519,6 +528,33 @@ const style = StyleSheet.create({
     fontFamily: 'Lato-Regular',
     marginTop: scale(5),
     textTransform: 'capitalize',
+  },
+  buttonContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: scale(150),
+    paddingTop: scale(10),
+    paddingBottom: scale(10),
+    alignContent: 'center',
+    alignSelf: 'center',
+  },
+  leftArrowContainer: {
+    justifyContent: 'center',
+    position: 'absolute',
+    left: 0,
+    alignItems: 'center',
+    alignContent: 'center',
+    top: 0,
+    bottom: 0,
+  },
+  rightArrowContainer: {
+    justifyContent: 'center',
+    position: 'absolute',
+    right: 0,
+    alignItems: 'center',
+    alignContent: 'center',
+    top: 0,
+    bottom: 0,
   },
 });
 

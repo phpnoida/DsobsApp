@@ -875,7 +875,7 @@ const Register = (props) => {
               setShowContactUsModal(!showContactUsModal);
             }
           }}
-          cancelAction={() => {
+          closeAction={() => {
             setShowContactUsModal(!showContactUsModal);
           }}
         />

@@ -11,21 +11,21 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
-import g from '../../theme/global';
-import grid from '../../theme/grid';
-import {scale} from '../../theme/Scalling';
-import GlobalInclude from '../../globalInclude/Globalinclude';
-import {IconType} from '../../helper/Constants';
-import CommonButton from '../../component/CommonButton';
+import g from '../../../theme/global';
+import grid from '../../../theme/grid';
+import {scale} from '../../../theme/Scalling';
+import GlobalInclude from '../../../globalInclude/Globalinclude';
+import {IconType} from '../../../helper/Constants';
+import CommonButton from '../../../component/CommonButton';
 import PhotoSheet from 'react-native-raw-bottom-sheet';
 import VideoSheet from 'react-native-raw-bottom-sheet';
 import RNFetchBlob from 'rn-fetch-blob';
 import ImagePicker from 'react-native-image-crop-picker';
 import DocumentPicker from 'react-native-document-picker';
-import NextPreviousButton from '../../component/NextPreviousButton';
-import {uploadMedia} from '../../Actions/CommonActions';
-import {updateUserProfile} from '../../Actions/UserActions';
-import YoutubeView from '../../component/YoutubeView';
+import NextPreviousButton from '../../../component/NextPreviousButton';
+import {uploadMedia} from '../../../Actions/CommonActions';
+import {updateUserProfile} from '../../../Actions/UserActions';
+import YoutubeView from '../../../component/YoutubeView';
 import FastImage from 'react-native-fast-image';
 import {createImageProgress} from 'react-native-image-progress';
 
@@ -36,10 +36,15 @@ let photoSheet = null;
 let videoSheet = null;
 let opacity = new Animated.Value(0.0);
 
-const TabFour = ({onSaveTab, onPreviousTab}) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [mediaData, setMediaData] = useState([]);
-
+const TabFour = ({
+  onSaveTab,
+  onPreviousTab,
+  mediaData,
+  removeMedia,
+  addVideo,
+  onPickImage,
+  onPickDocument,
+}) => {
   const [selectedLink, setSelectedLink] = useState('');
   const [selectedLinkError, setSelectedLinkError] = useState('');
   const [selectedLinkTags, setSelectedLinkTags] = useState('');
@@ -51,15 +56,6 @@ const TabFour = ({onSaveTab, onPreviousTab}) => {
     } else if (key === 'tags') {
       setSelectedLinkTags(value);
     }
-  };
-
-  const removeMedia = (index) => {
-    if (index > mediaData.length) {
-      return;
-    }
-    let oldData = mediaData;
-    oldData.splice(index, 1);
-    setMediaData([...oldData]);
   };
 
   const renderMediaItem = () => {
@@ -85,9 +81,7 @@ const TabFour = ({onSaveTab, onPreviousTab}) => {
                 ]}>
                 <TouchableOpacity
                   onPress={(e) => {
-                    props.removeIndex(() => {
-                      removeMedia(index);
-                    });
+                    removeMedia(index);
                   }}>
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(18), width: scale(18)}}
@@ -148,11 +142,9 @@ const TabFour = ({onSaveTab, onPreviousTab}) => {
                   {position: 'absolute', right: 10, top: 10, zIndex: 1},
                 ]}>
                 <TouchableOpacity
-                  onPress={(e) =>
-                    props.removeIndex(() => {
-                      removeMedia(index);
-                    })
-                  }>
+                  onPress={(e) => {
+                    removeMedia(index);
+                  }}>
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(18), width: scale(18)}}
                     iconColor={'#fff'}
@@ -186,9 +178,7 @@ const TabFour = ({onSaveTab, onPreviousTab}) => {
                 ]}>
                 <TouchableOpacity
                   onPress={(e) => {
-                    props.removeIndex(() => {
-                      removeMedia(index);
-                    });
+                    removeMedia(index);
                   }}>
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(18), width: scale(18)}}
@@ -227,7 +217,7 @@ const TabFour = ({onSaveTab, onPreviousTab}) => {
   const pickMultiple = () => {
     ImagePicker.openPicker({
       includeBase64: false,
-      cropping: false,
+      cropping: true,
       includeExif: false,
       mediaType: 'photo',
       multiple: false,
@@ -235,6 +225,7 @@ const TabFour = ({onSaveTab, onPreviousTab}) => {
       .then((images) => {
         if (images !== null) {
           console.log('images', images);
+          onPickImage(images);
         }
       })
       .catch((err) => {
@@ -253,6 +244,7 @@ const TabFour = ({onSaveTab, onPreviousTab}) => {
       });
       if (res !== null) {
         console.log('res', res);
+        onPickDocument(res);
       }
     } catch (err) {
       console.log('err', err);
@@ -282,10 +274,7 @@ const TabFour = ({onSaveTab, onPreviousTab}) => {
         type: 2,
         tags: selectedLinkTags,
       };
-      let oldData = mediaData;
-
-      oldData.splice(0, 0, obj);
-      setMediaData([...oldData]);
+      addVideo(obj);
     }
   };
 
@@ -408,7 +397,7 @@ const TabFour = ({onSaveTab, onPreviousTab}) => {
         </ScrollView>
       </View>
       <NextPreviousButton
-        isLoading={isLoading}
+        isLoading={false}
         onPreviuosTab={() => {
           onPreviousTab();
         }}
@@ -508,7 +497,7 @@ const TabFour = ({onSaveTab, onPreviousTab}) => {
             </View>
           </View>
           <CommonButton
-            showLoader={isLoading}
+            showLoader={false}
             title={'SAVE'}
             onPress={() => addToVideo()}
           />

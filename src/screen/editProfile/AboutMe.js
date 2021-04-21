@@ -179,7 +179,7 @@ const AboutMe = (props) => {
                 okAction={() => {
                   setShowContactUsModal(false);
                 }}
-                cancelAction={() => {
+                closeAction={() => {
                   setShowContactUsModal(false);
                 }}
               />

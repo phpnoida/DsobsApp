@@ -815,7 +815,7 @@ const BasicProfile = (props) => {
                 okAction={() => {
                   setShowContactUsModal(false);
                 }}
-                cancelAction={() => {
+                closeAction={() => {
                   setShowContactUsModal(false);
                 }}
               />

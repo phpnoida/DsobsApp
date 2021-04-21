@@ -311,7 +311,7 @@ const SocialLinks = (props) => {
                 okAction={() => {
                   setShowContactUsModal(false);
                 }}
-                cancelAction={() => {
+                closeAction={() => {
                   setShowContactUsModal(false);
                 }}
               />

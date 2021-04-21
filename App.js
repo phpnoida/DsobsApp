@@ -26,6 +26,7 @@ import {useDispatch} from 'react-redux';
 import {refreshScreen} from './src/reducer/NotificationReducer';
 import PushNotificationIOS from '@react-native-community/push-notification-ios';
 import LogoutAlert from './src/component/LogoutAlert';
+import Toast from './src/component/Toast';
 
 let baseRoute = 'AppTour';
 const deviceWidth = Dimensions.get('window').width;
@@ -239,6 +240,13 @@ const App = ({navigation}) => {
 
   return (
     <View style={{flex: 1}}>
+      <Toast
+        ref={(c) => {
+          if (c) {
+            Toast.toastInstance = c;
+          }
+        }}
+      />
       {isConnected ? (
         <NavigationContainer
           ref={navigationRef}

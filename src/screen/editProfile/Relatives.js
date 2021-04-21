@@ -254,7 +254,7 @@ const Relatives = (props) => {
                 okAction={() => {
                   setShowContactUsModal(false);
                 }}
-                cancelAction={() => {
+                closeAction={() => {
                   setShowContactUsModal(false);
                 }}
               />
