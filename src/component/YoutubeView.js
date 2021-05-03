@@ -17,9 +17,9 @@ const YoutubeView = (props) => {
 
   useEffect(() => {
     if (props.link !== '') {
-      console.log('link', props.link);
+      //console.log('link', props.link);
       youtubeId = Helper.GetYoutubeId(props.link);
-      console.log('youtubeId', youtubeId);
+      //console.log('youtubeId', youtubeId);
       setThumbnail(Helper.loadYoutubeThumb(youtubeId));
     }
 
@@ -43,7 +43,6 @@ const YoutubeView = (props) => {
         />
       ) : (
         <View>
-          {console.log('thumbnail', thumbnail)}
           {thumbnail !== undefined && thumbnail !== null && thumbnail !== '' ? (
             <View
               style={

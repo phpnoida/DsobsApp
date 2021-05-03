@@ -137,8 +137,8 @@ android {
         applicationId "com.dsobs"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 35
+        versionName "3.7.1"
         multiDexEnabled true
         externalNativeBuild {
             cmake {
@@ -167,16 +167,16 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
-            ndk {
-                abiFilters "armeabi-v7a", "x86"
-            }
+//            ndk {
+//                abiFilters "armeabi-v7a", "x86"
+//            }
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
-            ndk {
-                abiFilters "armeabi-v7a", "arm64-v8a"
-            }
+//            ndk {
+//                abiFilters "armeabi-v7a", "arm64-v8a"
+//            }
             signingConfig signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"

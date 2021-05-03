@@ -6,6 +6,7 @@ import {
   TextInput,
   Image,
   Platform,
+  PermissionsAndroid,
   Alert,
   ScrollView,
   Dimensions,
@@ -28,6 +29,7 @@ import {updateUserProfile} from '../../Actions/UserActions';
 import YoutubeView from '../../component/YoutubeView';
 import FastImage from 'react-native-fast-image';
 import {createImageProgress} from 'react-native-image-progress';
+import getPath from '@flyerhq/react-native-android-uri-path';
 
 const AnimatedFastImage = Animated.createAnimatedComponent(FastImage);
 const ProgressImage = createImageProgress(AnimatedFastImage);
@@ -95,7 +97,7 @@ const PhotosMedia = (props) => {
                 style={[
                   grid.rowdir,
                   grid.justifyContentRight,
-                  {position: 'absolute', right: 10, top: 10, zIndex: 1},
+                  {position: 'absolute', right: 5, top: 6, zIndex: 1},
                 ]}>
                 <TouchableOpacity
                   onPress={(e) => {
@@ -159,7 +161,7 @@ const PhotosMedia = (props) => {
                 style={[
                   grid.rowdir,
                   grid.justifyContentRight,
-                  {position: 'absolute', right: 10, top: 10, zIndex: 1},
+                  {position: 'absolute', right: 5, top: 6, zIndex: 1},
                 ]}>
                 <TouchableOpacity
                   onPress={(e) =>
@@ -196,8 +198,21 @@ const PhotosMedia = (props) => {
                   grid.rowdir,
                   grid.justifyContentRight,
                   g.colorGray,
-                  {position: 'absolute', right: 10, top: 10, zIndex: 1},
+                  {position: 'absolute', right: 5, top: 6, zIndex: 1},
                 ]}>
+                {/* <TouchableOpacity
+                  onPress={() => {}}
+                  activeOpacity={1}
+                  style={{marginEnd: scale(6)}}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(18), width: scale(18)}}
+                    iconColor={'#333333'}
+                    iconName={'download'}
+                    iconSize={scale(18)}
+                    iconType={IconType[4]}
+                  />
+                </TouchableOpacity> */}
+
                 <TouchableOpacity
                   onPress={(e) => {
                     props.removeIndex(() => {
@@ -217,7 +232,7 @@ const PhotosMedia = (props) => {
                 {item.thumbnail.includes('.pdf') && (
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(48), width: scale(48)}}
-                    iconColor={'#6e6e6e'}
+                    iconColor={'#E61A2D'}
                     iconName={'file-pdf-o'}
                     iconSize={scale(48)}
                     iconType={IconType[4]}
@@ -293,6 +308,7 @@ const PhotosMedia = (props) => {
       (response) => {
         setIsLoading(false);
         if (response && response !== undefined && response !== null) {
+          // Alert.alert('Upload response', JSON.stringify(response));
           if (response.status) {
             if (response.data && response.data !== null) {
               let childData = response.data.data;
@@ -312,6 +328,7 @@ const PhotosMedia = (props) => {
       },
       (error, message) => {
         setIsLoading(false);
+        console.log('error', error);
         responseMessage = message;
         setShowContactUsModal(true);
       },
@@ -325,80 +342,117 @@ const PhotosMedia = (props) => {
    */
 
   const uploadImage = (pickFile, childPath, mediaType) => {
-    let body = [];
+    try {
+      let body = [];
+      var re = /(?:\.([^.]+))?$/;
 
-    if (pickFile !== null) {
-      var path = '';
+      if (pickFile !== null) {
+        var path = '';
 
-      if (Platform.OS === 'android') {
-        path = pickFile.path;
-      } else if (Platform.OS === 'ios') {
-        path = pickFile.sourceURL;
+        if (Platform.OS === 'android') {
+          path = pickFile.path;
+        } else if (Platform.OS === 'ios') {
+          path = pickFile.sourceURL;
+        }
+
+        var ext = re.exec(path)[1];
+        var timestamp = new Date().getTime().toString();
+        let imageName = timestamp + '.' + ext;
+
+        let imagePath =
+          Platform.OS === 'ios' ? path.replace('file://', '') : path;
+
+        let imageType = pickFile.mime;
+
+        var imageData = {
+          name: 'image',
+          filename: imageName,
+          type: imageType,
+          data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
+        };
+        body.push(imageData);
+
+        uploadMediaContent(body, childPath, mediaType);
       }
-      let imageName = '';
-      if (
-        pickFile.fileName === undefined ||
-        pickFile.fileName == null ||
-        pickFile.fileName === ''
-      ) {
-        var getFilename = path.split('/');
-        imageName = getFilename[getFilename.length - 1];
-        var extension = imageName.split('.')[1];
-        imageName = new Date().getTime() + '.' + extension;
-      } else {
-        imageName = pickFile.fileName;
-      }
+    } catch (error) {}
+  };
 
-      let imagePath =
-        Platform.OS === 'ios' ? path.replace('file://', '') : path;
+  const requestStoragePermission = async () => {
+    if (Platform.OS !== 'android') {
+      return true;
+    }
 
-      let imageType = pickFile.mime;
+    const pm1 = await PermissionsAndroid.check(
+      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+    );
+    const pm2 = await PermissionsAndroid.check(
+      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+    );
 
-      var imageData = {
-        name: 'image',
-        filename: imageName,
-        type: imageType,
-        data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
-      };
-      body.push(imageData);
+    if (pm1 && pm2) {
+      return true;
+    }
 
-      uploadMediaContent(body, childPath, mediaType);
+    const userResponse = await PermissionsAndroid.requestMultiple([
+      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+    ]);
+
+    if (
+      userResponse['android.permission.READ_EXTERNAL_STORAGE'] === 'granted' &&
+      userResponse['android.permission.WRITE_EXTERNAL_STORAGE'] === 'granted'
+    ) {
+      return true;
+    } else {
+      return false;
     }
   };
 
-  const uploadDoc = (pickFile, childPath, mediaType) => {
-    let body = [];
+  const uploadDoc = async (pickFile, childPath, mediaType) => {
+    try {
+      let body = [];
+      var re = /(?:\.([^.]+))?$/;
 
-    if (pickFile !== null) {
-      var path = pickFile.uri;
-      let imageName = '';
-      if (
-        pickFile.name === undefined ||
-        pickFile.name == null ||
-        pickFile.name === ''
-      ) {
-        var getFilename = path.split('/');
-        imageName = getFilename[getFilename.length - 1];
-        var extension = imageName.split('.')[1];
-        imageName = new Date().getTime() + '.' + extension;
-      } else {
-        imageName = pickFile.name;
+      if (pickFile !== null) {
+        var status = await requestStoragePermission();
+
+        if (status) {
+          let path = '';
+
+          if (Platform.OS === 'android') {
+            path = getPath(pickFile.uri);
+          } else {
+            path = pickFile.uri;
+          }
+
+          if (path !== undefined && path !== null && path !== '') {
+            var ext = re.exec(path)[1];
+            var timestamp = new Date().getTime().toString();
+            let imageName = timestamp + '.' + ext;
+            let imagePath =
+              Platform.OS === 'ios' ? path.replace('file://', '') : path;
+            let imageType = pickFile.type;
+            var imageData = {
+              name: 'image',
+              filename: imageName,
+              type: imageType,
+              data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
+            };
+            body.push(imageData);
+            uploadMediaContent(body, childPath, mediaType);
+          } else {
+            Alert.alert(
+              'Erorr While pick media',
+              'Unable to pick file choose another',
+            );
+          }
+        }
       }
-
-      let imagePath =
-        Platform.OS === 'ios' ? path.replace('file://', '') : path;
-
-      let imageType = pickFile.type;
-
-      var imageData = {
-        name: 'image',
-        filename: imageName,
-        type: imageType,
-        data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
-      };
-      body.push(imageData);
-
-      uploadMediaContent(body, childPath, mediaType);
+    } catch (error) {
+      Alert.alert(
+        'Erorr While pick media',
+        'Unable to pick file choose another',
+      );
     }
   };
 
@@ -425,8 +479,24 @@ const PhotosMedia = (props) => {
       });
   };
 
+  const permissionDocument = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        pickDocument();
+      }
+    } else {
+      pickDocument();
+    }
+  };
   const pickDocument = async () => {
     try {
+      PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+      );
+
       const res = await DocumentPicker.pick({
         type: [DocumentPicker.types.pdf],
       });
@@ -547,7 +617,7 @@ const PhotosMedia = (props) => {
               <TouchableOpacity
                 style={grid.rowdir}
                 onPress={() => {
-                  pickDocument();
+                  permissionDocument();
                 }}
                 activeOpacity={0.7}>
                 <View

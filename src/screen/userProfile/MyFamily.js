@@ -54,8 +54,18 @@ const MyFamily = (props) => {
         <WorkExperience
           indexName={index}
           header={item.childName}
-          subHeader={`DOB. ${item.dob}`}
-          description={item.gender.toString() === '1' ? 'Female' : 'Male'}
+          subHeader={`DOB. ${
+            item.dob !== null && item.dob !== undefined && item.dob !== ''
+              ? item.dob
+              : 'N/A'
+          }`}
+          description={
+            item.gender.toString() === '0'
+              ? 'Female'
+              : item.gender.toString() === '1'
+              ? 'Male'
+              : 'LGBTQIA'
+          }
           image={item.childPhoto}
           onImagePress={() => {
             imageArray = [{url: item.childPhoto}];

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   TouchableNativeFeedback,
+  Platform,
 } from 'react-native';
 
 import {scale} from '../theme/Scalling';
@@ -34,21 +35,6 @@ const ZoomImage = (props) => {
         }}
         visible={showModal}>
         <View style={styles.modalView}>
-          <TouchableOpacity
-            onPress={() => {
-              setShowModal(!showModal);
-              props.onClose();
-            }}
-            style={styles.buttonCircle}
-            background={TouchableNativeFeedback.SelectableBackground()}>
-            <GlobalInclude.BaseIcon
-              containerStyle={{height: scale(30), width: scale(30)}}
-              iconColor={'#000'}
-              iconName={'close'}
-              iconSize={scale(30)}
-              iconType={IconType[8]}
-            />
-          </TouchableOpacity>
           <ImageViewer
             imageUrls={mediaContent}
             index={0}
@@ -58,6 +44,23 @@ const ZoomImage = (props) => {
               <View />;
             }}
           />
+          <View style={GlobalInclude.AppStyle.closeSpace}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowModal(!showModal);
+                props.onClose();
+              }}
+              style={styles.buttonCircle}
+              background={TouchableNativeFeedback.SelectableBackground()}>
+              <GlobalInclude.BaseIcon
+                containerStyle={{height: scale(30), width: scale(30)}}
+                iconColor={'#000'}
+                iconName={'close'}
+                iconSize={scale(30)}
+                iconType={IconType[8]}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </View>
@@ -82,8 +85,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     alignSelf: 'flex-end',
-    marginEnd: scale(15),
-    marginTop: scale(15),
     backgroundColor: 'white',
   },
 });

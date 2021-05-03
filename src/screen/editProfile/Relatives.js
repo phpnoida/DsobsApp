@@ -23,6 +23,7 @@ import {updateUserProfile} from '../../Actions/UserActions';
 
 var lastSelectedIndex = -1;
 let responseMessage = '';
+
 const Relatives = (props) => {
   const {profileData} = props;
 
@@ -67,6 +68,7 @@ const Relatives = (props) => {
             response.data !== null
           ) {
             let data = response.data;
+
             setSearchedUser([...data.data]);
           }
         }
@@ -82,7 +84,9 @@ const Relatives = (props) => {
     return (
       <EditLinksExperience
         indexName={index}
-        mainTitle={item.relativeName}
+        mainTitle={`${item.relativeName} ${
+          item.batch !== undefined && item.batch !== null ? item.batch : ''
+        }`}
         header={item.relationship}
         onDeletePress={() => {
           lastSelectedIndex = index;
@@ -102,6 +106,7 @@ const Relatives = (props) => {
   };
 
   const addNewLink = (updateMode) => {
+    Keyboard.dismiss();
     if (relativeName.trim() === '') {
       setErrorMessage({relativeName: 'This field is required'});
     } else {
@@ -202,6 +207,9 @@ const Relatives = (props) => {
 
   const renderAutoSuggest = () => {
     var data = searchedUser.map((row, index) => {
+      console.log('====================================');
+      console.log(row);
+      console.log('====================================');
       return (
         <TouchableOpacity
           key={index}
@@ -220,11 +228,16 @@ const Relatives = (props) => {
             />
           </View>
           <Text style={styles.userName}>{concatName(row)}</Text>
+          {row.batch ? (
+            <Text style={[g.fs12, g.colorBlack, g.FHNR, {margin: scale(2)}]}>
+              {row.batch}
+            </Text>
+          ) : null}
         </TouchableOpacity>
       );
     });
     return (
-      <View style={[g.AutoCompleteList1, g.AutoCompleteHeight1, g.p10]}>
+      <View style={[g.AutoCompleteList1, g.p10]}>
         <Text style={[g.colordarkGray, g.fs16, g.FHNM, g.pb5]}>Suggestion</Text>
         <ScrollView
           keyboardShouldPersistTaps="handled"
@@ -346,11 +359,7 @@ const Relatives = (props) => {
 
 const styles = StyleSheet.create({
   userName: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'center',
-    alignContent: 'center',
-    textAlign: 'center',
+    textAlign: 'left',
     fontSize: scale(13),
     color: '#333333',
     fontFamily: 'Lato-Regular',

@@ -173,7 +173,7 @@ const Magazine = ({route, navigation}) => {
 
   const downloadData = (file) => {
     config(downloadOptions)
-      .fetch('GET', file)
+      .fetch('GET', file.replace(/ /g, '%20'))
       .then((res) => {
         // do some magic here
         console.log('res', res);
@@ -186,7 +186,8 @@ const Magazine = ({route, navigation}) => {
           setShowModal(false);
         }, 2000);
       })
-      .catch(() => {
+      .catch((error) => {
+        console.log(error);
         responseMessage = 'Error while downloading content!';
         setIsDownloading(false);
         setShowModal(true);

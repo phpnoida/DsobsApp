@@ -282,6 +282,25 @@ const Helpers = {
     }
     return yearList;
   },
+  formateDate: function (date) {
+    let month = '',
+      dateVal = '';
+
+    if (date.getMonth() + 1 < 10) {
+      month = '0' + (date.getMonth() + 1).toString();
+    } else {
+      month = date.getMonth() + 1;
+    }
+    if (date.getDate() < 10) {
+      dateVal = '0' + date.getDate().toString();
+    } else {
+      dateVal = date.getDate();
+    }
+    let stringDate = `${dateVal}/${month}/${date.getFullYear()}`;
+    let serverDate = `${date.getFullYear()}/${month}/${dateVal}`;
+
+    return {displayDate: stringDate, serverDate: serverDate};
+  },
 };
 
 export default Helpers;
