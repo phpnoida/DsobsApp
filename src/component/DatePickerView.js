@@ -13,100 +13,97 @@ import {scale} from '../theme/Scalling';
 import grid from '../theme/grid';
 import {IconType} from '../helper/Constants';
 import DatePicker from 'react-native-date-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import CommonButton from './CommonButton';
+import Helper from '../helper/Helper';
 
 const windowWidth = Dimensions.get('window').width;
 
 const DatePickerView = (props) => {
   const [date, setDate] = useState(new Date());
   return (
-    <View>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        hardwareAccelerated={true}
-        visible={true}>
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <View style={styles.headerView}>
-              <Text style={[g.fs16, g.colorWhite, grid.col]}>
-                {'Pick a date'}
-              </Text>
-              <View style={grid.justifyContentRight}>
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    props.onCloseAction();
-                  }}
-                  hitSlop={{
-                    top: 15,
-                    bottom: 15,
-                    left: 15,
-                    right: 15,
-                  }}>
-                  <GlobalInclude.BaseIcon
-                    containerStyle={{height: scale(26), width: scale(26)}}
-                    iconColor={'#808080'}
-                    iconName={'close'}
-                    iconSize={scale(26)}
-                    iconType={IconType[8]}
-                  />
-                </TouchableOpacity>
-              </View>
+    <Modal
+      animationType="slide"
+      transparent={true}
+      hardwareAccelerated={true}
+      visible={true}>
+      <View style={styles.centeredView}>
+        <View style={styles.modalView}>
+          <View style={styles.headerView}>
+            <Text style={[g.fs16, g.colorWhite, grid.col]}>
+              {'Pick a date'}
+            </Text>
+            <View style={grid.justifyContentRight}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  props.onCloseAction();
+                }}
+                hitSlop={{
+                  top: 15,
+                  bottom: 15,
+                  left: 15,
+                  right: 15,
+                }}>
+                <GlobalInclude.BaseIcon
+                  containerStyle={{height: scale(26), width: scale(26)}}
+                  iconColor={'#808080'}
+                  iconName={'close'}
+                  iconSize={scale(26)}
+                  iconType={IconType[8]}
+                />
+              </TouchableOpacity>
             </View>
-            {/* content */}
-            <View
-              style={{
-                width: '100%',
-                padding: scale(6),
-              }}>
-              <DatePicker
+          </View>
+          {/* content */}
+          <View
+            style={{
+              width: '100%',
+              padding: scale(6),
+            }}>
+            {/* <DatePicker
                 date={date}
                 onDateChange={setDate}
                 mode={'date'}
                 androidVariant={'iosClone'}
                 maximumDate={new Date()}
-              />
-            </View>
+              /> */}
+            <DateTimePicker
+              testID={'dateTimePicker'}
+              value={date}
+              mode={'date'}
+              display={'spinner'}
+              maximumDate={new Date()}
+              dateFormat={'day month year'}
+              onChange={(event, selectedDate) => {
+                const currentDate = selectedDate || date;
+                setDate(currentDate);
+              }}
+            />
+          </View>
 
-            <View
-              style={{
-                justifyContent: 'center',
-                alignItems: 'center',
-                width: scale(150),
-                paddingTop: scale(10),
-                paddingBottom: scale(10),
-                alignContent: 'center',
-                alignSelf: 'center',
-              }}>
-              <CommonButton
-                showLoader={false}
-                title={'Done'}
-                onPress={() => {
-                  let month = '',
-                    dateVal = '';
-
-                  if (date.getMonth() + 1 < 10) {
-                    month = '0' + (date.getMonth() + 1).toString();
-                  } else {
-                    month = date.getMonth() + 1;
-                  }
-                  if (date.getDate() < 10) {
-                    dateVal = '0' + date.getDate().toString();
-                  } else {
-                    dateVal = date.getDate();
-                  }
-                  let stringDate = `${dateVal}-${month}-${date.getFullYear()}`;
-                  let serverDate = `${date.getFullYear()}-${month}-${dateVal}`;
-
-                  props.onDateSelect(stringDate, serverDate);
-                }}
-              />
-            </View>
+          <View
+            style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              width: scale(150),
+              paddingTop: scale(10),
+              paddingBottom: scale(10),
+              alignContent: 'center',
+              alignSelf: 'center',
+            }}>
+            <CommonButton
+              showLoader={false}
+              title={'Confirm'}
+              onPress={() => {
+                let obj = Helper.formateDate(date);
+                props.onDateSelect(obj);
+              }}
+            />
           </View>
         </View>
-      </Modal>
-    </View>
+      </View>
+    </Modal>
   );
 };
 

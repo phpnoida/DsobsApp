@@ -151,23 +151,23 @@ const ImageGallery = (props) => {
                 />
               </View>
             ) : (
-              <View>
+              <View
+                style={[
+                  g.bglightGray,
+                  g.br3,
+                  grid.justifyContentCenter,
+                  grid.alignItems,
+                  {aspectRatio: 1 / 1},
+                ]}>
                 <TouchableOpacity
                   onPress={() => {
                     documentItem = item.fileName;
                     setShowDocViewer(true);
                   }}
-                  style={[
-                    g.bglightGray,
-                    g.br3,
-                    grid.justifyContentCenter,
-                    grid.alignItems,
-                    {aspectRatio: 1 / 1},
-                  ]}
                   activeOpacity={1}>
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(36), width: scale(36)}}
-                    iconColor={'#000'}
+                    iconColor={'#E61A2D'}
                     iconName={'file-pdf-o'}
                     iconSize={scale(36)}
                     iconType={IconType[4]}

@@ -477,6 +477,7 @@ const DirectoryDetails = ({route, navigation}) => {
                   g.justifyContentCenter,
                   grid.alignContent,
                   g.mb5,
+                  {textTransform: 'capitalize'},
                 ]}>
                 {concateLocation(item)}
               </Text>
@@ -752,6 +753,24 @@ const DirectoryDetails = ({route, navigation}) => {
     outputRange: [0, -1],
   });
 
+  const renderFooter = () => {
+    return (
+      <View style={style.footerView}>
+        {searchedUser.length === totalCount ? (
+          <View />
+        ) : (
+          <View style={{height: scale(60)}}>
+            {paginationStatus === PaginationStatus.waiting ? (
+              <View style={g.p10}>
+                <ActivityIndicator size={'large'} color={'#2b3252'} />
+              </View>
+            ) : null}
+          </View>
+        )}
+      </View>
+    );
+  };
+
   return (
     <View style={GlobalInclude.AppStyle.fill}>
       <HeaderBar navigation={navigation} />
@@ -770,6 +789,7 @@ const DirectoryDetails = ({route, navigation}) => {
             ) : (
               <View style={GlobalInclude.AppStyle.fill}>
                 <Animated.FlatList
+                  showsVerticalScrollIndicator={false}
                   ref={listRef}
                   numColumns={2}
                   extraData={searchedUser}
@@ -783,6 +803,7 @@ const DirectoryDetails = ({route, navigation}) => {
                     paddingEnd: scale(15),
                     paddingBottom: animatedHeight,
                   }}
+                  ListFooterComponent={renderFooter}
                   keyExtractor={(v, i) => i.toString()}
                   onScrollEndDrag={onScrollEndDrag}
                   scrollEventThrottle={16}
@@ -814,7 +835,7 @@ const DirectoryDetails = ({route, navigation}) => {
         </TouchableOpacity>
       </SafeAreaView>
 
-      {showScrollTop ? (
+      {showScrollTop && !showLoader ? (
         <View style={[g.btnScrollStrip, grid.alignItems]}>
           <TouchableOpacity
             style={{width: scale(90)}}
@@ -822,9 +843,10 @@ const DirectoryDetails = ({route, navigation}) => {
             onPress={() => {
               setShowScrollTop(false);
               if (listRef !== null) {
-                listRef.current.scrollTo({
+                //.scrollToOffset({ animated: true, offset: 0 });
+                listRef.current.scrollToOffset({
                   animated: true,
-                  y: 0,
+                  offset: 0,
                 });
               }
             }}

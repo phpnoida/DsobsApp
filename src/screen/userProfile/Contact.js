@@ -36,7 +36,14 @@ const generateView = (type, icon, title, subTitle, callback) => {
             />
           )}
           <View style={[grid.col, g.pl15]}>
-            <Text style={[g.colordarkGray, g.fs16, g.FHNB, g.mb5]}>
+            <Text
+              style={[
+                g.colordarkGray,
+                g.fs16,
+                g.FHNB,
+                g.mb5,
+                {textTransform: 'capitalize'},
+              ]}>
               {title}
             </Text>
             <Text style={[g.colorLightGray, g.fs14, g.FHNR]}>{subTitle}</Text>

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Text, View, TouchableOpacity, StyleSheet} from 'react-native';
+import {Text, View, TouchableOpacity, StyleSheet, Platform} from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import Icons from 'react-native-vector-icons/FontAwesome';
@@ -7,6 +7,8 @@ import {scale} from '../../theme/Scalling';
 import Radio from '../../component/Radio';
 import Globalinclude from '../../globalInclude/Globalinclude';
 import DatePickerView from '../../component/DatePickerView';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import Helper from '../../helper/Helper';
 
 const createGenderRadioButtons = (value) => {
   return [
@@ -126,13 +128,32 @@ const TabThree = (props) => {
         )}
       </View>
 
-      {props.showDatePicker && (
+      {props.showDatePicker && Platform.OS === 'android' && (
+        <DateTimePicker
+          testID={'dateTimePicker'}
+          value={new Date()}
+          mode={'date'}
+          display={'spinner'}
+          maximumDate={new Date()}
+          dateFormat={'day month year'}
+          onChange={(event, selected) => {
+            const currentDate = selected || new Date();
+            let obj = Helper.formateDate(currentDate);
+            props.setSelectedDate(obj.displayDate, obj.serverDate);
+          }}
+          onTouchCancel={(event) => {
+            props.openDatePicker();
+          }}
+        />
+      )}
+
+      {props.showDatePicker && Platform.OS === 'ios' && (
         <DatePickerView
           onCloseAction={() => {
             props.openDatePicker();
           }}
-          onDateSelect={(stringDate, serverDate) => {
-            props.setSelectedDate(stringDate, serverDate);
+          onDateSelect={(obj) => {
+            props.setSelectedDate(obj.displayDate, obj.serverDate);
           }}
         />
       )}

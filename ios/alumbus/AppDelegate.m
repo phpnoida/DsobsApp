@@ -7,6 +7,7 @@
 #import <RNCPushNotificationIOS.h>
 #import <FirebaseMessaging.h>
 #import "RNFBMessagingModule.h"
+#import "Orientation.h"
 @import Firebase;
 #ifdef FB_SONARKIT_ENABLED
 #import <FlipperKit/FlipperClient.h>
@@ -122,6 +123,10 @@ didReceiveNotificationResponse:(UNNotificationResponse *)response
 {
  [RNCPushNotificationIOS didReceiveNotificationResponse:response];
  NSLog(@"%@", response);
+}
+
+- (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
+  return [Orientation getOrientation];
 }
 
 @end

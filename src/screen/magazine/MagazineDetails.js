@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   Text,
   View,
@@ -45,18 +45,36 @@ let shareOptions = {
 };
 
 const MagazineDetails = ({route, navigation}) => {
-  if (route.params && route.params !== undefined && route.params !== null) {
-    magazineData = route.params.data;
-    currentIndex = route.params.currentIndex;
-
-    console.log('currentIndex', currentIndex);
-    console.log('length', magazineData.length);
-  }
-  const [pageContent] = useState(magazineData);
+  const scrollViewRef = useRef();
+  const [pageContent, setPageContent] = useState(null);
   const [currentFontSize, setCurrentFontSize] = useState(scale(12));
   const [selectedSize, setSelectedSize] = useState(1);
   const [showShare, setShowShare] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [useHack, setUseHack] = useState(true);
+
+  useEffect(() => {
+    magazineData = null;
+    currentIndex = 0;
+    imageArray = [];
+
+    if (route.params && route.params !== undefined && route.params !== null) {
+      magazineData = route.params.data;
+      currentIndex = route.params.currentIndex;
+
+      console.log('magazine', currentIndex);
+      console.log('magazine', magazineData.length);
+
+      setPageContent(magazineData);
+
+      setTimeout(() => {
+        scrollViewRef.current.goToPage(currentIndex);
+        setUseHack(false);
+      }, 50);
+    }
+
+    return () => {};
+  }, []);
 
   const computeEmbeddedMaxWidth = (availableWidth) => {
     return Math.min(availableWidth, 500);
@@ -84,6 +102,7 @@ const MagazineDetails = ({route, navigation}) => {
             ) : (
               <View style={GlobalInclude.AppStyle.fill}>
                 <ScrollableTabView
+                  ref={scrollViewRef}
                   underlineColor={'#ffffff'}
                   style={{paddingLeft: 0, paddingRight: 0}}
                   tabBarActiveTextColor={'#2b3252'}
@@ -92,12 +111,12 @@ const MagazineDetails = ({route, navigation}) => {
                     fontSize: scale(15),
                     fontFamily: 'Lato-Regular',
                   }}
+                  locked={false}
                   tabBarUnderlineStyle={{height: 0}}
                   onChangeTab={(index) => {
                     shareOptions.url = pageContent[index.i].shareLink;
-                    console.log('data', pageContent[index.i]);
+                    //console.log('data', pageContent[index.i]);
                   }}
-                  page={parseInt(currentIndex, 10)}
                   renderTabBar={() => <View />}>
                   {pageContent.map((content, index) => {
                     return (
@@ -107,193 +126,211 @@ const MagazineDetails = ({route, navigation}) => {
                           GlobalInclude.AppStyle.contentSpace,
                         ]}
                         key={index}>
-                        <View
-                          style={[
-                            GlobalInclude.AppStyle.row,
-                            grid.alignItems,
-                            grid.justifyContent,
-                            g.mb10,
-                          ]}>
-                          <View style={grid.col}>
-                            <View style={[grid.rowrow, grid.alignItems]}>
-                              <TouchableOpacity
-                                onPress={() => navigation.goBack()}>
-                                <GlobalInclude.BaseIcon
-                                  containerStyle={styles.backIcon}
-                                  iconColor={'#2b3252'}
-                                  iconName={'arrowleft'}
-                                  iconSize={scale(30)}
-                                  iconType={IconType[10]}
-                                />
-                              </TouchableOpacity>
-                              <TouchableOpacity
-                                onPress={() => {
-                                  //setShowShare(true);
-                                  Alert.alert('Coming soon!');
-                                }}
-                                style={{marginStart: scale(5)}}>
-                                <GlobalInclude.BaseIcon
-                                  containerStyle={styles.backIcon}
-                                  iconColor={'#2b3252'}
-                                  iconName={'sharealt'}
-                                  iconSize={scale(24)}
-                                  iconType={IconType[10]}
-                                />
-                              </TouchableOpacity>
-                            </View>
-                          </View>
-                          <View
-                            style={[
-                              grid.rowrow,
-                              grid.alignItemsBottom,
-                              grid.justifyContent,
-                              {marginEnd: scale(10), height: 30},
-                            ]}>
-                            <TouchableOpacity
-                              activeOpacity={1}
-                              onPress={() => {
-                                setCurrentFontSize(scale(12));
-                                setSelectedSize(1);
-                              }}>
-                              <Text
-                                style={[
-                                  selectedSize === 1
-                                    ? g.colorBlue
-                                    : g.colordarkGray,
-                                  selectedSize === 1 ? g.textunderline : null,
-                                  {
-                                    lineHeight: 18,
-                                    fontSize: 12,
-                                  },
-                                  g.FHNB,
-                                ]}>
-                                A
-                              </Text>
-                            </TouchableOpacity>
-                            <View style={{marginHorizontal: scale(4)}} />
-                            <TouchableOpacity
-                              activeOpacity={1}
-                              onPress={() => {
-                                setCurrentFontSize(scale(16));
-                                setSelectedSize(2);
-                              }}>
-                              <Text
-                                style={[
-                                  selectedSize === 2
-                                    ? g.colorBlue
-                                    : g.colordarkGray,
-                                  selectedSize === 2 ? g.textunderline : null,
-                                  {lineHeight: 20, fontSize: 15},
-                                  g.FHNB,
-                                ]}>
-                                A
-                              </Text>
-                            </TouchableOpacity>
-                            <View style={{marginHorizontal: scale(3)}} />
-                            <TouchableOpacity
-                              activeOpacity={1}
-                              onPress={() => {
-                                setCurrentFontSize(scale(20));
-                                setSelectedSize(3);
-                              }}>
-                              <Text
-                                style={[
-                                  selectedSize === 3
-                                    ? g.colorBlue
-                                    : g.colordarkGray,
-                                  selectedSize === 3 ? g.textunderline : null,
-                                  {lineHeight: 20, fontSize: 20},
-                                  g.FHNB,
-                                ]}>
-                                A
-                              </Text>
-                            </TouchableOpacity>
-                          </View>
-                        </View>
-                        <ScrollView
-                          showsVerticalScrollIndicator={false}
-                          style={GlobalInclude.AppStyle.fill}
-                          key={index}>
-                          <View
-                            style={[
-                              g.p10,
-                              g.bgWhite,
-                              grid.rowrow,
-                              grid.justifyContent,
-                              grid.alignItems,
-                            ]}>
-                            <View style={[grid.col]}>
-                              <Text
-                                style={{
-                                  fontSize: currentFontSize + scale(2),
-                                  color: '#000000',
-                                  marginBottom: scale(5),
-                                  fontWeight: 'bold',
-                                }}>
-                                {content.header}
-                              </Text>
-                              <Text
-                                style={{
-                                  fontSize: currentFontSize,
-                                  color: '#000000',
-                                  fontWeight: 'bold',
-                                }}>
-                                {content.subTitle}
-                              </Text>
-                            </View>
-                          </View>
-                          <HTML
-                            key={index}
-                            source={{
-                              html:
-                                '<div>' +
-                                content.body
-                                  .replace(/<p[^>]*><br><\/p>/g, '<br>')
-                                  .replace(/<h3[^>]*><br><\/h3>/g, '')
-                                  .replace(/(<br\s*\/?>){1,}/gi, '<br>')
-                                  .replace(/(\r\n|\n|\r)/gm, '')
-                                  .replace(/(<br\s*\/?>)/gi, '') +
-                                '</div>',
-                            }}
-                            baseFontStyle={{fontSize: currentFontSize}}
-                            textSelectable={false}
-                            defaultTextProps={{allowFontScaling: true}}
-                            tagsStyles={richTextStyles}
-                            allowWhitespaceNodes={false}
-                            containerStyle={styles.container}
-                            contentWidth={Dimensions.get('window').width - 30}
-                            computeEmbeddedMaxWidth={computeEmbeddedMaxWidth}
-                            renderers={{
-                              img: (
-                                htmlAttribs,
-                                children,
-                                convertedCSSStyles,
-                                passProps,
-                              ) => {
-                                return (
+                        {useHack ? (
+                          <View />
+                        ) : (
+                          <View style={GlobalInclude.AppStyle.fill}>
+                            <View
+                              style={[
+                                GlobalInclude.AppStyle.row,
+                                grid.alignItems,
+                                grid.justifyContent,
+                                g.mb10,
+                              ]}>
+                              <View style={grid.col}>
+                                <View style={[grid.rowrow, grid.alignItems]}>
                                   <TouchableOpacity
-                                    onPress={() => {
-                                      imageArray = [{url: htmlAttribs.src}];
-                                      setShowImageModal(true);
-                                    }}>
-                                    <ProgresImage
-                                      source={
-                                        htmlAttribs.src != null &&
-                                        htmlAttribs.src !== ''
-                                          ? {uri: htmlAttribs.src}
-                                          : GlobalInclude.Assets.DefaultImage
-                                      }
-                                      containerStyle={{aspectRatio: 1}}
-                                      imageStyle={{
-                                        aspectRatio: 1,
-                                      }}
+                                    onPress={() => navigation.goBack()}>
+                                    <GlobalInclude.BaseIcon
+                                      containerStyle={styles.backIcon}
+                                      iconColor={'#2b3252'}
+                                      iconName={'arrowleft'}
+                                      iconSize={scale(30)}
+                                      iconType={IconType[10]}
                                     />
                                   </TouchableOpacity>
-                                );
-                              },
-                            }}
-                          />
-                        </ScrollView>
+                                  <TouchableOpacity
+                                    onPress={() => {
+                                      //setShowShare(true);
+                                      Alert.alert('Coming soon!');
+                                    }}
+                                    style={{marginStart: scale(5)}}>
+                                    <GlobalInclude.BaseIcon
+                                      containerStyle={styles.backIcon}
+                                      iconColor={'#2b3252'}
+                                      iconName={'sharealt'}
+                                      iconSize={scale(24)}
+                                      iconType={IconType[10]}
+                                    />
+                                  </TouchableOpacity>
+                                </View>
+                              </View>
+                              <View
+                                style={[
+                                  grid.rowrow,
+                                  grid.alignItemsBottom,
+                                  grid.justifyContent,
+                                  {marginEnd: scale(10), height: 30},
+                                ]}>
+                                <TouchableOpacity
+                                  activeOpacity={1}
+                                  onPress={() => {
+                                    setCurrentFontSize(scale(12));
+                                    setSelectedSize(1);
+                                  }}>
+                                  <Text
+                                    style={[
+                                      selectedSize === 1
+                                        ? g.colorBlue
+                                        : g.colordarkGray,
+                                      selectedSize === 1
+                                        ? g.textunderline
+                                        : null,
+                                      {
+                                        lineHeight: 18,
+                                        fontSize: 12,
+                                      },
+                                      g.FHNB,
+                                    ]}>
+                                    A
+                                  </Text>
+                                </TouchableOpacity>
+                                <View style={{marginHorizontal: scale(4)}} />
+                                <TouchableOpacity
+                                  activeOpacity={1}
+                                  onPress={() => {
+                                    setCurrentFontSize(scale(16));
+                                    setSelectedSize(2);
+                                  }}>
+                                  <Text
+                                    style={[
+                                      selectedSize === 2
+                                        ? g.colorBlue
+                                        : g.colordarkGray,
+                                      selectedSize === 2
+                                        ? g.textunderline
+                                        : null,
+                                      {lineHeight: 20, fontSize: 15},
+                                      g.FHNB,
+                                    ]}>
+                                    A
+                                  </Text>
+                                </TouchableOpacity>
+                                <View style={{marginHorizontal: scale(3)}} />
+                                <TouchableOpacity
+                                  activeOpacity={1}
+                                  onPress={() => {
+                                    setCurrentFontSize(scale(20));
+                                    setSelectedSize(3);
+                                  }}>
+                                  <Text
+                                    style={[
+                                      selectedSize === 3
+                                        ? g.colorBlue
+                                        : g.colordarkGray,
+                                      selectedSize === 3
+                                        ? g.textunderline
+                                        : null,
+                                      {lineHeight: 20, fontSize: 20},
+                                      g.FHNB,
+                                    ]}>
+                                    A
+                                  </Text>
+                                </TouchableOpacity>
+                              </View>
+                            </View>
+                            <ScrollView
+                              showsVerticalScrollIndicator={false}
+                              style={GlobalInclude.AppStyle.fill}
+                              key={index}>
+                              <View
+                                style={[
+                                  g.p10,
+                                  g.bgWhite,
+                                  grid.rowrow,
+                                  grid.justifyContent,
+                                  grid.alignItems,
+                                ]}>
+                                <View style={[grid.col]}>
+                                  <Text
+                                    style={{
+                                      fontSize: currentFontSize + scale(2),
+                                      color: '#000000',
+                                      marginBottom: scale(5),
+                                      fontWeight: 'bold',
+                                    }}>
+                                    {content.header}
+                                  </Text>
+                                  <Text
+                                    style={{
+                                      fontSize: currentFontSize,
+                                      color: '#000000',
+                                      fontWeight: 'bold',
+                                    }}>
+                                    {content.subTitle}
+                                  </Text>
+                                </View>
+                              </View>
+                              <HTML
+                                key={index}
+                                source={{
+                                  html:
+                                    '<div>' +
+                                    content.body
+                                      .replace(/<p[^>]*><br><\/p>/g, '<br>')
+                                      .replace(/<h3[^>]*><br><\/h3>/g, '')
+                                      .replace(/(<br\s*\/?>){1,}/gi, '<br>')
+                                      .replace(/(\r\n|\n|\r)/gm, '')
+                                      .replace(/(<br\s*\/?>)/gi, '') +
+                                    '</div>',
+                                }}
+                                baseFontStyle={{fontSize: currentFontSize}}
+                                textSelectable={false}
+                                defaultTextProps={{allowFontScaling: true}}
+                                tagsStyles={richTextStyles}
+                                allowWhitespaceNodes={false}
+                                containerStyle={styles.container}
+                                contentWidth={
+                                  Dimensions.get('window').width - 30
+                                }
+                                computeEmbeddedMaxWidth={
+                                  computeEmbeddedMaxWidth
+                                }
+                                renderers={{
+                                  img: (
+                                    htmlAttribs,
+                                    children,
+                                    convertedCSSStyles,
+                                    passProps,
+                                  ) => {
+                                    return (
+                                      <TouchableOpacity
+                                        onPress={() => {
+                                          imageArray = [{url: htmlAttribs.src}];
+                                          setShowImageModal(true);
+                                        }}>
+                                        <ProgresImage
+                                          source={
+                                            htmlAttribs.src != null &&
+                                            htmlAttribs.src !== ''
+                                              ? {uri: htmlAttribs.src}
+                                              : GlobalInclude.Assets
+                                                  .DefaultImage
+                                          }
+                                          containerStyle={{aspectRatio: 1}}
+                                          imageStyle={{
+                                            aspectRatio: 1,
+                                          }}
+                                          mode={'contain'}
+                                        />
+                                      </TouchableOpacity>
+                                    );
+                                  },
+                                }}
+                              />
+                            </ScrollView>
+                          </View>
+                        )}
                       </View>
                     );
                   })}

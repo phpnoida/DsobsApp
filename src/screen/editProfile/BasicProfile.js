@@ -30,6 +30,7 @@ import CityListSheet from 'react-native-raw-bottom-sheet';
 import RadioButton from '../../component/RadioButton';
 import BottomSheetHeader from '../../component/BottomSheetHeader';
 import CountryPicker from 'react-native-country-picker-modal';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import DatePickerView from '../../component/DatePickerView';
 import RNFetchBlob from 'rn-fetch-blob';
 import {getCountries, getStates, getCities} from '../../Actions/CommonActions';
@@ -170,6 +171,24 @@ const BasicProfile = (props) => {
   const [showContactUsModal, setShowContactUsModal] = useState(false);
 
   useEffect(() => {
+
+    profileUri = null;
+    stringDate = 'N/A';
+    birthDate = '';
+    professionListMain = [];
+    countryListMain = [];
+    selectedCountryItem = null;
+    stateListMain = [];
+    selectedStateItem = null;
+    cityListMain = [];
+    selectedCityItem = null;
+   isCountrySelected = false;
+  isStateSelected = false;
+  isCitySelected = false;
+ pickerSelectionType = -1;
+ responseMessage = '';
+
+
     setPrefix(profileData.prefix);
     setPetName(profileData.petName);
 
@@ -203,12 +222,13 @@ const BasicProfile = (props) => {
       } else {
         date = formatedDate.getDate().toString();
       }
-      stringDate = `${date}-${month}-${formatedDate.getFullYear()}`;
+      stringDate = `${date}/${month}/${formatedDate.getFullYear()}`;
 
-      birthDate = `${formatedDate.getFullYear()}-${month}-${date}`;
+      birthDate = `${formatedDate.getFullYear()}/${month}/${date}`;
       console.log('sample', birthDate);
+      setSelectedDate(stringDate);
     }
-    setSelectedDate(stringDate);
+    
 
     let profession = '';
     if (profileData.profession.includes('-')) {
@@ -820,15 +840,36 @@ const BasicProfile = (props) => {
                 }}
               />
             )}
-            {showDatePicker && (
+            {showDatePicker && Platform.OS === 'android' && (
+              <DateTimePicker
+                testID={'dateTimePicker'}
+                value={new Date()}
+                mode={'date'}
+                display={'spinner'}
+                maximumDate={new Date()}
+                dateFormat={'day month year'}
+                onChange={(event, selected) => {
+                  const currentDate = selected || new Date();
+                  let obj = Helper.formateDate(currentDate);
+                  birthDate = obj.serverDate;
+                  setShowDatePicker(Platform.OS === 'ios');
+                  setSelectedDate(obj.displayDate);
+                }}
+                onTouchCancel={(event) => {
+                  setShowDatePicker(false);
+                }}
+              />
+            )}
+
+            {showDatePicker && Platform.OS === 'ios' && (
               <DatePickerView
                 onCloseAction={() => {
                   setShowDatePicker(false);
                 }}
-                onDateSelect={(displayDate, serverDate) => {
-                  birthDate = serverDate;
-                  setSelectedDate(displayDate);
+                onDateSelect={(obj) => {
+                  birthDate = obj.serverDate;
                   setShowDatePicker(false);
+                  setSelectedDate(obj.displayDate);
                 }}
               />
             )}
@@ -1189,10 +1230,9 @@ const BasicProfile = (props) => {
                 onPress={() => {
                   stateListSheet.open();
                 }}>
-                <Text>
+                <Text style={{textTransform:'capitalize'}}>
                   {selectedState !== ''
-                    ? selectedState.charAt(0).toUpperCase() +
-                      selectedState.slice(1)
+                    ? selectedState
                     : 'Select State'}
                 </Text>
               </TouchableOpacity>

@@ -61,7 +61,7 @@ let profileSheetMenu = [
 
 let profileSheet = null,
   userId = '',
-  birthDate = '',
+  birthDate = 'N/A',
   moveToTab = 1;
 
 const UserProfile = ({route, navigation}) => {
@@ -75,6 +75,11 @@ const UserProfile = ({route, navigation}) => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    profileSheet = null;
+
+    birthDate = 'N/A';
+    moveToTab = 1;
+
     console.log('Request for', userId);
     if (userId === global.userId) {
       getProfile();
@@ -120,6 +125,7 @@ const UserProfile = ({route, navigation}) => {
               if (
                 profile.dob &&
                 profile.dob !== undefined &&
+                profile.dob !== '' &&
                 profile.dob !== 'Invalid date'
               ) {
                 var formatedDate = new Date(profile.dob);

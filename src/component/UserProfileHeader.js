@@ -76,14 +76,14 @@ const UserProfileHeader = (props) => {
               {props.firstName.trim()} {props.lastName.trim()}
             </Text>
             {props.batch ? (
-              <Text style={[g.colorLightGray, g.fs14, g.FHNR, g.mt5]}>{`${
-                props.schoolNo
-              } ${
-                props.house.toLowerCase().charAt(0).toUpperCase() +
-                props.house.toLowerCase().slice(1)
-              } ${
-                props.section.charAt(0).toUpperCase() + props.section.slice(1)
-              } ${props.batch}`}</Text>
+              <Text
+                style={[
+                  g.colorLightGray,
+                  g.fs14,
+                  g.FHNR,
+                  g.mt5,
+                  {textTransform: 'capitalize'},
+                ]}>{`${props.schoolNo} ${props.house} ${props.section} ${props.batch}`}</Text>
             ) : null}
           </View>
           {props.userId !== global.userId ? (
@@ -104,8 +104,15 @@ const UserProfileHeader = (props) => {
         <Text style={[g.colorLightGray, g.fs14, g.FHNR, g.mt5]}>
           {props.profession}
         </Text>
-        <Text style={[g.colorLightGray, g.fs14, g.FHNR, g.mt5]}>
-          {props.city.charAt(0).toUpperCase() + props.city.slice(1)}
+        <Text
+          style={[
+            g.colorLightGray,
+            g.fs14,
+            g.FHNR,
+            g.mt5,
+            {textTransform: 'capitalize'},
+          ]}>
+          {props.city}
         </Text>
         <Text style={[g.colorLightGray, g.fs14, g.FHNR, g.mt5]}>
           {showLastSeen(props.lastseen)}

@@ -26,6 +26,8 @@ import {uploadProfilePic, updateUserProfile} from '../../Actions/UserActions';
 import RNFetchBlob from 'rn-fetch-blob';
 import ZoomImage from '../../component/ZoomImage';
 import DatePickerView from '../../component/DatePickerView';
+import Helper from '../../helper/Helper';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const createGenderRadioButtons = (value) => {
   return [
@@ -355,6 +357,10 @@ const MyFamily = (props) => {
   };
 
   const addNewLink = (updateMode) => {
+    if (childName.trim() === '') {
+      setErrorMessage({childName: 'This field is required'});
+      return;
+    }
     let insertedItem = {
       childName: childName,
       dob: serverDate,
@@ -417,14 +423,35 @@ const MyFamily = (props) => {
               />
             )}
 
-            {showDatePicker && (
+            {showDatePicker && Platform.OS === 'android' && (
+              <DateTimePicker
+                testID={'dateTimePicker'}
+                value={new Date()}
+                mode={'date'}
+                display={'spinner'}
+                maximumDate={new Date()}
+                dateFormat={'day month year'}
+                onChange={(event, selected) => {
+                  const currentDate = selected || new Date();
+                  let obj = Helper.formateDate(currentDate);
+                  serverDate = obj.serverDate;
+                  setShowDatePicker(Platform.OS === 'ios');
+                  setSelectedDate(obj.serverDate);
+                }}
+                onTouchCancel={(event) => {
+                  setShowDatePicker(false);
+                }}
+              />
+            )}
+
+            {showDatePicker && Platform.OS === 'ios' && (
               <DatePickerView
                 onCloseAction={() => {
                   setShowDatePicker(false);
                 }}
-                onDateSelect={(displayDate, selected) => {
-                  serverDate = selected;
-                  setSelectedDate(selected);
+                onDateSelect={(obj) => {
+                  serverDate = obj.serverDate;
+                  setSelectedDate(obj.serverDate);
                   setShowDatePicker(false);
                 }}
               />
@@ -500,10 +527,10 @@ const MyFamily = (props) => {
                   iconType={IconType[4]}
                 />
               </TouchableOpacity>
-              {errorMessage.awardCategory &&
-                errorMessage.awardCategory.length > 0 && (
+              {errorMessage.spousePhoto &&
+                errorMessage.spousePhoto.length > 0 && (
                   <Text style={[g.errorMsg, g.pt5]}>
-                    {errorMessage.awardCategory}
+                    {errorMessage.spousePhoto}
                   </Text>
                 )}
             </View>
@@ -610,10 +637,10 @@ const MyFamily = (props) => {
                   iconType={IconType[4]}
                 />
               </TouchableOpacity>
-              {errorMessage.awardCategory &&
-                errorMessage.awardCategory.length > 0 && (
+              {errorMessage.childPhoto &&
+                errorMessage.childPhoto.length > 0 && (
                   <Text style={[g.errorMsg, g.pt5]}>
-                    {errorMessage.awardCategory}
+                    {errorMessage.childPhoto}
                   </Text>
                 )}
             </View>

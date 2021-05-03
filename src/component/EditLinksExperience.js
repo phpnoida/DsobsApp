@@ -8,6 +8,9 @@ import {IconType} from '../helper/Constants';
 import GlobalInclude from '../globalInclude/Globalinclude';
 
 const EditLinksExperience = (props) => {
+  console.log('====================================');
+  console.log(props);
+  console.log('====================================');
   return (
     <TouchableOpacity activeOpacity={1}>
       <View
@@ -16,24 +19,24 @@ const EditLinksExperience = (props) => {
           {borderTopWidth: 1, borderTopColor: '#cccccc', paddingTop: scale(10)},
         ]}>
         <View style={[grid.col, g.pr10]}>
-          {props.mainTitle && (
+          {props.mainTitle && props.mainTitle !== '' ? (
             <Text style={styles.menuHeader}>{props.mainTitle}</Text>
-          )}
-          {props.header && (
+          ) : null}
+          {props.header && props.header !== '' ? (
             <View>
               <View style={{margin: scale(1)}} />
               <Text style={styles.menuTitle}>{props.header}</Text>
             </View>
-          )}
+          ) : null}
 
-          {props.subHeader && (
+          {props.subHeader && props.subHeader !== '' ? (
             <View>
               <View style={{margin: scale(1)}} />
               <Text style={styles.menuTitle}>{props.subHeader}</Text>
             </View>
-          )}
+          ) : null}
 
-          {props.description && (
+          {props.description && props.description !== '' && (
             <View>
               <View style={{margin: scale(1)}} />
               <Text style={styles.menuTitle}>{props.description}</Text>

@@ -9,8 +9,8 @@ import {
   ActivityIndicator,
   Dimensions,
   StyleSheet,
-  Keyboard,
   SafeAreaView,
+  Platform,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
@@ -21,11 +21,10 @@ import TopHeaderView from '../../component/TopHeaderView';
 import CheckBoxIOS from 'react-native-check-box';
 import {doGetProfessionList} from '../../Actions/UserActions';
 import {doSearchCity, doSearchCompany} from '../../Actions/CommonActions';
-import {getDirectory} from '../../Actions/DirectoryActions';
+import {getDirectory, logDirectory} from '../../Actions/DirectoryActions';
 import BottomSheetHeader from '../../component/BottomSheetHeader';
 import ProfessionSheet from 'react-native-raw-bottom-sheet';
 import RadioButton from '../../component/RadioButton';
-import MyStatusBar from '../../component/MyStatusBar';
 
 import ScrollableTabView, {
   ScrollableTabBar,
@@ -54,7 +53,7 @@ const myInput = React.createRef();
 const scrollRef = React.createRef();
 
 const SearchDirectory = ({route, navigation}) => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [searchIndex, setSearchIndex] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [professionList, setProfessionList] = useState([]);
@@ -69,17 +68,41 @@ const SearchDirectory = ({route, navigation}) => {
     searchBy = 1;
     searchVal = '';
 
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (global.isConnected) {
+        logDirectory(
+          (response) => {
+            if (response && response !== null) {
+              if (
+                response.data &&
+                response.data !== undefined &&
+                response.data !== null
+              ) {
+                let data = response.data;
+                console.log('data', data);
+                if (data.status) {
+                }
+              }
+            }
+          },
+          (code, error) => {
+            console.log('error', error);
+          },
+        );
+      }
+    });
+
     if (global.isConnected) {
       getProfessionList();
     }
-    return () => {};
-  }, []);
+    return () => {
+      unsubscribe();
+    };
+  }, [navigation]);
 
   const getProfessionList = () => {
-    setIsLoading(true);
     doGetProfessionList(
       (response) => {
-        setIsLoading(false);
         if (response && response !== null) {
           if (
             response.data &&
@@ -106,18 +129,19 @@ const SearchDirectory = ({route, navigation}) => {
         }
       },
       (code, error) => {
-        setIsLoading(false);
         console.log('error', error);
       },
     );
   };
 
   const getSearchDataByCity = (query) => {
+    setIsLoading(true);
     doSearchCity(
       query,
       10,
       0,
       (response) => {
+        setIsLoading(false);
         if (response && response !== null) {
           if (
             response.data &&
@@ -138,6 +162,7 @@ const SearchDirectory = ({route, navigation}) => {
         }
       },
       (code, error) => {
+        setIsLoading(false);
         setSearchedCityCompany([]);
         console.log('error', error);
       },
@@ -145,11 +170,13 @@ const SearchDirectory = ({route, navigation}) => {
   };
 
   const getSearchDataByCompany = (query) => {
+    setIsLoading(true);
     doSearchCompany(
       query,
       10,
       0,
       (response) => {
+        setIsLoading(false);
         if (response && response !== null) {
           if (
             response.data &&
@@ -170,6 +197,7 @@ const SearchDirectory = ({route, navigation}) => {
         }
       },
       (code, error) => {
+        setIsLoading(false);
         setSearchedCityCompany([]);
         console.log('error', error);
       },
@@ -177,10 +205,12 @@ const SearchDirectory = ({route, navigation}) => {
   };
 
   const doSearchUser = (query) => {
+    setIsLoading(true);
     getDirectory(
       searchBy.toString(),
       query,
       (response) => {
+        setIsLoading(false);
         if (response && response !== null) {
           if (
             response.data &&
@@ -208,6 +238,7 @@ const SearchDirectory = ({route, navigation}) => {
         }
       },
       (error) => {
+        setIsLoading(false);
         setSearchedUser([]);
         console.log('error', error);
       },
@@ -414,16 +445,20 @@ const SearchDirectory = ({route, navigation}) => {
       );
     });
     return (
-      <View style={[g.AutoCompleteList1, g.p10]}>
-        <Text style={[g.colordarkGray, g.fs12, g.FHNM, g.pb5]}>
-          Search Suggestion:
-        </Text>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          horizontal={true}
-          showsHorizontalScrollIndicator={false}>
-          {data}
-        </ScrollView>
+      <View>
+        {searchedUser.length > 0 && (
+          <View style={[g.AutoCompleteList1, g.p10]}>
+            <Text style={[g.colordarkGray, g.fs12, g.FHNM, g.pb5]}>
+              Auto Suggestion:
+            </Text>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}>
+              {data}
+            </ScrollView>
+          </View>
+        )}
       </View>
     );
   };
@@ -530,16 +565,20 @@ const SearchDirectory = ({route, navigation}) => {
       );
     });
     return (
-      <View style={[g.AutoCompleteList1, g.p10]}>
-        <Text style={[g.colordarkGray, g.fs12, g.FHNM, g.pb5]}>
-          Search Suggestion:
-        </Text>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          horizontal={true}
-          showsHorizontalScrollIndicator={false}>
-          {data}
-        </ScrollView>
+      <View>
+        {searchedCityCompany.length > 0 && (
+          <View style={[g.AutoCompleteList1, g.p10]}>
+            <Text style={[g.colordarkGray, g.fs12, g.FHNM, g.pb5]}>
+              Auto Suggestion:
+            </Text>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}>
+              {data}
+            </ScrollView>
+          </View>
+        )}
       </View>
     );
   };
@@ -810,7 +849,7 @@ const SearchDirectory = ({route, navigation}) => {
               <View>
                 {searchedCityCompany.length > 0
                   ? renderAutoSuggestCityCompany()
-                  : searchedUser.length > 0 && renderAutoSuggest()}
+                  : renderAutoSuggest()}
               </View>
               {/* below contents */}
               {professionList.length > 0 && (
