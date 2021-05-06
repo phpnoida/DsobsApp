@@ -16,7 +16,7 @@ import g from '../../theme/global';
 import grid from '../../theme/grid';
 import ProgresImage from '../../component/ProgresImage';
 import Slideshow from '../../component/Slideshow.js';
-import {getYellowPageAbout} from '../../Actions/AddYellowPageActions';
+import {getYellowPageAbout} from '../../Actions/YelloPageActions';
 
 import HTML from 'react-native-render-html';
 

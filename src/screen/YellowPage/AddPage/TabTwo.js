@@ -27,6 +27,7 @@ const TabTwo = ({
   productTags,
   onRemoveTag,
   errorMessage,
+  inEditMode,
 }) => {
   const [showRemoveAlert, setShowRemoveAlert] = useState(false);
 
@@ -48,7 +49,7 @@ const TabTwo = ({
         showsVerticalScrollIndicator={false}>
         <View style={g.pb30}>
           <View style={g.mb15}>
-            {generateHeader('About The Business', false)}
+            {generateHeader('About The Business', true)}
             <TextInput
               underlineColorAndroid="transparent"
               numberOfLines={6}
@@ -74,7 +75,7 @@ const TabTwo = ({
               )}
           </View>
           <View style={g.mb15}>
-            {generateHeader('Product & Services Offered', false)}
+            {generateHeader('Product & Services Offered', true)}
             <TextInput
               underlineColorAndroid="transparent"
               numberOfLines={6}
@@ -147,6 +148,7 @@ const TabTwo = ({
       </KeyboardAwareScrollView>
       <NextPreviousButton
         isLoading={false}
+        nextTitle={inEditMode ? 'Update & Next' : 'Save & Next'}
         onPreviuosTab={() => {
           onPreviousTab();
         }}

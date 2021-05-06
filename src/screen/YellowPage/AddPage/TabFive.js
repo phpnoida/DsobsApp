@@ -22,6 +22,7 @@ const TabFive = ({
   webLink,
   errorMessage,
   loader,
+  inEditMode,
 }) => {
   const generateHeader = (title, required) => {
     return (
@@ -41,7 +42,7 @@ const TabFive = ({
         showsVerticalScrollIndicator={false}>
         <View style={g.pb30}>
           <View style={g.mb15}>
-            {generateHeader('Company Contact Person', false)}
+            {generateHeader('Company Contact Person', true)}
             <TextInput
               underlineColorAndroid="transparent"
               style={g.inputWhite}
@@ -85,7 +86,7 @@ const TabFive = ({
               )}
           </View>
           <View style={g.mb15}>
-            {generateHeader('Contact Number', false)}
+            {generateHeader('Contact Number', true)}
             <TextInput
               underlineColorAndroid="transparent"
               style={g.inputWhite}
@@ -106,7 +107,7 @@ const TabFive = ({
               )}
           </View>
           <View style={g.mb15}>
-            {generateHeader('Email Address', false)}
+            {generateHeader('Email Address', true)}
             <TextInput
               underlineColorAndroid="transparent"
               style={g.inputWhite}
@@ -145,7 +146,7 @@ const TabFive = ({
             )}
           </View>
           <View style={g.mb15}>
-            {generateHeader('Company Address', false)}
+            {generateHeader('Company Address', true)}
             <TextInput
               underlineColorAndroid="transparent"
               numberOfLines={6}
@@ -193,7 +194,7 @@ const TabFive = ({
         onPreviuosTab={() => {
           onPreviousTab();
         }}
-        nextTitle={'Save'}
+        nextTitle={inEditMode ? 'Update Now' : 'Save'}
         onSaveTab={() => {
           onSaveTab();
         }}

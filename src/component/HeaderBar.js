@@ -39,6 +39,23 @@ const HeaderBar = ({
       }}>
       <View style={headerStyle.topContainer} />
       <View style={headerStyle.container}>
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            justifyContent: 'center',
+            marginEnd: scale(40),
+            marginStart: scale(40),
+          }}>
+          {title && (
+            <Text style={[g.fs16, g.FHNB, g.colordarkGray, g.txtCenter]}>
+              {title}
+            </Text>
+          )}
+        </View>
         <View style={[grid.col, grid.rowdir]}>
           {showBack && (
             <TouchableOpacity
@@ -51,14 +68,8 @@ const HeaderBar = ({
               />
             </TouchableOpacity>
           )}
-          <View style={[grid.col, grid.justifyContentCenter]}>
-            {title && (
-              <Text style={[g.fs16, g.FHNB, g.colordarkGray, g.txtCenter]}>
-                {title}
-              </Text>
-            )}
-          </View>
         </View>
+
         <View>
           {showLabel && (
             <TouchableOpacity

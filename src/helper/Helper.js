@@ -2,6 +2,8 @@ import {Linking, Alert, Platform} from 'react-native';
 import {APP_NAME, WHATSAPP_NO} from '../helper/Constants';
 import PushNotification from 'react-native-push-notification';
 import PushNotificationIOS from '@react-native-community/push-notification-ios';
+import RNFetchBlob from 'rn-fetch-blob';
+
 const Helpers = {
   ToastShow: function (name, style) {
     if (style === 'success') {
@@ -300,6 +302,70 @@ const Helpers = {
     let serverDate = `${date.getFullYear()}/${month}/${dateVal}`;
 
     return {displayDate: stringDate, serverDate: serverDate};
+  },
+  openDialler: function (number) {
+    let phoneNumber = '';
+    if (Platform.OS === 'android') {
+      phoneNumber = `tel:${number.trim()}`;
+    } else {
+      phoneNumber = `telprompt:${number}`;
+    }
+    Linking.openURL(phoneNumber);
+  },
+  openEmail: function (email) {
+    Linking.openURL('mailto:' + `${email}` + '?subject= ');
+  },
+  openLink: function (link) {
+    Linking.canOpenURL(link).then((status) => {
+      if (status) {
+        Linking.openURL(link).catch(() => {
+          Alert.alert('Unable to open link!');
+        });
+      } else {
+        Alert.alert('Invalid link!');
+      }
+    });
+  },
+  uploadImage: function (pickFile) {
+    let body = [];
+    if (pickFile !== null) {
+      var path = '';
+
+      if (Platform.OS === 'android') {
+        path = pickFile.path;
+      } else if (Platform.OS === 'ios') {
+        path = pickFile.sourceURL;
+      }
+      let imageName = '';
+      if (
+        pickFile.fileName === undefined ||
+        pickFile.fileName == null ||
+        pickFile.fileName === ''
+      ) {
+        var getFilename = path.split('/');
+        imageName = getFilename[getFilename.length - 1];
+        var extension = imageName.split('.')[1];
+        imageName = new Date().getTime() + '.' + extension;
+      } else {
+        imageName = pickFile.fileName;
+      }
+
+      let imagePath =
+        Platform.OS === 'ios' ? path.replace('file://', '') : path;
+
+      let imageType = pickFile.mime;
+
+      var imageData = {
+        name: 'image',
+        filename: imageName,
+        type: imageType,
+        data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
+      };
+      body.push(imageData);
+
+      return body;
+    }
+    return null;
   },
 };
 

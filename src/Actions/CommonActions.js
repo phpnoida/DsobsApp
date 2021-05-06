@@ -139,6 +139,34 @@ export function doSearchCompany(query, size, index, callback, errCallback) {
     payload: request,
   };
 }
+export function doSearchProfession(query, size, index, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}user/directory/proffession?size=${size}&index=${index}&s=${query}`;
+  const request = axios
+    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .then((res) => {
+      callback(res);
+    })
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+export function doSearchBusiness(query, size, index, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}yellowPages/business?size=${size}&index=${index}&s=${query}`;
+  const request = axios
+    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .then((res) => {
+      callback(res);
+    })
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
 
 export function handleError(err, errCallback) {
   if (

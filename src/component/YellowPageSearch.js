@@ -118,47 +118,23 @@ const YellowPageSearch = ({
                 grid.justifyContentCenter,
               ]}
               keyboardType={'default'}
-              placeholder={
-                chkType === 1
-                  ? 'Type more than 3 characters '
-                  : 'Type anything...'
-              }
+              placeholder={'Type more than 3 characters'}
               onChangeText={(text) => {
                 changeText(text);
               }}
             />
           </View>
         </View>
-        {filterQuery.length <= 3 ? (
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => onFilterPress()}
-            style={[
-              g.fliterBtnNew,
-              grid.alignItems,
-              grid.justifyContentCenter,
-            ]}>
-            <Image
-              source={GlobalInclude.Assets.Filter}
-              resizeMode="contain"
-              style={{width: 16}}
-            />
-          </TouchableOpacity>
-        ) : chkType === 1 || chkType === 4 ? (
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => onGoPress()}
-            style={[
-              g.fliterBtnNew,
-              grid.alignItems,
-              grid.justifyContentCenter,
-              g.bgBlue,
-            ]}>
-            <Text style={[g.colorWhite, g.FHNM, g.fs16]}>Go</Text>
-          </TouchableOpacity>
-        ) : (
-          <View />
-        )}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => onFilterPress()}
+          style={[g.fliterBtnNew, grid.alignItems, grid.justifyContentCenter]}>
+          <Image
+            source={GlobalInclude.Assets.Filter}
+            resizeMode="contain"
+            style={{width: 16}}
+          />
+        </TouchableOpacity>
       </View>
     </View>
   );

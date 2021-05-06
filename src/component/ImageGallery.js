@@ -47,6 +47,10 @@ const ImageGallery = (props) => {
   const [mediaContent] = useState(props.mediaContent);
   const [lastIndex, setIastIndex] = useState(0);
 
+  console.log('====================================');
+  console.log('content.images', JSON.stringify(props.mediaContent));
+  console.log('====================================');
+
   const openImage = () => {
     if (mediaContent.length > 0) {
       imageArray = [];
@@ -158,7 +162,13 @@ const ImageGallery = (props) => {
                 ]}>
                 <TouchableOpacity
                   onPress={() => {
-                    documentItem = item.fileName;
+                    console.log('item', item);
+                    documentItem =
+                      item.fileName &&
+                      item.fileName !== undefined &&
+                      item.fileName !== null
+                        ? item.fileName
+                        : item.thumbnail;
                     setShowDocViewer(true);
                   }}
                   activeOpacity={1}>

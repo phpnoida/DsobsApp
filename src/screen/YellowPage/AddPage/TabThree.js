@@ -31,6 +31,7 @@ const TabThree = ({
   removeAlumini,
   errorMessage,
   searchUserName,
+  inEditMode,
 }) => {
   const [showRemoveAlert, setShowRemoveAlert] = useState(false);
 
@@ -73,7 +74,7 @@ const TabThree = ({
                       grid.justifyContentCenter,
                     ]}
                     keyboardType={'default'}
-                    placeholder={'Type more then 3 characters '}
+                    placeholder={'Type more than 3 characters '}
                     onChangeText={(text) => {
                       changeText(text);
                     }}
@@ -150,6 +151,18 @@ const TabThree = ({
                         numberOfLines={2}>
                         {Helper.concatName(item)}
                       </Text>
+
+                      <Text
+                        style={[
+                          g.FHNR,
+                          g.txtCenter,
+                          g.colorGray,
+                          g.fs12,
+                          g.mt2,
+                        ]}
+                        numberOfLines={2}>
+                        {item.designation}
+                      </Text>
                     </View>
                   </TouchableOpacity>
                 );
@@ -160,6 +173,7 @@ const TabThree = ({
       </KeyboardAwareScrollView>
       <NextPreviousButton
         isLoading={false}
+        nextTitle={inEditMode ? 'Update & Next' : 'Save & Next'}
         onPreviuosTab={() => {
           onPreviousTab();
         }}

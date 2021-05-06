@@ -238,4 +238,7 @@ export default StyleSheet.create({
     fontFamily: 'Lato-Bold',
     textAlign: 'left',
   },
+  transform: {
+    textTransform: 'capitalize',
+  },
 });

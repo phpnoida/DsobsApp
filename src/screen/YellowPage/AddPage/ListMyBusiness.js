@@ -1,11 +1,8 @@
 import React, {useState, useEffect} from 'react';
 import {
   View,
-  Dimensions,
-  StyleSheet,
   Keyboard,
   SafeAreaView,
-  Platform,
   ActivityIndicator,
   Alert,
 } from 'react-native';
@@ -18,15 +15,14 @@ import TabFour from './TabFour';
 import TabFive from './TabFive';
 import Toast from '../../../component/Toast';
 import {getDirectory} from '../../../Actions/DirectoryActions';
-import {doSearchCity} from '../../../Actions/CommonActions';
+import {doSearchCity, uploadMedia} from '../../../Actions/CommonActions';
 import {getProfessionList} from '../../../Actions/UserActions';
-import {uploadMedia} from '../../../Actions/CommonActions';
-import {addYellowPage} from '../../../Actions/AddYellowPageActions';
-import RNFetchBlob from 'rn-fetch-blob';
+import {addYellowPage, editYellowPage} from '../../../Actions/YelloPageActions';
 import {APP_NAME} from '../../../helper/Constants';
-import {CommonActions} from '@react-navigation/native';
+import Helper from '../../../helper/Helper';
 
 let searchVal = '';
+let postId = '';
 let cityTitle = '';
 let responseMessage = '';
 let professionListMain = [];
@@ -34,15 +30,12 @@ let inEditMode = false;
 let isSuccess = false;
 
 const ListMyBusiness = ({route, navigation}) => {
-  if (route.params !== undefined && route.params !== null) {
-    inEditMode = route.params.data.inEditMode;
-  }
-
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState({});
   const [loader, setLoader] = useState(false);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [setDefaultBusinessName, setSetDefaultBusinessName] = useState('');
 
   /**Tab one */
   const [businessName, setBusinessName] = useState('');
@@ -77,11 +70,62 @@ const ListMyBusiness = ({route, navigation}) => {
   const [webLink, setWebLink] = useState('');
 
   useEffect(() => {
+    searchVal = '';
+    postId = '';
+    cityTitle = '';
+    responseMessage = '';
+    professionListMain = [];
+    inEditMode = false;
+    isSuccess = false;
+
+    if (route.params !== undefined && route.params !== null) {
+      inEditMode = route.params.data.inEditMode;
+
+      if (inEditMode) {
+        setupDefaultData(route.params.data.data);
+      }
+    }
+
     if (global.isConnected) {
       getProfession();
     }
     return () => {};
-  }, []);
+  }, [route]);
+
+  const setupDefaultData = (defaultData) => {
+    if (defaultData && defaultData !== undefined && defaultData !== null) {
+      setBusinessName(defaultData.businessName);
+      setSetDefaultBusinessName(defaultData.businessName);
+      setSelectedProfession(defaultData.categoryOfBusiness);
+      setBusinessLocation(
+        defaultData.googleMapsLocation !== undefined &&
+          defaultData.googleMapsLocation !== null
+          ? defaultData.googleMapsLocation.link
+          : '',
+      );
+      setSelectedCities([...defaultData.citiesOfOperation]);
+      setCoverImages([...defaultData.coverImages]);
+
+      setAboutBusiness(defaultData.aboutTheBusiness);
+      setBusinessServices(defaultData.productsAndServicesOffered);
+      setProductTags([...defaultData.tags]);
+
+      setSelectedUser([...defaultData.alumniInBusiness]);
+      setMediaData([...defaultData.images]);
+
+      let companyContactPerson = defaultData.companyContactPerson;
+
+      setContactPerson(companyContactPerson.name);
+      setDesignation(companyContactPerson.designation);
+      setPhoneContact(companyContactPerson.phone);
+      setEmailAddress(companyContactPerson.email);
+      setWhatsApp(companyContactPerson.whatsapp);
+      setAddress(defaultData.companyAddress);
+      setWebLink(companyContactPerson.websiteLink);
+
+      postId = defaultData._id;
+    }
+  };
 
   /*****
    *
@@ -160,17 +204,17 @@ const ListMyBusiness = ({route, navigation}) => {
           if (response.status) {
             if (response.data && response.data !== null) {
               let childData = response.data.data;
-              let object = {
-                thumbnail: childData,
-                fileName: childData,
-                type: mediaType,
-              };
 
               if (mediaType === 4) {
                 let oldData = coverImages;
-                oldData.splice(0, 0, object);
+                oldData.splice(0, 0, childData);
                 setCoverImages([...oldData]);
               } else {
+                let object = {
+                  thumbnail: childData,
+                  fileName: childData,
+                  type: mediaType,
+                };
                 let oldData = mediaData;
                 oldData.splice(0, 0, object);
                 setMediaData([...oldData]);
@@ -265,6 +309,16 @@ const ListMyBusiness = ({route, navigation}) => {
       businessName: businessName,
       userId: global.userId,
     };
+
+    if (inEditMode) {
+      delete requestObject.userId;
+      editYellowPageData(requestObject);
+    } else {
+      addYellowPageData(requestObject);
+    }
+  };
+
+  const addYellowPageData = (requestObject) => {
     setLoader(true);
     addYellowPage(
       requestObject,
@@ -297,6 +351,42 @@ const ListMyBusiness = ({route, navigation}) => {
     );
   };
 
+  const editYellowPageData = (requestObject) => {
+    setLoader(true);
+    editYellowPage(
+      postId,
+      requestObject,
+      (response) => {
+        setLoader(false);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              isSuccess = true;
+              responseMessage =
+                'Congratulations your request has been submitted!';
+              setShowErrorMessage(true);
+            } else {
+              responseMessage = 'Error while posting your request!';
+              setShowErrorMessage(true);
+            }
+          }
+        }
+      },
+      (code, error) => {
+        console.log('code', code);
+        console.log('error', error);
+        responseMessage = error;
+        setShowErrorMessage(true);
+      },
+    );
+  };
+
   /*****
    *
    * API Section
@@ -304,79 +394,8 @@ const ListMyBusiness = ({route, navigation}) => {
    */
 
   const uploadImage = (pickFile, childPath, mediaType) => {
-    let body = [];
-
-    if (pickFile !== null) {
-      var path = '';
-
-      if (Platform.OS === 'android') {
-        path = pickFile.path;
-      } else if (Platform.OS === 'ios') {
-        path = pickFile.sourceURL;
-      }
-      let imageName = '';
-      if (
-        pickFile.fileName === undefined ||
-        pickFile.fileName == null ||
-        pickFile.fileName === ''
-      ) {
-        var getFilename = path.split('/');
-        imageName = getFilename[getFilename.length - 1];
-        var extension = imageName.split('.')[1];
-        imageName = new Date().getTime() + '.' + extension;
-      } else {
-        imageName = pickFile.fileName;
-      }
-
-      let imagePath =
-        Platform.OS === 'ios' ? path.replace('file://', '') : path;
-
-      let imageType = pickFile.mime;
-
-      var imageData = {
-        name: 'image',
-        filename: imageName,
-        type: imageType,
-        data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
-      };
-      body.push(imageData);
-
-      uploadMediaContent(body, childPath, mediaType);
-    }
-  };
-
-  const uploadDoc = (pickFile, childPath, mediaType) => {
-    let body = [];
-
-    if (pickFile !== null) {
-      var path = pickFile.uri;
-      let imageName = '';
-      if (
-        pickFile.name === undefined ||
-        pickFile.name == null ||
-        pickFile.name === ''
-      ) {
-        var getFilename = path.split('/');
-        imageName = getFilename[getFilename.length - 1];
-        var extension = imageName.split('.')[1];
-        imageName = new Date().getTime() + '.' + extension;
-      } else {
-        imageName = pickFile.name;
-      }
-
-      let imagePath =
-        Platform.OS === 'ios' ? path.replace('file://', '') : path;
-
-      let imageType = pickFile.type;
-
-      var imageData = {
-        name: 'image',
-        filename: imageName,
-        type: imageType,
-        data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
-      };
-      body.push(imageData);
-
+    let body = Helper.uploadImage(pickFile);
+    if (body !== null) {
       uploadMediaContent(body, childPath, mediaType);
     }
   };
@@ -397,10 +416,15 @@ const ListMyBusiness = ({route, navigation}) => {
       } else if (selectedCities.length === 0) {
         setErrorMessage({selectedCities: 'This field is required'});
         return;
-      } else if (businessLocation.trim() === '') {
-        setErrorMessage({businessLocation: 'This field is required'});
-        return;
       }
+
+      /**
+       * else if (businessLocation.trim() === '') {
+       * setErrorMessage({businessLocation: 'This field is required'});
+       * return;
+       * }
+       *
+       */
     } else if (step === 2) {
       if (aboutBusiness.trim() === '') {
         setErrorMessage({aboutBusiness: 'This field is required'});
@@ -408,21 +432,37 @@ const ListMyBusiness = ({route, navigation}) => {
       } else if (businessServices.trim() === '') {
         setErrorMessage({businessServices: 'This field is required'});
         return;
-      } else if (productTags.length === 0) {
-        setErrorMessage({tag: 'This field is required'});
-        return;
       }
+      /**
+       * else if (productTags.length === 0) {
+       * setErrorMessage({tag: 'This field is required'});
+       * return;
+      }
+       */
     } else if (step === 3) {
       if (selectedUser.length === 0) {
         setErrorMessage({selectedAlumini: 'This field is required'});
         return;
       }
     } else if (step === 5) {
+      /**
+       * else if (designation.trim() === '') {
+       * setErrorMessage({designation: 'This field is required'});
+       * return;
+       * }
+       *  else if (whatsApp.trim() === '') {
+       * setErrorMessage({whatsApp: 'This field is required'});
+       * return;
+       * }
+       *  else if (webLink.trim() === '') {
+       * setErrorMessage({webLink: 'This field is required'});
+       * return;
+       * } 
+       * 
+       */
+
       if (contactPerson.trim() === '') {
         setErrorMessage({contactPerson: 'This field is required'});
-        return;
-      } else if (designation.trim() === '') {
-        setErrorMessage({designation: 'This field is required'});
         return;
       } else if (phoneContact.trim() === '') {
         setErrorMessage({phoneContact: 'This field is required'});
@@ -430,17 +470,12 @@ const ListMyBusiness = ({route, navigation}) => {
       } else if (emailAddress.trim() === '') {
         setErrorMessage({emailAddress: 'This field is required'});
         return;
-      } else if (whatsApp.trim() === '') {
-        setErrorMessage({whatsApp: 'This field is required'});
-        return;
       } else if (address.trim() === '') {
         setErrorMessage({address: 'This field is required'});
         return;
-      } else if (webLink.trim() === '') {
-        setErrorMessage({webLink: 'This field is required'});
-        return;
       } else {
         saveMyBusiness();
+        return;
       }
     }
 
@@ -524,6 +559,7 @@ const ListMyBusiness = ({route, navigation}) => {
       case 1:
         return (
           <TabOne
+            inEditMode={inEditMode}
             businessName={businessName}
             professionList={professionList}
             selectedProfession={selectedProfession}
@@ -548,9 +584,9 @@ const ListMyBusiness = ({route, navigation}) => {
               getSearchDataByCity(query);
             }}
             selectedCities={selectedCities}
-            setSelectedCities={(city) => {
+            setSelectedCities={(city, countryCode) => {
               let oldData = selectedCities;
-              oldData.push(city);
+              oldData.push(`${city} (${countryCode})`);
               setSelectedCities([...oldData]);
             }}
             onRemoveCity={(index) => {
@@ -567,6 +603,7 @@ const ListMyBusiness = ({route, navigation}) => {
       case 2:
         return (
           <TabTwo
+            inEditMode={inEditMode}
             onSaveTab={() => validateAndMoveNextTab()}
             onPreviousTab={() => goPreviousTab()}
             handleInput={handleInput}
@@ -616,6 +653,7 @@ const ListMyBusiness = ({route, navigation}) => {
       case 3:
         return (
           <TabThree
+            inEditMode={inEditMode}
             onSaveTab={() => validateAndMoveNextTab()}
             onPreviousTab={() => goPreviousTab()}
             errorMessage={errorMessage}
@@ -649,6 +687,7 @@ const ListMyBusiness = ({route, navigation}) => {
       case 4:
         return (
           <TabFour
+            inEditMode={inEditMode}
             onSaveTab={() => validateAndMoveNextTab()}
             onPreviousTab={() => goPreviousTab()}
             mediaData={mediaData}
@@ -662,13 +701,18 @@ const ListMyBusiness = ({route, navigation}) => {
               uploadImage(image, 'utils/imageupload', 1);
             }}
             onPickDocument={(document) => {
-              uploadDoc(document, 'utils/imageupload?type=1', 3);
+              uploadMediaContent(
+                document.body,
+                document.childPath,
+                document.mediaType,
+              );
             }}
           />
         );
       case 5:
         return (
           <TabFive
+            inEditMode={inEditMode}
             loader={loader}
             onSaveTab={() => validateAndMoveNextTab()}
             onPreviousTab={() => goPreviousTab()}
@@ -691,7 +735,9 @@ const ListMyBusiness = ({route, navigation}) => {
     <View style={GlobalInclude.AppStyle.topSpace}>
       <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
         <HeaderBar
-          title={'List My Business'}
+          title={
+            inEditMode ? `Edit ${setDefaultBusinessName}` : 'List My Business'
+          }
           navigation={navigation}
           showBack={true}
         />
@@ -721,12 +767,13 @@ const ListMyBusiness = ({route, navigation}) => {
           okAction={() => {
             setShowErrorMessage(!showErrorMessage);
             if (isSuccess) {
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{name: 'YellowPages'}],
-                }),
-              );
+              navigation.goBack();
+              // navigation.dispatch(
+              //   CommonActions.reset({
+              //     index: 0,
+              //     routes: [{name: 'YellowPages'}],
+              //   }),
+              // );
             }
           }}
           closeAction={() => {
@@ -737,7 +784,5 @@ const ListMyBusiness = ({route, navigation}) => {
     </View>
   );
 };
-
-const style = StyleSheet.create({});
 
 export default ListMyBusiness;

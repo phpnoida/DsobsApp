@@ -167,9 +167,10 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
-//            ndk {
-//                abiFilters "armeabi-v7a", "x86"
-//            }
+           ndk {
+               //
+               abiFilters "armeabi-v7a", "x86"
+           }
         }
         release {
             // Caution! In production, you need to generate your own keystore file.

@@ -1,6 +1,43 @@
 import axios from 'axios';
 import {SERVER_PATH} from '../../config';
 
+export function addYellowPage(payload, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}yellowPages`;
+
+  const request = axios
+    .post(requestPath, payload, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+export function editYellowPage(pageId, payload, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}yellowPages?id=${pageId}`;
+
+  const request = axios
+    .patch(requestPath, payload, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
 export function doFitlerYellowPage(filterQuery, callback, errCallback) {
   let requestPath = `${SERVER_PATH}yellowPages/filter`;
   console.log('====================================');
@@ -11,6 +48,37 @@ export function doFitlerYellowPage(filterQuery, callback, errCallback) {
       headers: {Authorization: global.accessToken},
       params: filterQuery,
     })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function getYellowPageAbout(callback, errCallback) {
+  let requestPath = `${SERVER_PATH}yellowPages/aboutYp`;
+
+  const request = axios
+    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+export function getMyBusinessList(callback, errCallback) {
+  let requestPath = `${SERVER_PATH}yellowPages/my`;
+
+  console.log('====================================');
+  console.log('global.accessToken', global.accessToken);
+  console.log('====================================');
+
+  const request = axios
+    .get(requestPath, {headers: {Authorization: global.accessToken}})
     .then((res) => callback(res))
     .catch((err) => {
       handleError(err, errCallback);

@@ -5,25 +5,32 @@ import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 
-const Tags = ({productTags}) => (
+const Tags = ({content}) => (
   <ScrollView style={[GlobalInclude.AppStyle.fill, g.pl15, g.pr15]}>
-    <View style={grid.displayinlineBlock}>
-      {productTags.map((v, i) => {
-        return (
-          <TouchableOpacity
-            key={i.toString()}
-            onLongPress={() => {
-              selectedIndex = i;
-              setShowRemoveAlert(true);
-            }}
-            style={{margin: scale(4)}}
-            activeOpacity={1}>
-            <View style={[g.tagStyle, grid.rowdir]}>
-              <Text style={[g.tagTxtStyle, g.mr10]}>{v}</Text>
-            </View>
-          </TouchableOpacity>
-        );
-      })}
+    <View>
+      {content.tags &&
+      content.tags !== undefined &&
+      content.tags !== null &&
+      content.tags.length > 0 ? (
+        <View style={grid.displayinlineBlock}>
+          {content.tags.map((v, i) => {
+            return (
+              <TouchableOpacity
+                key={i.toString()}
+                style={{margin: scale(4)}}
+                activeOpacity={1}>
+                <View style={[g.tagStyle, grid.rowdir]}>
+                  <Text style={[g.tagTxtStyle, g.mr10]}>{v}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      ) : (
+        <View>
+          <Text style={[g.colorLightGray, g.fs16, g.FHNR]}>N/A</Text>
+        </View>
+      )}
     </View>
   </ScrollView>
 );

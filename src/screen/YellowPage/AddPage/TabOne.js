@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState} from 'react';
 import {
   Text,
   View,
@@ -7,6 +7,7 @@ import {
   Alert,
   Dimensions,
   ScrollView,
+  Keyboard,
   StyleSheet,
 } from 'react-native';
 import g from '../../../theme/global';
@@ -23,13 +24,12 @@ import RbSheet from 'react-native-raw-bottom-sheet';
 import BottomSheetHeader from '../../../component/BottomSheetHeader';
 import ModelAlert from '../../../component/ModalAlert';
 
-const {height, width} = Dimensions.get('window');
+const {height} = Dimensions.get('window');
 let selectedIndex = -1;
 let isEndReached = false;
 let scrollHold = 60;
 
 const scrollRef = React.createRef();
-const refRBSheet = React.createRef();
 const refRBSheetCity = React.createRef();
 const refProfessionSheet = React.createRef();
 
@@ -68,6 +68,7 @@ const TabOne = ({
   onRemoveCity,
   businessLocation,
   errorMessage,
+  inEditMode,
 }) => {
   const [showRemoveAlert, setShowRemoveAlert] = useState(false);
 
@@ -80,7 +81,8 @@ const TabOne = ({
           style={style.suggestionContainer}
           onPress={() => {
             if (selectedCities.length < 5) {
-              setSelectedCities(row.name);
+              Keyboard.dismiss();
+              setSelectedCities(row.name, row.country_code);
             } else {
               Alert.alert('You can select max 5 cities!');
             }
@@ -94,6 +96,9 @@ const TabOne = ({
           />
           <View style={{marginStart: scale(5)}}>
             <Text style={style.userName}>{row.name}</Text>
+          </View>
+          <View style={{marginStart: scale(5)}}>
+            <Text style={style.userName}>{row.country_name}</Text>
           </View>
         </TouchableOpacity>
       );
@@ -121,7 +126,7 @@ const TabOne = ({
         showsVerticalScrollIndicator={false}>
         <View style={[grid.flex1, g.pb30]}>
           <View style={g.mb15}>
-            {generateHeader('Company Name', false)}
+            {generateHeader('Company Name', true)}
             <TextInput
               value={businessName}
               underlineColorAndroid="transparent"
@@ -144,7 +149,7 @@ const TabOne = ({
           </View>
 
           <View style={g.mb15}>
-            {generateHeader('Business Category', false)}
+            {generateHeader('Business Category', true)}
             <TouchableOpacity
               activeOpacity={0.8}
               style={g.inputWhite}
@@ -175,7 +180,7 @@ const TabOne = ({
           </View>
 
           <View style={g.mb15}>
-            {generateHeader('Cover Image', false)}
+            {generateHeader('Cover Image', true)}
             <TouchableOpacity
               activeOpacity={1}
               onPress={() => {
@@ -219,6 +224,7 @@ const TabOne = ({
             <View>
               <ScrollView
                 horizontal
+                pagingEnabled={true}
                 showsHorizontalScrollIndicator={false}
                 ref={scrollRef}
                 onScroll={({nativeEvent}) => {
@@ -232,7 +238,7 @@ const TabOne = ({
                   return (
                     <View style={{margin: scale(5)}} key={index}>
                       <ProgresImage
-                        source={{uri: item.thumbnail}}
+                        source={{uri: item}}
                         containerStyle={{
                           height: scale(80),
                           width: scale(110),
@@ -271,9 +277,12 @@ const TabOne = ({
                   <TouchableOpacity
                     style={style.nextIconBox}
                     onPress={() => {
-                      scrollRef.current.scrollTo({
-                        x: -scrollHold,
-                      });
+                      if (isEndReached) {
+                        scrollHold = scrollHold - 60;
+                        scrollRef.current.scrollTo({
+                          x: scrollHold,
+                        });
+                      }
                     }}>
                     <GlobalInclude.BaseIcon
                       containerStyle={{height: scale(22), width: scale(22)}}
@@ -292,14 +301,19 @@ const TabOne = ({
                     disabled={isEndReached}
                     style={style.nextIconBox}
                     onPress={() => {
-                      if (scrollHold === 60) {
-                        scrollRef.current.scrollTo({
-                          x: scrollHold,
-                        });
-                      } else {
-                        scrollRef.current.scrollTo({
-                          x: scrollHold++,
-                        });
+                      console.log('scrollHold', scrollHold);
+                      if (!isEndReached) {
+                        if (scrollHold === 60) {
+                          scrollRef.current.scrollTo({
+                            x: scrollHold,
+                          });
+                          scrollHold = scrollHold + 60;
+                        } else {
+                          scrollHold = scrollHold + 60;
+                          scrollRef.current.scrollTo({
+                            x: scrollHold,
+                          });
+                        }
                       }
                     }}>
                     <GlobalInclude.BaseIcon
@@ -316,7 +330,7 @@ const TabOne = ({
           </View>
 
           <View style={g.mb15}>
-            {generateHeader('Cities of Operation Max-5', false)}
+            {generateHeader('Cities of Operation Max-5', true)}
             <TouchableOpacity
               style={g.inputWhite}
               onPress={() => {
@@ -329,11 +343,12 @@ const TabOne = ({
                   grid.col,
                   g.FHNR,
                   grid.justifyContentCenter,
+                  GlobalInclude.AppStyle.transform,
                   {textAlignVertical: 'center'},
                 ]}
                 numberOfLines={1}>
                 {selectedCities.length > 0
-                  ? selectedCities.toString()
+                  ? selectedCities.toString().replace(/,/g, ', ')
                   : 'Select City'}
               </Text>
             </TouchableOpacity>
@@ -372,31 +387,12 @@ const TabOne = ({
       <View style={style.buttonContainer}>
         <CommonButton
           showLoader={false}
-          title={'Save & Next'}
+          title={inEditMode ? 'Update & Next' : 'Save & Next'}
           onPress={() => {
             onSaveTab();
           }}
         />
       </View>
-      {/* bottom sheet */}
-      <RbSheet
-        ref={refRBSheet}
-        height={height / 2}
-        minClosingHeight={50}
-        duration={350}
-        closeOnDragDown={true}
-        customStyles={{
-          container: {
-            backgroundColor: '#fff',
-            borderTopLeftRadius: 30,
-            borderTopRightRadius: 30,
-            padding: 20,
-          },
-        }}>
-        <Text style={[g.fs16, g.FHNR, g.txtLeft, g.colorBlack, g.mb15]}>
-          Title will display here
-        </Text>
-      </RbSheet>
       <RbSheet
         ref={refRBSheetCity}
         height={height - 150}
@@ -440,7 +436,14 @@ const TabOne = ({
                         style={{margin: scale(4)}}
                         activeOpacity={1}>
                         <View style={[g.tagStyle, grid.rowdir]}>
-                          <Text style={[g.tagTxtStyle, g.mr10]}>{v}</Text>
+                          <Text
+                            style={[
+                              g.tagTxtStyle,
+                              g.mr10,
+                              GlobalInclude.AppStyle.transform,
+                            ]}>
+                            {v}
+                          </Text>
                         </View>
                       </TouchableOpacity>
                     );

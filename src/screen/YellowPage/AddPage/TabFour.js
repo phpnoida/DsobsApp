@@ -28,6 +28,7 @@ import {updateUserProfile} from '../../../Actions/UserActions';
 import YoutubeView from '../../../component/YoutubeView';
 import FastImage from 'react-native-fast-image';
 import {createImageProgress} from 'react-native-image-progress';
+import {permissionDocument} from '../../../helper/UploadDocument';
 
 const AnimatedFastImage = Animated.createAnimatedComponent(FastImage);
 const ProgressImage = createImageProgress(AnimatedFastImage);
@@ -44,6 +45,7 @@ const TabFour = ({
   addVideo,
   onPickImage,
   onPickDocument,
+  inEditMode,
 }) => {
   const [selectedLink, setSelectedLink] = useState('');
   const [selectedLinkError, setSelectedLinkError] = useState('');
@@ -239,13 +241,12 @@ const TabFour = ({
 
   const pickDocument = async () => {
     try {
-      const res = await DocumentPicker.pick({
-        type: [DocumentPicker.types.pdf],
+      permissionDocument().then((response) => {
+        if (response && response !== null && response !== undefined) {
+          let body = response;
+          onPickDocument(body);
+        }
       });
-      if (res !== null) {
-        console.log('res', res);
-        onPickDocument(res);
-      }
     } catch (err) {
       console.log('err', err);
       Alert.alert('User Cancelled Selection!');
@@ -398,6 +399,7 @@ const TabFour = ({
       </View>
       <NextPreviousButton
         isLoading={false}
+        nextTitle={inEditMode ? 'Update & Next' : 'Save & Next'}
         onPreviuosTab={() => {
           onPreviousTab();
         }}

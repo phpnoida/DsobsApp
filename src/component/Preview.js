@@ -1,38 +1,42 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  Platform,
-} from 'react-native';
+import {View, StyleSheet, Platform} from 'react-native';
 import ProgresImage from './ProgresImage';
-import GlobalInclude from '../globalInclude/Globalinclude';
 import {scale} from '../theme/Scalling';
 
-const Preview = ({style, item, imageKey, onPress, index, active, local}) => {
-  console.log('====================================');
-  console.log(item);
-  console.log('====================================');
+const Preview = ({
+  style,
+  item,
+  imageKey,
+  onPress,
+  index,
+  active,
+  local,
+  ViewStyle,
+  containerStyle,
+  imageStyle,
+}) => {
   return (
     <View
-      style={{
-        borderRadius: scale(10),
-        borderBottomLeftRadius: 0,
-        borderBottomRightRadius: 0,
-        height: scale(160),
-        width: style.width,
-        overflow: 'hidden',
-      }}>
+      style={[
+        {
+          borderRadius: scale(10),
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
+          height: scale(160),
+          width: style.width,
+          overflow: 'hidden',
+        },
+        ViewStyle,
+      ]}>
       <ProgresImage
-        source={{uri: item.image}}
+        source={{uri: item}}
         containerStyle={{
           borderRadius: scale(10),
           borderBottomLeftRadius: 0,
           borderBottomRightRadius: 0,
           height: scale(160),
           width: style.width,
+          ...containerStyle,
         }}
         imageStyle={{
           borderRadius: scale(10),
@@ -40,6 +44,7 @@ const Preview = ({style, item, imageKey, onPress, index, active, local}) => {
           borderBottomRightRadius: 0,
           height: scale(160),
           width: style.width,
+          ...imageStyle,
         }}
         mode={'cover'}
       />

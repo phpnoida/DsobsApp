@@ -27,7 +27,6 @@ import ProfessionSheet from 'react-native-raw-bottom-sheet';
 import RadioButton from '../../component/RadioButton';
 import AutoSuggestUser from '../../component/AutoSuggestUser';
 
-
 import ScrollableTabView, {
   ScrollableTabBar,
 } from 'react-native-scrollable-tab-view';

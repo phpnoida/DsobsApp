@@ -31,7 +31,7 @@ const BottomSheetHeader = (props) => {
               style={[grid.rowdir, g.fs16, g.ml5]}
               keyboardType="default"
               placeholder={'Search'}
-              returnKeyType="search"
+              returnKeyType={'done'}
               onChangeText={(search) => props.onSeachQuery(search)}
             />
           </View>
