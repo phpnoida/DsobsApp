@@ -6,29 +6,31 @@ import {scale} from '../../theme/Scalling';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 
 const ProductServices = ({content}) => (
-  <ScrollView style={grid.flex1} showsVerticalScrollIndicator={false}>
-    <View style={{padding: scale(10), paddingBottom: scale(70)}}>
-      {content.productsAndServicesOffered &&
-      content.productsAndServicesOffered !== undefined &&
-      content.productsAndServicesOffered !== null ? (
-        <View style={[g.boxShadow, g.bgWhite, g.br3, g.p5]}>
-          <View style={[grid.rowdir, grid.alignItems]}>
-            <View style={[grid.col, g.p10]}>
-              <Text style={[g.colorLightGray, g.fs16, g.FHNR]}>
-                {content.productsAndServicesOffered}
-              </Text>
+  <View>
+    {content.productsAndServicesOffered &&
+    content.productsAndServicesOffered !== undefined &&
+    content.productsAndServicesOffered !== null ? (
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={{padding: scale(10), paddingBottom: scale(70)}}>
+          <View style={[g.boxShadow, g.bgWhite, g.br3, g.p5]}>
+            <View style={[grid.rowdir, grid.alignItems]}>
+              <View style={[grid.col, g.p10]}>
+                <Text style={[g.colorLightGray, g.fs16, g.FHNR]}>
+                  {content.productsAndServicesOffered}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
-      ) : (
-        <View style={GlobalInclude.AppStyle.fillCenter}>
-          <Text style={[g.fs16, g.FHNB, g.colorBlack]}>
-            Currently No Data Uploaded!
-          </Text>
-        </View>
-      )}
-    </View>
-  </ScrollView>
+      </ScrollView>
+    ) : (
+      <View style={GlobalInclude.AppStyle.center}>
+        <Text style={[g.fs16, g.FHNB, g.colorBlack]}>
+          Currently No Data Uploaded!
+        </Text>
+      </View>
+    )}
+  </View>
 );
 
 export default ProductServices;

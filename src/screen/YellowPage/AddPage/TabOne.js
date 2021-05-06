@@ -27,17 +27,21 @@ import ModelAlert from '../../../component/ModalAlert';
 const {height} = Dimensions.get('window');
 let selectedIndex = -1;
 let isEndReached = false;
-let scrollHold = 60;
+let isHomeReached = false;
+let scrollHold = 120;
 
 const scrollRef = React.createRef();
 const refRBSheetCity = React.createRef();
 const refProfessionSheet = React.createRef();
 
-const isCloseToBottom = ({layoutMeasurement, contentOffset, contentSize}) => {
-  const paddingToBottom = 20;
+const isAtHome = ({contentOffset}) => {
+  return contentOffset.x > 0;
+};
+
+const isCloseToRight = ({layoutMeasurement, contentOffset, contentSize}) => {
+  const padingRight = scale(5);
   return (
-    layoutMeasurement.width + contentOffset.x >=
-    contentSize.width - paddingToBottom
+    layoutMeasurement.width + contentOffset.x >= contentSize.width - padingRight
   );
 };
 
@@ -224,15 +228,11 @@ const TabOne = ({
             <View>
               <ScrollView
                 horizontal
-                pagingEnabled={true}
                 showsHorizontalScrollIndicator={false}
                 ref={scrollRef}
                 onScroll={({nativeEvent}) => {
-                  if (isCloseToBottom(nativeEvent)) {
-                    isEndReached = true;
-                  } else {
-                    isEndReached = false;
-                  }
+                  isEndReached = isCloseToRight(nativeEvent);
+                  isHomeReached = isAtHome(nativeEvent);
                 }}>
                 {coverImages.map((item, index) => {
                   return (
@@ -277,11 +277,17 @@ const TabOne = ({
                   <TouchableOpacity
                     style={style.nextIconBox}
                     onPress={() => {
-                      if (isEndReached) {
-                        scrollHold = scrollHold - 60;
-                        scrollRef.current.scrollTo({
-                          x: scrollHold,
-                        });
+                      if (isHomeReached) {
+                        if (
+                          scrollRef.current !== null &&
+                          scrollRef.current !== undefined
+                        ) {
+                          scrollHold = scrollHold - 120;
+                          scrollRef.current.scrollTo({
+                            x: scrollHold,
+                            animated: true,
+                          });
+                        }
                       }
                     }}>
                     <GlobalInclude.BaseIcon
@@ -301,18 +307,29 @@ const TabOne = ({
                     disabled={isEndReached}
                     style={style.nextIconBox}
                     onPress={() => {
-                      console.log('scrollHold', scrollHold);
                       if (!isEndReached) {
-                        if (scrollHold === 60) {
-                          scrollRef.current.scrollTo({
-                            x: scrollHold,
-                          });
-                          scrollHold = scrollHold + 60;
+                        if (scrollHold === 120) {
+                          if (
+                            scrollRef.current !== null &&
+                            scrollRef.current !== undefined
+                          ) {
+                            scrollRef.current.scrollTo({
+                              x: scrollHold,
+                              animated: true,
+                            });
+                            scrollHold = scrollHold + 120;
+                          }
                         } else {
-                          scrollHold = scrollHold + 60;
-                          scrollRef.current.scrollTo({
-                            x: scrollHold,
-                          });
+                          if (
+                            scrollRef.current !== null &&
+                            scrollRef.current !== undefined
+                          ) {
+                            scrollHold = scrollHold + 120;
+                            scrollRef.current.scrollTo({
+                              x: scrollHold,
+                              animated: true,
+                            });
+                          }
                         }
                       }
                     }}>

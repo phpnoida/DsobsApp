@@ -583,6 +583,7 @@ const YellowPages = ({navigation}) => {
               ChkFourTitle={'Location'}
               onChecked={(type) => {
                 searchType = type;
+                resetCount();
                 setCheckedType(type);
                 setSearchedCityCompany([]);
                 setFilterQuery('');
@@ -592,13 +593,17 @@ const YellowPages = ({navigation}) => {
                 searchVal = text;
                 setFilterQuery(text);
                 if (searchType === 1) {
-                  if (text.length > 3) {
+                  if (text.length > 2) {
                     searchProfession(text);
                   } else {
                     setSearchedCityCompany([]);
+                    if (text.length === 0) {
+                      resetCount();
+                      getYellowPage();
+                    }
                   }
                 } else if (searchType === 2) {
-                  if (text.length > 3) {
+                  if (text.length > 2) {
                     searchCompanyName(text);
                   } else {
                     setSearchedCityCompany([]);
@@ -609,20 +614,25 @@ const YellowPages = ({navigation}) => {
                   }
                 } else if (searchType === 3) {
                   resetCount();
-                  if (text.length > 3) {
+                  if (text.length > 2) {
                     filterObject.s = text;
                     filterObject.type = 2;
                     getYellowPage();
                   } else {
                     if (text.length === 0) {
+                      resetCount();
                       getYellowPage();
                     }
                   }
                 } else if (searchType === 4) {
-                  if (text.length > 3) {
+                  if (text.length > 2) {
                     searchCityName(text);
                   } else {
                     setSearchedCityCompany([]);
+                    if (text.length === 0) {
+                      resetCount();
+                      getYellowPage();
+                    }
                   }
                 }
               }}
@@ -645,8 +655,10 @@ const YellowPages = ({navigation}) => {
                 searchedData={searchedCityCompany}
                 onPress={(row, index) => {
                   Keyboard.dismiss();
+                  setFilterQuery('');
                   setSearchedCityCompany([]);
-                  setFilterQuery(row.label);
+                  setFilterQuery(Helper.capitalize(row.label));
+
                   searchVal = row.label;
                   resetCount();
                   setTimeout(() => {
@@ -760,16 +772,11 @@ const YellowPages = ({navigation}) => {
                 List My Business
               </Text>
             </TouchableOpacity>
-
-            <Text
-              style={[g.fs16, g.FHNB, g.txtLeft, g.colorBlue, g.ml10, g.mb10]}>
-              My Business
-            </Text>
             {myBusinessList &&
               myBusinessList !== null &&
               myBusinessList !== undefined &&
               myBusinessList.length > 0 && (
-                <View style={g.ml24}>
+                <View>
                   {myBusinessList.map((item, index) => {
                     return (
                       <TouchableOpacity

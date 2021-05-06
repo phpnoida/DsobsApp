@@ -58,9 +58,8 @@ const TabTwo = ({
                 g.inputWhite,
                 {height: scale(100), textAlignVertical: 'top'},
               ]}
-              autoCapitalize="words"
+              autoCapitalize={'sentences'}
               placeholder="Enter your text here"
-              keyboardType={'default'}
               returnKeyType={'done'}
               value={aboutBusiness}
               onChangeText={(value) => {
@@ -84,8 +83,7 @@ const TabTwo = ({
                 g.inputWhite,
                 {height: scale(100), textAlignVertical: 'top'},
               ]}
-              keyboardType={'default'}
-              autoCapitalize={'words'}
+              autoCapitalize={'sentences'}
               returnKeyType={'done'}
               placeholder={'Enter your text here'}
               value={businessServices}

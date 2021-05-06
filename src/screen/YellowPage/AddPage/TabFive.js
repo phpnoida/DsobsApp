@@ -6,9 +6,7 @@ import {scale} from '../../../theme/Scalling';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import NextPreviousButton from '../../../component/NextPreviousButton';
-import CommonButton from '../../../component/CommonButton';
 
-let selectedIndex = -1;
 const TabFive = ({
   onSaveTab,
   onPreviousTab,
@@ -18,11 +16,13 @@ const TabFive = ({
   phoneContact,
   emailAddress,
   whatsApp,
+  whatsappCountryCode,
   address,
   webLink,
   errorMessage,
   loader,
   inEditMode,
+  openCounryCodePicker,
 }) => {
   const generateHeader = (title, required) => {
     return (
@@ -127,20 +127,41 @@ const TabFive = ({
                 </Text>
               )}
           </View>
+
           <View style={g.mb15}>
             {generateHeader('WhatsApp Number', false)}
-            <TextInput
-              underlineColorAndroid="transparent"
-              style={g.inputWhite}
-              maxLength={12}
-              value={whatsApp}
-              keyboardType={'phone-pad'}
-              returnKeyType={'done'}
-              placeholder={'Enter your text here'}
-              onChangeText={(value) => {
-                handleInput('whatsApp', value);
-              }}
-            />
+            <View
+              style={[grid.rowdir, g.bglightGray, {borderRadius: scale(6)}]}>
+              <TouchableOpacity
+                activeOpacity={1}
+                style={[g.countryCode]}
+                onPress={() => {
+                  openCounryCodePicker();
+                }}>
+                <Text style={[g.colordarkGray, g.FHNR, g.txtCenter]}>
+                  {whatsappCountryCode}
+                </Text>
+              </TouchableOpacity>
+              <View style={[grid.col]}>
+                <TextInput
+                  underlineColorAndroid="transparent"
+                  style={[
+                    g.inputGrayLogin,
+                    g.mb0,
+                    g.pt5,
+                    g.pb5,
+                    {borderTopLeftRadius: 0, borderBottomLeftRadius: 0},
+                  ]}
+                  maxLength={12}
+                  keyboardType={'phone-pad'}
+                  returnKeyType={'done'}
+                  value={whatsApp}
+                  placeholder="Phone Number"
+                  onChangeText={(value) => handleInput('whatsApp', value)}
+                  placeholderTextColor={'#ddd'}
+                />
+              </View>
+            </View>
             {errorMessage.whatsApp && errorMessage.whatsApp.length > 0 && (
               <Text style={[g.errorMsg, g.pt5]}>{errorMessage.whatsApp}</Text>
             )}

@@ -126,7 +126,11 @@ const AluminiDetails = ({content, navigation}) => (
           {showTaggedUsers(navigation, content.alumniInBusiness)}
         </View>
       ) : (
-        <Text style={[g.colorLightGray, g.fs16, g.FHNR]}>N/A</Text>
+        <View style={GlobalInclude.AppStyle.center}>
+          <Text style={[g.fs16, g.FHNB, g.colorBlack]}>
+            Currently No Data Uploaded!
+          </Text>
+        </View>
       )}
     </View>
   </ScrollView>

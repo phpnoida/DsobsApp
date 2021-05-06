@@ -20,6 +20,7 @@ import {getProfessionList} from '../../../Actions/UserActions';
 import {addYellowPage, editYellowPage} from '../../../Actions/YelloPageActions';
 import {APP_NAME} from '../../../helper/Constants';
 import Helper from '../../../helper/Helper';
+import CountryPicker from 'react-native-country-picker-modal';
 
 let searchVal = '';
 let postId = '';
@@ -68,6 +69,8 @@ const ListMyBusiness = ({route, navigation}) => {
   const [whatsApp, setWhatsApp] = useState('');
   const [address, setAddress] = useState('');
   const [webLink, setWebLink] = useState('');
+  const [whatsappCountryCode, setWhatsappCountryCode] = useState('+91');
+  const [showCodePicker, setShowCodePicker] = useState(false);
 
   useEffect(() => {
     searchVal = '';
@@ -122,6 +125,7 @@ const ListMyBusiness = ({route, navigation}) => {
       setWhatsApp(companyContactPerson.whatsapp);
       setAddress(defaultData.companyAddress);
       setWebLink(companyContactPerson.websiteLink);
+      setWhatsappCountryCode(companyContactPerson.whatsappCountryCode);
 
       postId = defaultData._id;
     }
@@ -282,6 +286,7 @@ const ListMyBusiness = ({route, navigation}) => {
         designation: designation,
         email: emailAddress,
         whatsapp: whatsApp,
+        whatsappCountryCode: whatsappCountryCode,
         websiteLink: webLink,
         phone: phoneContact,
         countryCode: '+91',
@@ -307,11 +312,19 @@ const ListMyBusiness = ({route, navigation}) => {
       paymentMode: 0,
       companyAddress: address,
       businessName: businessName,
+
       userId: global.userId,
     };
 
     if (inEditMode) {
       delete requestObject.userId;
+      delete requestObject.amountReceived;
+      delete requestObject.amountDateOfRecived;
+      delete requestObject.subscriptionStartDate;
+      delete requestObject.subscriptionEndDate;
+      delete requestObject.amountReceivedBy;
+      delete requestObject.amountReceiverPhone;
+      delete requestObject.editors;
       editYellowPageData(requestObject);
     } else {
       addYellowPageData(requestObject);
@@ -379,10 +392,9 @@ const ListMyBusiness = ({route, navigation}) => {
         }
       },
       (code, error) => {
-        console.log('code', code);
-        console.log('error', error);
         responseMessage = error;
         setShowErrorMessage(true);
+        setLoader(false);
       },
     );
   };
@@ -392,6 +404,20 @@ const ListMyBusiness = ({route, navigation}) => {
    * API Section
    *
    */
+
+  const openCounryCodePicker = () => {
+    setShowCodePicker(!showCodePicker);
+  };
+
+  const closeCodePicker = () => {
+    setShowCodePicker(!showCodePicker);
+  };
+
+  const onSelectCountry = (country) => {
+    setShowCodePicker(!showCodePicker);
+    let code = '+' + country.callingCode[0];
+    setWhatsappCountryCode(code);
+  };
 
   const uploadImage = (pickFile, childPath, mediaType) => {
     let body = Helper.uploadImage(pickFile);
@@ -457,8 +483,8 @@ const ListMyBusiness = ({route, navigation}) => {
        *  else if (webLink.trim() === '') {
        * setErrorMessage({webLink: 'This field is required'});
        * return;
-       * } 
-       * 
+       * }
+       *
        */
 
       if (contactPerson.trim() === '') {
@@ -722,9 +748,11 @@ const ListMyBusiness = ({route, navigation}) => {
             phoneContact={phoneContact}
             emailAddress={emailAddress}
             whatsApp={whatsApp}
+            whatsappCountryCode={whatsappCountryCode}
             address={address}
             webLink={webLink}
             errorMessage={errorMessage}
+            openCounryCodePicker={() => openCounryCodePicker()}
           />
         );
     }
@@ -778,6 +806,21 @@ const ListMyBusiness = ({route, navigation}) => {
           }}
           closeAction={() => {
             setShowErrorMessage(!showErrorMessage);
+          }}
+        />
+      )}
+
+      {/* country code picker */}
+      {showCodePicker && (
+        <CountryPicker
+          withFilter={true}
+          modalProps={{animationType: 'slide'}}
+          visible
+          onClose={() => {
+            closeCodePicker();
+          }}
+          onSelect={(country) => {
+            onSelectCountry(country);
           }}
         />
       )}

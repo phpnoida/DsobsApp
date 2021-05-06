@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
@@ -32,6 +33,7 @@ import Helpers from '../../helper/Helper';
 
 let latitude = 0.0,
   longitude = 0.0;
+const {height} = Dimensions.get('window');
 
 const BusinessDetails = ({route, navigation}) => {
   const refRBSheet = useRef();
@@ -110,7 +112,7 @@ const BusinessDetails = ({route, navigation}) => {
           ) : (
             <View style={GlobalInclude.AppStyle.fill}>
               {pageContent !== null ? (
-                <View style={GlobalInclude.AppStyle.fill}>
+                <ScrollView showsVerticalScrollIndicator={false}>
                   <HeaderBar
                     title={
                       pageContent.businessName &&
@@ -217,6 +219,7 @@ const BusinessDetails = ({route, navigation}) => {
                     )}
                   </View>
                   <ScrollableTabView
+                    style={{height: height}}
                     underlineColor={'#ffffff'}
                     initialPage={0}
                     tabBarActiveTextColor={'#2b3252'}
@@ -253,7 +256,7 @@ const BusinessDetails = ({route, navigation}) => {
                       productTags={['help', 'structure', 'helo']}
                     />
                   </ScrollableTabView>
-                </View>
+                </ScrollView>
               ) : (
                 <View style={GlobalInclude.AppStyle.center}>
                   <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
@@ -317,8 +320,7 @@ const BusinessDetails = ({route, navigation}) => {
               ? pageContent.companyContactPerson.name
               : 'N/A'}
           </Text>
-          <Text
-            style={[g.fs16, g.FHNR, g.txtLeft, g.colorBlack, g.mb10, g.ml10]}>
+          <Text style={[g.fs16, g.FHNR, g.txtLeft, g.colorBlack, g.mb10]}>
             {pageContent.companyContactPerson.designation &&
             pageContent.companyContactPerson.designation !== undefined &&
             pageContent.companyContactPerson.designation !== null
@@ -381,10 +383,8 @@ const BusinessDetails = ({route, navigation}) => {
                     pageContent.companyContactPerson.whatsapp !== null &&
                     pageContent.companyContactPerson.whatsapp !== ''
                   ) {
-                    Helpers.shareToWhatsAppWithContact(
-                      pageContent.companyContactPerson.whatsapp,
-                      '',
-                    );
+                    let phoneNumber = `${pageContent.companyContactPerson.whatsappCountryCode}${pageContent.companyContactPerson.whatsapp}`;
+                    Helpers.shareToWhatsAppWithContact(phoneNumber, '');
                   }
                 }}
                 activeOpacity={1}>
@@ -435,42 +435,40 @@ const BusinessDetails = ({route, navigation}) => {
                 {'Email'}
               </Text>
             </View>
-            <View
-              style={{
-                flex: 1,
-                alignSelf: 'center',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-              <TouchableOpacity
-                onPress={() => {
-                  if (
-                    pageContent.companyContactPerson.websiteLink &&
-                    pageContent.companyContactPerson.websiteLink !==
-                      undefined &&
-                    pageContent.companyContactPerson.websiteLink !== null &&
-                    pageContent.companyContactPerson.websiteLink !== ''
-                  ) {
+            {pageContent.companyContactPerson.websiteLink &&
+            pageContent.companyContactPerson.websiteLink !== undefined &&
+            pageContent.companyContactPerson.websiteLink !== null &&
+            pageContent.companyContactPerson.websiteLink !== '' ? (
+              <View
+                style={{
+                  flex: 1,
+                  alignSelf: 'center',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}>
+                <TouchableOpacity
+                  onPress={() => {
                     Helpers.openLink(
                       pageContent.companyContactPerson.websiteLink,
                     );
-                  }
-                }}
-                activeOpacity={1}>
-                <ProgresImage
-                  source={GlobalInclude.Assets.WebSite}
-                  containerStyle={{height: scale(28), width: scale(28)}}
-                  imageStyle={{
-                    height: scale(28),
-                    width: scale(28),
                   }}
-                  mode={'contain'}
-                />
-              </TouchableOpacity>
-              <Text style={[g.fs12, g.FHNR, g.txtCenter, g.colorBlack, g.mt10]}>
-                {'Website'}
-              </Text>
-            </View>
+                  activeOpacity={1}>
+                  <ProgresImage
+                    source={GlobalInclude.Assets.WebSite}
+                    containerStyle={{height: scale(28), width: scale(28)}}
+                    imageStyle={{
+                      height: scale(28),
+                      width: scale(28),
+                    }}
+                    mode={'contain'}
+                  />
+                </TouchableOpacity>
+                <Text
+                  style={[g.fs12, g.FHNR, g.txtCenter, g.colorBlack, g.mt10]}>
+                  {'Website'}
+                </Text>
+              </View>
+            ) : null}
           </View>
         </RbSheet>
       )}

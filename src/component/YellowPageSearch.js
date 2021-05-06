@@ -109,6 +109,7 @@ const YellowPageSearch = ({
               iconType={IconType[4]}
             />
             <TextInput
+              value={filterQuery}
               underlineColorAndroid="transparent"
               style={[
                 g.inputNew,
@@ -117,8 +118,8 @@ const YellowPageSearch = ({
                 grid.col,
                 grid.justifyContentCenter,
               ]}
-              keyboardType={'default'}
-              placeholder={'Type more than 3 characters'}
+              autoCapitalize={'words'}
+              placeholder={'Type more than 2 characters'}
               onChangeText={(text) => {
                 changeText(text);
               }}
