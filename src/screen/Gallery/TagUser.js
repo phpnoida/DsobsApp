@@ -86,7 +86,7 @@ const TagUser = ({route, navigation}) => {
       let taggedIds = [];
       taggedUsers.map((user) => {
         taggedIds.push({
-          id: user._id,
+          _id: user._id,
           firstName: user.firstName,
           lastName: user.lastName,
           batch: user.batch,
@@ -163,6 +163,10 @@ const TagUser = ({route, navigation}) => {
         return;
       }
     }
+
+    console.log('====================================');
+    console.log('item', item);
+    console.log('====================================');
 
     let oldItem = taggedUsers;
 
@@ -263,6 +267,7 @@ const TagUser = ({route, navigation}) => {
             navigation={navigation}
             title={'Tag People'}
             showLabel={false}
+            showBack={true}
           />
           <ScrollView
             style={{
@@ -302,22 +307,18 @@ const TagUser = ({route, navigation}) => {
                   People
                 </Text>
               ) : null}
-              <View
-                style={[
-                  grid.row,
-                  g.mt10,
-                  taggedUsers.length > 2 ? grid.justifyContent : '',
-                  grid.flexwrap,
-                ]}>
+
+              <View style={[grid.rowdir, grid.flexwrap, grid.alignItems]}>
                 {taggedUsers.map((item, index) => {
                   return (
                     <View
                       key={index}
                       style={[
                         {
+                          width: width / 3 - 30,
+                          marginTop: 10,
+                          marginRight: 10,
                           marginLeft: 10,
-                          width: width / 3 - 40,
-                          marginRight: taggedUsers.length > 2 ? 10 : 20,
                           paddingTop: scale(15),
                         },
                       ]}>

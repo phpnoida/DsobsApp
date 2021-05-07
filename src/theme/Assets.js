@@ -51,6 +51,10 @@ import EmailIcon from '../../Assets/Icon/email.png';
 import WebSite from '../../Assets/Icon/globe.png';
 import WhatsAppIcon from '../../Assets/Icon/whatsapp.png';
 import MapLocation from '../../Assets/Icon/map_location.png';
+import AudioAttach from '../../Assets/Icon/attachAudio.png';
+import CameraAttach from '../../Assets/Icon/attachCamera.png';
+import DocAttach from '../../Assets/Icon/attachdocs.png';
+import VideoAttach from '../../Assets/Icon/attachVideo.png';
 export default {
   AppLogo: AppLogo,
   Alumbus: Alumbus,
@@ -105,4 +109,8 @@ export default {
   WebSite: WebSite,
   WhatsAppIcon: WhatsAppIcon,
   MapLocation: MapLocation,
+  AudioAttach: AudioAttach,
+  CameraAttach: CameraAttach,
+  DocAttach: DocAttach,
+  VideoAttach: VideoAttach,
 };

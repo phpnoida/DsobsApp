@@ -593,7 +593,7 @@ const YellowPages = ({navigation}) => {
                 searchVal = text;
                 setFilterQuery(text);
                 if (searchType === 1) {
-                  if (text.length > 2) {
+                  if (text.length >= 2) {
                     searchProfession(text);
                   } else {
                     setSearchedCityCompany([]);
@@ -603,7 +603,7 @@ const YellowPages = ({navigation}) => {
                     }
                   }
                 } else if (searchType === 2) {
-                  if (text.length > 2) {
+                  if (text.length >= 2) {
                     searchCompanyName(text);
                   } else {
                     setSearchedCityCompany([]);
@@ -614,7 +614,7 @@ const YellowPages = ({navigation}) => {
                   }
                 } else if (searchType === 3) {
                   resetCount();
-                  if (text.length > 2) {
+                  if (text.length >= 2) {
                     filterObject.s = text;
                     filterObject.type = 2;
                     getYellowPage();
@@ -625,7 +625,7 @@ const YellowPages = ({navigation}) => {
                     }
                   }
                 } else if (searchType === 4) {
-                  if (text.length > 2) {
+                  if (text.length >= 2) {
                     searchCityName(text);
                   } else {
                     setSearchedCityCompany([]);
@@ -826,7 +826,7 @@ const YellowPages = ({navigation}) => {
           setFilterQuery(value);
           searchVal = value;
           refProfessionalSheet.current.close();
-
+          setProfessionList([...professionListMain]);
           resetCount();
           filterObject.categoryOfBusiness = value;
           setTimeout(() => {

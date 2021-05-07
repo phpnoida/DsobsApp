@@ -217,6 +217,19 @@ const GalleryListing = ({navigation}) => {
     getAlbumList();
   };
 
+  const resetData = () => {
+    filterObject.index = 0;
+    if (
+      filterObject.s &&
+      filterObject.s !== undefined &&
+      filterObject.s !== null
+    ) {
+      delete filterObject.s;
+    }
+    setPageContent([]);
+    getAlbumList();
+  };
+
   const expandSelectedPanel = (index) => {
     let oldData = pageContent;
 
@@ -312,6 +325,8 @@ const GalleryListing = ({navigation}) => {
               onChecked={(type) => {
                 searchType = type;
                 setCheckedType(type);
+                setSearchedUser([]);
+                setFilterQuery('');
                 if (type === 3) {
                   setTimeout(() => {
                     refRBSheet.current.open();

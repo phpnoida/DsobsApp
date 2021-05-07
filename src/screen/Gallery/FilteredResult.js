@@ -185,7 +185,11 @@ const FilteredResult = ({navigation, route}) => {
             </View>
           ) : (
             <View style={GlobalInclude.AppStyle.fill}>
-              <HeaderBar navigation={navigation} title={pageTitle} />
+              <HeaderBar
+                navigation={navigation}
+                title={pageTitle}
+                showBack={true}
+              />
               <View
                 style={{
                   paddingLeft: 15,

@@ -449,6 +449,7 @@ const GalleryDetail = ({route, navigation}) => {
             <View style={GlobalInclude.AppStyle.fill}>
               <HeaderBar
                 navigation={navigation}
+                showBack={true}
                 title={title}
                 showLabel={true}
                 label={'Tag'}

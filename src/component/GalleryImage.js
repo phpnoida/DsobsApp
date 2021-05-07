@@ -26,9 +26,7 @@ class GalleryImage extends Component {
   }
 
   renderImages = (data, expanded) => {
-    let component = [];
-
-    let loopTill = expanded ? 5 : 0;
+    let loopTill = expanded ? 6 : 0;
 
     let calloutSection = data.map((item, index) => {
       return (
@@ -76,7 +74,7 @@ class GalleryImage extends Component {
   };
 
   loadRemainImages = (imageArray) => {
-    let data = imageArray.slice(5);
+    let data = imageArray.slice(6);
     return this.renderImages(data, true);
   };
 

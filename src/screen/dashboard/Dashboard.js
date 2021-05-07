@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect,useRef} from 'react';
 import {
   Text,
   View,
@@ -62,6 +62,7 @@ let bottomSheetMenu = [
 ];
 
 const Dashboard = ({props, navigation}) => {
+
   const [showWelcome, setShowWelcome] = useState(true);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [showPopNotification, setShowPopNotification] = useState(false);

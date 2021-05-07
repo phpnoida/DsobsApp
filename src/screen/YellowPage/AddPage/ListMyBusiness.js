@@ -594,6 +594,7 @@ const ListMyBusiness = ({route, navigation}) => {
             }}
             onPreofessionSelect={(profession) => {
               setSelectedProfession(profession);
+              setProfessionList([...professionListMain]);
             }}
             coverImages={coverImages}
             setCoverImages={(image) => {
