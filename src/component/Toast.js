@@ -133,6 +133,8 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
     flexDirection: 'row',
+    zIndex: 9999,
+    top:0,
   },
   timing: {
     borderBottomRightRadius: 5,

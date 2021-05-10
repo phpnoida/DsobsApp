@@ -613,7 +613,7 @@ const ListMyBusiness = ({route, navigation}) => {
             selectedCities={selectedCities}
             setSelectedCities={(city, countryCode) => {
               let oldData = selectedCities;
-              oldData.push(`${city} (${countryCode})`);
+              oldData.push(`${Helper.capitalize(city)} (${countryCode})`);
               setSelectedCities([...oldData]);
             }}
             onRemoveCity={(index) => {

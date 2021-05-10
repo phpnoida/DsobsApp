@@ -30,12 +30,18 @@ import YellowPageListing from '../screen/YellowPage/YellowPageListing';
 import BusinessDetails from '../screen/YellowPage/BusinessDetails';
 import AboutYellowPage from '../screen/YellowPage/AboutYellowPage';
 import NotificationListing from '../screen/Notification/NotificationListing';
+import Demo from '../Demo';
 
 const Stack = createStackNavigator();
 
 export const RootNavigators = (baseRoute) => {
   return (
     <Stack.Navigator initialRouteName={baseRoute}>
+      <Stack.Screen
+        name="Demo"
+        component={Demo}
+        options={{headerShown: false}}
+      />
       <Stack.Screen
         name="AppTour"
         component={AppTour}

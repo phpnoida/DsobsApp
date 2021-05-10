@@ -2,39 +2,22 @@ import React, {useState, useEffect} from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
-  TextInput,
   SafeAreaView,
-  Image,
   Text,
   ActivityIndicator,
   TouchableOpacity,
-  Dimensions,
   FlatList,
-  Linking,
+  Dimensions,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
-import {IconType, APP_NAME, URL_REGX} from '../../helper/Constants';
-import TopHeaderView from '../../component/TopHeaderView';
-import GalleryImage from '../../component/GalleryImage';
-import CheckBoxIOS from 'react-native-check-box';
-import FilterSheet from 'react-native-raw-bottom-sheet';
-import CommonButton from '../../component/CommonButton';
-import ImageShareModal from '../../component/ImageShareModal';
-import {
-  getAlbums,
-  getGalleryCategory,
-  doFilterGallery,
-} from '../../Actions/GalleryActions';
+import {APP_NAME} from '../../helper/Constants';
+import {doFilterGallery} from '../../Actions/GalleryActions';
 import HeaderBar from '../../component/HeaderBar';
 import ProgresImage from '../../component/ProgresImage';
-
 let pageTitle = APP_NAME;
-let deviceWidth = Dimensions.get('window').width;
-
 const PaginationStatus = {
   firstLoad: 0,
   waiting: 1,
@@ -42,6 +25,8 @@ const PaginationStatus = {
 };
 let totalCount = 0;
 let filterObject = {};
+
+const {height, width} = Dimensions.get('window');
 
 const FilteredResult = ({navigation, route}) => {
   const [imageData, setImageData] = useState([]);
@@ -64,9 +49,6 @@ const FilteredResult = ({navigation, route}) => {
   }, []);
 
   const getGalleryData = () => {
-    console.log('====================================');
-    console.log(filterObject);
-    console.log('====================================');
     doFilterGallery(
       filterObject,
       (response) => {
@@ -80,11 +62,10 @@ const FilteredResult = ({navigation, route}) => {
             let data = response.data;
 
             if (data.status) {
-              console.log('====================================');
-              console.log('data.data', JSON.stringify(data.data));
-              console.log('====================================');
               let results = data.data;
-
+              console.log('====================================');
+              console.log('results', results);
+              console.log('====================================');
               if (filterObject.index === 0) {
                 totalCount = data.totalCount;
                 setImageData([...results]);
@@ -150,28 +131,48 @@ const FilteredResult = ({navigation, route}) => {
     );
   };
 
-  const generateGalleryView = ({item, index}) => {
+  const generateGalleryView = () => {
+    let calloutSection = imageData.map((item, index) => {
+      return (
+        <TouchableOpacity
+          activeOpacity={1}
+          key={index}
+          style={{
+            width: width / 3 - 27,
+            marginTop: 10,
+            marginRight: 5,
+            marginLeft: 5,
+          }}>
+          <View style={[g.br3, g.oh, g.bggray]}>
+            <ProgresImage
+              source={
+                item.imagesLink !== undefined &&
+                item.imagesLink !== null &&
+                item.imagesLink !== ''
+                  ? {
+                      uri: item.imagesLink,
+                    }
+                  : GlobalInclude.Assets.DefaultImage
+              }
+              containerStyle={{aspectRatio: 1 / 1}}
+              imageStyle={{
+                aspectRatio: 1 / 1,
+              }}
+            />
+          </View>
+        </TouchableOpacity>
+      );
+    });
+    return calloutSection;
+  };
+
+  const renderNoDataComponent = () => {
     return (
-      <TouchableOpacity activeOpacity={1} onPress={() => {}} style={[g.mb15]}>
-        <View style={[g.br3, g.oh]}>
-          <ProgresImage
-            source={
-              item.imagesLink != null && item.imagesLink !== ''
-                ? {uri: item.imagesLink}
-                : GlobalInclude.Assets.DefaultImage
-            }
-            containerStyle={[
-              g.oh,
-              g.bglightGray,
-              {
-                borderRadius: 8,
-                aspectRatio: 3 / 4,
-                width: deviceWidth - 30,
-              },
-            ]}
-          />
-        </View>
-      </TouchableOpacity>
+      <View style={GlobalInclude.AppStyle.center}>
+        <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
+          No Record Found
+        </Text>
+      </View>
     );
   };
 
@@ -191,32 +192,32 @@ const FilteredResult = ({navigation, route}) => {
                 showBack={true}
               />
               <View
-                style={{
-                  paddingLeft: 15,
-                  paddingRight: 15,
-                  paddingTop: scale(15),
-                  paddingBottom: scale(35),
-                }}>
-                {imageData === null || imageData.length === 0 ? (
-                  <View style={GlobalInclude.AppStyle.center}>
-                    <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
-                      No Record Found
-                    </Text>
+                style={[
+                  {
+                    marginRight: 15,
+                    marginLeft: 15,
+                    padding: 10,
+                    borderRadius: 10,
+                    shadowOffset: {width: 2},
+                  },
+                  g.mb5,
+                  g.mt10,
+                  g.pb15,
+                  g.bgWhite,
+                  g.boxShadow,
+                ]}>
+                <View
+                  style={[
+                    grid.rowdir,
+                    grid.alignItemsBottom,
+                    grid.justifyContent,
+                  ]}>
+                  <View style={[g.oh]}>
+                    <View style={[grid.rowdir, grid.flexwrap]}>
+                      {generateGalleryView()}
+                    </View>
                   </View>
-                ) : (
-                  <FlatList
-                    showsVerticalScrollIndicator={false}
-                    extraData={imageData}
-                    data={imageData}
-                    renderItem={generateGalleryView}
-                    keyExtractor={(item, index) => index.toString()}
-                    onEndReachedThreshold={0.1}
-                    onEndReached={onEndReached}
-                    refreshing={isRefreshing}
-                    onRefresh={handleRefresh}
-                    ListFooterComponent={renderFooter}
-                  />
-                )}
+                </View>
               </View>
             </View>
           )}

@@ -147,6 +147,10 @@ const AboutPhoto = ({route, navigation}) => {
 
       setShowLoader(true);
 
+      console.log('====================================');
+      console.log('requestData', requestData);
+      console.log('====================================');
+
       doUpdateImageInformation(
         imageId,
         requestData,

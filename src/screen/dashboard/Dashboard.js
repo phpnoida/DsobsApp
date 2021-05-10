@@ -1,4 +1,4 @@
-import React, {useState, useEffect,useRef} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   Text,
   View,
@@ -62,7 +62,6 @@ let bottomSheetMenu = [
 ];
 
 const Dashboard = ({props, navigation}) => {
-
   const [showWelcome, setShowWelcome] = useState(true);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [showPopNotification, setShowPopNotification] = useState(false);
@@ -698,20 +697,20 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    //Alert.alert('Coming soon...');
-                    bottomSheet.close();
-                    setTimeout(() => {
-                      navigation.navigate('YellowPages');
-                    }, 200);
+                    Alert.alert('Coming soon...');
                   }}>
                   <Image
-                    source={GlobalInclude.Assets.Events}
+                    source={GlobalInclude.Assets.CommonRoom}
                     resizeMode={'contain'}
                     resizeMethod={'auto'}
-                    style={styles.menuIcon}
+                    tintColor={'#2b3252'}
+                    style={[
+                      styles.menuIcon,
+                      {...Platform.select({ios: {tintColor: '#2b3252'}})},
+                    ]}
                   />
                   <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Events</Text>
+                    <Text style={styles.menuStyle}>Common Room</Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -722,16 +721,23 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    Alert.alert('Coming soon...');
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('YellowPages');
+                    }, 200);
                   }}>
                   <Image
-                    source={GlobalInclude.Assets.Store}
+                    source={GlobalInclude.Assets.YellowPage}
                     resizeMode={'contain'}
                     resizeMethod={'auto'}
-                    style={styles.menuIcon}
+                    tintColor={'#2b3252'}
+                    style={[
+                      styles.menuIcon,
+                      {...Platform.select({ios: {tintColor: '#2b3252'}})},
+                    ]}
                   />
                   <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Store</Text>
+                    <Text style={styles.menuStyle}>Yellow Pages</Text>
                   </View>
                 </TouchableOpacity>
                 <View style={{margin: scale(5)}} />
@@ -756,43 +762,6 @@ const Dashboard = ({props, navigation}) => {
                 </TouchableOpacity>
               </View>
 
-              {/* row four */}
-              <View style={[grid.rowdir, grid.justifyContentCenter, g.mt8]}>
-                <TouchableOpacity
-                  style={[styles.whiteButton]}
-                  activeOpacity={1}
-                  onPress={() => {
-                    Alert.alert('Coming soon...');
-                  }}>
-                  <Image
-                    source={GlobalInclude.Assets.Jobs}
-                    resizeMode={'contain'}
-                    resizeMethod={'auto'}
-                    style={[styles.menuIcon, {marginStart: scale(20)}]}
-                  />
-                  <View style={GlobalInclude.AppStyle.fillCenter}>
-                    <Text style={styles.menuStyle}>Jobs</Text>
-                  </View>
-                </TouchableOpacity>
-                <View style={{margin: scale(5)}} />
-                <TouchableOpacity
-                  style={styles.whiteButton}
-                  activeOpacity={1}
-                  onPress={() => {
-                    Alert.alert('Coming soon...');
-                  }}>
-                  <Image
-                    source={GlobalInclude.Assets.Offers}
-                    resizeMode={'contain'}
-                    resizeMethod={'auto'}
-                    style={[styles.menuIcon, {marginStart: scale(20)}]}
-                  />
-                  <View style={GlobalInclude.AppStyle.fillCenter}>
-                    <Text style={styles.menuStyle}>Offers</Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-
               {/* row five */}
               <View style={[grid.rowdir, grid.justifyContentCenter, g.mt8]}>
                 <TouchableOpacity
@@ -808,7 +777,7 @@ const Dashboard = ({props, navigation}) => {
                     style={styles.menuIcon}
                   />
                   <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Footsteps</Text>
+                    <Text style={styles.menuStyle}>Social Work</Text>
                   </View>
                 </TouchableOpacity>
                 <View style={{margin: scale(5)}} />
@@ -819,13 +788,13 @@ const Dashboard = ({props, navigation}) => {
                     Alert.alert('Coming soon...');
                   }}>
                   <Image
-                    source={GlobalInclude.Assets.Groups}
+                    source={GlobalInclude.Assets.Events}
                     resizeMode={'contain'}
                     resizeMethod={'auto'}
                     style={styles.menuIcon}
                   />
                   <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Common Room</Text>
+                    <Text style={styles.menuStyle}>Events</Text>
                   </View>
                 </TouchableOpacity>
                 <View style={{margin: scale(5)}} />
@@ -843,6 +812,60 @@ const Dashboard = ({props, navigation}) => {
                   />
                   <View style={styles.menuText}>
                     <Text style={styles.menuStyle}>Ventures</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* row five */}
+              <View style={[grid.rowdir, grid.justifyContentCenter, g.mt8]}>
+                <TouchableOpacity
+                  style={styles.whiteButtonHorizontal}
+                  activeOpacity={1}
+                  onPress={() => {
+                    Alert.alert('Coming soon...');
+                  }}>
+                  <Image
+                    source={GlobalInclude.Assets.Jobs}
+                    resizeMode={'contain'}
+                    resizeMethod={'auto'}
+                    style={styles.menuIcon}
+                  />
+                  <View style={styles.menuText}>
+                    <Text style={styles.menuStyle}>Jobs</Text>
+                  </View>
+                </TouchableOpacity>
+                <View style={{margin: scale(5)}} />
+                <TouchableOpacity
+                  style={styles.whiteButtonHorizontal}
+                  activeOpacity={1}
+                  onPress={() => {
+                    Alert.alert('Coming soon...');
+                  }}>
+                  <Image
+                    source={GlobalInclude.Assets.Store}
+                    resizeMode={'contain'}
+                    resizeMethod={'auto'}
+                    style={styles.menuIcon}
+                  />
+                  <View style={styles.menuText}>
+                    <Text style={styles.menuStyle}>Store</Text>
+                  </View>
+                </TouchableOpacity>
+                <View style={{margin: scale(5)}} />
+                <TouchableOpacity
+                  style={styles.whiteButtonHorizontal}
+                  activeOpacity={1}
+                  onPress={() => {
+                    Alert.alert('Coming soon...');
+                  }}>
+                  <Image
+                    source={GlobalInclude.Assets.Offers}
+                    resizeMode={'contain'}
+                    resizeMethod={'auto'}
+                    style={styles.menuIcon}
+                  />
+                  <View style={styles.menuText}>
+                    <Text style={styles.menuStyle}>Offers</Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -890,13 +913,13 @@ const Dashboard = ({props, navigation}) => {
                     Alert.alert('Coming soon...');
                   }}>
                   <Image
-                    source={GlobalInclude.Assets.Magazine}
+                    source={GlobalInclude.Assets.Groups}
                     resizeMode={'contain'}
                     resizeMethod={'auto'}
                     style={styles.menuIcon}
                   />
                   <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Ticker</Text>
+                    <Text style={styles.menuStyle}>Groups</Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -1123,7 +1146,7 @@ const styles = StyleSheet.create({
   },
   menuStyle: {
     color: '#2b3252',
-    fontSize: scale(13),
+    fontSize: scale(12.5),
     textAlign: 'center',
     fontFamily: 'Lato-bold',
     flexWrap: 'wrap',
@@ -1176,8 +1199,8 @@ const styles = StyleSheet.create({
     height: null,
   },
   menuIcon: {
-    height: scale(36),
-    width: scale(36),
+    height: scale(34),
+    width: scale(34),
     marginBottom: scale(3),
   },
   menuText: {flexDirection: 'row', flexWrap: 'wrap'},

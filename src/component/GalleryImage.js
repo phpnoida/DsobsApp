@@ -78,11 +78,11 @@ class GalleryImage extends Component {
     return this.renderImages(data, true);
   };
 
-  shouldComponentUpdate(nextProps, nextState) {
-    const {isExpanded} = nextProps;
-    const {isExpanded: oldLiked} = this.props;
-    return isExpanded !== oldLiked;
-  }
+  // shouldComponentUpdate(nextProps, nextState) {
+  //   const {isExpanded} = nextProps;
+  //   const {isExpanded: oldLiked} = this.props;
+  //   return isExpanded !== oldLiked;
+  // }
 
   render() {
     return (

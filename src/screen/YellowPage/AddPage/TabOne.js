@@ -275,7 +275,7 @@ const TabOne = ({
           </View>
 
           <View style={g.mb15}>
-            {generateHeader('Cities of Operation Max-5', true)}
+            {generateHeader('Cities of Operation (Max-5)', true)}
             <TouchableOpacity
               style={g.inputWhite}
               onPress={() => {

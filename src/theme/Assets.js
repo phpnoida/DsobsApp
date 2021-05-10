@@ -55,6 +55,8 @@ import AudioAttach from '../../Assets/Icon/attachAudio.png';
 import CameraAttach from '../../Assets/Icon/attachCamera.png';
 import DocAttach from '../../Assets/Icon/attachdocs.png';
 import VideoAttach from '../../Assets/Icon/attachVideo.png';
+import CommonRoom from '../../Assets/Icon/common_room.png';
+import YellowPage from '../../Assets/Icon/yellow_page.png';
 export default {
   AppLogo: AppLogo,
   Alumbus: Alumbus,
@@ -113,4 +115,6 @@ export default {
   CameraAttach: CameraAttach,
   DocAttach: DocAttach,
   VideoAttach: VideoAttach,
+  CommonRoom: CommonRoom,
+  YellowPage: YellowPage,
 };

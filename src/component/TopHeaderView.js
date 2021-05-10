@@ -18,7 +18,7 @@ const menuOptions = [
   {screen: 'NewsListing', visible: true, value: 2, label: 'News'},
   {screen: 'Video', visible: true, value: 3, label: 'Videos'},
   {screen: 'GalleryListing', visible: true, value: 4, label: 'Gallery'},
-  {screen: 'YellowPages', visible: true, value: 5, label: 'Yello Page'},
+  {screen: 'YellowPages', visible: true, value: 5, label: 'Yellow Pages'},
 ];
 
 const TopHeaderView = ({
@@ -28,6 +28,8 @@ const TopHeaderView = ({
   label,
   showLabel,
   onLabelPress,
+  customIcon,
+  customIconPress,
 }) => {
   const [openDropDown, setOpenDropDown] = useState(false);
   const [selectedTab] = useState(menuOptions[index].label);
@@ -151,6 +153,22 @@ const TopHeaderView = ({
                 <Text style={[g.colorBlue, g.fs14, g.FHNB, g.txtRight]}>
                   {label}
                 </Text>
+              </TouchableOpacity>
+            )}
+            {customIcon && (
+              <TouchableOpacity
+                onPress={() => customIconPress()}
+                style={{
+                  maxWidth: scale(50),
+                  alignSelf: 'flex-end',
+                }}>
+                <GlobalInclude.BaseIcon
+                  containerStyle={customIcon.containerStyle}
+                  iconColor={customIcon.iconColor}
+                  iconName={customIcon.iconName}
+                  iconSize={customIcon.size}
+                  iconType={customIcon.type}
+                />
               </TouchableOpacity>
             )}
           </View>

@@ -57,6 +57,8 @@ export function doUpdateImageInformation(
 ) {
   let requestPath = `${SERVER_PATH}imageGallery/images?id=${imageId}`;
 
+  console.log('requestPath', requestPath);
+  
   const request = axios
     .patch(requestPath, payload, {
       headers: {

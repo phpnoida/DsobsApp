@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import Indicator from './Indicator';
 import ChildItem from './ChildItem';
+import {scale} from '../theme/Scalling';
 
 export default class FlatListSlider extends Component {
   slider = createRef();
@@ -93,9 +94,6 @@ export default class FlatListSlider extends Component {
               height: this.props.height,
             })
           }
-          ItemSeparatorComponent={() => (
-            <View style={{width: this.props.separatorWidth}} />
-          )}
           keyExtractor={(item, index) => item.toString() + index}
           onViewableItemsChanged={this.onViewableItemsChanged}
           viewabilityConfig={this.viewabilityConfig}
@@ -186,6 +184,8 @@ const styles = StyleSheet.create({
   },
   indicatorContainerStyle: {
     marginTop: 18,
+    position: 'absolute',
+    bottom: 10,
   },
   shadow: {
     ...Platform.select({

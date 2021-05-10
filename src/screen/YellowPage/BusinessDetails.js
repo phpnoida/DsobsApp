@@ -112,7 +112,7 @@ const BusinessDetails = ({route, navigation}) => {
           ) : (
             <View style={GlobalInclude.AppStyle.fill}>
               {pageContent !== null ? (
-                <ScrollView showsVerticalScrollIndicator={false}>
+                <View style={GlobalInclude.AppStyle.fill}>
                   <HeaderBar
                     title={
                       pageContent.businessName &&
@@ -123,10 +123,10 @@ const BusinessDetails = ({route, navigation}) => {
                     }
                     navigation={navigation}
                     customIcon={{
-                      containerStyle: {height: scale(24), width: scale(24)},
+                      containerStyle: {height: scale(30), width: scale(30)},
                       iconColor: '#2b3252',
                       iconName: 'keyboard-backspace',
-                      size: scale(24),
+                      size: scale(30),
                       type: IconType[1],
                     }}
                     customIconPress={() => {
@@ -219,7 +219,6 @@ const BusinessDetails = ({route, navigation}) => {
                     )}
                   </View>
                   <ScrollableTabView
-                    style={{height: height}}
                     underlineColor={'#ffffff'}
                     initialPage={0}
                     tabBarActiveTextColor={'#2b3252'}
@@ -235,7 +234,7 @@ const BusinessDetails = ({route, navigation}) => {
                     )}>
                     <AboutCompany tabLabel={'About'} content={pageContent} />
                     <ProductServices
-                      tabLabel={'ProductServices'}
+                      tabLabel={'Product & Services'}
                       content={pageContent}
                     />
                     <CompanyPhotos tabLabel={'Media'} content={pageContent} />
@@ -246,7 +245,7 @@ const BusinessDetails = ({route, navigation}) => {
                       content={pageContent}
                     />
                     <AluminiDetails
-                      tabLabel={'AluminiDetails'}
+                      tabLabel={'Alumini Details'}
                       content={pageContent}
                       navigation={navigation}
                     />
@@ -256,7 +255,7 @@ const BusinessDetails = ({route, navigation}) => {
                       productTags={['help', 'structure', 'helo']}
                     />
                   </ScrollableTabView>
-                </ScrollView>
+                </View>
               ) : (
                 <View style={GlobalInclude.AppStyle.center}>
                   <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
@@ -313,14 +312,14 @@ const BusinessDetails = ({route, navigation}) => {
               padding: 20,
             },
           }}>
-          <Text style={[g.fs20, g.FHNB, g.txtLeft, g.colorBlue, g.mb5]}>
+          <Text style={[g.fs16, g.FHNB, g.txtLeft, g.colorBlue, g.mb5]}>
             {pageContent.companyContactPerson.name &&
             pageContent.companyContactPerson.name !== undefined &&
             pageContent.companyContactPerson.name !== null
               ? pageContent.companyContactPerson.name
               : 'N/A'}
           </Text>
-          <Text style={[g.fs16, g.FHNR, g.txtLeft, g.colorBlack, g.mb10]}>
+          <Text style={[g.fs14, g.FHNR, g.txtLeft, g.colorBlack, g.mb10]}>
             {pageContent.companyContactPerson.designation &&
             pageContent.companyContactPerson.designation !== undefined &&
             pageContent.companyContactPerson.designation !== null

@@ -13,13 +13,14 @@ import {
   SafeAreaView,
   Platform,
   FlatList,
+  Animated,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
 import {scale} from '../../theme/Scalling';
 import grid from '../../theme/grid';
 import {IconType, APP_NAME} from '../../helper/Constants';
-import HeaderBar from '../../component/HeaderBar';
+import TopHeaderView from '../../component/TopHeaderView';
 import Helper from '../../helper/Helper';
 import YellowPageSearch from '../../component/YellowPageSearch';
 import AutoSuggestLocationCompany from '../../component/AutoSuggestLocationCompany';
@@ -66,7 +67,7 @@ let sortBy = [
     label: 'Alphabetical A-Z',
   },
 ];
-
+let curY = new Animated.Value(0);
 const YellowPages = ({navigation}) => {
   const refRBSheet = useRef();
   const refProfessionalSheet = useRef();
@@ -85,6 +86,8 @@ const YellowPages = ({navigation}) => {
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [myBusinessList, setMyBusinessList] = useState([]);
+
+  const [animatedHeight, setAnimatedHeight] = useState(221);
 
   useEffect(() => {
     professionListMain = [];
@@ -414,8 +417,7 @@ const YellowPages = ({navigation}) => {
         key={index}
         style={{
           marginBottom: scale(15),
-          paddingHorizontal: scale(15),
-          flex: 1,
+          marginHorizontal: scale(15),
         }}>
         <View style={[g.bgWhite, g.boxShadow, {borderRadius: scale(10)}]}>
           <View
@@ -551,14 +553,195 @@ const YellowPages = ({navigation}) => {
     );
   };
 
+  const headerDistance = Animated.diffClamp(curY, 0, 210).interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -1],
+  });
+
+  const headerComponent = () => {
+    return (
+      <View
+        style={[
+          GlobalInclude.AppStyle.contentSpace,
+          {marginBottom: scale(10)},
+        ]}>
+        {/* search container */}
+        <YellowPageSearch
+          mainTitle={'Search By'}
+          chkType={checkedType}
+          chkOneTitle={'Category'}
+          chkTwoTitle={'Company'}
+          ChkThreeTitle={'Tags'}
+          ChkFourTitle={'Location'}
+          onChecked={(type) => {
+            searchType = type;
+            resetCount();
+            setCheckedType(type);
+            setSearchedCityCompany([]);
+            setFilterQuery('');
+            searchVal = '';
+          }}
+          changeText={(text) => {
+            searchVal = text;
+            setFilterQuery(text);
+            if (searchType === 1) {
+              if (text.length >= 2) {
+                searchProfession(text);
+              } else {
+                setSearchedCityCompany([]);
+                if (text.length === 0) {
+                  resetCount();
+                  getYellowPage();
+                }
+              }
+            } else if (searchType === 2) {
+              if (text.length >= 2) {
+                searchCompanyName(text);
+              } else {
+                setSearchedCityCompany([]);
+                if (text.length === 0) {
+                  resetCount();
+                  getYellowPage();
+                }
+              }
+            } else if (searchType === 3) {
+              resetCount();
+              if (text.length >= 2) {
+                filterObject.s = text;
+                filterObject.type = 2;
+                getYellowPage();
+              } else {
+                if (text.length === 0) {
+                  resetCount();
+                  getYellowPage();
+                }
+              }
+            } else if (searchType === 4) {
+              if (text.length >= 2) {
+                searchCityName(text);
+              } else {
+                setSearchedCityCompany([]);
+                if (text.length === 0) {
+                  resetCount();
+                  getYellowPage();
+                }
+              }
+            }
+          }}
+          filterQuery={filterQuery}
+          onGoPress={() => {
+            navigation.navigate('YellowPageListing');
+          }}
+          onFilterPress={() => {
+            if (
+              refProfessionalSheet.current !== undefined &&
+              refProfessionalSheet.current !== null
+            ) {
+              refProfessionalSheet.current.open();
+            }
+          }}
+        />
+
+        {searchedCityCompany.length > 0 && (
+          <AutoSuggestLocationCompany
+            searchedData={searchedCityCompany}
+            onPress={(row, index) => {
+              Keyboard.dismiss();
+              setFilterQuery('');
+              setSearchedCityCompany([]);
+              setFilterQuery(Helper.capitalize(row.label));
+
+              searchVal = row.label;
+              resetCount();
+              setTimeout(() => {
+                if (searchType === 1) {
+                  filterObject.categoryOfBusiness = row.label;
+                } else if (searchType === 2) {
+                  filterObject.s = row.label;
+                  filterObject.type = 1;
+                } else if (searchType === 4) {
+                  filterObject.s = row.label;
+                  filterObject.type = 3;
+                }
+                setFirstTimeLoad(true);
+                getYellowPage();
+              }, 150);
+            }}
+          />
+        )}
+
+        <View style={[grid.rowdir, g.mt10, g.mb5]}>
+          {sortBy.map((item, i) => {
+            return (
+              <View
+                style={[
+                  g.btnsort,
+                  sortedBy === item.value && g.darkBlue,
+                  i === 0 && g.ml0,
+                ]}
+                key={i}>
+                <Text
+                  style={[
+                    g.colorGray,
+                    g.fs12,
+                    sortedBy === item.value && g.colorWhite,
+                  ]}
+                  onPress={() => {
+                    if (pageContent !== null && pageContent.length > 0) {
+                      filterObject.sortBy = i + 1;
+                      setSortedBy(item.value);
+                      getYellowPage();
+                    }
+                  }}>
+                  {item.label}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+    );
+  };
+
+  const renderNoDataComponent = () => {
+    return (
+      <View style={GlobalInclude.AppStyle.center}>
+        <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
+          No Record Found
+        </Text>
+      </View>
+    );
+  };
+
+  const renderHeader = () => {
+    return (
+      <Animated.View
+        style={[
+          g.newHeaderConcept,
+          {
+            transform: [
+              {
+                translateY: headerDistance,
+              },
+            ],
+          },
+        ]}
+        onLayout={({nativeEvent}) => {
+          setAnimatedHeight(nativeEvent.layout.height);
+        }}>
+        <View>{headerComponent()}</View>
+      </Animated.View>
+    );
+  };
+
   return (
     <View style={GlobalInclude.AppStyle.topSpace}>
       <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
-        <View style={GlobalInclude.AppStyle.fill}>
-          <HeaderBar
-            title={'YellowPages'}
+        <View
+          style={[GlobalInclude.AppStyle.contentSpace, {zIndex: 1}, g.bgWhite]}>
+          <TopHeaderView
             navigation={navigation}
-            showBack={true}
+            index={5}
             customIcon={{
               containerStyle: {height: scale(24), width: scale(24)},
               iconColor: '#2b3252',
@@ -572,176 +755,39 @@ const YellowPages = ({navigation}) => {
               }
             }}
           />
-          <View style={[GlobalInclude.AppStyle.contentSpace]}>
-            {/* search container */}
-            <YellowPageSearch
-              mainTitle={'Search By'}
-              chkType={checkedType}
-              chkOneTitle={'Category'}
-              chkTwoTitle={'Company'}
-              ChkThreeTitle={'Tags'}
-              ChkFourTitle={'Location'}
-              onChecked={(type) => {
-                searchType = type;
-                resetCount();
-                setCheckedType(type);
-                setSearchedCityCompany([]);
-                setFilterQuery('');
-                searchVal = '';
-              }}
-              changeText={(text) => {
-                searchVal = text;
-                setFilterQuery(text);
-                if (searchType === 1) {
-                  if (text.length >= 2) {
-                    searchProfession(text);
-                  } else {
-                    setSearchedCityCompany([]);
-                    if (text.length === 0) {
-                      resetCount();
-                      getYellowPage();
-                    }
-                  }
-                } else if (searchType === 2) {
-                  if (text.length >= 2) {
-                    searchCompanyName(text);
-                  } else {
-                    setSearchedCityCompany([]);
-                    if (text.length === 0) {
-                      resetCount();
-                      getYellowPage();
-                    }
-                  }
-                } else if (searchType === 3) {
-                  resetCount();
-                  if (text.length >= 2) {
-                    filterObject.s = text;
-                    filterObject.type = 2;
-                    getYellowPage();
-                  } else {
-                    if (text.length === 0) {
-                      resetCount();
-                      getYellowPage();
-                    }
-                  }
-                } else if (searchType === 4) {
-                  if (text.length >= 2) {
-                    searchCityName(text);
-                  } else {
-                    setSearchedCityCompany([]);
-                    if (text.length === 0) {
-                      resetCount();
-                      getYellowPage();
-                    }
-                  }
-                }
-              }}
-              filterQuery={filterQuery}
-              onGoPress={() => {
-                navigation.navigate('YellowPageListing');
-              }}
-              onFilterPress={() => {
-                if (
-                  refProfessionalSheet.current !== undefined &&
-                  refProfessionalSheet.current !== null
-                ) {
-                  refProfessionalSheet.current.open();
-                }
-              }}
-            />
-
-            {searchedCityCompany.length > 0 && (
-              <AutoSuggestLocationCompany
-                searchedData={searchedCityCompany}
-                onPress={(row, index) => {
-                  Keyboard.dismiss();
-                  setFilterQuery('');
-                  setSearchedCityCompany([]);
-                  setFilterQuery(Helper.capitalize(row.label));
-
-                  searchVal = row.label;
-                  resetCount();
-                  setTimeout(() => {
-                    if (searchType === 1) {
-                      filterObject.categoryOfBusiness = row.label;
-                    } else if (searchType === 2) {
-                      filterObject.s = row.label;
-                      filterObject.type = 1;
-                    } else if (searchType === 4) {
-                      filterObject.s = row.label;
-                      filterObject.type = 3;
-                    }
-                    setFirstTimeLoad(true);
-                    getYellowPage();
-                  }, 150);
-                }}
-              />
-            )}
-
-            <View style={[grid.rowdir, g.mt10, g.mb5]}>
-              {sortBy.map((item, i) => {
-                return (
-                  <View
-                    style={[
-                      g.btnsort,
-                      sortedBy === item.value && g.darkBlue,
-                      i === 0 && g.ml0,
-                    ]}
-                    key={i}>
-                    <Text
-                      style={[
-                        g.colorGray,
-                        g.fs12,
-                        sortedBy === item.value && g.colorWhite,
-                      ]}
-                      onPress={() => {
-                        if (pageContent !== null && pageContent.length > 0) {
-                          filterObject.sortBy = i + 1;
-                          setSortedBy(item.value);
-                          getYellowPage();
-                        }
-                      }}>
-                      {item.label}
-                    </Text>
-                  </View>
-                );
-              })}
+        </View>
+        <View style={[GlobalInclude.AppStyle.fill]}>
+          {firstTimeLoad ? (
+            <View style={GlobalInclude.AppStyle.fillCenter}>
+              <ActivityIndicator size={'small'} color={'#2b3252'} />
             </View>
-          </View>
-          <View style={[GlobalInclude.AppStyle.fill]}>
-            {firstTimeLoad ? (
-              <View style={GlobalInclude.AppStyle.fillCenter}>
-                <ActivityIndicator size={'small'} color={'#2b3252'} />
-              </View>
-            ) : (
-              <View style={GlobalInclude.AppStyle.fill}>
-                {pageContent === null || pageContent.length === 0 ? (
-                  <View style={GlobalInclude.AppStyle.center}>
-                    <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
-                      No Record Found
-                    </Text>
-                  </View>
-                ) : (
-                  <FlatList
-                    showsVerticalScrollIndicator={false}
-                    extraData={pageContent}
-                    data={pageContent}
-                    renderItem={renderItem}
-                    keyExtractor={(item, index) => index.toString()}
-                    onEndReachedThreshold={0.1}
-                    onEndReached={onEndReached}
-                    refreshing={isRefreshing}
-                    onRefresh={handleRefresh}
-                    ListFooterComponent={renderFooter}
-                    contentContainerStyle={{
-                      marginTop: scale(10),
-                      paddingBottom: scale(70),
-                    }}
-                  />
+          ) : (
+            <View style={GlobalInclude.AppStyle.fill}>
+              <Animated.FlatList
+                showsVerticalScrollIndicator={false}
+                extraData={pageContent}
+                data={pageContent}
+                renderItem={renderItem}
+                keyExtractor={(item, index) => index.toString()}
+                onEndReachedThreshold={0.1}
+                onEndReached={onEndReached}
+                refreshing={isRefreshing}
+                onRefresh={handleRefresh}
+                ListEmptyComponent={renderNoDataComponent}
+                ListFooterComponent={renderFooter}
+                contentContainerStyle={{
+                  marginTop: animatedHeight,
+                  paddingBottom: scale(230),
+                }}
+                scrollEventThrottle={16}
+                onScroll={Animated.event(
+                  [{nativeEvent: {contentOffset: {y: curY}}}],
+                  {useNativeDriver: true},
                 )}
-              </View>
-            )}
-          </View>
+              />
+              {renderHeader()}
+            </View>
+          )}
         </View>
       </SafeAreaView>
 
@@ -768,7 +814,7 @@ const YellowPages = ({navigation}) => {
                   data: {inEditMode: false},
                 });
               }}>
-              <Text style={[g.fs18, g.FHNB, g.txtLeft, g.colorBlue, g.mb10]}>
+              <Text style={[g.fs16, g.FHNB, g.txtLeft, g.colorBlue, g.mb10]}>
                 List My Business
               </Text>
             </TouchableOpacity>
@@ -789,7 +835,7 @@ const YellowPages = ({navigation}) => {
                           });
                         }}>
                         <Text
-                          style={[g.fs16, g.FHNM, g.txtLeft, g.colordarkGray]}>
+                          style={[g.fs14, g.FHNM, g.txtLeft, g.colordarkGray]}>
                           {item.businessName &&
                           item.businessName !== undefined &&
                           item.businessName !== null
@@ -806,7 +852,7 @@ const YellowPages = ({navigation}) => {
                 refRBSheet.current.close();
                 navigation.navigate('AboutYellowPage');
               }}>
-              <Text style={[g.fs18, g.FHNB, g.txtLeft, g.colorBlue, g.mb10]}>
+              <Text style={[g.fs16, g.FHNB, g.txtLeft, g.colorBlue, g.mb10]}>
                 About YellowPages
               </Text>
             </TouchableOpacity>

@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   FlatList,
   Linking,
+  Animated,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -40,6 +41,7 @@ let filterObject = {
 };
 
 const cancelAlbum = axios.CancelToken.source();
+let curY = new Animated.Value(0);
 
 const GalleryListing = ({navigation}) => {
   const refRBSheet = useRef();
@@ -57,6 +59,7 @@ const GalleryListing = ({navigation}) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [checkedType, setCheckedType] = useState(1);
   const [searchedUser, setSearchedUser] = useState([]);
+  const [animatedHeight, setAnimatedHeight] = useState(159);
 
   useEffect(() => {
     userData = null;
@@ -128,6 +131,7 @@ const GalleryListing = ({navigation}) => {
             if (data.status) {
               if (filterObject.index === 0) {
                 totalCount = data.totalCount;
+                console.log('totalCount', totalCount);
                 setPageContent([...data.data]);
               } else {
                 setPageContent([...pageContent, ...data.data]);
@@ -227,7 +231,12 @@ const GalleryListing = ({navigation}) => {
       delete filterObject.s;
     }
     setPageContent([]);
-    getAlbumList();
+
+    console.log('22');
+
+    setTimeout(() => {
+      getAlbumList();
+    }, 500);
   };
 
   const expandSelectedPanel = (index) => {
@@ -239,6 +248,7 @@ const GalleryListing = ({navigation}) => {
   };
 
   const generateGalleryView = ({item, index}) => {
+    console.log('item.title', index, item.title);
     return (
       <GalleryImage
         key={index}
@@ -281,6 +291,100 @@ const GalleryListing = ({navigation}) => {
     );
   };
 
+  const renderHeaderComponents = () => {
+    return (
+      <View style={{paddingHorizontal: scale(15)}}>
+        <AutoCompleteSearch
+          mainTitle={'Search By'}
+          chkType={checkedType}
+          chkOneTitle={'Name/Batch/House/Number'}
+          chkTwoTitle={'Album'}
+          ChkThreeTitle={'Year'}
+          ChkFourTitle={'Tags'}
+          withFilter={true}
+          onChecked={(type) => {
+            searchType = type;
+            setCheckedType(type);
+            setSearchedUser([]);
+            setFilterQuery('');
+            if (type === 3) {
+              setTimeout(() => {
+                refRBSheet.current.open();
+              }, 100);
+            }
+          }}
+          onFilterPress={() => {
+            if (refRBFilter.current !== null) {
+              refRBFilter.current.open();
+            }
+          }}
+          changeText={(text) => {
+            searchVal = text;
+            setFilterQuery(text);
+            console.log('searchType', searchType);
+            if (searchType === 1) {
+              if (text.length > 3) {
+                setSearchedUser([]);
+                doSearchUser(text);
+              } else if (text.length < 4) {
+                setSearchedUser([]);
+              }
+            } else if (searchType === 2) {
+              filterObject.s = searchVal;
+              if (text.length === 0) {
+                resetData();
+              } else {
+                setPageContent([]);
+                getAlbumList();
+              }
+            }
+          }}
+          filterQuery={filterQuery}
+          searchedUser={searchedUser}
+          onUserSelected={(row, index) => {
+            setFilterQuery('');
+            setCheckedType(-1);
+            searchVal = '';
+
+            navigation.navigate('FilteredResult', {
+              filterBy: {userId: row._id, index: 0, size: 10},
+              pageTitle: `Search For: ${Helper.concatName(row)}`,
+            });
+          }}
+          onGoPress={() => {
+            if (searchType === 4) {
+              navigation.navigate('FilteredResult', {
+                filterBy: {tag: searchVal, index: 0, size: 10},
+                pageTitle: `Search For: ${searchVal}`,
+              });
+            } else if (searchType === 1) {
+              navigation.navigate('DirectoryDetails', {
+                searchBy: searchType,
+                searchVal: searchVal,
+                from: 'Gallery',
+              });
+            }
+          }}
+        />
+      </View>
+    );
+  };
+
+  const renderNoDataComponent = () => {
+    return (
+      <View style={GlobalInclude.AppStyle.center}>
+        <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
+          No Record Found
+        </Text>
+      </View>
+    );
+  };
+
+  const headerDistance = Animated.diffClamp(curY, 0, 160).interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -1],
+  });
+
   return (
     <View style={GlobalInclude.AppStyle.topSpace}>
       <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
@@ -291,6 +395,8 @@ const GalleryListing = ({navigation}) => {
               paddingRight: 15,
               paddingTop: scale(15),
               paddingBottom: 0,
+              zIndex: 1,
+              backgroundColor: 'white',
             }}>
             <TopHeaderView
               index={4}
@@ -313,75 +419,6 @@ const GalleryListing = ({navigation}) => {
                 }
               }}
             />
-            {/* search container */}
-            <AutoCompleteSearch
-              mainTitle={'Search By'}
-              chkType={checkedType}
-              chkOneTitle={'Name/Batch/House/Number'}
-              chkTwoTitle={'Album'}
-              ChkThreeTitle={'Year'}
-              ChkFourTitle={'Tags'}
-              withFilter={true}
-              onChecked={(type) => {
-                searchType = type;
-                setCheckedType(type);
-                setSearchedUser([]);
-                setFilterQuery('');
-                if (type === 3) {
-                  setTimeout(() => {
-                    refRBSheet.current.open();
-                  }, 100);
-                }
-              }}
-              onFilterPress={() => {
-                if (refRBFilter.current !== null) {
-                  refRBFilter.current.open();
-                }
-              }}
-              changeText={(text) => {
-                searchVal = text;
-                setFilterQuery(text);
-                if (searchType === 1) {
-                  if (text.length > 3) {
-                    setSearchedUser([]);
-                    doSearchUser(text);
-                  } else if (text.length < 4) {
-                    setSearchedUser([]);
-                  }
-                } else if (searchType === 2) {
-                  filterObject.s = searchVal;
-                  setPageContent([]);
-
-                  getAlbumList();
-                }
-              }}
-              filterQuery={filterQuery}
-              searchedUser={searchedUser}
-              onUserSelected={(row, index) => {
-                setFilterQuery('');
-                setCheckedType(-1);
-                searchVal = '';
-
-                navigation.navigate('FilteredResult', {
-                  filterBy: {userId: row._id, index: 0, size: 10},
-                  pageTitle: `Search For: ${Helper.concatName(row)}`,
-                });
-              }}
-              onGoPress={() => {
-                if (searchType === 4) {
-                  navigation.navigate('FilteredResult', {
-                    filterBy: {tag: searchVal, index: 0, size: 10},
-                    pageTitle: `Search For: ${searchVal}`,
-                  });
-                } else if (searchType === 1) {
-                  navigation.navigate('DirectoryDetails', {
-                    searchBy: searchType,
-                    searchVal: searchVal,
-                    from: 'Gallery',
-                  });
-                }
-              }}
-            />
           </View>
           {firstTimeLoad ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
@@ -389,26 +426,43 @@ const GalleryListing = ({navigation}) => {
             </View>
           ) : (
             <View style={GlobalInclude.AppStyle.fill}>
-              {pageContent === null || pageContent.length === 0 ? (
-                <View style={GlobalInclude.AppStyle.center}>
-                  <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
-                    No Record Found
-                  </Text>
-                </View>
-              ) : (
-                <FlatList
-                  showsVerticalScrollIndicator={false}
-                  extraData={pageContent}
-                  data={pageContent}
-                  renderItem={generateGalleryView}
-                  keyExtractor={(item, index) => index.toString()}
-                  onEndReachedThreshold={0.1}
-                  onEndReached={onEndReached}
-                  refreshing={isRefreshing}
-                  onRefresh={handleRefresh}
-                  ListFooterComponent={renderFooter}
-                />
-              )}
+              <Animated.FlatList
+                showsVerticalScrollIndicator={false}
+                data={pageContent}
+                renderItem={generateGalleryView}
+                keyExtractor={(item, index) => index.toString()}
+                onEndReachedThreshold={0.1}
+                onEndReached={onEndReached}
+                refreshing={isRefreshing}
+                onRefresh={handleRefresh}
+                ListFooterComponent={renderFooter}
+                ListEmptyComponent={renderNoDataComponent}
+                contentContainerStyle={{
+                  marginTop: animatedHeight,
+                  paddingBottom: scale(200),
+                }}
+                scrollEventThrottle={1}
+                onScroll={Animated.event(
+                  [{nativeEvent: {contentOffset: {y: curY}}}],
+                  {useNativeDriver: true},
+                )}
+              />
+              <Animated.View
+                style={[
+                  g.newHeaderConcept,
+                  {
+                    transform: [
+                      {
+                        translateY: headerDistance,
+                      },
+                    ],
+                  },
+                ]}
+                onLayout={({nativeEvent}) => {
+                  setAnimatedHeight(nativeEvent.layout.height);
+                }}>
+                {renderHeaderComponents()}
+              </Animated.View>
             </View>
           )}
         </View>

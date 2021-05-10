@@ -1,27 +1,329 @@
-import React from 'react';
+import React, {useRef, useState} from 'react';
 import {
   Text,
   Dimensions,
   View,
-  ScrollView,
+  Alert,
   TouchableOpacity,
   StyleSheet,
   Image,
+  PermissionsAndroid,
+  Platform,
+  ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import g from '../theme/global';
 import grid from '../theme/grid';
 import {scale} from '../theme/Scalling';
 import GlobalInclude from '../globalInclude/Globalinclude';
+import RNFetchBlob from 'rn-fetch-blob';
+import ImagePicker from 'react-native-image-crop-picker';
+import DocumentPicker from 'react-native-document-picker';
+import Toast from './Toast';
+import {uploadMedia} from '../Actions/CommonActions';
+import CommonButton from './CommonButton';
+import getPath from '@flyerhq/react-native-android-uri-path';
 
-const UploadMedia = ({refRBSheet}) => {
-  const generateIcon = (name, label, enabled) => {
+var re = /(?:\.([^.]+))?$/;
+
+const UploadMedia = ({refRBSheet, media, videoData, onPickMedia}) => {
+  const videoRef = useRef();
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedLink, setSelectedLink] = useState(
+    videoData !== undefined && videoData !== null ? videoData.link : '',
+  );
+  const [selectedLinkTags, setSelectedLinkTags] = useState(
+    videoData !== undefined && videoData !== null ? videoData.tags : '',
+  );
+  const [errorMessage, setErrorMessage] = useState({});
+
+  /**
+   *
+   * API SECTION
+   *
+   */
+
+  const uploadMediaContent = (body, childPath, mediaType) => {
+    setIsLoading(true);
+    uploadMedia(
+      childPath,
+      body,
+      (response) => {
+        setIsLoading(false);
+        if (response && response !== undefined && response !== null) {
+          if (response.status && response.data && response.data !== null) {
+            let childData = response.data.data;
+            let object = {
+              thumbnail: childData,
+              fileName: childData,
+              type: mediaType,
+            };
+            onPickMedia(object);
+          } else {
+            onPickMedia(null);
+          }
+        } else {
+          onPickMedia(null);
+        }
+      },
+      (error, message) => {
+        setIsLoading(false);
+        console.log('error', error);
+        onPickMedia(null);
+        Toast.show({
+          title: 'Uploading Failed',
+          text: message,
+          color: '#f39c12',
+          timing: 5000,
+        });
+      },
+    );
+  };
+
+  /**
+   *
+   * API SECTION
+   *
+   */
+
+  const pickImage = () => {
+    ImagePicker.openPicker({
+      includeBase64: false,
+      cropping: false,
+      includeExif: false,
+      mediaType: 'photo',
+      multiple: false,
+    })
+      .then((images) => {
+        if (images !== null) {
+          console.log('images', images);
+          uploadImage(images, 'utils/imageupload', 1);
+        }
+      })
+      .catch((err) => {
+        console.log('err.toString()', err.toString());
+        if (err.toString() === 'Error: User cancelled image selection') {
+          ImagePicker.clean();
+          onPickMedia(null);
+          Toast.show({
+            title: 'Cancel Selection',
+            text: 'User Cancelled Selection!',
+            color: '#f39c12',
+            timing: 2500,
+          });
+        }
+      });
+  };
+
+  const uploadImage = (pickFile, childPath, mediaType) => {
+    try {
+      let body = [];
+      if (pickFile !== null) {
+        var path = '';
+
+        if (Platform.OS === 'android') {
+          path = pickFile.path;
+        } else if (Platform.OS === 'ios') {
+          path = pickFile.sourceURL;
+        }
+
+        var ext = re.exec(path)[1];
+        var timestamp = new Date().getTime().toString();
+        let imageName = timestamp + '.' + ext;
+
+        let imagePath =
+          Platform.OS === 'ios' ? path.replace('file://', '') : path;
+
+        let imageType = pickFile.mime;
+
+        var imageData = {
+          name: 'image',
+          filename: imageName,
+          type: imageType,
+          data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
+        };
+        body.push(imageData);
+
+        uploadMediaContent(body, childPath, mediaType);
+      } else {
+        onPickMedia(null);
+        Toast.show({
+          title: 'Erorr While pick media',
+          text: 'Unable to pick file choose another',
+          color: '#f39c12',
+          timing: 3000,
+        });
+      }
+    } catch (error) {
+      onPickMedia(null);
+    }
+  };
+
+  const uploadDoc = async (pickFile, childPath, mediaType) => {
+    try {
+      let body = [];
+      if (pickFile !== null) {
+        let path = '';
+        if (Platform.OS === 'android') {
+          path = getPath(pickFile.uri);
+        } else {
+          path = pickFile.uri;
+        }
+
+        if (path !== undefined && path !== null && path !== '') {
+          var ext = re.exec(path)[1];
+          var timestamp = new Date().getTime().toString();
+          let imageName = timestamp + '.' + ext;
+          let imagePath =
+            Platform.OS === 'ios' ? path.replace('file://', '') : path;
+          let imageType = pickFile.type;
+          var imageData = {
+            name: 'image',
+            filename: imageName,
+            type: imageType,
+            data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
+          };
+          body.push(imageData);
+          let object = {
+            body: body,
+            childPath: childPath,
+            mediaType: mediaType,
+          };
+          return object;
+        } else {
+          onPickMedia(null);
+          Toast.show({
+            title: 'Erorr While pick media',
+            text: 'Unable to pick file choose another',
+            color: '#f39c12',
+            timing: 3000,
+          });
+        }
+      } else {
+        onPickMedia(null);
+        Toast.show({
+          title: 'Erorr While pick media',
+          text: 'Unable to pick file choose another',
+          color: '#f39c12',
+          timing: 3000,
+        });
+      }
+    } catch (error) {
+      onPickMedia(null);
+      Toast.show({
+        title: 'Erorr While pick media',
+        text: 'Unable to pick file choose another',
+        color: '#f39c12',
+        timing: 3000,
+      });
+    }
+  };
+
+  const pickDocument = async () => {
+    let status = await hasPermission();
+    if (!status) {
+      Toast.show({
+        title: 'Permission Denied',
+        text: 'You denied permission please grant it from settings',
+        color: '#f39c12',
+        timing: 3000,
+      });
+      return;
+    } else {
+      try {
+        const res = await DocumentPicker.pick({
+          type: [DocumentPicker.types.pdf],
+        });
+        if (res !== null) {
+          uploadDoc(res, 'utils/imageupload?type=1', 3);
+        }
+      } catch (error) {
+        onPickMedia(null);
+        Toast.show({
+          title: 'Cancel Selection',
+          text: 'User Cancelled Selection!',
+          color: '#f39c12',
+          timing: 3000,
+        });
+      }
+    }
+  };
+
+  const hasPermission = async () => {
+    if (Platform.OS !== 'android') {
+      return true;
+    }
+
+    const pm1 = await PermissionsAndroid.check(
+      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+    );
+    const pm2 = await PermissionsAndroid.check(
+      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+    );
+
+    if (pm1 && pm2) {
+      return true;
+    }
+
+    const userResponse = await PermissionsAndroid.requestMultiple([
+      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+    ]);
+
+    if (
+      userResponse['android.permission.READ_EXTERNAL_STORAGE'] === 'granted' &&
+      userResponse['android.permission.WRITE_EXTERNAL_STORAGE'] === 'granted'
+    ) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  const addToVideo = () => {
+    if (selectedLink.trim() === '') {
+      setErrorMessage({link: 'This field is required!'});
+    } else if (selectedLinkTags.trim() === '') {
+      setErrorMessage({tag: 'This field is required!'});
+    } else {
+      setErrorMessage({});
+      videoRef.current.close();
+      const thumbnail =
+        selectedLink.includes('youtube') || selectedLink.includes('youtu.be')
+          ? selectedLink.replace('watch?v=', 'embed/')
+          : selectedLink.includes('vimeo')
+          ? selectedLink.replace(
+              'https://vimeo.com/',
+              'https://player.vimeo.com/video/',
+            )
+          : '';
+      const obj = {
+        fileName: selectedLink,
+        thumbnail: thumbnail,
+        type: 2,
+        tags: selectedLinkTags,
+      };
+      onPickMedia(obj);
+    }
+  };
+
+  const handleInput = (key, value) => {
+    if (key === 'link') {
+      setSelectedLink(value);
+    } else if (key === 'tags') {
+      setSelectedLinkTags(value);
+    }
+  };
+
+  const generateIcon = (name, label, enabled, onPress) => {
     return (
       <TouchableOpacity
         style={[g.p10, g.m10, g.bglightGray, styles.mainBox]}
         activeOpacity={0.8}
-        enabled={enabled}
-        onPress={() => {}}>
+        disabled={enabled}
+        onPress={onPress}>
         <View style={[grid.rowdir, grid.justifyContentCenter]}>
           <Image
             source={name}
@@ -38,30 +340,140 @@ const UploadMedia = ({refRBSheet}) => {
   };
 
   return (
-    <RBSheet
-      ref={refRBSheet}
-      height={290}
-      minClosingHeight={50}
-      onClose={() => {}}
-      duration={350}
-      closeOnDragDown={true}
-      customStyles={{
-        container: {
-          backgroundColor: '#fff',
-          borderTopLeftRadius: 30,
-          borderTopRightRadius: 30,
-          padding: 20,
-        },
-      }}>
-      <View style={[grid.rowdir, grid.flexwrap, g.mt5]}>
-        {generateIcon(GlobalInclude.Assets.CameraAttach, 'Image', true)}
-        {generateIcon(GlobalInclude.Assets.VideoAttach, 'Video', true)}
-      </View>
-      <View style={[grid.rowdir, grid.flexwrap, g.mt5]}>
-        {generateIcon(GlobalInclude.Assets.AudioAttach, 'Audio', false)}
-        {generateIcon(GlobalInclude.Assets.DocAttach, 'Document', true)}
-      </View>
-    </RBSheet>
+    <View>
+      <RBSheet
+        ref={refRBSheet}
+        height={290}
+        minClosingHeight={50}
+        onClose={() => {}}
+        duration={350}
+        closeOnDragDown={true}
+        customStyles={{
+          container: {
+            backgroundColor: '#fff',
+            borderTopLeftRadius: 30,
+            borderTopRightRadius: 30,
+            padding: 20,
+          },
+        }}>
+        <View
+          style={{flex: 1, justifyContent: 'center', alignContent: 'center'}}>
+          <View style={[grid.rowdir, grid.flexwrap, g.mt5]}>
+            {generateIcon(
+              GlobalInclude.Assets.CameraAttach,
+              'Image',
+              media.image,
+              () => {
+                refRBSheet.current.close();
+                setTimeout(() => {
+                  pickImage();
+                }, 350);
+              },
+            )}
+            {generateIcon(
+              GlobalInclude.Assets.VideoAttach,
+              'Video',
+              media.video,
+              () => {
+                //pickVideo();
+                refRBSheet.current.close();
+                setErrorMessage({});
+                setTimeout(() => {
+                  videoRef.current.open();
+                }, 350);
+              },
+            )}
+          </View>
+          <View style={[grid.rowdir, grid.flexwrap, g.mt5]}>
+            {generateIcon(
+              GlobalInclude.Assets.AudioAttach,
+              'Audio',
+              media.audio,
+              () => {},
+            )}
+            {generateIcon(
+              GlobalInclude.Assets.DocAttach,
+              'Document',
+              media.document,
+              () => {
+                refRBSheet.current.close();
+                setTimeout(() => {
+                  pickDocument();
+                }, 350);
+              },
+            )}
+          </View>
+        </View>
+      </RBSheet>
+      {isLoading && (
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            justifyContent: 'center',
+          }}>
+          <ActivityIndicator size={'small'} color={'#2b3252'} />
+        </View>
+      )}
+
+      {/* Video */}
+      <RBSheet
+        ref={videoRef}
+        height={260}
+        minClosingHeight={50}
+        duration={350}
+        closeOnDragDown={true}
+        customStyles={{
+          container: {
+            backgroundColor: '#fff',
+            borderTopLeftRadius: 30,
+            borderTopRightRadius: 30,
+            padding: 20,
+          },
+        }}>
+        <View style={grid.flex1}>
+          <View style={[grid.col, g.mb10]}>
+            <TextInput
+              placeholder={'Paste Youtube link here (Required)'}
+              onChangeText={(link) => handleInput('link', link)}
+              underlineColorAndroid="transparent"
+              style={g.inputWhite}
+              value={selectedLink}
+            />
+            {errorMessage.link && errorMessage.link !== '' ? (
+              <Text style={g.errorMsg}>{errorMessage.link}</Text>
+            ) : null}
+          </View>
+
+          <View style={[grid.row, g.mb10]}>
+            <View style={grid.col}>
+              <TextInput
+                placeholder={
+                  'Tag this photo, seperate tags by comma (Required)'
+                }
+                onChangeText={(tags) => handleInput('tags', tags)}
+                underlineColorAndroid="transparent"
+                style={[g.inputWhite]}
+                value={selectedLinkTags}
+              />
+              {errorMessage.tag && errorMessage.tag !== '' ? (
+                <Text style={g.errorMsg}>{errorMessage.tag}</Text>
+              ) : null}
+            </View>
+          </View>
+          <CommonButton
+            showLoader={isLoading}
+            title={
+              videoData !== undefined && videoData !== null ? 'Update' : 'Save'
+            }
+            onPress={() => addToVideo()}
+          />
+        </View>
+      </RBSheet>
+    </View>
   );
 };
 
