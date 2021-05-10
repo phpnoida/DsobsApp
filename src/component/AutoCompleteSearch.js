@@ -39,7 +39,7 @@ const AutoCompleteSearch = ({
   searchedUser,
   onUserSelected,
   onGoPress,
-  withFilter
+  withFilter,
 }) => {
   const drawCheckbox = (title, checked, onClick) => {
     return (

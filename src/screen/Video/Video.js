@@ -232,7 +232,7 @@ const Video = ({navigation}) => {
         }
         setShowSharingSheet(true);
       })
-      .catch((err) => errorHandler(err));
+      .catch((err) => {});
   };
 
   const resetFilter = () => {
@@ -367,7 +367,7 @@ const Video = ({navigation}) => {
                 </Text>
                 <Text
                   style={[g.fs14, g.mt5, g.FHNR, g.colorBlack]}
-                  numberOfLines={2}>
+                  numberOfLines={item.isShowing ? undefined : 2}>
                   {item.mainVideo.about}
                 </Text>
               </View>
@@ -429,10 +429,7 @@ const Video = ({navigation}) => {
                   )}
 
                 <TouchableOpacity
-                  style={[
-                    style.seeMore,
-                    {width: scale(130)},
-                  ]}
+                  style={[style.seeMore, {width: scale(130)}]}
                   onPress={() => {
                     let title =
                       item.title !== undefined && item.title !== null
@@ -440,7 +437,7 @@ const Video = ({navigation}) => {
                         : `Hey,Check out The ${APP_NAME}`;
 
                     let subject =
-                      item.mainVideo.about.substring(0, 30) +
+                      item.mainVideo.about.substring(0, 500) +
                       `\nFind video from below link\n${item.mainVideo.videoLink}`;
 
                     let youtubeId = Helper.GetYoutubeId(
@@ -898,8 +895,8 @@ const style = StyleSheet.create({
   },
   showChildVideo: {
     marginBottom: 5,
-    marginLeft: 5,
-    marginRight: 5,
+    marginLeft: 3,
+    marginRight: 3,
     padding: 5,
     paddingBottom: 15,
   },

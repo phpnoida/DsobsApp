@@ -69,6 +69,7 @@ let sortBy = [
 ];
 let curY = new Animated.Value(0);
 const YellowPages = ({navigation}) => {
+  curY = new Animated.Value(0);
   const refRBSheet = useRef();
   const refProfessionalSheet = useRef();
 
@@ -87,7 +88,7 @@ const YellowPages = ({navigation}) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [myBusinessList, setMyBusinessList] = useState([]);
 
-  const [animatedHeight, setAnimatedHeight] = useState(221);
+  const [animatedHeight, setAnimatedHeight] = useState(255);
 
   useEffect(() => {
     professionListMain = [];
@@ -553,7 +554,11 @@ const YellowPages = ({navigation}) => {
     );
   };
 
-  const headerDistance = Animated.diffClamp(curY, 0, 210).interpolate({
+  const headerDistance = Animated.diffClamp(
+    curY,
+    0,
+    searchedCityCompany.length > 0 ? 510 : 255,
+  ).interpolate({
     inputRange: [0, 1],
     outputRange: [0, -1],
   });
@@ -734,6 +739,42 @@ const YellowPages = ({navigation}) => {
     );
   };
 
+  const createMenu = (key,title, icon, onPress) => {
+    return (
+      <View
+        style={
+          key === 3
+            ? [{padding: 13, paddingLeft: 0}]
+            : [
+                g.bb1,
+                {borderBottomColor: '#e5e5e5', padding: 13, paddingLeft: 0},
+              ]
+        }>
+        <TouchableOpacity
+          activeOpacity={1}
+          style={[grid.rowdir, grid.alignItems]}
+          onPress={onPress}>
+          <Image
+            source={icon}
+            style={{height: scale(20), width: scale(20)}}
+            resizeMethod={'auto'}
+            resizeMode={'contain'}
+          />
+          <Text
+            style={key ===2 ? [{marginLeft: 10,fontSize: 16},
+              g.FHNR,
+              g.colordarkGray,]:[
+              {marginLeft: 10,fontSize: 18},
+              g.FHNB,
+              g.colorBlue,
+            ]}>
+            {title}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
     <View style={GlobalInclude.AppStyle.topSpace}>
       <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
@@ -793,7 +834,7 @@ const YellowPages = ({navigation}) => {
 
       <BottomSheetAbout
         ref={refRBSheet}
-        height={height / 2 - 80}
+        height={height / 2}
         minClosingHeight={50}
         duration={350}
         closeOnDragDown={true}
@@ -807,55 +848,53 @@ const YellowPages = ({navigation}) => {
         }}>
         <ScrollView showsVerticalScrollIndicator={false}>
           <View>
-            <TouchableOpacity
-              onPress={() => {
+            {createMenu(1,
+              'List My Business',
+              GlobalInclude.Assets.MyYellowPages,
+              () => {
                 refRBSheet.current.close();
                 navigation.navigate('ListMyBusiness', {
                   data: {inEditMode: false},
                 });
-              }}>
-              <Text style={[g.fs16, g.FHNB, g.txtLeft, g.colorBlue, g.mb10]}>
-                List My Business
-              </Text>
-            </TouchableOpacity>
+              },
+            )}
+
             {myBusinessList &&
               myBusinessList !== null &&
               myBusinessList !== undefined &&
               myBusinessList.length > 0 && (
-                <View>
+                <View style={[g.mt5, g.mb5]}>
                   {myBusinessList.map((item, index) => {
                     return (
-                      <TouchableOpacity
-                        style={g.mb10}
-                        key={index}
-                        onPress={() => {
-                          refRBSheet.current.close();
-                          navigation.navigate('ListMyBusiness', {
-                            data: {inEditMode: true, data: item},
-                          });
-                        }}>
-                        <Text
-                          style={[g.fs14, g.FHNM, g.txtLeft, g.colordarkGray]}>
-                          {item.businessName &&
-                          item.businessName !== undefined &&
-                          item.businessName !== null
+                      <View key={index}>
+                        {createMenu(2,
+                          item.businessName &&
+                            item.businessName !== undefined &&
+                            item.businessName !== null
                             ? `Edit ${item.businessName}`
-                            : 'N/A'}
-                        </Text>
-                      </TouchableOpacity>
+                            : 'N/A',
+                          GlobalInclude.Assets.ListYellowPage,
+                          () => {
+                            refRBSheet.current.close();
+                            navigation.navigate('ListMyBusiness', {
+                              data: {inEditMode: true, data: item},
+                            });
+                          },
+                        )}
+                      </View>
                     );
                   })}
                 </View>
               )}
-            <TouchableOpacity
-              onPress={() => {
+
+            {createMenu(3,
+              'About Yellow Pages',
+              GlobalInclude.Assets.AboutYellowPage,
+              () => {
                 refRBSheet.current.close();
                 navigation.navigate('AboutYellowPage');
-              }}>
-              <Text style={[g.fs16, g.FHNB, g.txtLeft, g.colorBlue, g.mb10]}>
-                About YellowPages
-              </Text>
-            </TouchableOpacity>
+              },
+            )}
           </View>
         </ScrollView>
       </BottomSheetAbout>

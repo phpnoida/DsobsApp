@@ -27,16 +27,18 @@ import getPath from '@flyerhq/react-native-android-uri-path';
 
 var re = /(?:\.([^.]+))?$/;
 
-const UploadMedia = ({refRBSheet, media, videoData, onPickMedia}) => {
+const UploadMedia = ({
+  refRBSheet,
+  media,
+  videoData,
+  onPickMedia,
+  showLoader,
+}) => {
   const videoRef = useRef();
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedLink, setSelectedLink] = useState(
-    videoData !== undefined && videoData !== null ? videoData.link : '',
-  );
-  const [selectedLinkTags, setSelectedLinkTags] = useState(
-    videoData !== undefined && videoData !== null ? videoData.tags : '',
-  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedLink, setSelectedLink] = useState('');
+  const [selectedLinkTags, setSelectedLinkTags] = useState('');
   const [errorMessage, setErrorMessage] = useState({});
 
   /**
@@ -98,6 +100,7 @@ const UploadMedia = ({refRBSheet, media, videoData, onPickMedia}) => {
     })
       .then((images) => {
         if (images !== null) {
+          refRBSheet.current.open();
           console.log('images', images);
           uploadImage(images, 'utils/imageupload', 1);
         }
@@ -358,13 +361,25 @@ const UploadMedia = ({refRBSheet, media, videoData, onPickMedia}) => {
         }}>
         <View
           style={{flex: 1, justifyContent: 'center', alignContent: 'center'}}>
+          {isLoading && (
+            <View
+              style={{
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                left: 0,
+                right: 0,
+                justifyContent: 'center',
+              }}>
+              <ActivityIndicator size={'small'} color={'#2b3252'} />
+            </View>
+          )}
           <View style={[grid.rowdir, grid.flexwrap, g.mt5]}>
             {generateIcon(
               GlobalInclude.Assets.CameraAttach,
               'Image',
               media.image,
               () => {
-                refRBSheet.current.close();
                 setTimeout(() => {
                   pickImage();
                 }, 350);
@@ -375,8 +390,17 @@ const UploadMedia = ({refRBSheet, media, videoData, onPickMedia}) => {
               'Video',
               media.video,
               () => {
-                //pickVideo();
                 refRBSheet.current.close();
+                setSelectedLink(
+                  videoData !== undefined && videoData !== null
+                    ? videoData.link
+                    : '',
+                );
+                setSelectedLinkTags(
+                  videoData !== undefined && videoData !== null
+                    ? videoData.tags
+                    : '',
+                );
                 setErrorMessage({});
                 setTimeout(() => {
                   videoRef.current.open();
@@ -405,19 +429,6 @@ const UploadMedia = ({refRBSheet, media, videoData, onPickMedia}) => {
           </View>
         </View>
       </RBSheet>
-      {isLoading && (
-        <View
-          style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            justifyContent: 'center',
-          }}>
-          <ActivityIndicator size={'small'} color={'#2b3252'} />
-        </View>
-      )}
 
       {/* Video */}
       <RBSheet

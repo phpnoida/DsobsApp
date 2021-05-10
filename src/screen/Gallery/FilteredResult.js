@@ -63,9 +63,11 @@ const FilteredResult = ({navigation, route}) => {
 
             if (data.status) {
               let results = data.data;
+
               console.log('====================================');
-              console.log('results', results);
+              console.log(results);
               console.log('====================================');
+
               if (filterObject.index === 0) {
                 totalCount = data.totalCount;
                 setImageData([...results]);
@@ -137,6 +139,14 @@ const FilteredResult = ({navigation, route}) => {
         <TouchableOpacity
           activeOpacity={1}
           key={index}
+          onPress={() => {
+            let payload = {
+              index: index,
+              data: imageData,
+              title: item.galleryId.title,
+            };
+            navigation.navigate('GalleryDetail', payload);
+          }}
           style={{
             width: width / 3 - 27,
             marginTop: 10,
@@ -191,34 +201,45 @@ const FilteredResult = ({navigation, route}) => {
                 title={pageTitle}
                 showBack={true}
               />
-              <View
-                style={[
-                  {
-                    marginRight: 15,
-                    marginLeft: 15,
-                    padding: 10,
-                    borderRadius: 10,
-                    shadowOffset: {width: 2},
-                  },
-                  g.mb5,
-                  g.mt10,
-                  g.pb15,
-                  g.bgWhite,
-                  g.boxShadow,
-                ]}>
+              {imageData &&
+              imageData !== undefined &&
+              imageData !== null &&
+              imageData.length > 0 ? (
                 <View
                   style={[
-                    grid.rowdir,
-                    grid.alignItemsBottom,
-                    grid.justifyContent,
+                    {
+                      marginRight: 15,
+                      marginLeft: 15,
+                      padding: 10,
+                      borderRadius: 10,
+                      shadowOffset: {width: 2},
+                    },
+                    g.mb5,
+                    g.mt10,
+                    g.pb15,
+                    g.bgWhite,
+                    g.boxShadow,
                   ]}>
-                  <View style={[g.oh]}>
-                    <View style={[grid.rowdir, grid.flexwrap]}>
-                      {generateGalleryView()}
+                  <View
+                    style={[
+                      grid.rowdir,
+                      grid.alignItemsBottom,
+                      grid.justifyContent,
+                    ]}>
+                    <View style={[g.oh]}>
+                      <View style={[grid.rowdir, grid.flexwrap]}>
+                        {generateGalleryView()}
+                      </View>
                     </View>
                   </View>
                 </View>
-              </View>
+              ) : (
+                <View style={GlobalInclude.AppStyle.fillCenter}>
+                  <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
+                    No Record Found
+                  </Text>
+                </View>
+              )}
             </View>
           )}
         </View>

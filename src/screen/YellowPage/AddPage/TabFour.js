@@ -1,14 +1,11 @@
-import React, {useState, useEffect} from 'react';
+import React, {useRef} from 'react';
 import {
   Text,
   View,
   TouchableOpacity,
-  TextInput,
   Image,
   Platform,
-  Alert,
   ScrollView,
-  Dimensions,
   Animated,
 } from 'react-native';
 import g from '../../../theme/global';
@@ -16,25 +13,14 @@ import grid from '../../../theme/grid';
 import {scale} from '../../../theme/Scalling';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import {IconType} from '../../../helper/Constants';
-import CommonButton from '../../../component/CommonButton';
-import PhotoSheet from 'react-native-raw-bottom-sheet';
-import VideoSheet from 'react-native-raw-bottom-sheet';
-import RNFetchBlob from 'rn-fetch-blob';
-import ImagePicker from 'react-native-image-crop-picker';
-import DocumentPicker from 'react-native-document-picker';
 import NextPreviousButton from '../../../component/NextPreviousButton';
-import {uploadMedia} from '../../../Actions/CommonActions';
-import {updateUserProfile} from '../../../Actions/UserActions';
 import YoutubeView from '../../../component/YoutubeView';
 import FastImage from 'react-native-fast-image';
 import {createImageProgress} from 'react-native-image-progress';
-import {permissionDocument} from '../../../helper/UploadDocument';
+import UploadMedia from '../../../component/UploadMedia';
 
 const AnimatedFastImage = Animated.createAnimatedComponent(FastImage);
 const ProgressImage = createImageProgress(AnimatedFastImage);
-
-let photoSheet = null;
-let videoSheet = null;
 let opacity = new Animated.Value(0.0);
 
 const TabFour = ({
@@ -46,19 +32,9 @@ const TabFour = ({
   onPickImage,
   onPickDocument,
   inEditMode,
+  onMediaPick,
 }) => {
-  const [selectedLink, setSelectedLink] = useState('');
-  const [selectedLinkError, setSelectedLinkError] = useState('');
-  const [selectedLinkTags, setSelectedLinkTags] = useState('');
-  const [selectedTagsError, setSelectedTagsError] = useState('');
-
-  const handleInput = (key, value) => {
-    if (key === 'link') {
-      setSelectedLink(value);
-    } else if (key === 'tags') {
-      setSelectedLinkTags(value);
-    }
-  };
+  const uploadRef = useRef();
 
   const renderMediaItem = () => {
     let componentArray = [];
@@ -216,69 +192,6 @@ const TabFour = ({
     return componentArray;
   };
 
-  const pickMultiple = () => {
-    ImagePicker.openPicker({
-      includeBase64: false,
-      cropping: true,
-      includeExif: false,
-      mediaType: 'photo',
-      multiple: false,
-    })
-      .then((images) => {
-        if (images !== null) {
-          console.log('images', images);
-          onPickImage(images);
-        }
-      })
-      .catch((err) => {
-        Alert.alert('User Cancelled Selection!');
-        console.log('err', err);
-      })
-      .finally(() => {
-        photoSheet.close();
-      });
-  };
-
-  const pickDocument = async () => {
-    try {
-      permissionDocument().then((response) => {
-        if (response && response !== null && response !== undefined) {
-          let body = response;
-          onPickDocument(body);
-        }
-      });
-    } catch (err) {
-      console.log('err', err);
-      Alert.alert('User Cancelled Selection!');
-    }
-  };
-
-  const addToVideo = () => {
-    if (selectedLink.trim() === '') {
-      setSelectedLinkError('This field is required!');
-    } else if (selectedLinkTags.trim() === '') {
-      setSelectedTagsError('This field is required!');
-    } else {
-      videoSheet.close();
-      const thumbnail =
-        selectedLink.includes('youtube') || selectedLink.includes('youtu.be')
-          ? selectedLink.replace('watch?v=', 'embed/')
-          : selectedLink.includes('vimeo')
-          ? selectedLink.replace(
-              'https://vimeo.com/',
-              'https://player.vimeo.com/video/',
-            )
-          : '';
-      const obj = {
-        fileName: selectedLink,
-        thumbnail: thumbnail,
-        type: 2,
-        tags: selectedLinkTags,
-      };
-      addVideo(obj);
-    }
-  };
-
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.pl15, g.pr15, g.pt20]}>
       <View style={GlobalInclude.AppStyle.fill}>
@@ -290,7 +203,9 @@ const TabFour = ({
               <TouchableOpacity
                 style={grid.rowdir}
                 onPress={() => {
-                  photoSheet.open();
+                  if (uploadRef.current !== null) {
+                    uploadRef.current.open();
+                  }
                 }}
                 activeOpacity={0.7}>
                 <View
@@ -301,73 +216,7 @@ const TabFour = ({
                     {padding: 15, borderRadius: 10},
                   ]}>
                   <Text style={[g.fs16, g.FHNR, g.colorLightGray]}>
-                    Upload a Photo here
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    g.p15,
-                    g.bglightGray,
-                    {width: 50, height: 50, borderRadius: 10},
-                  ]}>
-                  <Image
-                    source={GlobalInclude.Assets.UploadIcon}
-                    resizeMode="contain"
-                    style={[g.w20, {height: 23}]}
-                  />
-                </View>
-              </TouchableOpacity>
-            </View>
-            <View style={g.mb15}>
-              <TouchableOpacity
-                style={grid.rowdir}
-                onPress={() => {
-                  setSelectedLink('');
-                  setSelectedLinkTags('');
-                  videoSheet.open();
-                }}
-                activeOpacity={0.7}>
-                <View
-                  style={[
-                    g.bglightGray,
-                    grid.col,
-                    g.mr10,
-                    {padding: 15, borderRadius: 10},
-                  ]}>
-                  <Text style={[g.fs16, g.FHNR, g.colorLightGray]}>
-                    Upload a Video here
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    g.p15,
-                    g.bglightGray,
-                    {width: 50, height: 50, borderRadius: 10},
-                  ]}>
-                  <Image
-                    source={GlobalInclude.Assets.UploadIcon}
-                    resizeMode="contain"
-                    style={[g.w20, {height: 23}]}
-                  />
-                </View>
-              </TouchableOpacity>
-            </View>
-            <View style={g.mb15}>
-              <TouchableOpacity
-                style={grid.rowdir}
-                onPress={() => {
-                  pickDocument();
-                }}
-                activeOpacity={0.7}>
-                <View
-                  style={[
-                    g.bglightGray,
-                    grid.col,
-                    g.mr10,
-                    {padding: 15, borderRadius: 10},
-                  ]}>
-                  <Text style={[g.fs16, g.FHNR, g.colorLightGray]}>
-                    Upload a Docs here
+                    Upload Media
                   </Text>
                 </View>
                 <View
@@ -407,104 +256,17 @@ const TabFour = ({
           onSaveTab();
         }}
       />
-      <PhotoSheet
-        ref={(ref) => {
-          photoSheet = ref;
+      <UploadMedia
+        refRBSheet={uploadRef}
+        media={{image: false, video: false, document: false, audio: true}}
+        onPickMedia={(media) => {
+          uploadRef.current.close();
+          if (media !== undefined && media !== null) {
+            console.log('media', media);
+            onMediaPick(media);
+          }
         }}
-        height={120}
-        minClosingHeight={50}
-        duration={350}
-        closeOnDragDown={true}
-        customStyles={{
-          container: {
-            backgroundColor: '#fff',
-            borderTopLeftRadius: 30,
-            borderTopRightRadius: 30,
-            paddingStart: scale(15),
-            paddingEnd: scale(15),
-            paddingBottom: scale(20),
-          },
-        }}>
-        <View style={[g.bb1, g.p15, g.pl0, {borderBottomColor: '#e5e5e5'}]}>
-          <TouchableOpacity
-            activeOpacity={1}
-            style={[grid.rowdir, grid.alignItems]}
-            onPress={() => {
-              pickMultiple();
-            }}>
-            <View style={[grid.rowdir, grid.justifyContentCenter, {width: 22}]}>
-              <GlobalInclude.BaseIcon
-                containerStyle={{height: scale(18), width: scale(18)}}
-                iconColor={'#bababa'}
-                iconName={'mobile'}
-                iconSize={scale(18)}
-                iconType={IconType[4]}
-              />
-            </View>
-            <Text style={[g.fs16, g.FHNB, g.colordarkGray, g.ml15]}>
-              {'Upload From Device'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </PhotoSheet>
-
-      {/* video sheet */}
-      <VideoSheet
-        ref={(ref) => {
-          videoSheet = ref;
-        }}
-        height={260}
-        minClosingHeight={50}
-        duration={350}
-        closeOnDragDown={true}
-        customStyles={{
-          container: {
-            backgroundColor: '#fff',
-            borderTopLeftRadius: 30,
-            borderTopRightRadius: 30,
-            paddingStart: scale(15),
-            paddingEnd: scale(15),
-            paddingTop: scale(10),
-            paddingBottom: scale(10),
-          },
-        }}>
-        <View style={grid.flex1}>
-          <View style={[grid.col, g.mb10]}>
-            <TextInput
-              placeholder={'Paste Youtube link here (Required)'}
-              onChangeText={(link) => handleInput('link', link)}
-              underlineColorAndroid="transparent"
-              style={g.inputWhite}
-              value={selectedLink}
-            />
-            {selectedLinkError && selectedLinkError !== '' ? (
-              <Text style={g.errorMsg}>{selectedLinkError}</Text>
-            ) : null}
-          </View>
-
-          <View style={[grid.row, g.mb10]}>
-            <View style={grid.col}>
-              <TextInput
-                placeholder={
-                  'Tag this photo, seperate tags by comma (Required)'
-                }
-                onChangeText={(tags) => handleInput('tags', tags)}
-                underlineColorAndroid="transparent"
-                style={[g.inputWhite]}
-                value={selectedLinkTags}
-              />
-              {selectedTagsError && selectedTagsError !== '' ? (
-                <Text style={g.errorMsg}>{selectedTagsError}</Text>
-              ) : null}
-            </View>
-          </View>
-          <CommonButton
-            showLoader={false}
-            title={'SAVE'}
-            onPress={() => addToVideo()}
-          />
-        </View>
-      </VideoSheet>
+      />
     </View>
   );
 };

@@ -44,6 +44,7 @@ const cancelAlbum = axios.CancelToken.source();
 let curY = new Animated.Value(0);
 
 const GalleryListing = ({navigation}) => {
+  curY = new Animated.Value(0);
   const refRBSheet = useRef();
   const refRBFilter = useRef();
 
@@ -59,7 +60,7 @@ const GalleryListing = ({navigation}) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [checkedType, setCheckedType] = useState(1);
   const [searchedUser, setSearchedUser] = useState([]);
-  const [animatedHeight, setAnimatedHeight] = useState(159);
+  const [animatedHeight, setAnimatedHeight] = useState(222);
 
   useEffect(() => {
     userData = null;
@@ -231,12 +232,7 @@ const GalleryListing = ({navigation}) => {
       delete filterObject.s;
     }
     setPageContent([]);
-
-    console.log('22');
-
-    setTimeout(() => {
-      getAlbumList();
-    }, 500);
+    getAlbumList();
   };
 
   const expandSelectedPanel = (index) => {
@@ -248,7 +244,6 @@ const GalleryListing = ({navigation}) => {
   };
 
   const generateGalleryView = ({item, index}) => {
-    console.log('item.title', index, item.title);
     return (
       <GalleryImage
         key={index}
@@ -293,7 +288,11 @@ const GalleryListing = ({navigation}) => {
 
   const renderHeaderComponents = () => {
     return (
-      <View style={{paddingHorizontal: scale(15)}}>
+      <View
+        style={[
+          GlobalInclude.AppStyle.contentSpace,
+          {marginBottom: scale(10)},
+        ]}>
         <AutoCompleteSearch
           mainTitle={'Search By'}
           chkType={checkedType}
@@ -380,7 +379,11 @@ const GalleryListing = ({navigation}) => {
     );
   };
 
-  const headerDistance = Animated.diffClamp(curY, 0, 160).interpolate({
+  const headerDistance = Animated.diffClamp(
+    curY,
+    0,
+    searchedUser.length > 0 ? 512 : 222,
+  ).interpolate({
     inputRange: [0, 1],
     outputRange: [0, -1],
   });
@@ -439,13 +442,15 @@ const GalleryListing = ({navigation}) => {
                 ListEmptyComponent={renderNoDataComponent}
                 contentContainerStyle={{
                   marginTop: animatedHeight,
-                  paddingBottom: scale(200),
+                  paddingBottom: searchedUser.length > 0 ? scale(400) : scale(230),
                 }}
-                scrollEventThrottle={1}
+                scrollEventThrottle={16}
                 onScroll={Animated.event(
                   [{nativeEvent: {contentOffset: {y: curY}}}],
                   {useNativeDriver: true},
                 )}
+                contentInset={{top: 0, bottom: 20, left: 0, right: 0}}
+                contentInsetAdjustmentBehavior="automatic"
               />
               <Animated.View
                 style={[

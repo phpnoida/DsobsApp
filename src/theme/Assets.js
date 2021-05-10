@@ -57,6 +57,9 @@ import DocAttach from '../../Assets/Icon/attachdocs.png';
 import VideoAttach from '../../Assets/Icon/attachVideo.png';
 import CommonRoom from '../../Assets/Icon/common_room.png';
 import YellowPage from '../../Assets/Icon/yellow_page.png';
+import AboutYellowPage from '../../Assets/Icon/about_yellow_page.png';
+import ListYellowPage from '../../Assets/Icon/list_business.png';
+import MyYellowPages from '../../Assets/Icon/my_business.png';
 export default {
   AppLogo: AppLogo,
   Alumbus: Alumbus,
@@ -117,4 +120,7 @@ export default {
   VideoAttach: VideoAttach,
   CommonRoom: CommonRoom,
   YellowPage: YellowPage,
+  AboutYellowPage: AboutYellowPage,
+  ListYellowPage: ListYellowPage,
+  MyYellowPages: MyYellowPages,
 };

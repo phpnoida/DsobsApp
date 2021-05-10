@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   Keyboard,
@@ -213,15 +213,6 @@ const ListMyBusiness = ({route, navigation}) => {
                 let oldData = coverImages;
                 oldData.splice(0, 0, childData);
                 setCoverImages([...oldData]);
-              } else {
-                let object = {
-                  thumbnail: childData,
-                  fileName: childData,
-                  type: mediaType,
-                };
-                let oldData = mediaData;
-                oldData.splice(0, 0, object);
-                setMediaData([...oldData]);
               }
             }
           }
@@ -443,7 +434,6 @@ const ListMyBusiness = ({route, navigation}) => {
         setErrorMessage({selectedCities: 'This field is required'});
         return;
       }
-
       /**
        * else if (businessLocation.trim() === '') {
        * setErrorMessage({businessLocation: 'This field is required'});
@@ -486,7 +476,6 @@ const ListMyBusiness = ({route, navigation}) => {
        * }
        *
        */
-
       if (contactPerson.trim() === '') {
         setErrorMessage({contactPerson: 'This field is required'});
         return;
@@ -719,20 +708,10 @@ const ListMyBusiness = ({route, navigation}) => {
             onPreviousTab={() => goPreviousTab()}
             mediaData={mediaData}
             removeMedia={(index) => removeIndex(index)}
-            addVideo={(obj) => {
+            onMediaPick={(media) => {
               let oldData = mediaData;
-              oldData.splice(0, 0, obj);
+              oldData.splice(0, 0, media);
               setMediaData([...oldData]);
-            }}
-            onPickImage={(image) => {
-              uploadImage(image, 'utils/imageupload', 1);
-            }}
-            onPickDocument={(document) => {
-              uploadMediaContent(
-                document.body,
-                document.childPath,
-                document.mediaType,
-              );
             }}
           />
         );

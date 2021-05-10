@@ -364,6 +364,7 @@ const GalleryDetail = ({route, navigation}) => {
     if (item.lastName && item.lastName !== undefined && item.lastName !== '') {
       fullName += ' ' + item.lastName;
     }
+    console.log('fullName',fullName);
     return fullName;
   };
 
