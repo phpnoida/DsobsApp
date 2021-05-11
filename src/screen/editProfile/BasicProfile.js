@@ -171,7 +171,6 @@ const BasicProfile = (props) => {
   const [showContactUsModal, setShowContactUsModal] = useState(false);
 
   useEffect(() => {
-
     profileUri = null;
     stringDate = 'N/A';
     birthDate = '';
@@ -182,12 +181,11 @@ const BasicProfile = (props) => {
     selectedStateItem = null;
     cityListMain = [];
     selectedCityItem = null;
-   isCountrySelected = false;
-  isStateSelected = false;
-  isCitySelected = false;
- pickerSelectionType = -1;
- responseMessage = '';
-
+    isCountrySelected = false;
+    isStateSelected = false;
+    isCitySelected = false;
+    pickerSelectionType = -1;
+    responseMessage = '';
 
     setPrefix(profileData.prefix);
     setPetName(profileData.petName);
@@ -228,7 +226,6 @@ const BasicProfile = (props) => {
       console.log('sample', birthDate);
       setSelectedDate(stringDate);
     }
-    
 
     let profession = '';
     if (profileData.profession.includes('-')) {
@@ -1230,10 +1227,8 @@ const BasicProfile = (props) => {
                 onPress={() => {
                   stateListSheet.open();
                 }}>
-                <Text style={{textTransform:'capitalize'}}>
-                  {selectedState !== ''
-                    ? selectedState
-                    : 'Select State'}
+                <Text style={{textTransform: 'capitalize'}}>
+                  {selectedState !== '' ? selectedState : 'Select State'}
                 </Text>
               </TouchableOpacity>
               {errorMessage.state && errorMessage.state.length > 0 && (

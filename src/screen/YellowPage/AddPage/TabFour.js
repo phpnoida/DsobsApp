@@ -28,9 +28,6 @@ const TabFour = ({
   onPreviousTab,
   mediaData,
   removeMedia,
-  addVideo,
-  onPickImage,
-  onPickDocument,
   inEditMode,
   onMediaPick,
 }) => {

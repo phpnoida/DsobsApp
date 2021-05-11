@@ -241,4 +241,17 @@ export default StyleSheet.create({
   transform: {
     textTransform: 'capitalize',
   },
+  triangleShape: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 8,
+    borderStyle: 'solid',
+    backgroundColor: 'transparent',
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: '#dddddd',
+    marginLeft: 8,
+  },
 });

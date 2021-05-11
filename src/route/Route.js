@@ -33,6 +33,8 @@ import NotificationListing from '../screen/Notification/NotificationListing';
 import Teachers from '../screen/Teacher/Teachers';
 import TeachersList from '../screen/Teacher/TeachersList';
 import VolunteerList from '../screen/Teacher/VolunteerList';
+import SocialListing from '../screen/SocialWork/SocialListing';
+import ListMyWork from '../screen/SocialWork/AddListing/ListMyWork';
 
 const Stack = createStackNavigator();
 
@@ -202,6 +204,16 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="VolunteerList"
         component={VolunteerList}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="SocialListing"
+        component={SocialListing}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ListMyWork"
+        component={ListMyWork}
         options={{headerShown: false}}
       />
     </Stack.Navigator>
