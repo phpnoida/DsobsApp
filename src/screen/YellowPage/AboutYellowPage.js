@@ -20,9 +20,6 @@ import {getYellowPageAbout} from '../../Actions/YelloPageActions';
 
 import HTML from 'react-native-render-html';
 
-const contentText =
-  "<h1>Href Attribute Example</h1> <p> <a href='https://www.freecodecamp.org/contribute/'>The freeCodeCamp Contribution Page</a> shows you how and where you canontribute to freeCodeCamp's community and growth. </p>";
-
 const AboutYellowPage = ({navigation}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [pageContent, setPageContent] = useState(null);

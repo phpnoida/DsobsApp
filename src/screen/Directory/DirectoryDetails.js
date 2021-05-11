@@ -94,7 +94,7 @@ const DirectoryDetails = ({route, navigation}) => {
     dataSize = 10;
     totalCount = 0;
     currentShowing = 1;
-
+    filterObject = {};
     filterObject.index = dataIndex;
     filterObject.size = dataSize;
 
@@ -768,7 +768,7 @@ const DirectoryDetails = ({route, navigation}) => {
 
   return (
     <View style={GlobalInclude.AppStyle.fill}>
-      <HeaderBar navigation={navigation} />
+      <HeaderBar navigation={navigation} showBack={true} title={'Directory'} />
       <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
         <TouchableOpacity
           style={GlobalInclude.AppStyle.fill}

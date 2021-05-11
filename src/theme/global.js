@@ -1830,4 +1830,18 @@ export default {
     borderColor: '#2b3252',
     backgroundColor: '#2b3252',
   },
+  bbtnNew: {
+    borderWidth: 1,
+    borderColor: '#2b3252',
+    borderRadius: 5,
+    padding: 15,
+    width: deviceWidth / 2 - 70,
+  },
+  bbtnNewtxt: {
+    color: '#2b3252',
+    fontSize: deviceWidth > 380 ? 16 : 14,
+    textAlign: 'center',
+    lineHeight: 17,
+    fontFamily: 'Lato-bold',
+  },
 };

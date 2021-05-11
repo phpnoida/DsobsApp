@@ -189,12 +189,7 @@ const UploadMedia = ({
             data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
           };
           body.push(imageData);
-          let object = {
-            body: body,
-            childPath: childPath,
-            mediaType: mediaType,
-          };
-          return object;
+          uploadMediaContent(body, childPath, mediaType);
         } else {
           onPickMedia(null);
           Toast.show({
@@ -240,6 +235,7 @@ const UploadMedia = ({
           type: [DocumentPicker.types.pdf],
         });
         if (res !== null) {
+          refRBSheet.current.open();
           uploadDoc(res, 'utils/imageupload?type=1', 3);
         }
       } catch (error) {

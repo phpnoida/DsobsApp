@@ -30,6 +30,9 @@ import YellowPageListing from '../screen/YellowPage/YellowPageListing';
 import BusinessDetails from '../screen/YellowPage/BusinessDetails';
 import AboutYellowPage from '../screen/YellowPage/AboutYellowPage';
 import NotificationListing from '../screen/Notification/NotificationListing';
+import Teachers from '../screen/Teacher/Teachers';
+import TeachersList from '../screen/Teacher/TeachersList';
+import VolunteerList from '../screen/Teacher/VolunteerList';
 
 const Stack = createStackNavigator();
 
@@ -181,10 +184,24 @@ export const RootNavigators = (baseRoute) => {
         options={{headerShown: false}}
         component={AboutYellowPage}
       />
-
       <Stack.Screen
         name="NotificationListing"
         component={NotificationListing}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="Teachers"
+        component={Teachers}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="TeachersList"
+        component={TeachersList}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="VolunteerList"
+        component={VolunteerList}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

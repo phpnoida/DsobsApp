@@ -19,6 +19,7 @@ const menuOptions = [
   {screen: 'Video', visible: true, value: 3, label: 'Videos'},
   {screen: 'GalleryListing', visible: true, value: 4, label: 'Gallery'},
   {screen: 'YellowPages', visible: true, value: 5, label: 'Yellow Pages'},
+  {screen: 'Teachers', visible: true, value: 6, label: 'Teachers'},
 ];
 
 const TopHeaderView = ({

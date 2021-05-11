@@ -332,6 +332,8 @@ const YellowPages = ({navigation}) => {
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
       console.log('onPaginate()');
       setPaginationStatus(PaginationStatus.waiting);
+      filterObject.index = filterObject.index +1;
+      getYellowPage()
     }
   };
 

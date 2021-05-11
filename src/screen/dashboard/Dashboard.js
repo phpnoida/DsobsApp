@@ -876,7 +876,10 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    Alert.alert('Coming soon...');
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('Teachers');
+                    }, 200);
                   }}>
                   <Image
                     source={GlobalInclude.Assets.Teacher}
