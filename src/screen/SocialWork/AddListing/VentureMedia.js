@@ -218,7 +218,7 @@ const VentureMedia = ({
       </View>
       <NextPreviousButton
         isLoading={false}
-        nextTitle={inEditMode ? 'Update & Next' : 'Save & Next'}
+        nextTitle={inEditMode ? 'Update & Next' : 'Finish'}
         onPreviuosTab={() => {
           onPreviousTab();
         }}

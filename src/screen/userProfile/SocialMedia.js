@@ -17,7 +17,7 @@ import {IconType} from '../../helper/Constants';
 
 let deviceWidth = Dimensions.get('window').width;
 
-const generateView = (iconColor, icon, type, clickEvent) => {
+export const generateView = (iconColor, icon, type, clickEvent) => {
   return (
     <View>
       <TouchableOpacity

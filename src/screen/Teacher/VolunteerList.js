@@ -176,6 +176,7 @@ const VolunteerList = ({navigation}) => {
     filterObject = {};
     filterObject.index = 0;
     filterObject.size = 10;
+    filterObject.type = 2;
   };
 
   const createFullName = (item) => {

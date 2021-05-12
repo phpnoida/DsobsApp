@@ -33,7 +33,6 @@ import Helpers from '../../helper/Helper';
 
 let latitude = 0.0,
   longitude = 0.0;
-const {height} = Dimensions.get('window');
 
 const BusinessDetails = ({route, navigation}) => {
   const refRBSheet = useRef();

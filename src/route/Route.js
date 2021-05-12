@@ -26,7 +26,6 @@ import AboutPhoto from '../screen/Gallery/AboutPhoto';
 import FilteredResult from '../screen/Gallery/FilteredResult';
 import YellowPages from '../screen/YellowPage/YellowPages';
 import ListMyBusiness from '../screen/YellowPage/AddPage/ListMyBusiness';
-import YellowPageListing from '../screen/YellowPage/YellowPageListing';
 import BusinessDetails from '../screen/YellowPage/BusinessDetails';
 import AboutYellowPage from '../screen/YellowPage/AboutYellowPage';
 import NotificationListing from '../screen/Notification/NotificationListing';
@@ -35,6 +34,7 @@ import TeachersList from '../screen/Teacher/TeachersList';
 import VolunteerList from '../screen/Teacher/VolunteerList';
 import SocialListing from '../screen/SocialWork/SocialListing';
 import ListMyWork from '../screen/SocialWork/AddListing/ListMyWork';
+import ListingDetails from '../screen/SocialWork/Details/ListingDetails';
 
 const Stack = createStackNavigator();
 
@@ -172,11 +172,6 @@ export const RootNavigators = (baseRoute) => {
         options={{headerShown: false}}
       />
       <Stack.Screen
-        name="YellowPageListing"
-        component={YellowPageListing}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
         name="BusinessDetails"
         component={BusinessDetails}
         options={{headerShown: false}}
@@ -214,6 +209,11 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="ListMyWork"
         component={ListMyWork}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ListingDetails"
+        component={ListingDetails}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

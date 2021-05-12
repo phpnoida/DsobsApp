@@ -49,7 +49,7 @@ const VentureDetails = ({
         showsVerticalScrollIndicator={false}>
         <View style={[grid.flex1, g.pb30]}>
           <View style={g.mb15}>
-            {generateHeader('Social Venture Video', false)}
+            {generateHeader('Social Work Video', false)}
             <TextInput
               underlineColorAndroid={'transparent'}
               style={g.inputWhite}
@@ -106,7 +106,7 @@ const VentureDetails = ({
             </View>
           </View>
           <View style={g.mb15}>
-            {generateHeader('About the Social Venture', true)}
+            {generateHeader('About the Social Work', true)}
             <TextInput
               underlineColorAndroid="transparent"
               numberOfLines={16}
@@ -119,7 +119,7 @@ const VentureDetails = ({
               keyboardType={'default'}
               autoCapitalize={'sentences'}
               returnKeyType={'done'}
-              placeholder={''}
+              placeholder={'Write text here'}
               onChangeText={(value) => {
                 handleInput('aboutVenture', value);
               }}
@@ -214,6 +214,7 @@ const styles = StyleSheet.create({
     padding: scale(8),
     borderRadius: scale(8),
     overflow: 'hidden',
+    width: scale(80)
   },
 });
 

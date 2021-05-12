@@ -31,6 +31,7 @@ const BasicDetails = ({
   facebook,
   twitter,
   wikipedia,
+  errorMessage,
 }) => {
   const refCategory = useRef();
   const refYear = useRef();
@@ -64,6 +65,10 @@ const BasicDetails = ({
               </Text>
               <View style={GlobalInclude.AppStyle.triangleShape} />
             </TouchableOpacity>
+            {errorMessage.selectedCategory &&
+            errorMessage.selectedCategory !== '' ? (
+              <Text style={g.errorMsg}>{errorMessage.selectedCategory}</Text>
+            ) : null}
           </View>
           <View style={g.mb15}>
             <View style={grid.rowdir}>
@@ -100,6 +105,12 @@ const BasicDetails = ({
                 </TouchableOpacity>
               </View>
             </View>
+            {errorMessage.projectName && errorMessage.projectName !== '' ? (
+              <Text style={g.errorMsg}>{errorMessage.projectName}</Text>
+            ) : null}
+            {errorMessage.selectedYear && errorMessage.selectedYear !== '' ? (
+              <Text style={g.errorMsg}>{errorMessage.selectedYear}</Text>
+            ) : null}
           </View>
           <View style={g.mb15}>
             {generateHeader('Initiated By', true)}
@@ -127,7 +138,7 @@ const BasicDetails = ({
                 style={[g.inputWhite, grid.col]}
                 value={facebook}
                 onChangeText={(value) => handleInput('facebook', value)}
-                placeholder={''}
+                placeholder={'Write/Paste link here'}
                 maxLength={264}
               />
             </View>
@@ -139,7 +150,7 @@ const BasicDetails = ({
                 style={[g.inputWhite, grid.col]}
                 value={twitter}
                 onChangeText={(value) => handleInput('twitter', value)}
-                placeholder={''}
+                placeholder={'Write/Paste link here'}
                 maxLength={264}
               />
             </View>
@@ -151,7 +162,7 @@ const BasicDetails = ({
                 style={[g.inputWhite, grid.col]}
                 value={wikipedia}
                 onChangeText={(value) => handleInput('wikipedia', value)}
-                placeholder={''}
+                placeholder={'Write/Paste link here'}
                 maxLength={264}
               />
             </View>

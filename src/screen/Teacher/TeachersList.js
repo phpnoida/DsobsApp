@@ -145,6 +145,7 @@ const TeachersList = ({navigation}) => {
     filterObject = {};
     filterObject.index = 0;
     filterObject.size = 10;
+    filterObject.type = 1;
   };
 
   const createFullName = (item) => {

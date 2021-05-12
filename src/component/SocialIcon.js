@@ -34,6 +34,7 @@ export const showSocialIcon = (title, color) => {
           height: 26,
           backgroundColor: '#ced4da',
           marginStart: scale(5),
+          alignSelf: 'center',
         }}
       />
     </View>

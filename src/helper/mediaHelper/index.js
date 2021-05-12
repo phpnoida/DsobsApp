@@ -1,22 +1,11 @@
 import React, {useRef, useState} from 'react';
-import {
-  Text,
-  Dimensions,
-  View,
-  Alert,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  PermissionsAndroid,
-  Platform,
-  ActivityIndicator,
-  TextInput,
-} from 'react-native';
+import {Platform} from 'react-native';
 
 import ImagePicker from 'react-native-image-crop-picker';
 import DocumentPicker from 'react-native-document-picker';
 import Toast from '../../component/Toast';
 import RNFetchBlob from 'rn-fetch-blob';
+import {uploadMedia} from '../../Actions/CommonActions';
 
 var re = /(?:\.([^.]+))?$/;
 
@@ -93,4 +82,37 @@ export const uploadImage = (pickFile, childPath, mediaType) => {
     });
   }
   return object;
+};
+
+export const uploadMediaContent = (body, childPath, mediaType, onPickMedia) => {
+  uploadMedia(
+    childPath,
+    body,
+    (response) => {
+      if (response && response !== undefined && response !== null) {
+        if (response.status && response.data && response.data !== null) {
+          let childData = response.data.data;
+          let object = {
+            thumbnail: childData,
+            fileName: childData,
+            type: mediaType,
+          };
+          onPickMedia(object);
+        } else {
+          onPickMedia(null);
+        }
+      } else {
+        onPickMedia(null);
+      }
+    },
+    (error, message) => {
+      onPickMedia(null);
+      Toast.show({
+        title: 'Uploading Failed',
+        text: message,
+        color: '#f39c12',
+        timing: 5000,
+      });
+    },
+  );
 };
