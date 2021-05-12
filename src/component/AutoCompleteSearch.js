@@ -175,7 +175,7 @@ const AutoCompleteSearch = ({
               style={{width: 16}}
             />
           </TouchableOpacity>
-        ) : chkType === 1 || chkType === 4 ? (
+        ) : chkType === 4 ? (
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => onGoPress()}

@@ -201,6 +201,7 @@ const AboutPhoto = ({route, navigation}) => {
             navigation={navigation}
             title={'About the Photo'}
             showLabel={false}
+            showBack={true}
           />
           <View
             style={{
