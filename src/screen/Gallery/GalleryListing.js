@@ -144,6 +144,10 @@ const GalleryListing = ({navigation}) => {
         setFirstTimeLoad(false);
       },
       (error, message) => {
+        setPaginationStatus(PaginationStatus.allLoaded);
+        if (filterObject.index === 0) {
+          setPageContent([]);
+        }
         console.log('message', message);
         console.log('error', error);
       },
@@ -442,7 +446,8 @@ const GalleryListing = ({navigation}) => {
                 ListEmptyComponent={renderNoDataComponent}
                 contentContainerStyle={{
                   marginTop: animatedHeight,
-                  paddingBottom: searchedUser.length > 0 ? scale(400) : scale(230),
+                  paddingBottom:
+                    searchedUser.length > 0 ? scale(400) : scale(230),
                 }}
                 scrollEventThrottle={16}
                 onScroll={Animated.event(

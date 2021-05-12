@@ -65,7 +65,7 @@ const FilteredResult = ({navigation, route}) => {
               let results = data.data;
 
               console.log('====================================');
-              console.log(results);
+              console.log(JSON.stringify(results));
               console.log('====================================');
 
               if (filterObject.index === 0) {
@@ -143,7 +143,12 @@ const FilteredResult = ({navigation, route}) => {
             let payload = {
               index: index,
               data: imageData,
-              title: item.galleryId.title,
+              title:
+                item.galleryId &&
+                item.galleryId !== null &&
+                item.galleryId.length > 0
+                  ? item.galleryId[0].title
+                  : APP_NAME,
             };
             navigation.navigate('GalleryDetail', payload);
           }}

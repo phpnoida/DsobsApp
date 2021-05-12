@@ -58,7 +58,7 @@ export function doUpdateImageInformation(
   let requestPath = `${SERVER_PATH}imageGallery/images?id=${imageId}`;
 
   console.log('requestPath', requestPath);
-  
+
   const request = axios
     .patch(requestPath, payload, {
       headers: {
@@ -77,7 +77,9 @@ export function doUpdateImageInformation(
 
 export function doFilterGallery(params, callback, errCallback) {
   let requestPath = `${SERVER_PATH}imageGallery/images/filter`;
-
+  console.log('====================================');
+  console.log('filterObject', params);
+  console.log('====================================');
   const request = axios
     .get(requestPath, {
       headers: {Authorization: global.accessToken},

@@ -364,7 +364,7 @@ const GalleryDetail = ({route, navigation}) => {
     if (item.lastName && item.lastName !== undefined && item.lastName !== '') {
       fullName += ' ' + item.lastName;
     }
-    console.log('fullName',fullName);
+    console.log('fullName', fullName);
     return fullName;
   };
 
@@ -646,6 +646,7 @@ const GalleryDetail = ({route, navigation}) => {
                 style={[grid.rowdir, grid.alignItems]}
                 onPress={() => {
                   optionsSheet.close();
+                  console.log('imageData', JSON.stringify(imageData));
                   setTimeout(() => {
                     let payload = {
                       id: imageData._id,

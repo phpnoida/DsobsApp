@@ -9,18 +9,20 @@ import {scale} from '../theme/Scalling';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import {IconType} from '../helper/Constants';
 
-let youtubeId = '';
 let _youTubeRef = React.createRef();
 const YoutubeView = (props) => {
   const [playVideo, setPlayVideo] = useState(false);
   const [thumbnail, setThumbnail] = useState('');
+  const [youtubeId, setyoutubeId] = useState('');
 
   useEffect(() => {
     if (props.link !== '') {
       //console.log('link', props.link);
-      youtubeId = Helper.GetYoutubeId(props.link);
-      //console.log('youtubeId', youtubeId);
-      setThumbnail(Helper.loadYoutubeThumb(youtubeId));
+      let videoId = Helper.GetYoutubeId(props.link);
+      setThumbnail(Helper.loadYoutubeThumb(videoId));
+      setyoutubeId(Helper.GetYoutubeId(props.link));
+
+      console.log('props.link', props.link);
     }
 
     return () => {};

@@ -168,7 +168,7 @@ const TabFour = ({
                 {item.thumbnail.includes('.pdf') && (
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(48), width: scale(48)}}
-                    iconColor={'#6e6e6e'}
+                    iconColor={'#E61A2D'}
                     iconName={'file-pdf-o'}
                     iconSize={scale(48)}
                     iconType={IconType[4]}
