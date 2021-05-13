@@ -15,6 +15,7 @@ import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
+import AsyncStorage from '@react-native-community/async-storage';
 import {
   getUserProfile,
   getUserProfileFromDirectory,
@@ -116,37 +117,45 @@ const UserProfile = ({route, navigation}) => {
                   : null;
 
               console.log('profile', profile);
-              userId = profile._id;
 
-              if (profile._id !== global.userId) {
-                profileSheetMenu.splice(0, 1);
-                profileSheetMenu.splice(3, 1);
-              }
-              if (
-                profile.dob &&
-                profile.dob !== undefined &&
-                profile.dob !== '' &&
-                profile.dob !== 'Invalid date'
-              ) {
-                var formatedDate = new Date(profile.dob);
-                let month = '';
-                if (formatedDate.getMonth() + 1 < 10) {
-                  month = '0' + (formatedDate.getMonth() + 1).toString();
-                } else {
-                  month = (formatedDate.getMonth() + 1).toString();
-                }
+              global.userDetails = profile;
+              global.firstName = profile.firstName;
+              global.lastName = profile.lastName;
 
-                let date = '';
+              AsyncStorage.setItem('userDetails', JSON.stringify(profile)).then(
+                () => {
+                  userId = profile._id;
+                  if (profile._id !== global.userId) {
+                    profileSheetMenu.splice(0, 1);
+                    profileSheetMenu.splice(3, 1);
+                  }
+                  if (
+                    profile.dob &&
+                    profile.dob !== undefined &&
+                    profile.dob !== '' &&
+                    profile.dob !== 'Invalid date'
+                  ) {
+                    var formatedDate = new Date(profile.dob);
+                    let month = '';
+                    if (formatedDate.getMonth() + 1 < 10) {
+                      month = '0' + (formatedDate.getMonth() + 1).toString();
+                    } else {
+                      month = (formatedDate.getMonth() + 1).toString();
+                    }
 
-                if (formatedDate.getDate() < 10) {
-                  date = '0' + formatedDate.getDate().toString();
-                } else {
-                  date = formatedDate.getDate().toString();
-                }
+                    let date = '';
 
-                birthDate = `${date}/${month}/${formatedDate.getFullYear()}`;
-              }
-              setProfileData(profile);
+                    if (formatedDate.getDate() < 10) {
+                      date = '0' + formatedDate.getDate().toString();
+                    } else {
+                      date = formatedDate.getDate().toString();
+                    }
+
+                    birthDate = `${date}/${month}/${formatedDate.getFullYear()}`;
+                  }
+                  setProfileData(profile);
+                },
+              );
             }
           }
         }

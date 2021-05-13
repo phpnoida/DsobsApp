@@ -6,6 +6,7 @@ import {
   TextInput,
   StyleSheet,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import g from '../../../theme/global';
 import grid from '../../../theme/grid';
@@ -16,7 +17,13 @@ import NextPreviousButton from '../../../component/NextPreviousButton';
 import ModelAlert from '../../../component/ModalAlert';
 import {generateHeader} from './HeaderTitle';
 import {IconType, TEXTAREA_COUNT} from '../../../helper/Constants';
-import {pickImage, uploadImage} from '../../../helper/mediaHelper';
+import {
+  pickImage,
+  uploadImage,
+  uploadMediaContent,
+} from '../../../helper/mediaHelper';
+import Toast from '../../../component/Toast';
+import ProgressImage from '../../../component/ProgresImage';
 
 let selectedIndex = -1;
 
@@ -26,18 +33,39 @@ const VentureDetails = ({
   onPreviousTab,
   onRemoveTag,
   ventureVideoLink,
+  uploadMedia,
   aboutVenture,
+  socialPhoto,
   addTag,
   tag,
   setTag,
   selectedTags,
+  errorMessage,
 }) => {
   const [showRemoveAlert, setShowRemoveAlert] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const pickMedia = async () => {
     let result = await pickImage();
 
     if (result !== undefined && result !== null) {
-      let itemObject = uploadImage(result);
+      setIsLoading(true);
+      let itemObject = uploadImage(result, 'utils/imageupload', 1);
+
+      if (itemObject !== undefined && itemObject !== null) {
+        uploadMediaContent(
+          itemObject.body,
+          itemObject.childPath,
+          itemObject.mediaType,
+          (uploadResult) => {
+            setIsLoading(false);
+            if (uploadResult !== null && uploadResult !== undefined) {
+              uploadMedia(uploadResult);
+            }
+          },
+        );
+      } else {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -50,60 +78,125 @@ const VentureDetails = ({
         <View style={[grid.flex1, g.pb30]}>
           <View style={g.mb15}>
             {generateHeader('Social Work Video', false)}
-            <TextInput
-              underlineColorAndroid={'transparent'}
-              style={g.inputWhite}
-              value={ventureVideoLink}
-              maxLength={100}
-              keyboardType={'default'}
-              autoCapitalize={'words'}
-              returnKeyType={'done'}
-              placeholder={'Paste youtube URL'}
-              onChangeText={(value) => {
-                handleInput('ventureVideoLink', value);
-              }}
-            />
-            <View style={[g.mt10]}>
-              <View style={[grid.rowdir]}>
-                <TouchableOpacity
-                  style={[grid.col, g.mr10]}
-                  activeOpacity={1}
-                  onPress={() => {
-                    pickMedia();
-                  }}>
-                  <View
-                    style={[
-                      grid.row,
-                      g.inputWhite,
-                      grid.alignItems,
-                      g.pb5,
-                      g.pt5,
-                    ]}>
-                    <GlobalInclude.BaseIcon
+            <View style={[grid.rowdir]}>
+              {socialPhoto !== null && (
+                <View
+                  style={[grid.alignItems, grid.justifyContentCenter, g.mr5]}>
+                  <View>
+                    <ProgressImage
+                      source={{uri: socialPhoto.thumbnail}}
                       containerStyle={{
-                        height: scale(28),
-                        width: scale(28),
-                        justifyContent: 'center',
+                        height: scale(50),
+                        width: scale(50),
+                        borderRadius: scale(5),
                       }}
-                      iconColor={'#bababa'}
-                      iconName={'download'}
-                      iconSize={scale(22)}
-                      iconType={IconType[4]}
+                      imageStyle={{
+                        height: scale(50),
+                        width: scale(50),
+                        borderRadius: scale(5),
+                      }}
+                      mode={'contain'}
                     />
-                    <Text style={[grid.col, g.fs14, g.colorLightGray, g.FHNR]}>
-                      Click to Upload Image
-                    </Text>
+                    <TouchableOpacity
+                      hitSlop={{
+                        top: 15,
+                        bottom: 15,
+                        left: 15,
+                        right: 15,
+                      }}
+                      onPress={() => {
+                        uploadMedia(null);
+                      }}
+                      style={styles.buttonCircle}>
+                      <GlobalInclude.BaseIcon
+                        containerStyle={{height: scale(15), width: scale(15)}}
+                        iconColor={'#FFF'}
+                        iconName={'close'}
+                        iconSize={scale(15)}
+                        iconType={IconType[8]}
+                      />
+                    </TouchableOpacity>
                   </View>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  activeOpacity={1}
-                  onPress={() => {
-                    pickMedia();
-                  }}>
-                  <Text style={styles.addTag}>Add</Text>
-                </TouchableOpacity>
+                </View>
+              )}
+              <View style={[grid.flex1]}>
+                <TextInput
+                  underlineColorAndroid={'transparent'}
+                  style={g.inputWhite}
+                  value={ventureVideoLink}
+                  maxLength={100}
+                  keyboardType={'default'}
+                  autoCapitalize={'words'}
+                  returnKeyType={'done'}
+                  placeholder={'Paste youtube URL'}
+                  onChangeText={(value) => {
+                    handleInput('ventureVideoLink', value);
+                  }}
+                />
+                <View style={[g.mt10]}>
+                  <View style={[grid.rowdir]}>
+                    <TouchableOpacity
+                      style={[grid.col, g.mr10]}
+                      activeOpacity={1}
+                      onPress={() => {
+                        pickMedia();
+                      }}>
+                      <View
+                        style={[
+                          grid.row,
+                          g.inputWhite,
+                          grid.alignItems,
+                          g.pb5,
+                          g.pt5,
+                        ]}>
+                        <GlobalInclude.BaseIcon
+                          containerStyle={{
+                            height: scale(28),
+                            width: scale(28),
+                            justifyContent: 'center',
+                          }}
+                          iconColor={'#bababa'}
+                          iconName={'download'}
+                          iconSize={scale(22)}
+                          iconType={IconType[4]}
+                        />
+                        <Text
+                          style={[grid.col, g.fs14, g.colorLightGray, g.FHNR]}>
+                          Click to Upload Image
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={1}
+                      style={styles.addTag}
+                      onPress={() => {
+                        pickMedia();
+                      }}>
+                      {isLoading ? (
+                        <View
+                          style={[
+                            grid.alignItems,
+                            grid.justifyContentCenter,
+                            grid.flex1,
+                          ]}>
+                          <ActivityIndicator
+                            size={'small'}
+                            color={'#fff'}
+                            style={[grid.alignItems, grid.justifyContentCenter]}
+                          />
+                        </View>
+                      ) : (
+                        <Text style={styles.addImageStyle}>Add</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
               </View>
             </View>
+            {errorMessage.socialImageVideo &&
+            errorMessage.socialImageVideo !== '' ? (
+              <Text style={g.errorMsg}>{errorMessage.socialImageVideo}</Text>
+            ) : null}
           </View>
           <View style={g.mb15}>
             {generateHeader('About the Social Work', true)}
@@ -128,6 +221,9 @@ const VentureDetails = ({
               {TEXTAREA_COUNT.min} to {TEXTAREA_COUNT.max} {'Characters'} :{' '}
               {aboutVenture.length}
             </Text>
+            {errorMessage.aboutVenture && errorMessage.aboutVenture !== '' ? (
+              <Text style={g.errorMsg}>{errorMessage.aboutVenture}</Text>
+            ) : null}
           </View>
 
           <View style={g.mb15}>
@@ -214,7 +310,24 @@ const styles = StyleSheet.create({
     padding: scale(8),
     borderRadius: scale(8),
     overflow: 'hidden',
-    width: scale(80)
+    width: scale(80),
+  },
+  addImageStyle: {
+    color: '#ffffff',
+    textAlign: 'center',
+    fontSize: scale(16),
+  },
+  buttonCircle: {
+    width: scale(20),
+    height: scale(20),
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    position: 'absolute',
+    right: -5,
+    top: -5,
+    backgroundColor: '#2b3252',
+    borderRadius: scale(24),
   },
 });
 

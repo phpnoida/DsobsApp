@@ -15,7 +15,10 @@ const Helpers = {
 
   validateRegex: function (regex, val) {
     var found = val.match(regex);
-    var bool = found && found.length;
+    var bool =
+      found && found !== undefined && found !== null && found.length > 0
+        ? true
+        : false;
     return bool;
   },
   getBloodGroup: function () {

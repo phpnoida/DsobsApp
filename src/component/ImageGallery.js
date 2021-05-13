@@ -151,7 +151,7 @@ const ImageGallery = (props) => {
                   iconType={'font-awesome'}
                 />
               </View>
-            ) : (
+            ) : type === 3 ? (
               <View
                 style={[
                   g.bglightGray,
@@ -162,7 +162,6 @@ const ImageGallery = (props) => {
                 ]}>
                 <TouchableOpacity
                   onPress={() => {
-                    console.log('item', item);
                     documentItem =
                       item.fileName &&
                       item.fileName !== undefined &&
@@ -181,6 +180,27 @@ const ImageGallery = (props) => {
                   />
                 </TouchableOpacity>
               </View>
+            ) : type === 4 ? (
+              <View
+                style={[
+                  g.bglightGray,
+                  g.br3,
+                  grid.justifyContentCenter,
+                  grid.alignItems,
+                  {aspectRatio: 1 / 1},
+                ]}>
+                <TouchableOpacity onPress={() => {}} activeOpacity={1}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(36), width: scale(36)}}
+                    iconColor={'#E61A2D'}
+                    iconName={'file-audio-o'}
+                    iconSize={scale(36)}
+                    iconType={IconType[4]}
+                  />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View />
             )}
           </View>
         </View>

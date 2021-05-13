@@ -25,6 +25,7 @@ const VentureMedia = ({
   removeMedia,
   inEditMode,
   onMediaPick,
+  loader,
 }) => {
   const uploadRef = useRef();
 
@@ -148,6 +149,47 @@ const VentureMedia = ({
               </Text>
             </View>
           )}
+
+          {item.type === 4 && (
+            <View style={[g.b1, g.br3, g.oh, g.p10, {aspectRatio: 16 / 9}]}>
+              <View
+                style={[
+                  grid.rowdir,
+                  grid.justifyContentRight,
+                  g.colorGray,
+                  {position: 'absolute', right: 10, top: 10, zIndex: 1},
+                ]}>
+                <TouchableOpacity
+                  onPress={(e) => {
+                    removeMedia(index);
+                  }}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(18), width: scale(18)}}
+                    iconColor={'#333333'}
+                    iconName={'remove'}
+                    iconSize={scale(18)}
+                    iconType={IconType[4]}
+                  />
+                </TouchableOpacity>
+              </View>
+              <View style={[grid.rowrow, grid.justifyContentCenter, g.mt5]}>
+                {item.thumbnail.includes('.mp3') && (
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(48), width: scale(48)}}
+                    iconColor={'#6e6e6e'}
+                    iconName={'file-audio-o'}
+                    iconSize={scale(48)}
+                    iconType={IconType[4]}
+                  />
+                )}
+              </View>
+              <Text
+                style={[g.fs14, g.colordarkGray, g.FHNM, g.mt15]}
+                numberOfLines={2}>
+                {item.fieldName}
+              </Text>
+            </View>
+          )}
         </View>
       );
       componentArray.push(child);
@@ -186,9 +228,14 @@ const VentureMedia = ({
                   style={[
                     g.p15,
                     g.bglightGray,
-                    grid.alignItems,
-                    grid.justifyContent,
-                    {width: 50, height: 50, borderRadius: 10},
+                    {
+                      width: 50,
+                      height: 50,
+                      borderRadius: 10,
+                      alignSelf: 'center',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    },
                   ]}>
                   <Image
                     source={GlobalInclude.Assets.UploadIcon}
@@ -217,7 +264,7 @@ const VentureMedia = ({
         </ScrollView>
       </View>
       <NextPreviousButton
-        isLoading={false}
+        isLoading={loader}
         nextTitle={inEditMode ? 'Update & Next' : 'Finish'}
         onPreviuosTab={() => {
           onPreviousTab();
@@ -228,7 +275,7 @@ const VentureMedia = ({
       />
       <UploadMedia
         refRBSheet={uploadRef}
-        media={{image: false, video: false, document: false, audio: true}}
+        media={{image: false, video: false, document: false, audio: false}}
         onPickMedia={(media) => {
           uploadRef.current.close();
           if (media !== undefined && media !== null) {

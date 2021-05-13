@@ -59,6 +59,7 @@ const BasicDetails = ({
                   g.FHNR,
                   grid.justifyContentCenter,
                   {textAlignVertical: 'center'},
+                  selectedCategory !== '' ? g.colorBlack : g.colorGray1,
                 ]}
                 numberOfLines={1}>
                 {selectedCategory !== '' ? selectedCategory : 'Select'}
@@ -82,7 +83,7 @@ const BasicDetails = ({
                   keyboardType={'default'}
                   autoCapitalize={'words'}
                   returnKeyType={'done'}
-                  placeholder={''}
+                  placeholder={'Write text here'}
                   onChangeText={(value) => {
                     handleInput('projectName', value);
                   }}
@@ -98,7 +99,13 @@ const BasicDetails = ({
                     }
                   }}
                   style={[grid.rowdir, grid.alignItems, g.inputWhite]}>
-                  <Text style={[grid.col, g.FHNR]} numberOfLines={1}>
+                  <Text
+                    style={[
+                      grid.col,
+                      g.FHNR,
+                      selectedYear !== -1 ? g.colorBlack : g.colorGray1,
+                    ]}
+                    numberOfLines={1}>
                     {selectedYear !== -1 ? selectedYear : 'Select Year'}
                   </Text>
                   <View style={GlobalInclude.AppStyle.triangleShape} />
@@ -122,7 +129,7 @@ const BasicDetails = ({
               keyboardType={'default'}
               autoCapitalize={'words'}
               returnKeyType={'done'}
-              placeholder={''}
+              placeholder={'Write text here'}
               onChangeText={(value) => {
                 handleInput('initiatedBy', value);
               }}
@@ -130,7 +137,7 @@ const BasicDetails = ({
           </View>
           <View style={g.mb15}>
             {generateHeader('Social Media Links', false)}
-            <View style={[grid.rowdir, g.shareStyle, grid.alignItems, g.mb10]}>
+            <View style={[grid.rowdir, g.shareStyle, grid.alignItems]}>
               {showSocialIcon('facebook-official', '#475993')}
               <TextInput
                 keyboardType={'default'}
@@ -142,7 +149,13 @@ const BasicDetails = ({
                 maxLength={264}
               />
             </View>
-            <View style={[grid.rowdir, g.shareStyle, grid.alignItems, g.mb10]}>
+            {errorMessage.facebook && errorMessage.facebook !== '' ? (
+              <Text style={g.errorMsg}>{errorMessage.facebook}</Text>
+            ) : null}
+          </View>
+
+          <View style={g.mb15}>
+            <View style={[grid.rowdir, g.shareStyle, grid.alignItems]}>
               {showSocialIcon('twitter-square', '#2b95ff')}
               <TextInput
                 keyboardType={'default'}
@@ -154,7 +167,13 @@ const BasicDetails = ({
                 maxLength={264}
               />
             </View>
-            <View style={[grid.rowdir, g.shareStyle, grid.alignItems, g.mb10]}>
+            {errorMessage.twitter && errorMessage.twitter !== '' ? (
+              <Text style={g.errorMsg}>{errorMessage.twitter}</Text>
+            ) : null}
+          </View>
+
+          <View style={g.mb15}>
+            <View style={[grid.rowdir, g.shareStyle, grid.alignItems]}>
               {showSocialIcon('wikipedia-w', '#3e3e3e')}
               <TextInput
                 keyboardType={'default'}
@@ -166,6 +185,9 @@ const BasicDetails = ({
                 maxLength={264}
               />
             </View>
+            {errorMessage.wikipedia && errorMessage.wikipedia !== '' ? (
+              <Text style={g.errorMsg}>{errorMessage.wikipedia}</Text>
+            ) : null}
           </View>
         </View>
       </KeyboardAwareScrollView>

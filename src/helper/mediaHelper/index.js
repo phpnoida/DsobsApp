@@ -1,8 +1,6 @@
-import React, {useRef, useState} from 'react';
-import {Platform} from 'react-native';
 
+import {Platform} from 'react-native';
 import ImagePicker from 'react-native-image-crop-picker';
-import DocumentPicker from 'react-native-document-picker';
 import Toast from '../../component/Toast';
 import RNFetchBlob from 'rn-fetch-blob';
 import {uploadMedia} from '../../Actions/CommonActions';

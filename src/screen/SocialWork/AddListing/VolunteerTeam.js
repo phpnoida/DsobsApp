@@ -117,7 +117,9 @@ const VolunteerTeam = ({
                       left: 15,
                       right: 15,
                     }}
-                    onPress={() => {}}
+                    onPress={() => {
+                      updateIndex('imageData', null, index);
+                    }}
                     style={styles.buttonCircle}>
                     <GlobalInclude.BaseIcon
                       containerStyle={{height: scale(15), width: scale(15)}}

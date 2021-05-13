@@ -292,8 +292,11 @@ const Login = ({navigation}) => {
       .subscribeToTopic(fcmTopic)
       .then(() => {
         AsyncStorage.setItem('loggedIn', '1').then(() => {
-          AsyncStorage.setItem('userDetails', JSON.stringify(userDetails)).then(
-            () => {
+          AsyncStorage.setItem('tokens', JSON.stringify(tokens)).then(() => {
+            AsyncStorage.setItem(
+              'userDetails',
+              JSON.stringify(userDetails),
+            ).then(() => {
               AsyncStorage.setItem('accessToken', tokens.accessToken).then(
                 () => {
                   AsyncStorage.setItem(
@@ -311,10 +314,12 @@ const Login = ({navigation}) => {
                   });
                 },
               );
-            },
-          );
+            });
+          });
         });
       });
+
+    
   };
 
   const makeAuthTimer = () => {

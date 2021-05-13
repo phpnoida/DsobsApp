@@ -20,7 +20,6 @@ import {scale} from '../../theme/Scalling';
 import {CommonActions} from '@react-navigation/native';
 import Globalinclude from '../../globalInclude/Globalinclude';
 import MyStatusBar from '../../component/MyStatusBar';
-
 import BasicProfile from './BasicProfile';
 import AboutMe from './AboutMe';
 import PhotosMedia from './PhotosMedia';

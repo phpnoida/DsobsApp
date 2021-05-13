@@ -7,6 +7,7 @@ import {
   Modal,
   TextInput,
   ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import g from '../../../theme/global';
 import grid from '../../../theme/grid';
@@ -14,13 +15,25 @@ import {scale} from '../../../theme/Scalling';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import ProgressImage from '../../../component/ProgresImage';
 import {IconType} from '../../../helper/Constants';
+import Toast from '../../../component/Toast';
+import Helper from '../../../helper/Helper';
+import moment from 'moment';
 
-const Tags = ({content, productTags}) => {
+let commentId = '';
+let lastIndex = -1;
+const Comments = ({
+  content,
+  postUserComment,
+  updateUserCommentData,
+  removeIndex,
+}) => {
   const [showCommentModal, setShowCommentModal] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [commentError, setCommentError] = useState('');
   const [isCommenting, setIsCommenting] = useState(false);
 
   const renderList = () => {
-    return productTags.map((item, index) => {
+    return content.map((item, index) => {
       return (
         <View style={g.mb5} key={index}>
           <View style={[grid.rowdir]}>
@@ -32,81 +45,101 @@ const Tags = ({content, productTags}) => {
                   g.oh,
                   {width: scale(35), borderRadius: scale(50)},
                 ]}>
-                <ProgressImage
-                  source={GlobalInclude.Assets.DefaultProfile}
-                  containerStyle={{
-                    aspectRatio: 1 / 1,
-                    alignSelf: 'center',
-                    width: scale(35),
-                    justifyContent: 'center',
-                  }}
-                  mode={'cover'}
-                />
+                {item.authorId !== undefined &&
+                item.authorId !== null &&
+                item.authorId.profileImg !== undefined &&
+                item.authorId.profileImg !== null &&
+                item.authorId.profileImg !== '' ? (
+                  <ProgressImage
+                    source={{uri: item.authorId.profileImg}}
+                    containerStyle={styles.imageStyle}
+                    mode={'cover'}
+                  />
+                ) : (
+                  <ProgressImage
+                    source={GlobalInclude.Assets.DefaultProfile}
+                    containerStyle={styles.imageStyle}
+                    mode={'cover'}
+                  />
+                )}
               </View>
             </View>
             <View>
-              <Text style={[g.fs14, g.FHNR, g.colordarkGray]}>Rahul Kumar</Text>
+              <Text style={[g.fs14, g.FHNR, g.colordarkGray]}>
+                {item.authorId !== undefined && item.authorId !== null
+                  ? Helper.concatName(item.authorId)
+                  : 'N/A'}
+              </Text>
               <Text style={[g.fs12, g.FHNR, g.colorBlue, g.mt5]}>
-                12/02/2021
+                {moment(item.postedDate).fromNow()}
               </Text>
               <Text style={[g.fs15, g.FHNR, g.colorLightGray, g.mt5]}>
-                This is static design
+                {item.commentText !== undefined &&
+                item.commentText !== null &&
+                item.commentText !== ''
+                  ? item.commentText
+                  : 'N/A'}
               </Text>
             </View>
           </View>
-          <View style={[grid.rowdir, g.mb5, grid.justifyContentRight]}>
-            <TouchableOpacity
-              hitSlop={{top: 10, bottom: 10, left: 10, right: 0}}
-              activeOpacity={0.8}
-              onPress={() => {
-                setShowCommentModal(true);
-              }}
-              style={[
-                grid.rowdir,
-                grid.alignItems,
-                grid.justifyContentCenter,
-                g.bgBlue,
-                g.mr10,
-                {
-                  width: scale(22),
-                  height: scale(22),
-                  borderRadius: scale(22),
-                  elevation: 1,
-                },
-              ]}>
-              <GlobalInclude.BaseIcon
-                containerStyle={{height: scale(12), width: scale(12)}}
-                iconColor={'#fff'}
-                iconName={'pencil'}
-                iconSize={scale(12)}
-                iconType={IconType[4]}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
-              activeOpacity={0.8}
-              onPress={() => {}}
-              style={[
-                grid.rowdir,
-                grid.alignItems,
-                grid.justifyContentCenter,
-                g.bgBlue,
-                {
-                  width: scale(22),
-                  height: scale(22),
-                  borderRadius: scale(22),
-                  elevation: 1,
-                },
-              ]}>
-              <GlobalInclude.BaseIcon
-                containerStyle={{height: scale(12), width: scale(12)}}
-                iconColor={'#fff'}
-                iconName={'close'}
-                iconSize={scale(12)}
-                iconType={IconType[4]}
-              />
-            </TouchableOpacity>
-          </View>
+          {global.userId === item.authorId._id ? (
+            <View style={[grid.rowdir, g.mb5, grid.justifyContentRight]}>
+              <TouchableOpacity
+                hitSlop={{top: 10, bottom: 10, left: 10, right: 0}}
+                activeOpacity={0.8}
+                onPress={() => {
+                  lastIndex = index;
+                  commentId = item._id;
+                  setCommentError('');
+                  setCommentText(item.commentText);
+                  setShowCommentModal(true);
+                }}
+                style={[
+                  grid.rowdir,
+                  grid.alignItems,
+                  grid.justifyContentCenter,
+                  g.bgBlue,
+                  g.mr10,
+                  styles.iconContainer,
+                ]}>
+                <GlobalInclude.BaseIcon
+                  containerStyle={{height: scale(12), width: scale(12)}}
+                  iconColor={'#fff'}
+                  iconName={'pencil'}
+                  iconSize={scale(12)}
+                  iconType={IconType[4]}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                activeOpacity={0.8}
+                onPress={() => {
+                  removeIndex(item._id, index, (status) => {
+                    Toast.show({
+                      title: 'Congratulations',
+                      text: 'Comment removed successfully',
+                      color: '#228B22',
+                      timing: 3000,
+                    });
+                  });
+                }}
+                style={[
+                  grid.rowdir,
+                  grid.alignItems,
+                  grid.justifyContentCenter,
+                  g.bgBlue,
+                  styles.iconContainer,
+                ]}>
+                <GlobalInclude.BaseIcon
+                  containerStyle={{height: scale(12), width: scale(12)}}
+                  iconColor={'#fff'}
+                  iconName={'close'}
+                  iconSize={scale(12)}
+                  iconType={IconType[4]}
+                />
+              </TouchableOpacity>
+            </View>
+          ) : null}
         </View>
       );
     });
@@ -124,10 +157,10 @@ const Tags = ({content, productTags}) => {
         </Text>
       </View>
       <View>
-        {productTags &&
-        productTags !== undefined &&
-        productTags !== null &&
-        productTags.length > 0 ? (
+        {content &&
+        content !== undefined &&
+        content !== null &&
+        content.length > 0 ? (
           <ScrollView
             contentContainerStyle={{paddingBottom: scale(70)}}
             showsVerticalScrollIndicator={false}>
@@ -181,33 +214,88 @@ const Tags = ({content, productTags}) => {
                 </TouchableOpacity>
               </View>
               <Text style={[g.fs12, g.FHNR, g.mb5, g.pt10]}>
-                Post Your Comment
+                {commentId !== '' ? 'Update Your Comment' : 'Post Your Comment'}
               </Text>
               <TextInput
-                maxLength={1000}
+                maxLength={1500}
                 placeholder={'Write Text Here'}
                 underlineColorAndroid="transparent"
                 multiline={true}
+                value={commentText}
                 autoFocus
                 style={[
                   g.mt10,
                   g.bgWhite,
                   g.textareaStyle,
-                  {minHeight: 100, maxHeight: 100, height: 100},
+                  {minHeight: 160, maxHeight: 160, height: 160},
                 ]}
-                onChangeText={(comment) => {}}
+                onChangeText={(comment) => {
+                  setCommentText(comment);
+                }}
               />
               <Text style={[g.fs12, g.FHNR, g.mb5, g.pt10, g.txtRight]}>
-                Max 1000 characters: 0
+                {`Max 1000 characters: ${commentText.length}`}
               </Text>
+              {commentError &&
+              commentError !== null &&
+              commentError.length > 0 ? (
+                <Text style={g.errorMsg}>{commentError}</Text>
+              ) : null}
               <View style={[grid.rowdir, g.mt10]}>
-                {isCommenting ? (
-                  <ActivityIndicator size="large" color="#666666" />
-                ) : (
-                  <Text style={[g.btn, g.mr5, g.fs12]} onPress={() => {}}>
-                    Post Comment
-                  </Text>
-                )}
+                <View style={[g.btn, g.mr5, {width: scale(130)}]}>
+                  {isCommenting ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text
+                      style={[g.fs12, g.FHNR, g.txtCenter, g.colorWhite]}
+                      onPress={() => {
+                        if (
+                          commentText.length === 0 ||
+                          commentText.trim() === ''
+                        ) {
+                          setCommentError('This field is required!');
+                        } else {
+                          setIsCommenting(true);
+                          if (commentId !== '') {
+                            updateUserCommentData(
+                              commentText,
+                              commentId,
+                              lastIndex,
+                              (status) => {
+                                setIsCommenting(false);
+                                setShowCommentModal(false);
+                                setCommentText('');
+                                if (status) {
+                                  Toast.show({
+                                    title: 'Congratulations',
+                                    text: 'Comment added successfully',
+                                    color: '#228B22',
+                                    timing: 3000,
+                                  });
+                                }
+                              },
+                            );
+                          } else {
+                            postUserComment(commentText, (status) => {
+                              setIsCommenting(false);
+                              setShowCommentModal(false);
+                              setCommentText('');
+                              if (status) {
+                                Toast.show({
+                                  title: 'Congratulations',
+                                  text: 'Comment updated successfully',
+                                  color: '#228B22',
+                                  timing: 3000,
+                                });
+                              }
+                            });
+                          }
+                        }
+                      }}>
+                      {commentId !== '' ? 'Update Comment' : 'Post Comment'}
+                    </Text>
+                  )}
+                </View>
 
                 <Text
                   style={[g.btn, g.bggray, g.fs12]}
@@ -224,5 +312,18 @@ const Tags = ({content, productTags}) => {
     </View>
   );
 };
-
-export default Tags;
+const styles = StyleSheet.create({
+  imageStyle: {
+    aspectRatio: 1 / 1,
+    alignSelf: 'center',
+    width: scale(35),
+    justifyContent: 'center',
+  },
+  iconContainer: {
+    width: scale(22),
+    height: scale(22),
+    borderRadius: scale(22),
+    elevation: 1,
+  },
+});
+export default Comments;

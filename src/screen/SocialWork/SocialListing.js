@@ -5,10 +5,9 @@ import {
   SafeAreaView,
   Text,
   ActivityIndicator,
-  FlatList,
-  Linking,
   Animated,
   TouchableOpacity,
+  Keyboard,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -20,7 +19,15 @@ import SocialWorkSearch from '../../component/SocialWorkSearch';
 import {renderNoDataComponent} from '../../component/Common';
 import CategorySheet from './AddListing/CategorySheet';
 import AutoSuggestLocationCompany from '../../component/AutoSuggestLocationCompany';
-import {doSearchCity} from '../../Actions/CommonActions';
+import {
+  getWorkCategory,
+  doFitlerSocialWork,
+  searchWorkCategory,
+} from '../../Actions/SocialWorkActions';
+import {URL_REGX} from '../../helper/Constants';
+import Helper from '../../helper/Helper';
+const {urlRegex} = URL_REGX;
+
 const PaginationStatus = {
   firstLoad: 0,
   waiting: 1,
@@ -33,19 +40,19 @@ let filterObject = {
   index: 0,
   size: 10,
 };
+let searchFilter = {
+  index: 0,
+  size: 10,
+  s: '',
+};
 let curY = new Animated.Value(0);
 const SocialListing = ({navigation}) => {
   curY = new Animated.Value(0);
   const refCategory = useRef();
 
-  const [firstTimeLoad, setFirstTimeLoad] = useState(false);
+  const [firstTimeLoad, setFirstTimeLoad] = useState(true);
   const [filterQuery, setFilterQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [pageContent, setPageContent] = useState([
-    {item: 1},
-    {item: 1},
-    {item: 1},
-  ]);
+  const [pageContent, setPageContent] = useState([]);
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
   );
@@ -53,29 +60,94 @@ const SocialListing = ({navigation}) => {
   const [animatedHeight, setAnimatedHeight] = useState(119);
   const [categoryList, setCategoryList] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
-
-  const [searchedCityCompany, setSearchedCityCompany] = useState([]);
+  const [searchCategory, setSearchCategory] = useState([]);
 
   useEffect(() => {
     searchVal = '';
-    totalCount = 0;
     categoryListMain = [];
-    filterObject = {
-      index: 0,
-      size: 10,
+    resetCount();
+
+    const getCategory = () => {
+      getWorkCategory(
+        (response) => {
+          getSocialWork();
+          if (response && response !== null) {
+            if (
+              response.data &&
+              response.data !== undefined &&
+              response.data !== null
+            ) {
+              let data = response.data;
+
+              if (data.status) {
+                let categoryArray = [];
+                if (data.data !== null) {
+                  data.data.map((item, index) => {
+                    categoryArray.push({key: index, text: item});
+                  });
+                }
+                categoryListMain = categoryArray;
+                setCategoryList(categoryArray);
+              }
+            }
+          }
+        },
+        (error) => {
+          getSocialWork();
+        },
+      );
     };
+
+    if (global.isConnected) {
+      getCategory();
+    }
 
     return () => {};
   }, []);
 
-  const searchCityName = (query) => {
-    setIsLoading(true);
-    doSearchCity(
-      query,
-      10,
-      0,
+  /*****
+   *
+   * API Section
+   *
+   */
+
+  const findCategory = () => {
+    searchWorkCategory(
+      searchFilter,
       (response) => {
-        setIsLoading(false);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            if (data.status) {
+              if (searchVal.length > 0) {
+                let itemList = [];
+                data.data.map((child) => {
+                  itemList.push({id: child, label: child, value: ''});
+                });
+                setSearchCategory([...itemList]);
+              } else {
+                setSearchCategory([]);
+              }
+            }
+          }
+        }
+      },
+      (code, error) => {
+        setSearchCategory([]);
+        console.log('error->', error);
+      },
+    );
+  };
+
+  const getSocialWork = () => {
+    doFitlerSocialWork(
+      filterObject,
+      (response) => {
+        setIsRefreshing(false);
         if (response && response !== null) {
           if (
             response.data &&
@@ -85,27 +157,25 @@ const SocialListing = ({navigation}) => {
             let data = response.data;
 
             if (data.status) {
-              if (searchVal.length > 0) {
-                let itemList = [];
-                data.data.map((child) => {
-                  itemList.push({
-                    id: child,
-                    label: child.name,
-                    value: child.country_name,
-                  });
-                });
-                setSearchedCityCompany([...itemList]);
+              if (filterObject.index === 0) {
+                totalCount = data.totalCount;
+
+                console.log('totalCount', totalCount);
+                setPageContent([...data.data]);
               } else {
-                setSearchedCityCompany([]);
+                setPageContent([...pageContent, ...data.data]);
               }
+              setPaginationStatus(PaginationStatus.waiting);
             }
           }
         }
+        setFirstTimeLoad(false);
       },
       (code, error) => {
-        setIsLoading(false);
-        setSearchedCityCompany([]);
-        console.log('error', error);
+        setIsRefreshing(false);
+        setFirstTimeLoad(false);
+        setPageContent([]);
+        console.log('error->', error);
       },
     );
   };
@@ -120,7 +190,7 @@ const SocialListing = ({navigation}) => {
       console.log('onPaginate()');
       setPaginationStatus(PaginationStatus.waiting);
       filterObject.index = filterObject.index + 1;
-      //getYellowPage();
+      getSocialWork();
     }
   };
 
@@ -152,7 +222,7 @@ const SocialListing = ({navigation}) => {
    *
    */
 
-  const searchCategory = (searchText) => {
+  const searchCategoryName = (searchText) => {
     let oldContent = categoryList;
     var list = [];
     if (searchText.length > 0) {
@@ -191,7 +261,8 @@ const SocialListing = ({navigation}) => {
         <TouchableOpacity
           activeOpacity={1}
           onPress={() => {
-            navigation.navigate('ListingDetails', {data: item});
+            filterObject.id = item._id;
+            navigation.navigate('ListingDetails', {data: filterObject});
           }}
           key={index}
           style={{
@@ -199,19 +270,13 @@ const SocialListing = ({navigation}) => {
             marginHorizontal: scale(15),
           }}>
           <View style={[g.bgWhite, g.boxShadow, {borderRadius: scale(10)}]}>
-            <View
-              style={[
-                g.bggray3,
-                {
-                  borderRadius: scale(10),
-                  borderBottomLeftRadius: 0,
-                  borderBottomRightRadius: 0,
-                  overflow: 'hidden',
-                },
-              ]}>
-              {index === 1 ? (
+            <View style={[g.bggray3, style.backgroundBorder]}>
+              {item.socialWorkVideo !== undefined &&
+              item.socialWorkVideo !== null &&
+              item.socialWorkVideo !== '' &&
+              Helper.validateRegex(urlRegex, item.socialWorkVideo) ? (
                 <YoutubeView
-                  link={'https://www.youtube.com/watch?v=zFSgc6mleXo&t=12s'}
+                  link={item.socialWorkVideo}
                   containerStyle={style.videoContainer}
                   overlayStyle={style.overlayStyle}
                   thumbStyle={style.thumbStyle}
@@ -222,19 +287,21 @@ const SocialListing = ({navigation}) => {
                   }}
                   iconSize={scale(20)}
                 />
+              ) : item.socialWorkImage !== undefined &&
+                item.socialWorkImage !== null &&
+                item.socialWorkImage !== '' &&
+                Helper.validateRegex(urlRegex, item.socialWorkImage) ? (
+                <ProgressImage
+                  source={{uri: item.socialWorkImage}}
+                  containerStyle={style.imageStyle}
+                  imageStyle={style.imageStyle}
+                  mode={'cover'}
+                />
               ) : (
                 <ProgressImage
                   source={GlobalInclude.Assets.DefaultImage}
-                  containerStyle={{
-                    aspectRatio: 16 / 9,
-                    borderRadius: scale(10),
-                  }}
-                  imageStyle={{
-                    aspectRatio: 16 / 9,
-                    borderRadius: scale(10),
-                    borderBottomLeftRadius: 0,
-                    borderBottomRightRadius: 0,
-                  }}
+                  containerStyle={style.imageStyle}
+                  imageStyle={style.imageStyle}
                   mode={'cover'}
                 />
               )}
@@ -247,11 +314,9 @@ const SocialListing = ({navigation}) => {
                   g.colorBlack,
                   GlobalInclude.AppStyle.transform,
                 ]}>
-                {item.businessName &&
-                item.businessName !== undefined &&
-                item.businessName !== null
-                  ? item.businessName
-                  : 'Drive Against Corona'}
+                {item.title && item.title !== undefined && item.title !== null
+                  ? item.title
+                  : 'N/A'}
               </Text>
               <Text
                 style={[
@@ -259,14 +324,14 @@ const SocialListing = ({navigation}) => {
                   g.mt5,
                   g.FHNR,
                   GlobalInclude.AppStyle.transform,
-                  {color: '#bababa'},
+                  style.grayColorText,
                 ]}
-                numberOfLines={2}>
-                {item.categoryOfBusiness &&
-                item.categoryOfBusiness !== undefined &&
-                item.categoryOfBusiness !== null
-                  ? item.categoryOfBusiness
-                  : 'Teeka Utsav'}
+                numberOfLines={1}>
+                {item.category &&
+                item.category !== undefined &&
+                item.category !== null
+                  ? item.category
+                  : 'N/A'}
               </Text>
               <Text
                 style={[
@@ -274,14 +339,14 @@ const SocialListing = ({navigation}) => {
                   g.mt5,
                   g.FHNR,
                   GlobalInclude.AppStyle.transform,
-                  {color: '#bababa'},
+                  style.grayColorText,
                 ]}
                 numberOfLines={2}>
-                {item.categoryOfBusiness &&
-                item.categoryOfBusiness !== undefined &&
-                item.categoryOfBusiness !== null
-                  ? item.categoryOfBusiness
-                  : 'Year:2021'}
+                {item.startedYear &&
+                item.startedYear !== undefined &&
+                item.startedYear !== null
+                  ? `Year: ${item.startedYear}`
+                  : 'N/A'}
               </Text>
               <Text
                 style={[
@@ -289,14 +354,14 @@ const SocialListing = ({navigation}) => {
                   g.mt5,
                   g.FHNR,
                   GlobalInclude.AppStyle.transform,
-                  {color: '#bababa'},
+                  style.grayColorText,
                 ]}
-                numberOfLines={2}>
-                {item.categoryOfBusiness &&
-                item.categoryOfBusiness !== undefined &&
-                item.categoryOfBusiness !== null
-                  ? item.categoryOfBusiness
-                  : 'Rahul Kumar'}
+                numberOfLines={1}>
+                {item.initiatedBy &&
+                item.initiatedBy !== undefined &&
+                item.initiatedBy !== null
+                  ? item.initiatedBy
+                  : 'N/A'}
               </Text>
             </View>
           </View>
@@ -308,7 +373,7 @@ const SocialListing = ({navigation}) => {
   const headerDistance = Animated.diffClamp(
     curY,
     0,
-    searchedCityCompany.length > 0 ? 328 : 119,
+    searchCategory.length > 0 ? 328 : 119,
   ).interpolate({
     inputRange: [0, 1],
     outputRange: [0, -1],
@@ -328,7 +393,6 @@ const SocialListing = ({navigation}) => {
           },
         ]}
         onLayout={({nativeEvent}) => {
-          console.log('item', nativeEvent.layout.height);
           setAnimatedHeight(nativeEvent.layout.height);
         }}>
         <View
@@ -340,7 +404,13 @@ const SocialListing = ({navigation}) => {
             changeText={(text) => {
               searchVal = text;
               setFilterQuery(text);
-              searchCityName(text);
+              if (text.length === 0) {
+                resetCount();
+                getSocialWork();
+              } else if (text.length >= 2) {
+                searchFilter.s = text;
+                findCategory();
+              }
             }}
             filterQuery={filterQuery}
             onFilterPress={() => {
@@ -353,10 +423,19 @@ const SocialListing = ({navigation}) => {
             }}
           />
 
-          {searchedCityCompany.length > 0 && (
+          {searchCategory.length > 0 && (
             <AutoSuggestLocationCompany
-              searchedData={searchedCityCompany}
-              onPress={(row, index) => {}}
+              searchedData={searchCategory}
+              onPress={(row, index) => {
+                Keyboard.dismiss();
+                resetCount();
+                setSearchCategory([]);
+                setFilterQuery(Helper.capitalize(row.label));
+                filterObject.category = row.label;
+                searchVal = row.label;
+                setFirstTimeLoad(true);
+                getSocialWork();
+              }}
             />
           )}
         </View>
@@ -377,7 +456,7 @@ const SocialListing = ({navigation}) => {
             <TopHeaderView
               index={7}
               navigation={navigation}
-              label={'Post a Social'}
+              label={'Post a SW'}
               showLabel={true}
               onLabelPress={() => {
                 navigation.navigate('ListMyWork');
@@ -406,7 +485,7 @@ const SocialListing = ({navigation}) => {
                   contentContainerStyle={{
                     marginTop: animatedHeight,
                     paddingBottom:
-                      searchedCityCompany.length > 0 ? scale(280) : scale(130),
+                      searchCategory.length > 0 ? scale(280) : scale(130),
                   }}
                   scrollEventThrottle={16}
                   onScroll={Animated.event(
@@ -425,12 +504,20 @@ const SocialListing = ({navigation}) => {
         refRBSheet={refCategory}
         dataList={categoryList}
         searchProfession={(query) => {
-          searchCategory(query);
+          searchCategoryName(query);
         }}
         selectedProfession={selectedCategory}
         setSelectedProfession={(value) => {
-          console.log('value', value);
+          Keyboard.dismiss();
+          setSelectedCategory(Helper.capitalize(value));
+          resetCount();
+          filterObject.category = value;
+          searchVal = value;
+          setFirstTimeLoad(true);
           refCategory.current.close();
+          setTimeout(() => {
+            getSocialWork();
+          }, 350);
         }}
         onClose={() => {}}
       />
@@ -498,6 +585,19 @@ const style = StyleSheet.create({
     zIndex: 9,
     bottom: 15,
     left: 15,
+  },
+  imageStyle: {
+    aspectRatio: 16 / 9,
+    borderRadius: scale(10),
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  grayColorText: {color: '#bababa'},
+  backgroundBorder: {
+    borderRadius: scale(10),
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    overflow: 'hidden',
   },
 });
 

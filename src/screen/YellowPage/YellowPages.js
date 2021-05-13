@@ -332,8 +332,8 @@ const YellowPages = ({navigation}) => {
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
       console.log('onPaginate()');
       setPaginationStatus(PaginationStatus.waiting);
-      filterObject.index = filterObject.index +1;
-      getYellowPage()
+      filterObject.index = filterObject.index + 1;
+      getYellowPage();
     }
   };
 
@@ -741,7 +741,7 @@ const YellowPages = ({navigation}) => {
     );
   };
 
-  const createMenu = (key,title, icon, onPress) => {
+  const createMenu = (key, title, icon, onPress) => {
     return (
       <View
         style={
@@ -763,13 +763,11 @@ const YellowPages = ({navigation}) => {
             resizeMode={'contain'}
           />
           <Text
-            style={key ===2 ? [{marginLeft: 10,fontSize: 16},
-              g.FHNR,
-              g.colordarkGray,]:[
-              {marginLeft: 10,fontSize: 18},
-              g.FHNB,
-              g.colorBlue,
-            ]}>
+            style={
+              key === 2
+                ? [{marginLeft: 10, fontSize: 16}, g.FHNR, g.colordarkGray]
+                : [{marginLeft: 10, fontSize: 18}, g.FHNB, g.colorBlue]
+            }>
             {title}
           </Text>
         </TouchableOpacity>
@@ -850,7 +848,8 @@ const YellowPages = ({navigation}) => {
         }}>
         <ScrollView showsVerticalScrollIndicator={false}>
           <View>
-            {createMenu(1,
+            {createMenu(
+              1,
               'List My Business',
               GlobalInclude.Assets.MyYellowPages,
               () => {
@@ -869,7 +868,8 @@ const YellowPages = ({navigation}) => {
                   {myBusinessList.map((item, index) => {
                     return (
                       <View key={index}>
-                        {createMenu(2,
+                        {createMenu(
+                          2,
                           item.businessName &&
                             item.businessName !== undefined &&
                             item.businessName !== null
@@ -889,7 +889,8 @@ const YellowPages = ({navigation}) => {
                 </View>
               )}
 
-            {createMenu(3,
+            {createMenu(
+              3,
               'About Yellow Pages',
               GlobalInclude.Assets.AboutYellowPage,
               () => {

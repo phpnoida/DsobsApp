@@ -149,13 +149,19 @@ const App = ({navigation}) => {
           .then((details) => {
             if (details && details !== null && details !== '') {
               var userDetails = JSON.parse(details);
-              let tokens = userDetails.tokens;
               global.userDetails = userDetails;
-              global.accessToken = tokens.accessToken;
               global.userId = userDetails._id;
               global.firstName = userDetails.firstName;
               global.lastName = userDetails.lastName;
             }
+          })
+          .then(() => {
+            AsyncStorage.getItem('tokens').then((details) => {
+              if (details && details !== null && details !== '') {
+                let tokens = JSON.parse(details);
+                global.accessToken = tokens.accessToken;
+              }
+            });
           })
           .then(() => {
             callback();

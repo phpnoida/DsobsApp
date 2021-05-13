@@ -1,11 +1,5 @@
-import React, {useState, useEffect, useRef} from 'react';
-import {
-  View,
-  Keyboard,
-  SafeAreaView,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {View, Keyboard, SafeAreaView, Alert} from 'react-native';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import HeaderBar from '../../../component/HeaderBar';
 import Toast from '../../../component/Toast';
@@ -15,8 +9,12 @@ import VentureDetails from './VentureDetails';
 import VentureMedia from './VentureMedia';
 import VolunteerTeam from './VolunteerTeam';
 import {getDirectory} from '../../../Actions/DirectoryActions';
-import {APP_NAME} from '../../../helper/Constants';
-
+import {
+  getWorkCategory,
+  addSocialWork,
+} from '../../../Actions/SocialWorkActions';
+import {APP_NAME, URL_REGX} from '../../../helper/Constants';
+const {fbRegex, twiterRegex, wikiRegex} = URL_REGX;
 let categoryListMain = [];
 let searchVal = '';
 let requestedIndex = 0;
@@ -25,7 +23,6 @@ let isSuccess = false;
 
 const ListMyWork = ({route, navigation}) => {
   const [step, setStep] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState({});
   const [loader, setLoader] = useState(false);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
@@ -45,7 +42,7 @@ const ListMyWork = ({route, navigation}) => {
   const [aboutVenture, setAboutVenture] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [tag, setTag] = useState('');
-
+  const [socialPhoto, setSocialPhoto] = useState(null);
   //TabThree
   const [searchedUser, setSearchedUser] = useState([]);
   const [volunteers, setVolunteers] = useState([]);
@@ -58,6 +55,7 @@ const ListMyWork = ({route, navigation}) => {
     searchVal = '';
 
     let volunterDetail = {
+      _id: '',
       fromSchool: false,
       volunteerName: '',
       userData: null,
@@ -72,6 +70,11 @@ const ListMyWork = ({route, navigation}) => {
     defaultVolunteers.push(volunterDetail);
     defaultVolunteers.push(volunterDetail);
     setVolunteers(defaultVolunteers);
+
+    if (global.isConnected) {
+      getCategory();
+    }
+
     return () => {};
   }, []);
 
@@ -80,6 +83,35 @@ const ListMyWork = ({route, navigation}) => {
    * API Section
    *
    */
+
+  const getCategory = () => {
+    getWorkCategory(
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              let categoryArray = [];
+              if (data.data !== null) {
+                data.data.map((item, index) => {
+                  categoryArray.push({key: index, text: item});
+                });
+              }
+              categoryListMain = categoryArray;
+              setCategoryList(categoryArray);
+            }
+          }
+        }
+      },
+      (error) => {},
+    );
+  };
+
   const doSearchUser = (query) => {
     getDirectory(
       '1',
@@ -107,6 +139,107 @@ const ListMyWork = ({route, navigation}) => {
       },
     );
   };
+
+  const listMyWork = () => {
+    let participants = [];
+
+    volunteers.map((item, index) => {
+      if (
+        item.volunteerName.trim() !== '' &&
+        item.volunteerRole.trim() !== ''
+      ) {
+        let request = {
+          fromSchool: item.fromSchool,
+          name: item.volunteerName,
+          batch: item.volunteerRole,
+          profilePic:
+            item.imageData !== null && item.imageData !== undefined
+              ? item.imageData.thumbnail
+              : '',
+        };
+        if (item._id !== undefined && item._id !== null && item._id !== '') {
+          request._id = item._id;
+        }
+        participants.push(request);
+      }
+    });
+
+    mediaData.map((item, index) => {
+      if (
+        item.fileName &&
+        item.fileName !== undefined &&
+        item.fileName !== null
+      ) {
+        delete item.fileName;
+      }
+      if (item.tags && item.tags !== undefined && item.tags !== null) {
+        delete item.tags;
+      }
+    });
+
+    let requestObject = {
+      title: projectName,
+      category: selectedCategory,
+      startedYear: selectedYear.toString(),
+      initiatedBy: initiatedBy,
+      facebook: facebook,
+      twitter: twitter,
+      wiki: wikipedia,
+      socialWorkVideo: ventureVideoLink,
+      socialWorkImage:
+        socialPhoto !== null && socialPhoto !== undefined
+          ? socialPhoto.thumbnail
+          : '',
+      about: aboutVenture,
+      tags: selectedTags,
+      participants: participants,
+      media: mediaData,
+    };
+    if (global.isConnected) {
+      addMyWork(requestObject);
+    }
+  };
+
+  const addMyWork = (requestObject) => {
+    setLoader(true);
+    addSocialWork(
+      requestObject,
+      (response) => {
+        setLoader(false);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              isSuccess = true;
+              responseMessage = `Congratulations your social work has been successfully sent to ${APP_NAME} for approval.`;
+              setShowErrorMessage(true);
+            } else {
+              responseMessage = 'Error while posting your request!';
+              setShowErrorMessage(true);
+            }
+          }
+        }
+      },
+      (code, error) => {
+        console.log('====================================');
+        console.log('code,error', code, error);
+        console.log('====================================');
+        setLoader(false);
+        Toast.show({
+          title: 'Something went wrong',
+          text: error,
+          color: '#f39c12',
+          timing: 3000,
+        });
+      },
+    );
+  };
+
   /*****
    *
    * API Section
@@ -115,8 +248,27 @@ const ListMyWork = ({route, navigation}) => {
 
   const handleInput = (key, value) => {
     switch (key) {
-      case 'value': {
-      }
+      case 'projectName':
+        setProjectName(value);
+        break;
+      case 'initiatedBy':
+        setInitiatedBy(value);
+        break;
+      case 'facebook':
+        setFacebook(value);
+        break;
+      case 'twitter':
+        setTwitter(value);
+        break;
+      case 'wikipedia':
+        setWikipedia(value);
+        break;
+      case 'ventureVideoLink':
+        setVentureVideoLink(value);
+        break;
+      case 'aboutVenture':
+        setAboutVenture(value);
+        break;
     }
   };
 
@@ -137,26 +289,44 @@ const ListMyWork = ({route, navigation}) => {
 
   const validateAndMoveNextTab = () => {
     Keyboard.dismiss();
-
-    //projectName    selectedYear;
     if (step === 1) {
-      // if (selectedCategory === '') {
-      //   setErrorMessage({selectedCategory: 'This field is required'});
-      //   return;
-      // } else if (projectName === '') {
-      //   setErrorMessage({projectName: 'This field is required'});
-      //   return;
-      // } else if (selectedYear === -1) {
-      //   setErrorMessage({selectedYear: 'This field is required'});
-      //   return;
-      // }
+      if (selectedCategory === '') {
+        setErrorMessage({selectedCategory: 'This field is required'});
+        return;
+      } else if (projectName === '') {
+        setErrorMessage({projectName: 'This field is required'});
+        return;
+      } else if (selectedYear === -1) {
+        setErrorMessage({selectedYear: 'This field is required'});
+        return;
+      } else if (facebook !== '' && !Helper.validateRegex(fbRegex, facebook)) {
+        setErrorMessage({facebook: 'This link is not valid'});
+        return;
+      } else if (
+        twitter !== '' &&
+        !Helper.validateRegex(twiterRegex, twitter)
+      ) {
+        setErrorMessage({twitter: 'This link is not valid'});
+        return;
+      } else if (
+        wikipedia !== '' &&
+        !Helper.validateRegex(wikiRegex, wikipedia)
+      ) {
+        setErrorMessage({wikipedia: 'This link is not valid'});
+        return;
+      }
     } else if (step === 2) {
-      //Please Upload at least one, Photo or Video
-    } else if (step === 3) {
+      if (ventureVideoLink === '' && socialPhoto === null) {
+        setErrorMessage({
+          socialImageVideo: 'Please Upload at least one, Photo or Video',
+        });
+        return;
+      } else if (aboutVenture === '') {
+        setErrorMessage({aboutVenture: 'This field is required'});
+        return;
+      }
     } else if (step === 4) {
-      isSuccess = true;
-      responseMessage = `Congratulations your social work has been successfully sent to ${APP_NAME} for approval.`;
-      setShowErrorMessage(true);
+      listMyWork();
       return;
     }
 
@@ -197,7 +367,13 @@ const ListMyWork = ({route, navigation}) => {
     let oldData = volunteers;
     oldData = JSON.parse(JSON.stringify(oldData));
     let item = oldData[index];
-    item[key] = value;
+    if (key === 'userData') {
+      item._id = value._id;
+      item.volunteerName = Helper.concatName(value);
+      item[key] = value;
+    } else {
+      item[key] = value;
+    }
     oldData[index] = item;
     setVolunteers([...oldData]);
   };
@@ -231,6 +407,7 @@ const ListMyWork = ({route, navigation}) => {
 
     if (isValid) {
       let volunterDetail = {
+        _id: '',
         fromSchool: false,
         volunteerName: '',
         userData: null,
@@ -274,12 +451,17 @@ const ListMyWork = ({route, navigation}) => {
       case 2:
         return (
           <VentureDetails
+            errorMessage={errorMessage}
             handleInput={handleInput}
             onPreviousTab={goPreviousTab}
             onSaveTab={validateAndMoveNextTab}
             ventureVideoLink={ventureVideoLink}
             aboutVenture={aboutVenture}
             selectedTags={selectedTags}
+            socialPhoto={socialPhoto}
+            uploadMedia={(media) => {
+              setSocialPhoto(media);
+            }}
             tag={tag}
             setTag={(value) => {
               setTag(value);
@@ -345,9 +527,10 @@ const ListMyWork = ({route, navigation}) => {
             }}
             searchedUser={searchedUser}
             onUserSelect={(row, index) => {
-              updateVolunteer('userData', row, index);
-              updateVolunteer('volunteerName', Helper.concatName(row), index);
               setSearchedUser([]);
+              setTimeout(() => {
+                updateVolunteer('userData', row, index);
+              }, 200);
             }}
             addNewVolunteer={validateAndAddNewVolunteer}
           />
@@ -356,6 +539,7 @@ const ListMyWork = ({route, navigation}) => {
       case 4:
         return (
           <VentureMedia
+            loader={loader}
             onSaveTab={() => validateAndMoveNextTab()}
             onPreviousTab={() => goPreviousTab()}
             mediaData={mediaData}
@@ -380,21 +564,6 @@ const ListMyWork = ({route, navigation}) => {
         />
         <View style={GlobalInclude.AppStyle.fill}>{loadTab(step)}</View>
       </SafeAreaView>
-      {isLoading && (
-        <View
-          style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            alignItems: 'center',
-            zIndex: 2,
-            left: 0,
-            right: 0,
-            justifyContent: 'center',
-          }}>
-          <ActivityIndicator size={'large'} color={'#2b3252'} />
-        </View>
-      )}
 
       {showErrorMessage && (
         <GlobalInclude.ModalAlert

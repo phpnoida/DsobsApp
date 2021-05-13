@@ -21,14 +21,8 @@ import NextPreviousButton from '../../component/NextPreviousButton';
 
 var lastSelectedIndex = -1;
 
-const {
-  urlRegex,
-  fbRegex,
-  instaRegex,
-  twiterRegex,
-  youtubeRegex,
-  wikiRegex,
-} = URL_REGX;
+const {urlRegex, fbRegex, instaRegex, twiterRegex, youtubeRegex, wikiRegex} =
+  URL_REGX;
 let responseMessage = '';
 const SocialLinks = (props) => {
   const {profileData} = props;

@@ -250,6 +250,37 @@ const UploadMedia = ({
     }
   };
 
+  const pickAudio = async () => {
+    let status = await hasPermission();
+    if (!status) {
+      Toast.show({
+        title: 'Permission Denied',
+        text: 'You denied permission please grant it from settings',
+        color: '#f39c12',
+        timing: 3000,
+      });
+      return;
+    } else {
+      try {
+        const res = await DocumentPicker.pick({
+          type: [DocumentPicker.types.audio],
+        });
+        if (res !== null) {
+          refRBSheet.current.open();
+          uploadDoc(res, 'utils/imageupload?type=3', 4);
+        }
+      } catch (error) {
+        onPickMedia(null);
+        Toast.show({
+          title: 'Cancel Selection',
+          text: 'User Cancelled Selection!',
+          color: '#f39c12',
+          timing: 3000,
+        });
+      }
+    }
+  };
+
   const hasPermission = async () => {
     if (Platform.OS !== 'android') {
       return true;
@@ -409,7 +440,12 @@ const UploadMedia = ({
               GlobalInclude.Assets.AudioAttach,
               'Audio',
               media.audio,
-              () => {},
+              () => {
+                refRBSheet.current.close();
+                setTimeout(() => {
+                  pickAudio();
+                }, 350);
+              },
             )}
             {generateIcon(
               GlobalInclude.Assets.DocAttach,
