@@ -69,11 +69,33 @@ export function doFitlerSocialWork(filterQuery, callback, errCallback) {
   };
 }
 
-export function getComments(workId, callback, errCallback) {
-  let requestPath = `${SERVER_PATH}socialworks/comment/work?workId=${workId}`;
+export function doSearchSocialWork(filterQuery, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}socialworks`;
+  console.log('====================================');
+  console.log(filterQuery);
+  console.log('====================================');
+  const request = axios
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
+      params: filterQuery,
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function getComments(filterObject, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}socialworks/comment/work`;
 
   const request = axios
-    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
+      params: filterObject,
+    })
     .then((res) => callback(res))
     .catch((err) => {
       handleError(err, errCallback);

@@ -25,7 +25,7 @@ import GestureRecognizer from 'react-native-swipe-gestures';
 import {APP_NAME} from '../../helper/Constants';
 import RBSheetMenus from 'react-native-raw-bottom-sheet';
 import RBSheetProfile from 'react-native-raw-bottom-sheet';
-import AsyncStorage from '@react-native-community/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import ShowPopNotification from '../../component/ShowPopNotification';
 import {getPopNotification} from '../../Actions/CommonActions';
 import {useDispatch, useSelector, shallowEqual} from 'react-redux';
@@ -805,7 +805,10 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    Alert.alert('Coming soon...');
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('SocialVenture');
+                    }, 200);
                   }}>
                   <Image
                     source={GlobalInclude.Assets.Venture}

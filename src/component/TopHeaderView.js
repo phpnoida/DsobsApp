@@ -21,6 +21,7 @@ const menuOptions = [
   {screen: 'YellowPages', visible: true, value: 5, label: 'Yellow Pages'},
   {screen: 'Teachers', visible: true, value: 6, label: 'Teachers'},
   {screen: 'SocialListing', visible: true, value: 7, label: 'Social Work'},
+  {screen: 'SocialVenture', visible: true, value: 8, label: 'Venture'},
 ];
 
 const TopHeaderView = ({

@@ -26,10 +26,11 @@ import OptionsSheet from 'react-native-raw-bottom-sheet';
 import ProgresImage from '../../component/ProgresImage';
 import RNFetchBlob from 'rn-fetch-blob';
 import ImageViewer from 'react-native-image-zoom-viewer';
-import Orientation from 'react-native-orientation-locker';
-import ScreenOrientation, {
+import Orientation, {
+  OrientationLocker,
   PORTRAIT,
-} from 'react-native-orientation-locker/ScreenOrientation';
+} from 'react-native-orientation-locker';
+
 import {
   getSingleImageFromAlbum,
   doUpdateImageInformation,
@@ -471,7 +472,7 @@ const GalleryDetail = ({route, navigation}) => {
                 </View>
               ) : (
                 <View style={GlobalInclude.AppStyle.fill}>
-                  <ScreenOrientation
+                  <OrientationLocker
                     orientation={PORTRAIT}
                     onChange={(orientation) =>
                       console.log('onChange', orientation)

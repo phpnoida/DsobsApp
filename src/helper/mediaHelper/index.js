@@ -1,7 +1,5 @@
-
-import {Platform} from 'react-native';
+import {Platform, Alert} from 'react-native';
 import ImagePicker from 'react-native-image-crop-picker';
-import Toast from '../../component/Toast';
 import RNFetchBlob from 'rn-fetch-blob';
 import {uploadMedia} from '../../Actions/CommonActions';
 
@@ -15,15 +13,9 @@ export const pickImage = async () => {
     mediaType: 'photo',
     multiple: false,
   }).catch((err) => {
-    console.log('err.toString()', err.toString());
     if (err.toString() === 'Error: User cancelled image selection') {
       ImagePicker.clean();
-      Toast.show({
-        title: 'Cancel Selection',
-        text: 'User Cancelled Selection!',
-        color: '#f39c12',
-        timing: 2500,
-      });
+      Alert.alert('Cancel Selection', 'User Cancelled Selection!');
     }
   });
   return result;
@@ -64,20 +56,13 @@ export const uploadImage = (pickFile, childPath, mediaType) => {
       object.childPath = childPath;
       object.mediaType = mediaType;
     } else {
-      Toast.show({
-        title: 'Erorr While pick media',
-        text: 'Unable to pick file choose another',
-        color: '#f39c12',
-        timing: 3000,
-      });
+      Alert.alert(
+        'Erorr While pick media',
+        'Unable to pick file choose another',
+      );
     }
   } catch (error) {
-    Toast.show({
-      title: 'Erorr While pick media',
-      text: 'Unable to pick file choose another',
-      color: '#f39c12',
-      timing: 3000,
-    });
+    Alert.alert('Erorr While pick media', 'Unable to pick file choose another');
   }
   return object;
 };
@@ -105,12 +90,7 @@ export const uploadMediaContent = (body, childPath, mediaType, onPickMedia) => {
     },
     (error, message) => {
       onPickMedia(null);
-      Toast.show({
-        title: 'Uploading Failed',
-        text: message,
-        color: '#f39c12',
-        timing: 5000,
-      });
+      Alert.alert('Uploading Failed', message);
     },
   );
 };

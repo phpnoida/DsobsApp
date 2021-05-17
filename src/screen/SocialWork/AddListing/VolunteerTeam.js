@@ -73,7 +73,7 @@ const VolunteerTeam = ({
                 style={{
                   width: scale(40),
                 }}>
-                {generateHeader(`Role ${index + 1}`, false)}
+                {generateHeader(`Role ${item.role}`, false)}
               </View>
               <View
                 style={{
@@ -139,6 +139,8 @@ const VolunteerTeam = ({
                   underlineColorAndroid={'transparent'}
                   style={g.inputWhite}
                   maxLength={100}
+                  autoCompleteType={'off'}
+                  importantForAutofill={'no'}
                   value={item.volunteerName}
                   keyboardType={'default'}
                   autoCapitalize={'words'}

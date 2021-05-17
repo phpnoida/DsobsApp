@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import Helper from '../../helper/Helper';
-import AsyncStorage from '@react-native-community/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {requestAuthCode, verifyAuthCode} from '../../Actions/UserActions';
 import {sendPresenceStatus} from '../../Actions/CommonActions';
 import CountryPicker from 'react-native-country-picker-modal';
@@ -318,8 +318,6 @@ const Login = ({navigation}) => {
           });
         });
       });
-
-    
   };
 
   const makeAuthTimer = () => {

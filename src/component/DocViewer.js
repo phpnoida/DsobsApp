@@ -16,9 +16,6 @@ import GlobalInclude from '../globalInclude/Globalinclude';
 import {IconType} from '../helper/Constants';
 import DocView from 'react-native-pdf';
 import Orientation from 'react-native-orientation-locker';
-import ScreenOrientation, {
-  PORTRAIT,
-} from 'react-native-orientation-locker/ScreenOrientation';
 
 const {width} = Dimensions.get('window');
 const {config, fs} = RNFetchBlob;

@@ -6,9 +6,7 @@ import {
   TouchableOpacity,
   TouchableNativeFeedback,
   ScrollView,
-  Animated,
   Dimensions,
-  Platform,
 } from 'react-native';
 import {scale} from '../theme/Scalling';
 import GlobalInclude from '../globalInclude/Globalinclude';
@@ -19,23 +17,24 @@ import ImageShareModal from '../component/ImageShareModal';
 import YoutubeView from '../component/YoutubeView';
 import g from '../theme/global';
 import grid from '../theme/grid';
-import FastImage from 'react-native-fast-image';
-import {createImageProgress} from 'react-native-image-progress';
-
-const AnimatedFastImage = Animated.createAnimatedComponent(FastImage);
-const ProgressImage = createImageProgress(AnimatedFastImage);
-
-let imageArray = [];
-let documentItem = '';
+import Sound from 'react-native-sound';
+import ProgressImage from './ProgresImage';
+import TrackPlayer, {usePlaybackState} from 'react-native-track-player';
+import Player from './Player/Player';
 
 const deviceWidth = Dimensions.get('window').width;
-const tablet = deviceWidth >= 768;
-let opacity = new Animated.Value(0.0);
+let imageArray = [];
+let documentItem = '';
 let selectedKey = '';
+let playAudio = '';
+
 const ImageGallery = (props) => {
+  const playbackState = usePlaybackState();
+
   const [showModal, setShowModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDocViewer, setShowDocViewer] = useState(false);
+  const [showPlayer, setShowPlayer] = useState(false);
 
   /**
    * Here you have to pass valid media content if media content is in different format you have to reformat like below
@@ -47,9 +46,9 @@ const ImageGallery = (props) => {
   const [mediaContent] = useState(props.mediaContent);
   const [lastIndex, setIastIndex] = useState(0);
 
-  console.log('====================================');
-  console.log('content.images', JSON.stringify(props.mediaContent));
-  console.log('====================================');
+  // console.log('====================================');
+  // console.log('content.images', JSON.stringify(props.mediaContent));
+  // console.log('====================================');
 
   const openImage = () => {
     if (mediaContent.length > 0) {
@@ -95,7 +94,6 @@ const ImageGallery = (props) => {
               <TouchableOpacity
                 onPress={() => {
                   selectedKey = item.key;
-
                   setTimeout(() => {
                     openImage();
                   }, 200);
@@ -106,37 +104,10 @@ const ImageGallery = (props) => {
                 activeOpacity={1}>
                 <ProgressImage
                   source={{uri: item.thumbnail}}
-                  style={{aspectRatio: 1 / 1}}
+                  containerStyle={{aspectRatio: 1 / 1}}
                   imageStyle={{
                     aspectRatio: 1 / 1,
-                    opacity: opacity,
-                    transform: [
-                      {
-                        scale: opacity.interpolate({
-                          inputRange: [0, 1.0],
-                          outputRange: [0.85, 1.0],
-                        }),
-                      },
-                    ],
                   }}
-                  indicatorProps={{
-                    animated: true,
-                    color: '#2b3252',
-                    direction: Platform.os === 'android' ? 'clockwise' : 'rtl',
-                    indeterminate: true,
-                    progress: 100,
-                    strokeCap: 'butt',
-                    size: scale(20),
-                  }}
-                  onLoad={() => {
-                    Animated.timing(opacity, {
-                      toValue: 1.0,
-                      duration: 200,
-                      useNativeDriver: true,
-                    }).start();
-                  }}
-                  resizeMode={FastImage.resizeMode.cover}
-                  threshold={20}
                 />
               </TouchableOpacity>
             ) : type === 2 ? (
@@ -149,6 +120,7 @@ const ImageGallery = (props) => {
                   }}
                   iconName={'play-circle-o'}
                   iconType={'font-awesome'}
+                  showPlay={true}
                 />
               </View>
             ) : type === 3 ? (
@@ -189,7 +161,13 @@ const ImageGallery = (props) => {
                   grid.alignItems,
                   {aspectRatio: 1 / 1},
                 ]}>
-                <TouchableOpacity onPress={() => {}} activeOpacity={1}>
+                <TouchableOpacity
+                  onPress={() => {
+                    playAudio = item.thumbnail;
+                    setShowPlayer(!showPlayer);
+                    start();
+                  }}
+                  activeOpacity={1}>
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(36), width: scale(36)}}
                     iconColor={'#E61A2D'}
@@ -210,6 +188,56 @@ const ImageGallery = (props) => {
 
     return photosArray;
   };
+
+  const start = async () => {
+    // Set up the player
+    await TrackPlayer.setupPlayer({});
+    await TrackPlayer.updateOptions({
+      stopWithApp: true,
+      capabilities: [
+        TrackPlayer.CAPABILITY_PLAY,
+        TrackPlayer.CAPABILITY_PAUSE,
+        TrackPlayer.CAPABILITY_SKIP_TO_NEXT,
+        TrackPlayer.CAPABILITY_SKIP_TO_PREVIOUS,
+        TrackPlayer.CAPABILITY_STOP,
+      ],
+      compactCapabilities: [
+        TrackPlayer.CAPABILITY_PLAY,
+        TrackPlayer.CAPABILITY_PAUSE,
+      ],
+    });
+
+    // Add a track to the queue
+    await TrackPlayer.add({
+      id: 'trackId',
+      url: playAudio,
+      title: 'Play Audio',
+      artist: 'Track Artist',
+    });
+
+    // Start playing it
+    await TrackPlayer.play();
+  };
+
+  async function togglePlayback() {
+    const currentTrack = await TrackPlayer.getCurrentTrack();
+    if (currentTrack == null) {
+      await TrackPlayer.reset();
+      await TrackPlayer.add({
+        id: 'trackId',
+        url: playAudio,
+        title: 'Play Audio',
+        artist: 'Track Artist',
+      });
+      await TrackPlayer.play();
+    } else {
+      if (playbackState === TrackPlayer.STATE_PAUSED) {
+        await TrackPlayer.play();
+      } else {
+        await TrackPlayer.pause();
+      }
+    }
+  }
 
   return (
     <View style={GlobalInclude.AppStyle.fill}>
@@ -289,6 +317,62 @@ const ImageGallery = (props) => {
           }}
         />
       )}
+
+      <Modal
+        transparent={true}
+        onRequestClose={() => {
+          TrackPlayer.stop().then(() => {
+            setShowPlayer(!showPlayer);
+          });
+        }}
+        visible={showPlayer}>
+        <View style={styles.modalView}>
+          <View style={styles.centeredView}>
+            <View
+              style={{
+                backgroundColor: 'white',
+                borderRadius: 15,
+                shadowColor: '#333333',
+                shadowOffset: {width: 0, height: 2},
+                shadowOpacity: 0.2,
+                shadowRadius: 6,
+                elevation: 5,
+                padding: 8,
+                width: '90%',
+                justifyContent: 'center',
+                alignSelf: 'center',
+                alignItems: 'center',
+                height: scale(130),
+              }}>
+              <TouchableOpacity
+                onPress={() => {
+                  TrackPlayer.stop().then(() => {
+                    setShowPlayer(!showPlayer);
+                  });
+                }}
+                style={{
+                  width: scale(32),
+                  height: scale(32),
+                  justifyContent: 'flex-end',
+                  alignItems: 'flex-end',
+                  alignSelf: 'flex-end',
+                }}
+                background={TouchableNativeFeedback.SelectableBackground()}>
+                <GlobalInclude.BaseIcon
+                  containerStyle={{height: scale(30), width: scale(30)}}
+                  iconColor={'#000'}
+                  iconName={'close'}
+                  iconSize={scale(30)}
+                  iconType={IconType[8]}
+                />
+              </TouchableOpacity>
+              <View style={{flex: 1}}>
+                <Player onTogglePlayback={togglePlayback} />
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

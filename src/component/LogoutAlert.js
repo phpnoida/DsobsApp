@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import g from '../theme/global';
 import {scale} from '../theme/Scalling';
-import AsyncStorage from '@react-native-community/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import messaging from '@react-native-firebase/messaging';
 import {CommonActions} from '@react-navigation/native';
 const windowWidth = Dimensions.get('window').width;

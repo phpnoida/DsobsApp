@@ -17,7 +17,7 @@ const CategorySheet = ({
 }) => (
   <RBSheet
     ref={refRBSheet}
-    height={height - 150}
+    height={height - 130}
     minClosingHeight={50}
     onClose={() => {
       if (onClose) {
@@ -38,7 +38,7 @@ const CategorySheet = ({
     }}>
     <BottomSheetHeader
       title={'Select Nature'}
-      showSearch={true}
+      showSearch={false}
       onSeachQuery={(query) => {
         searchProfession(query);
       }}

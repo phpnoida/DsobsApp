@@ -860,6 +860,7 @@ const BasicProfile = (props) => {
 
             {showDatePicker && Platform.OS === 'ios' && (
               <DatePickerView
+                maxDate={new Date()}
                 onCloseAction={() => {
                   setShowDatePicker(false);
                 }}

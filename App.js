@@ -13,7 +13,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import SplashScreen from 'react-native-splash-screen';
 import NetInfo from '@react-native-community/netinfo';
 import {navigationRef, isReadyRef} from './src/helper/NavigationService';
-import AsyncStorage from '@react-native-community/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {sendPresenceStatus} from './src/Actions/CommonActions';
 import Offline from './src/component/Offline';
 import DeviceInfo from 'react-native-device-info';

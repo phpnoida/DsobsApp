@@ -20,9 +20,9 @@ const YoutubeView = (props) => {
       //console.log('link', props.link);
       let videoId = Helper.GetYoutubeId(props.link);
       setThumbnail(Helper.loadYoutubeThumb(videoId));
-      setyoutubeId(Helper.GetYoutubeId(props.link));
+      setyoutubeId(videoId);
 
-      console.log('props.link', props.link);
+      // console.log('props.link', props.link);
     }
 
     return () => {};
@@ -60,28 +60,30 @@ const YoutubeView = (props) => {
               <View
                 style={props.overlayStyle ? props.overlayStyle : g.videoBlackBg}
               />
-              <View
-                style={
-                  props.playIconstyle ? props.playIconstyle : style.playIcon
-                }>
-                <TouchableOpacity
-                  onPress={() => {
-                    setPlayVideo(true);
-                  }}
-                  activeOpacity={1}>
-                  <GlobalInclude.BaseIcon
-                    containerStyle={
-                      props.playIconContainer
-                        ? props.playIconContainer
-                        : style.playContainer
-                    }
-                    iconColor={'#fff'}
-                    iconName={props.iconName ? props.iconName : 'play'}
-                    iconSize={props.iconSize ? props.iconSize : scale(36)}
-                    iconType={props.iconType ? props.iconType : IconType[4]}
-                  />
-                </TouchableOpacity>
-              </View>
+              {props.showPlay && (
+                <View
+                  style={
+                    props.playIconstyle ? props.playIconstyle : style.playIcon
+                  }>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setPlayVideo(true);
+                    }}
+                    activeOpacity={1}>
+                    <GlobalInclude.BaseIcon
+                      containerStyle={
+                        props.playIconContainer
+                          ? props.playIconContainer
+                          : style.playContainer
+                      }
+                      iconColor={'#fff'}
+                      iconName={props.iconName ? props.iconName : 'play'}
+                      iconSize={props.iconSize ? props.iconSize : scale(36)}
+                      iconType={props.iconType ? props.iconType : IconType[4]}
+                    />
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           ) : (
             <View

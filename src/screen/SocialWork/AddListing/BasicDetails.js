@@ -88,6 +88,9 @@ const BasicDetails = ({
                     handleInput('projectName', value);
                   }}
                 />
+                {errorMessage.projectName && errorMessage.projectName !== '' ? (
+                  <Text style={g.errorMsg}>{errorMessage.projectName}</Text>
+                ) : null}
               </View>
               <View style={[grid.flex1, g.ml5]}>
                 {generateHeader('Year Started', true)}
@@ -110,14 +113,12 @@ const BasicDetails = ({
                   </Text>
                   <View style={GlobalInclude.AppStyle.triangleShape} />
                 </TouchableOpacity>
+                {errorMessage.selectedYear &&
+                errorMessage.selectedYear !== '' ? (
+                  <Text style={g.errorMsg}>{errorMessage.selectedYear}</Text>
+                ) : null}
               </View>
             </View>
-            {errorMessage.projectName && errorMessage.projectName !== '' ? (
-              <Text style={g.errorMsg}>{errorMessage.projectName}</Text>
-            ) : null}
-            {errorMessage.selectedYear && errorMessage.selectedYear !== '' ? (
-              <Text style={g.errorMsg}>{errorMessage.selectedYear}</Text>
-            ) : null}
           </View>
           <View style={g.mb15}>
             {generateHeader('Initiated By', true)}
@@ -134,6 +135,9 @@ const BasicDetails = ({
                 handleInput('initiatedBy', value);
               }}
             />
+            {errorMessage.initiatedBy && errorMessage.initiatedBy !== '' ? (
+              <Text style={g.errorMsg}>{errorMessage.initiatedBy}</Text>
+            ) : null}
           </View>
           <View style={g.mb15}>
             {generateHeader('Social Media Links', false)}

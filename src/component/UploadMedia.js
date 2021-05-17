@@ -74,12 +74,7 @@ const UploadMedia = ({
         setIsLoading(false);
         console.log('error', error);
         onPickMedia(null);
-        Toast.show({
-          title: 'Uploading Failed',
-          text: message,
-          color: '#f39c12',
-          timing: 5000,
-        });
+        Alert.alert('Uploading Failed');
       },
     );
   };
@@ -106,16 +101,10 @@ const UploadMedia = ({
         }
       })
       .catch((err) => {
-        console.log('err.toString()', err.toString());
-        if (err.toString() === 'Error: User cancelled image selection') {
-          ImagePicker.clean();
+        console.log('err', err.code);
+        if (err.code === 'E_PICKER_CANCELLED') {
           onPickMedia(null);
-          Toast.show({
-            title: 'Cancel Selection',
-            text: 'User Cancelled Selection!',
-            color: '#f39c12',
-            timing: 2500,
-          });
+          Alert.alert('Cancel Selection', 'User Cancelled Selection!');
         }
       });
   };
@@ -152,12 +141,10 @@ const UploadMedia = ({
         uploadMediaContent(body, childPath, mediaType);
       } else {
         onPickMedia(null);
-        Toast.show({
-          title: 'Erorr While pick media',
-          text: 'Unable to pick file choose another',
-          color: '#f39c12',
-          timing: 3000,
-        });
+        Alert.alert(
+          'Erorr While pick media',
+          'Unable to pick file choose another',
+        );
       }
     } catch (error) {
       onPickMedia(null);
@@ -192,42 +179,34 @@ const UploadMedia = ({
           uploadMediaContent(body, childPath, mediaType);
         } else {
           onPickMedia(null);
-          Toast.show({
-            title: 'Erorr While pick media',
-            text: 'Unable to pick file choose another',
-            color: '#f39c12',
-            timing: 3000,
-          });
+          Alert.alert(
+            'Erorr While pick media',
+            'Unable to pick file choose another',
+          );
         }
       } else {
         onPickMedia(null);
-        Toast.show({
-          title: 'Erorr While pick media',
-          text: 'Unable to pick file choose another',
-          color: '#f39c12',
-          timing: 3000,
-        });
+        Alert.alert(
+          'Erorr While pick media',
+          'Unable to pick file choose another',
+        );
       }
     } catch (error) {
       onPickMedia(null);
-      Toast.show({
-        title: 'Erorr While pick media',
-        text: 'Unable to pick file choose another',
-        color: '#f39c12',
-        timing: 3000,
-      });
+      Alert.alert(
+        'Erorr While pick media',
+        'Unable to pick file choose another',
+      );
     }
   };
 
   const pickDocument = async () => {
     let status = await hasPermission();
     if (!status) {
-      Toast.show({
-        title: 'Permission Denied',
-        text: 'You denied permission please grant it from settings',
-        color: '#f39c12',
-        timing: 3000,
-      });
+      Alert.alert(
+        'Permission Denied',
+        'You denied permission please grant it from settings',
+      );
       return;
     } else {
       try {
@@ -240,12 +219,7 @@ const UploadMedia = ({
         }
       } catch (error) {
         onPickMedia(null);
-        Toast.show({
-          title: 'Cancel Selection',
-          text: 'User Cancelled Selection!',
-          color: '#f39c12',
-          timing: 3000,
-        });
+        Alert.alert('User Cancelled Selection!');
       }
     }
   };
@@ -253,12 +227,10 @@ const UploadMedia = ({
   const pickAudio = async () => {
     let status = await hasPermission();
     if (!status) {
-      Toast.show({
-        title: 'Permission Denied',
-        text: 'You denied permission please grant it from settings',
-        color: '#f39c12',
-        timing: 3000,
-      });
+      Alert.alert(
+        'Permission Denied',
+        'You denied permission please grant it from settings',
+      );
       return;
     } else {
       try {
@@ -271,12 +243,7 @@ const UploadMedia = ({
         }
       } catch (error) {
         onPickMedia(null);
-        Toast.show({
-          title: 'Cancel Selection',
-          text: 'User Cancelled Selection!',
-          color: '#f39c12',
-          timing: 3000,
-        });
+        Alert.alert('User Cancelled Selection!');
       }
     }
   };

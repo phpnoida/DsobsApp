@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   TextInput,
   StyleSheet,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
 import g from '../../../theme/global';
@@ -22,7 +21,6 @@ import {
   uploadImage,
   uploadMediaContent,
 } from '../../../helper/mediaHelper';
-import Toast from '../../../component/Toast';
 import ProgressImage from '../../../component/ProgresImage';
 
 let selectedIndex = -1;
@@ -217,13 +215,20 @@ const VentureDetails = ({
                 handleInput('aboutVenture', value);
               }}
             />
-            <Text style={[g.fs10, g.FHNM, g.txtRight, g.colorGray1, g.pt5]}>
-              {TEXTAREA_COUNT.min} to {TEXTAREA_COUNT.max} {'Characters'} :{' '}
-              {aboutVenture.length}
-            </Text>
-            {errorMessage.aboutVenture && errorMessage.aboutVenture !== '' ? (
-              <Text style={g.errorMsg}>{errorMessage.aboutVenture}</Text>
-            ) : null}
+            <View style={[grid.rowdir, g.mt5]}>
+              <View style={grid.col}>
+                {errorMessage.aboutVenture &&
+                errorMessage.aboutVenture !== '' ? (
+                  <Text style={g.errorMsg}>{errorMessage.aboutVenture}</Text>
+                ) : null}
+              </View>
+              <View>
+                <Text style={[g.fs10, g.FHNM, g.txtRight, g.colorGray1]}>
+                  {TEXTAREA_COUNT.min} to {TEXTAREA_COUNT.max} {'Characters'} :{' '}
+                  {aboutVenture.length}
+                </Text>
+              </View>
+            </View>
           </View>
 
           <View style={g.mb15}>

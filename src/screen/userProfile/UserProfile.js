@@ -15,7 +15,7 @@ import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
-import AsyncStorage from '@react-native-community/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getUserProfile,
   getUserProfileFromDirectory,

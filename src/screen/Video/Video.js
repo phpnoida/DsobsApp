@@ -276,6 +276,7 @@ const Video = ({navigation}) => {
                 width: scale(14),
               }}
               iconSize={scale(14)}
+              showPlay={true}
             />
           </View>
           <View>
@@ -359,6 +360,7 @@ const Video = ({navigation}) => {
                     width: scale(20),
                   }}
                   iconSize={scale(20)}
+                  showPlay={true}
                 />
               </View>
               <View style={[g.p15]}>

@@ -20,12 +20,15 @@ const showTaggedUsers = (navigation, users) => {
 
   for (let i = 0; i < users.length; i++) {
     let item = users[i];
+    console.log(item);
     const component = (
       <TouchableOpacity
         onPress={() => {
-          // navigation.navigate('UserProfile', {
-          //   userId: item._id,
-          // });
+          if (item.fromSchool) {
+            navigation.navigate('UserProfile', {
+              userId: item._id,
+            });
+          }
         }}
         key={i}
         style={[
@@ -43,7 +46,7 @@ const showTaggedUsers = (navigation, users) => {
             />
           </View>
           <View style={GlobalInclude.AppStyle.fill}>
-            <Text
+            {/* <Text
               style={[
                 g.fs12,
                 g.FHNR,
@@ -53,13 +56,13 @@ const showTaggedUsers = (navigation, users) => {
                 GlobalInclude.AppStyle.transform,
               ]}>
               {`Participant ${i + 1}`}
-            </Text>
+            </Text> */}
             <Text
               style={[
                 g.fs14,
-                g.FHNR,
+                g.FHNB,
                 g.txtCenter,
-                g.colorGray1,
+                g.colorBlue,
                 g.mt5,
                 GlobalInclude.AppStyle.transform,
                 styles.userNameCenter,
@@ -98,12 +101,12 @@ const TheTeam = ({content, navigation}) => (
     contentContainerStyle={g.pb30}
     showsVerticalScrollIndicator={false}>
     <View style={g.p5}>
-      {content.participants &&
-      content.participants !== undefined &&
-      content.participants !== null &&
-      content.participants.length > 0 ? (
+      {content.organizer &&
+      content.organizer !== undefined &&
+      content.organizer !== null &&
+      content.organizer.length > 0 ? (
         <View style={grid.displayinlineBlock}>
-          {showTaggedUsers(navigation, content.participants)}
+          {showTaggedUsers(navigation, content.organizer)}
         </View>
       ) : (
         <View>

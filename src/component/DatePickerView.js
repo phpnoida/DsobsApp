@@ -73,7 +73,8 @@ const DatePickerView = (props) => {
               value={date}
               mode={'date'}
               display={'spinner'}
-              maximumDate={new Date()}
+              maximumDate={props.maxDate ? props.maxDate : undefined}
+              minimumDate={props.minDate ? props.minDate : undefined}
               dateFormat={'day month year'}
               onChange={(event, selectedDate) => {
                 const currentDate = selectedDate || date;

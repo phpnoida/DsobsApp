@@ -5,6 +5,11 @@ import ImageGallery from '../../../component/ImageGallery';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 
 const PitchDocument = ({content}) => {
+
+  content.media.map((item, index) => {
+    item.key = index;
+  });
+
   return (
     <View style={GlobalInclude.AppStyle.fill}>
       {content.media &&

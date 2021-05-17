@@ -54,7 +54,9 @@ const ListMyWork = ({route, navigation}) => {
     categoryListMain = [];
     searchVal = '';
 
-    let volunterDetail = {
+    let defaultVolunteers = [];
+
+    defaultVolunteers.push({
       _id: '',
       fromSchool: false,
       volunteerName: '',
@@ -63,13 +65,21 @@ const ListMyWork = ({route, navigation}) => {
       volunteerRole: '',
       isLoading: false,
       errorMessage: {},
-    };
+      role: 1,
+    });
+    defaultVolunteers.push({
+      _id: '',
+      fromSchool: false,
+      volunteerName: '',
+      userData: null,
+      imageData: null,
+      volunteerRole: '',
+      isLoading: false,
+      errorMessage: {},
+      role: 2,
+    });
 
-    let defaultVolunteers = [];
-
-    defaultVolunteers.push(volunterDetail);
-    defaultVolunteers.push(volunterDetail);
-    setVolunteers(defaultVolunteers);
+    setVolunteers([...defaultVolunteers]);
 
     if (global.isConnected) {
       getCategory();
@@ -230,12 +240,7 @@ const ListMyWork = ({route, navigation}) => {
         console.log('code,error', code, error);
         console.log('====================================');
         setLoader(false);
-        Toast.show({
-          title: 'Something went wrong',
-          text: error,
-          color: '#f39c12',
-          timing: 3000,
-        });
+        Alert.alert('Something went wrong', error);
       },
     );
   };
@@ -250,24 +255,31 @@ const ListMyWork = ({route, navigation}) => {
     switch (key) {
       case 'projectName':
         setProjectName(value);
+        setErrorMessage({});
         break;
       case 'initiatedBy':
         setInitiatedBy(value);
+        setErrorMessage({});
         break;
       case 'facebook':
         setFacebook(value);
+        setErrorMessage({});
         break;
       case 'twitter':
         setTwitter(value);
+        setErrorMessage({});
         break;
       case 'wikipedia':
         setWikipedia(value);
+        setErrorMessage({});
         break;
       case 'ventureVideoLink':
         setVentureVideoLink(value);
+        setErrorMessage({});
         break;
       case 'aboutVenture':
         setAboutVenture(value);
+        setErrorMessage({});
         break;
     }
   };
@@ -290,38 +302,44 @@ const ListMyWork = ({route, navigation}) => {
   const validateAndMoveNextTab = () => {
     Keyboard.dismiss();
     if (step === 1) {
-      if (selectedCategory === '') {
+      if (selectedCategory.trim() === '') {
         setErrorMessage({selectedCategory: 'This field is required'});
         return;
-      } else if (projectName === '') {
+      } else if (projectName.trim() === '') {
         setErrorMessage({projectName: 'This field is required'});
         return;
       } else if (selectedYear === -1) {
         setErrorMessage({selectedYear: 'This field is required'});
         return;
-      } else if (facebook !== '' && !Helper.validateRegex(fbRegex, facebook)) {
+      } else if (initiatedBy.trim() === '') {
+        setErrorMessage({initiatedBy: 'This field is required'});
+        return;
+      } else if (
+        facebook.trim() !== '' &&
+        !Helper.validateRegex(fbRegex, facebook)
+      ) {
         setErrorMessage({facebook: 'This link is not valid'});
         return;
       } else if (
-        twitter !== '' &&
+        twitter.trim() !== '' &&
         !Helper.validateRegex(twiterRegex, twitter)
       ) {
         setErrorMessage({twitter: 'This link is not valid'});
         return;
       } else if (
-        wikipedia !== '' &&
+        wikipedia.trim() !== '' &&
         !Helper.validateRegex(wikiRegex, wikipedia)
       ) {
         setErrorMessage({wikipedia: 'This link is not valid'});
         return;
       }
     } else if (step === 2) {
-      if (ventureVideoLink === '' && socialPhoto === null) {
+      if (ventureVideoLink.trim() === '' && socialPhoto === null) {
         setErrorMessage({
           socialImageVideo: 'Please Upload at least one, Photo or Video',
         });
         return;
-      } else if (aboutVenture === '') {
+      } else if (aboutVenture.trim() === '') {
         setErrorMessage({aboutVenture: 'This field is required'});
         return;
       }
@@ -371,8 +389,10 @@ const ListMyWork = ({route, navigation}) => {
       item._id = value._id;
       item.volunteerName = Helper.concatName(value);
       item[key] = value;
+      item.errorMessage = {};
     } else {
       item[key] = value;
+      item.errorMessage = {};
     }
     oldData[index] = item;
     setVolunteers([...oldData]);
@@ -390,12 +410,6 @@ const ListMyWork = ({route, navigation}) => {
         element.volunteerName.trim().length === 0
       ) {
         element.errorMessage.volunteerName = 'This field is required';
-        isValid = false;
-      } else if (
-        element.volunteerRole === '' ||
-        element.volunteerRole.trim().length === 0
-      ) {
-        element.errorMessage.volunteerRole = 'This field is required';
         isValid = false;
       } else {
         element.errorMessage = {};
@@ -415,8 +429,10 @@ const ListMyWork = ({route, navigation}) => {
         volunteerRole: '',
         isLoading: false,
         errorMessage: {},
+        role: oldData.length + 1,
       };
-      oldData.splice(0, 0, volunterDetail);
+      //oldData.splice(0, 0, volunterDetail);
+      oldData.push(volunterDetail);
     }
     setVolunteers([...oldData]);
   };
@@ -442,6 +458,7 @@ const ListMyWork = ({route, navigation}) => {
               setCategoryList([...categoryListMain]);
             }}
             setYear={(value) => {
+              setErrorMessage({});
               setSelectedYear(value);
             }}
             onSaveTab={validateAndMoveNextTab}

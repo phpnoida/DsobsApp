@@ -380,6 +380,33 @@ const Helpers = {
     }
     return arrOfWordsCased.join(' ');
   },
+  showFormatedDate: function (timestamp) {
+    let month_names = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    if (timestamp > 0) {
+      //console.log(timestamp);
+      var dateVal = new Date(timestamp);
+      var date = dateVal.getDate();
+      var month = dateVal.getMonth();
+      var year = dateVal.getFullYear();
+
+      return `${month_names[month]} ${date}, ${year}`;
+    } else {
+      return 'N/A';
+    }
+  },
 };
 
 export default Helpers;

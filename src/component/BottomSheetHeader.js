@@ -15,7 +15,7 @@ const BottomSheetHeader = (props) => {
           g.txtCenter,
           g.colorBlack,
           g.mt5,
-          g.mb15,
+          g.mb10,
           props.titleStyle,
         ]}>
         {props.title}

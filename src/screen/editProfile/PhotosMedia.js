@@ -187,6 +187,7 @@ const PhotosMedia = (props) => {
                 }}
                 iconName={'play-circle-o'}
                 iconType={'font-awesome'}
+                showPlay={true}
               />
             </View>
           )}

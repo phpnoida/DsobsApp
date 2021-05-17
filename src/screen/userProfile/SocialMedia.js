@@ -38,30 +38,22 @@ export const generateView = (iconColor, icon, type, clickEvent) => {
   );
 };
 
+export const openLink = (link) => {
+  Linking.canOpenURL(link).then((status) => {
+    if (status) {
+      Linking.openURL(link).catch(() => {
+        Alert.alert('Unable to open link!');
+      });
+    } else {
+      Alert.alert('Invalid link!');
+    }
+  });
+};
+
 const SocialMedia = (props) => {
   const {profileData} = props;
-  const {
-    fb,
-    insta,
-    gplus,
-    wiki,
-    youtube,
-    twitter,
-    whatsapp,
-    linkedinUrl,
-  } = profileData;
-
-  const openLink = (link) => {
-    Linking.canOpenURL(link).then((status) => {
-      if (status) {
-        Linking.openURL(link).catch(() => {
-          Alert.alert('Unable to open link!');
-        });
-      } else {
-        Alert.alert('Invalid link!');
-      }
-    });
-  };
+  const {fb, insta, gplus, wiki, youtube, twitter, whatsapp, linkedinUrl} =
+    profileData;
 
   return (
     <View style={{paddingStart: scale(15), paddingEnd: scale(15), flex: 1}}>

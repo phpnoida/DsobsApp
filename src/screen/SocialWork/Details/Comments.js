@@ -8,6 +8,8 @@ import {
   TextInput,
   ActivityIndicator,
   StyleSheet,
+  Alert,
+  FlatList,
 } from 'react-native';
 import g from '../../../theme/global';
 import grid from '../../../theme/grid';
@@ -18,131 +20,492 @@ import {IconType} from '../../../helper/Constants';
 import Toast from '../../../component/Toast';
 import Helper from '../../../helper/Helper';
 import moment from 'moment';
+import {renderNoDataComponent} from '../../../component/Common';
 
+import {
+  getComments,
+  addUserComment,
+  updateUserComment,
+  removeUserComment,
+} from '../../../Actions/SocialWorkActions';
+
+const PaginationStatus = {
+  firstLoad: 0,
+  waiting: 1,
+  allLoaded: 2,
+};
+let filterObject = {
+  index: 0,
+  size: 10,
+};
 let commentId = '';
 let lastIndex = -1;
-const Comments = ({
-  content,
-  postUserComment,
-  updateUserCommentData,
-  removeIndex,
-}) => {
+let totalCount = 0;
+
+const Comments = ({workId, navigation}) => {
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [commentError, setCommentError] = useState('');
   const [isCommenting, setIsCommenting] = useState(false);
+  const [firstTimeLoad, setFirstTimeLoad] = useState(true);
+  const [paginationStatus, setPaginationStatus] = useState(
+    PaginationStatus.firstLoad,
+  );
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [showOptions, setShowOptions] = useState(false);
 
-  const renderList = () => {
-    return content.map((item, index) => {
-      return (
-        <View style={g.mb5} key={index}>
-          <View style={[grid.rowdir]}>
-            <View>
-              <View
-                style={[
-                  g.mr10,
-                  g.bggray,
-                  g.oh,
-                  {width: scale(35), borderRadius: scale(50)},
-                ]}>
-                {item.authorId !== undefined &&
-                item.authorId !== null &&
-                item.authorId.profileImg !== undefined &&
-                item.authorId.profileImg !== null &&
-                item.authorId.profileImg !== '' ? (
-                  <ProgressImage
-                    source={{uri: item.authorId.profileImg}}
-                    containerStyle={styles.imageStyle}
-                    mode={'cover'}
-                  />
-                ) : (
-                  <ProgressImage
-                    source={GlobalInclude.Assets.DefaultProfile}
-                    containerStyle={styles.imageStyle}
-                    mode={'cover'}
-                  />
-                )}
+  useEffect(() => {
+    commentId = '';
+    lastIndex = -1;
+    totalCount = 0;
+
+    console.log('focus');
+    if (global.isConnected) {
+      resetCount();
+      filterObject.workId = workId;
+      if (global.isConnected) {
+        getCommentsList();
+      } else {
+        setFirstTimeLoad(false);
+      }
+    }
+
+    return () => {};
+  }, [workId, navigation]);
+
+  /**
+   *
+   * Pagination
+   *
+   */
+  const onPaginate = () => {
+    if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
+      console.log('onPaginate()');
+      setPaginationStatus(PaginationStatus.waiting);
+      filterObject.index = filterObject.index + 1;
+      getCommentsList();
+    }
+  };
+
+  const onEndReached = () => {
+    console.log('onEndReached()');
+    if (comments.length === totalCount || comments.length < 10) {
+      setPaginationStatus(PaginationStatus.allLoaded);
+      return;
+    }
+    if (paginationStatus === PaginationStatus.waiting) {
+      onPaginate();
+    }
+  };
+
+  const handleRefresh = () => {
+    filterObject.index = 0;
+    setIsRefreshing(true);
+  };
+
+  const resetCount = () => {
+    totalCount = 0;
+    filterObject = {};
+    filterObject.index = 0;
+    filterObject.size = 10;
+  };
+  /**
+   *
+   * Pagination
+   *
+   */
+
+  /**
+   *
+   * API
+   *
+   *
+   */
+  const getCommentsList = () => {
+    getComments(
+      filterObject,
+      (response) => {
+        setFirstTimeLoad(false);
+        setIsRefreshing(false);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            let commentList = [];
+            if (data.status) {
+              if (data.data !== undefined && data.data !== null) {
+                let items = data.data;
+                for (var key in items) {
+                  if (items.hasOwnProperty(key)) {
+                    commentList.push(items[key]);
+                  }
+                }
+                if (filterObject.index === 0) {
+                  totalCount = data.totalCount;
+                  setComments([...commentList]);
+                } else {
+                  setComments([...comments, ...commentList]);
+                }
+              }
+              setPaginationStatus(PaginationStatus.waiting);
+            }
+          }
+        }
+      },
+      (code, error) => {
+        console.log('====================================');
+        console.log('code', code);
+        console.log('====================================');
+        setComments([]);
+        setFirstTimeLoad(false);
+        console.log('error->', error);
+      },
+    );
+  };
+
+  const postUserComment = () => {
+    let requestObject = {
+      workId: filterObject.workId,
+      depth: 0,
+      parentId: '',
+      commentText: commentText,
+    };
+    addUserComment(
+      requestObject,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            if (data.status) {
+              let commentList = comments;
+              let detail = {};
+
+              detail._id = global.userDetails._id;
+              detail.profileImg = global.userDetails.profileImg;
+              detail.lastName = global.userDetails.lastName;
+              detail.batch = global.userDetails.batch;
+              detail.firstName = global.userDetails.firstName;
+
+              let item = data.data;
+              item.authorId = detail;
+              commentList.splice(0, 0, item);
+              setComments([...commentList]);
+              lastIndex = -1;
+              commentId = '';
+              setCommentError('');
+              setCommentText('');
+              hideModal();
+              Toast.show({
+                title: 'Congratulations',
+                text: 'Comment added successfully',
+                color: '#228B22',
+                timing: 3000,
+              });
+            } else {
+              hideModal();
+            }
+          }
+        }
+      },
+      (code, error) => {
+        lastIndex = -1;
+        commentId = '';
+        setCommentError('');
+        setCommentText('');
+        hideModal();
+        Toast.show({
+          title: 'Something went wrong',
+          text: error,
+          color: '#f39c12',
+          timing: 3000,
+        });
+      },
+    );
+  };
+
+  const hideModal = () => {
+    setIsCommenting(false);
+    setShowCommentModal(false);
+    setCommentText('');
+  };
+
+  const updateUserCommentData = () => {
+    let requestObject = {
+      status: 2,
+      commentText: commentText,
+    };
+    updateUserComment(
+      requestObject,
+      commentId,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            if (data.status) {
+              let commentList = comments;
+              let item = commentList[lastIndex];
+              item.commentText = commentText;
+              setComments([...commentList]);
+              lastIndex = -1;
+              commentId = '';
+              setCommentError('');
+              setCommentText('');
+              hideModal();
+              Toast.show({
+                title: 'Congratulations',
+                text: 'Comment updated successfully',
+                color: '#228B22',
+                timing: 3000,
+              });
+            } else {
+              hideModal();
+            }
+          }
+        }
+      },
+      (code, error) => {
+        lastIndex = -1;
+        commentId = '';
+        setCommentError('');
+        setCommentText('');
+        hideModal();
+        Toast.show({
+          title: 'Something went wrong',
+          text: error,
+          color: '#f39c12',
+          timing: 3000,
+        });
+      },
+    );
+  };
+
+  const deleteUserCommentData = () => {
+    removeUserComment(
+      commentId,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            if (data.status) {
+              let commentList = comments;
+
+              commentList.splice(lastIndex, 1);
+              setComments([...commentList]);
+
+              lastIndex = -1;
+              commentId = '';
+              setCommentError('');
+              setCommentText('');
+
+              Toast.show({
+                title: 'Congratulations',
+                text: 'Comment removed successfully',
+                color: '#228B22',
+                timing: 3000,
+              });
+            }
+          }
+        }
+      },
+      (code, error) => {
+        lastIndex = -1;
+        commentId = '';
+        setCommentError('');
+        setCommentText('');
+        Toast.show({
+          title: 'Something went wrong',
+          text: error,
+          color: '#f39c12',
+          timing: 3000,
+        });
+      },
+    );
+  };
+
+  /**
+   *
+   * API
+   *
+   *
+   */
+
+  const removeIndex = () => {
+    Alert.alert(
+      'Are you sure you want to delete it?',
+      '',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {
+          text: 'Ok',
+          onPress: () => {
+            deleteUserCommentData();
+          },
+        },
+      ],
+      {cancelable: false},
+    );
+  };
+
+  const renderFooter = () => {
+    return (
+      <View style={styles.footerView}>
+        {comments.length === totalCount ? (
+          <View />
+        ) : (
+          <View style={{height: scale(30)}}>
+            {paginationStatus === PaginationStatus.waiting ? (
+              <View style={g.p10}>
+                <ActivityIndicator size={'small'} color={'#2b3252'} />
               </View>
-            </View>
-            <View>
-              <Text style={[g.fs14, g.FHNR, g.colordarkGray]}>
+            ) : null}
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const renderItem = ({item, index}) => {
+    return (
+      <TouchableOpacity
+        style={g.mb10}
+        key={index}
+        onLongPress={
+          global.userId === item.authorId._id
+            ? () => {
+                lastIndex = index;
+                commentId = item._id;
+                setCommentError('');
+                setCommentText(item.commentText);
+                setShowOptions(true);
+              }
+            : null
+        }>
+        <View style={[g.mb5, grid.rowdir]}>
+          <View
+            style={[
+              g.mr10,
+              g.bggray,
+              g.oh,
+              {width: scale(35), height: scale(35), borderRadius: scale(50)},
+            ]}>
+            {item.authorId !== undefined &&
+            item.authorId !== null &&
+            item.authorId.profileImg !== undefined &&
+            item.authorId.profileImg !== null &&
+            item.authorId.profileImg !== '' ? (
+              <ProgressImage
+                source={{uri: item.authorId.profileImg}}
+                containerStyle={styles.imageStyle}
+                mode={'cover'}
+              />
+            ) : (
+              <ProgressImage
+                source={GlobalInclude.Assets.DefaultProfile}
+                containerStyle={styles.imageStyle}
+                mode={'cover'}
+              />
+            )}
+          </View>
+          <View style={grid.flex1}>
+            <View style={grid.rowrow}>
+              <Text style={[g.fs15, g.FHNM, g.colordarkGray, grid.col, g.mr5]}>
                 {item.authorId !== undefined && item.authorId !== null
-                  ? Helper.concatName(item.authorId)
+                  ? `${Helper.concatName(item.authorId)} (${
+                      item.authorId.batch
+                    })`
                   : 'N/A'}
               </Text>
-              <Text style={[g.fs12, g.FHNR, g.colorBlue, g.mt5]}>
+              <Text
+                style={[
+                  g.fs12,
+                  g.FHNR,
+                  g.colorBlue,
+                  grid.justifyContentCenter,
+                  grid.alignItems,
+                  g.txtCenterVertical,
+                ]}>
                 {moment(item.postedDate).fromNow()}
               </Text>
-              <Text style={[g.fs15, g.FHNR, g.colorLightGray, g.mt5]}>
-                {item.commentText !== undefined &&
-                item.commentText !== null &&
-                item.commentText !== ''
-                  ? item.commentText
-                  : 'N/A'}
-              </Text>
             </View>
+            <Text style={[g.fs13, g.FHNR, g.colorLightGray, g.mt5]}>
+              {item.commentText !== undefined &&
+              item.commentText !== null &&
+              item.commentText !== ''
+                ? item.commentText
+                : 'N/A'}
+            </Text>
+            {/* {global.userId === item.authorId._id ? (
+              <View style={[grid.rowdir, g.mb5, grid.justifyContentRight]}>
+                <TouchableOpacity
+                  hitSlop={{top: 10, bottom: 10, left: 10, right: 0}}
+                  activeOpacity={0.8}
+                  onPress={() => {}}
+                  style={[
+                    grid.rowdir,
+                    grid.alignItems,
+                    grid.justifyContentCenter,
+                    g.bgBlue,
+                    g.mr10,
+                    styles.iconContainer,
+                  ]}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(12), width: scale(12)}}
+                    iconColor={'#fff'}
+                    iconName={'pencil'}
+                    iconSize={scale(12)}
+                    iconType={IconType[4]}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    commentId = item._id;
+                    lastIndex = index;
+                    removeIndex();
+                  }}
+                  style={[
+                    grid.rowdir,
+                    grid.alignItems,
+                    grid.justifyContentCenter,
+                    g.bgBlue,
+                    styles.iconContainer,
+                  ]}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(12), width: scale(12)}}
+                    iconColor={'#fff'}
+                    iconName={'close'}
+                    iconSize={scale(12)}
+                    iconType={IconType[4]}
+                  />
+                </TouchableOpacity>
+              </View>
+            ) : null} */}
           </View>
-          {global.userId === item.authorId._id ? (
-            <View style={[grid.rowdir, g.mb5, grid.justifyContentRight]}>
-              <TouchableOpacity
-                hitSlop={{top: 10, bottom: 10, left: 10, right: 0}}
-                activeOpacity={0.8}
-                onPress={() => {
-                  lastIndex = index;
-                  commentId = item._id;
-                  setCommentError('');
-                  setCommentText(item.commentText);
-                  setShowCommentModal(true);
-                }}
-                style={[
-                  grid.rowdir,
-                  grid.alignItems,
-                  grid.justifyContentCenter,
-                  g.bgBlue,
-                  g.mr10,
-                  styles.iconContainer,
-                ]}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={{height: scale(12), width: scale(12)}}
-                  iconColor={'#fff'}
-                  iconName={'pencil'}
-                  iconSize={scale(12)}
-                  iconType={IconType[4]}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
-                activeOpacity={0.8}
-                onPress={() => {
-                  removeIndex(item._id, index, (status) => {
-                    Toast.show({
-                      title: 'Congratulations',
-                      text: 'Comment removed successfully',
-                      color: '#228B22',
-                      timing: 3000,
-                    });
-                  });
-                }}
-                style={[
-                  grid.rowdir,
-                  grid.alignItems,
-                  grid.justifyContentCenter,
-                  g.bgBlue,
-                  styles.iconContainer,
-                ]}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={{height: scale(12), width: scale(12)}}
-                  iconColor={'#fff'}
-                  iconName={'close'}
-                  iconSize={scale(12)}
-                  iconType={IconType[4]}
-                />
-              </TouchableOpacity>
-            </View>
-          ) : null}
         </View>
-      );
-    });
+        <View style={{borderBottomWidth: 0.5, borderBottomColor: '#e5e5e5'}} />
+      </TouchableOpacity>
+    );
   };
 
   return (
@@ -156,24 +519,26 @@ const Comments = ({
           {'Submit your comments'}
         </Text>
       </View>
-      <View>
-        {content &&
-        content !== undefined &&
-        content !== null &&
-        content.length > 0 ? (
-          <ScrollView
-            contentContainerStyle={{paddingBottom: scale(70)}}
-            showsVerticalScrollIndicator={false}>
-            {renderList()}
-          </ScrollView>
-        ) : (
-          <View style={GlobalInclude.AppStyle.center}>
-            <Text style={[g.fs16, g.FHNB, g.colorBlack]}>
-              Currently No Data Uploaded!
-            </Text>
-          </View>
-        )}
-      </View>
+      {firstTimeLoad ? (
+        <View style={GlobalInclude.AppStyle.fillCenter}>
+          <ActivityIndicator size={'small'} color={'#2b3252'} />
+        </View>
+      ) : (
+        <FlatList
+          showsVerticalScrollIndicator={false}
+          extraData={comments}
+          data={comments}
+          renderItem={renderItem}
+          keyExtractor={(item, index) => index.toString()}
+          onEndReachedThreshold={0.1}
+          onEndReached={onEndReached}
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          ListEmptyComponent={renderNoDataComponent}
+          ListFooterComponent={renderFooter}
+          contentContainerStyle={{paddingBottom: scale(70)}}
+        />
+      )}
 
       <Modal
         transparent={true}
@@ -257,38 +622,9 @@ const Comments = ({
                         } else {
                           setIsCommenting(true);
                           if (commentId !== '') {
-                            updateUserCommentData(
-                              commentText,
-                              commentId,
-                              lastIndex,
-                              (status) => {
-                                setIsCommenting(false);
-                                setShowCommentModal(false);
-                                setCommentText('');
-                                if (status) {
-                                  Toast.show({
-                                    title: 'Congratulations',
-                                    text: 'Comment added successfully',
-                                    color: '#228B22',
-                                    timing: 3000,
-                                  });
-                                }
-                              },
-                            );
+                            updateUserCommentData();
                           } else {
-                            postUserComment(commentText, (status) => {
-                              setIsCommenting(false);
-                              setShowCommentModal(false);
-                              setCommentText('');
-                              if (status) {
-                                Toast.show({
-                                  title: 'Congratulations',
-                                  text: 'Comment updated successfully',
-                                  color: '#228B22',
-                                  timing: 3000,
-                                });
-                              }
-                            });
+                            postUserComment();
                           }
                         }
                       }}>
@@ -309,6 +645,25 @@ const Comments = ({
           </View>
         </ScrollView>
       </Modal>
+
+      {showOptions && (
+        <GlobalInclude.ModalAlert
+          status={showOptions}
+          okButton={'Edit'}
+          cancelButton={'Delete'}
+          okAction={() => {
+            setShowOptions(false);
+            setShowCommentModal(true);
+          }}
+          cancelAction={() => {
+            setShowOptions(false);
+            removeIndex();
+          }}
+          closeAction={() => {
+            setShowOptions(false);
+          }}
+        />
+      )}
     </View>
   );
 };
@@ -324,6 +679,11 @@ const styles = StyleSheet.create({
     height: scale(22),
     borderRadius: scale(22),
     elevation: 1,
+  },
+  footerView: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
   },
 });
 export default Comments;

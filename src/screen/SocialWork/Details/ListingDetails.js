@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   SafeAreaView,
-  Alert,
 } from 'react-native';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import g from '../../../theme/global';
@@ -17,7 +16,6 @@ import ScrollableTabView, {
 import {IconType} from '../../../helper/Constants';
 import ProgressImage from '../../../component/ProgresImage';
 import YoutubeView from '../../../component/YoutubeView';
-import Toast from '../../../component/Toast';
 import Helpers from '../../../helper/Helper';
 import HeaderBar from '../../../component/HeaderBar';
 import {APP_NAME, URL_REGX} from '../../../helper/Constants';
@@ -26,13 +24,8 @@ import TheTeam from './TheTeam';
 import PitchDocument from './PitchDocument';
 import Tags from './Tags';
 import Comments from './Comments';
-import {
-  doFitlerSocialWork,
-  getComments,
-  addUserComment,
-  updateUserComment,
-  removeUserComment,
-} from '../../../Actions/SocialWorkActions';
+import {doFitlerSocialWork} from '../../../Actions/SocialWorkActions';
+import CommonButton from '../../../component/CommonButton';
 
 const {urlRegex} = URL_REGX;
 let filterObject = {};
@@ -40,7 +33,6 @@ let filterObject = {};
 const ListingDetails = ({route, navigation}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [pageContent, setPageContent] = useState({});
-  const [comments, setComments] = useState([]);
 
   useEffect(() => {
     if (route.params && route.params !== undefined && route.params !== null) {
@@ -68,7 +60,6 @@ const ListingDetails = ({route, navigation}) => {
       filterObject,
       (response) => {
         setIsLoading(false);
-        getCommentsList();
         if (response && response !== null) {
           if (
             response.data &&
@@ -96,192 +87,6 @@ const ListingDetails = ({route, navigation}) => {
         setPageContent(null);
         console.log('error->', error);
       },
-    );
-  };
-
-  const getCommentsList = () => {
-    getComments(
-      filterObject.id,
-      (response) => {
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
-            let commentList = [];
-            if (data.status) {
-              if (data.data !== undefined && data.data !== null) {
-                let items = data.data;
-                for (var key in items) {
-                  if (items.hasOwnProperty(key)) {
-                    commentList.push(items[key]);
-                  }
-                }
-                commentList = commentList.reverse();
-                setComments(commentList);
-              }
-            }
-          }
-        }
-      },
-      (code, error) => {
-        console.log('error->', error);
-      },
-    );
-  };
-
-  const postUserComment = (comment, onSubmit) => {
-    let requestObject = {
-      workId: filterObject.id,
-      depth: 0,
-      parentId: '',
-      commentText: comment,
-    };
-    addUserComment(
-      requestObject,
-      (response) => {
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
-            if (data.status) {
-              let commentList = comments;
-              let detail = {};
-
-              detail._id = global.userDetails._id;
-              detail.profileImg = global.userDetails.profileImg;
-              detail.lastName = global.userDetails.lastName;
-              detail.batch = global.userDetails.batch;
-              detail.firstName = global.userDetails.firstName;
-
-              let item = data.data;
-              item.authorId = detail;
-              commentList.splice(0, 0, item);
-              setComments([...commentList]);
-              onSubmit(true);
-            } else {
-              onSubmit(false);
-            }
-          }
-        }
-      },
-      (code, error) => {
-        onSubmit(false);
-        Toast.show({
-          title: 'Something went wrong',
-          text: error,
-          color: '#f39c12',
-          timing: 3000,
-        });
-      },
-    );
-  };
-
-  const updateUserCommentData = (comment, commentId, index, onSubmit) => {
-    let requestObject = {
-      status: 2,
-      commentText: comment,
-    };
-    updateUserComment(
-      requestObject,
-      commentId,
-      (response) => {
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
-            if (data.status) {
-              let commentList = comments;
-              let item = commentList[index];
-              item.commentText = comment;
-              setComments([...commentList]);
-              onSubmit(true);
-            } else {
-              onSubmit(false);
-            }
-          }
-        }
-      },
-      (code, error) => {
-        console.log('====================================');
-        console.log('error', error, code);
-        console.log('====================================');
-        onSubmit(false);
-        Toast.show({
-          title: 'Something went wrong',
-          text: error,
-          color: '#f39c12',
-          timing: 3000,
-        });
-      },
-    );
-  };
-
-  const deleteUserCommentData = (commentId, index, onSubmit) => {
-    removeUserComment(
-      commentId,
-      (response) => {
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
-            if (data.status) {
-              let commentList = comments;
-
-              commentList.splice(index, 1);
-
-              setComments([...commentList]);
-              onSubmit(true);
-            } else {
-              onSubmit(false);
-            }
-          }
-        }
-      },
-      (code, error) => {
-        console.log('====================================');
-        console.log('error', error, code);
-        console.log('====================================');
-        onSubmit(false);
-        Toast.show({
-          title: 'Something went wrong',
-          text: error,
-          color: '#f39c12',
-          timing: 3000,
-        });
-      },
-    );
-  };
-
-  const removeIndex = (commentId, index, onSubmit) => {
-    Alert.alert(
-      'Are you sure you want to delete it?',
-      '',
-      [
-        {
-          text: 'Cancel',
-          onPress: () => console.log('Cancel Pressed'),
-          style: 'cancel',
-        },
-        {
-          text: 'Ok',
-          onPress: () => {
-            deleteUserCommentData(commentId, index, onSubmit);
-          },
-        },
-      ],
-      {cancelable: false},
     );
   };
 
@@ -350,6 +155,7 @@ const ListingDetails = ({route, navigation}) => {
                           width: scale(20),
                         }}
                         iconSize={scale(20)}
+                        showPlay={true}
                       />
                     ) : pageContent.socialWorkImage !== undefined &&
                       pageContent.socialWorkImage !== null &&
@@ -411,6 +217,9 @@ const ListingDetails = ({route, navigation}) => {
                     tabBarInactiveTextColor={'#bababa'}
                     tabBarTextStyle={style.tabTextStyle}
                     tabBarUnderlineStyle={style.tabBarUnderlineStyle}
+                    onChangeTab={(tab) => {
+                      //console.log('tab', tab);
+                    }}
                     renderTabBar={() => (
                       <ScrollableTabBar style={style.tabBarStyle} />
                     )}>
@@ -420,10 +229,8 @@ const ListingDetails = ({route, navigation}) => {
                     <Tags tabLabel={'Tags'} content={pageContent} />
                     <Comments
                       tabLabel={'Comments'}
-                      content={comments}
-                      postUserComment={postUserComment}
-                      updateUserCommentData={updateUserCommentData}
-                      removeIndex={removeIndex}
+                      workId={filterObject.id}
+                      navigation={navigation}
                     />
                   </ScrollableTabView>
                 </View>
@@ -435,6 +242,31 @@ const ListingDetails = ({route, navigation}) => {
                 </View>
               )}
             </View>
+          )}
+        </View>
+
+        <View
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: scale(125),
+            paddingTop: scale(10),
+            paddingBottom: scale(10),
+            alignContent: 'center',
+            alignSelf: 'center',
+            position: 'absolute',
+            bottom: scale(2),
+          }}>
+          {pageContent !== null && (
+            <CommonButton
+              showLoader={false}
+              title={'Connect'}
+              onPress={() => {
+                navigation.navigate('UserProfile', {
+                  userId: pageContent.createdById,
+                });
+              }}
+            />
           )}
         </View>
       </SafeAreaView>
@@ -473,10 +305,8 @@ const style = StyleSheet.create({
   playIconstyle: {
     position: 'absolute',
     zIndex: 9,
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
+    bottom: 12,
+    left: 12,
     alignSelf: 'center',
     justifyContent: 'center',
     alignItems: 'center',

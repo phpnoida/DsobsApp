@@ -438,6 +438,9 @@ export default {
   txtCenter: {
     textAlign: 'center',
   },
+  txtCenterVertical: {
+    textAlignVertical: 'center',
+  },
   txtRight: {
     textAlign: 'right',
   },

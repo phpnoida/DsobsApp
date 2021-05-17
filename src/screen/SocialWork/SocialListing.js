@@ -22,6 +22,7 @@ import AutoSuggestLocationCompany from '../../component/AutoSuggestLocationCompa
 import {
   getWorkCategory,
   doFitlerSocialWork,
+  doSearchSocialWork,
   searchWorkCategory,
 } from '../../Actions/SocialWorkActions';
 import {URL_REGX} from '../../helper/Constants';
@@ -40,15 +41,12 @@ let filterObject = {
   index: 0,
   size: 10,
 };
-let searchFilter = {
-  index: 0,
-  size: 10,
-  s: '',
-};
+
 let curY = new Animated.Value(0);
 const SocialListing = ({navigation}) => {
   curY = new Animated.Value(0);
   const refCategory = useRef();
+  const flatList = useRef();
 
   const [firstTimeLoad, setFirstTimeLoad] = useState(true);
   const [filterQuery, setFilterQuery] = useState('');
@@ -65,7 +63,6 @@ const SocialListing = ({navigation}) => {
   useEffect(() => {
     searchVal = '';
     categoryListMain = [];
-    resetCount();
 
     const getCategory = () => {
       getWorkCategory(
@@ -98,12 +95,20 @@ const SocialListing = ({navigation}) => {
       );
     };
 
-    if (global.isConnected) {
-      getCategory();
-    }
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (flatList.current !== null && flatList.current !== undefined) {
+        flatList.current.scrollToOffset({x: 0, y: 0, animated: true});
+      }
+      if (global.isConnected) {
+        resetCount();
+        getCategory();
+      }
+    });
 
-    return () => {};
-  }, []);
+    return () => {
+      unsubscribe();
+    };
+  }, [navigation]);
 
   /*****
    *
@@ -111,65 +116,11 @@ const SocialListing = ({navigation}) => {
    *
    */
 
-  const findCategory = () => {
-    searchWorkCategory(
-      searchFilter,
-      (response) => {
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
-            if (data.status) {
-              if (searchVal.length > 0) {
-                let itemList = [];
-                data.data.map((child) => {
-                  itemList.push({id: child, label: child, value: ''});
-                });
-                setSearchCategory([...itemList]);
-              } else {
-                setSearchCategory([]);
-              }
-            }
-          }
-        }
-      },
-      (code, error) => {
-        setSearchCategory([]);
-        console.log('error->', error);
-      },
-    );
-  };
-
   const getSocialWork = () => {
     doFitlerSocialWork(
       filterObject,
       (response) => {
-        setIsRefreshing(false);
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
-
-            if (data.status) {
-              if (filterObject.index === 0) {
-                totalCount = data.totalCount;
-
-                console.log('totalCount', totalCount);
-                setPageContent([...data.data]);
-              } else {
-                setPageContent([...pageContent, ...data.data]);
-              }
-              setPaginationStatus(PaginationStatus.waiting);
-            }
-          }
-        }
-        setFirstTimeLoad(false);
+        manageResponse(response);
       },
       (code, error) => {
         setIsRefreshing(false);
@@ -178,6 +129,30 @@ const SocialListing = ({navigation}) => {
         console.log('error->', error);
       },
     );
+  };
+
+  const manageResponse = (response) => {
+    setIsRefreshing(false);
+    if (response && response !== null) {
+      if (
+        response.data &&
+        response.data !== undefined &&
+        response.data !== null
+      ) {
+        let data = response.data;
+
+        if (data.status) {
+          if (filterObject.index === 0) {
+            totalCount = data.totalCount;
+            setPageContent([...data.data]);
+          } else {
+            setPageContent([...pageContent, ...data.data]);
+          }
+          setPaginationStatus(PaginationStatus.waiting);
+        }
+      }
+    }
+    setFirstTimeLoad(false);
   };
 
   /**
@@ -271,10 +246,20 @@ const SocialListing = ({navigation}) => {
           }}>
           <View style={[g.bgWhite, g.boxShadow, {borderRadius: scale(10)}]}>
             <View style={[g.bggray3, style.backgroundBorder]}>
-              {item.socialWorkVideo !== undefined &&
-              item.socialWorkVideo !== null &&
-              item.socialWorkVideo !== '' &&
-              Helper.validateRegex(urlRegex, item.socialWorkVideo) ? (
+              {item.socialWorkImage !== undefined &&
+              item.socialWorkImage !== null &&
+              item.socialWorkImage !== '' &&
+              Helper.validateRegex(urlRegex, item.socialWorkImage) ? (
+                <ProgressImage
+                  source={{uri: item.socialWorkImage}}
+                  containerStyle={style.imageStyle}
+                  imageStyle={style.imageStyle}
+                  mode={'cover'}
+                />
+              ) : item.socialWorkVideo !== undefined &&
+                item.socialWorkVideo !== null &&
+                item.socialWorkVideo !== '' &&
+                Helper.validateRegex(urlRegex, item.socialWorkVideo) ? (
                 <YoutubeView
                   link={item.socialWorkVideo}
                   containerStyle={style.videoContainer}
@@ -286,16 +271,6 @@ const SocialListing = ({navigation}) => {
                     width: scale(20),
                   }}
                   iconSize={scale(20)}
-                />
-              ) : item.socialWorkImage !== undefined &&
-                item.socialWorkImage !== null &&
-                item.socialWorkImage !== '' &&
-                Helper.validateRegex(urlRegex, item.socialWorkImage) ? (
-                <ProgressImage
-                  source={{uri: item.socialWorkImage}}
-                  containerStyle={style.imageStyle}
-                  imageStyle={style.imageStyle}
-                  mode={'cover'}
                 />
               ) : (
                 <ProgressImage
@@ -405,11 +380,14 @@ const SocialListing = ({navigation}) => {
               searchVal = text;
               setFilterQuery(text);
               if (text.length === 0) {
+                Keyboard.dismiss();
+                setSearchCategory([]);
                 resetCount();
                 getSocialWork();
               } else if (text.length >= 2) {
-                searchFilter.s = text;
-                findCategory();
+                resetCount();
+                filterObject.s = text;
+                getSocialWork();
               }
             }}
             filterQuery={filterQuery}
@@ -471,6 +449,7 @@ const SocialListing = ({navigation}) => {
             ) : (
               <View style={GlobalInclude.AppStyle.fill}>
                 <Animated.FlatList
+                  ref={flatList}
                   showsVerticalScrollIndicator={false}
                   extraData={pageContent}
                   data={pageContent}
