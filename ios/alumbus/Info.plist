@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -24,10 +28,6 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>FirebaseAppDelegateProxyEnabled</key>
 	<false/>
-  <key>BGTaskSchedulerPermittedIdentifiers</key>
-  <array>
-      <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-  </array>
 	<key>FirebaseScreenReportingEnabled</key>
 	<true/>
 	<key>LSApplicationQueriesSchemes</key>
@@ -49,10 +49,14 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Take pictures for certain activities</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Need microphone access for recording videos</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>$(PRODUCT_NAME) would like access to your photo gallery to upload profile picture in $(PRODUCT_NAME) don't worry we are saving your picture in secure place and will not upload anywere without authorization.</string>
+	<string>Select pictures for certain activities</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Font AwesomeFreeSolid-900.ttf</string>
@@ -111,11 +115,5 @@
 	<string>Light</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-  <key>NSCameraUsageDescription</key>
-  <string>Take pictures for certain activities</string>
-  <key>NSPhotoLibraryUsageDescription</key>
-  <string>Select pictures for certain activities</string>
-  <key>NSMicrophoneUsageDescription</key>
-  <string>Need microphone access for recording videos</string>
 </dict>
 </plist>

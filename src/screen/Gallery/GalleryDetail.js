@@ -20,7 +20,7 @@ import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
-import {IconType} from '../../helper/Constants';
+import {IconType, APP_NAME} from '../../helper/Constants';
 import HeaderBar from '../../component/HeaderBar';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
 import ProgresImage from '../../component/ProgresImage';
@@ -49,7 +49,7 @@ let imageArray = [];
 let reportText = '';
 
 const GalleryDetail = ({route, navigation}) => {
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState(APP_NAME);
   const [data, setData] = useState([]);
   const [imageData, setImageData] = useState(null);
   const [lastIndex, setIastIndex] = useState(0);
@@ -312,29 +312,25 @@ const GalleryDetail = ({route, navigation}) => {
       },
     };
     console.log(file);
-    if (Platform.OS === 'android') {
-      config(downloadOptions)
-        .fetch('GET', file)
-        .then((res) => {
-          // do some magic here
-          console.log('res', res);
-          selectedId = '';
-          responseMessage = 'Image Downloaded Successfully!';
-          setIsDownloading(false);
-          setShowModal(true);
+    config(downloadOptions)
+      .fetch('GET', file)
+      .then((res) => {
+        // do some magic here
+        console.log('res', res);
+        selectedId = '';
+        responseMessage = 'Image Downloaded Successfully!';
+        setIsDownloading(false);
+        setShowModal(true);
 
-          setTimeout(() => {
-            setShowModal(false);
-          }, 2000);
-        })
-        .catch(() => {
-          responseMessage = 'Error while downloading content!';
-          setIsDownloading(false);
-          setShowModal(true);
-        });
-    } else {
-      CameraRoll.saveToCameraRoll(file, 'photo');
-    }
+        setTimeout(() => {
+          setShowModal(false);
+        }, 2000);
+      })
+      .catch(() => {
+        responseMessage = 'Error while downloading content!';
+        setIsDownloading(false);
+        setShowModal(true);
+      });
   };
 
   /**
@@ -439,321 +435,313 @@ const GalleryDetail = ({route, navigation}) => {
     return componentArray;
   };
 
-  return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
-      <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
-        <View style={GlobalInclude.AppStyle.fill}>
-          {isFetching ? (
-            <View style={GlobalInclude.AppStyle.fillCenter}>
-              <ActivityIndicator size={'small'} color={'#2b3252'} />
-            </View>
-          ) : (
-            <View style={GlobalInclude.AppStyle.fill}>
-              <HeaderBar
-                navigation={navigation}
-                showBack={true}
-                title={title}
-                showLabel={true}
-                label={'Tag'}
-                onLabelPress={() => {
+  const showOptionsList = () => {
+    return (
+      <OptionsSheet
+        ref={(ref) => {
+          optionsSheet = ref;
+        }}
+        onClose={() => {}}
+        minClosingHeight={50}
+        height={270}
+        duration={200}
+        closeOnDragDown={true}
+        customStyles={{
+          container: {
+            backgroundColor: '#fff',
+            borderTopLeftRadius: 30,
+            borderTopRightRadius: 30,
+            paddingStart: scale(15),
+            paddingEnd: scale(15),
+            paddingTop: scale(10),
+          },
+        }}>
+        <View stylre={[grid.flex1, g.mb10]}>
+          <View
+            style={[
+              g.bb1,
+              {borderBottomColor: '#e5e5e5', padding: 15, paddingLeft: 0},
+            ]}>
+            <TouchableOpacity
+              activeOpacity={1}
+              style={[grid.rowdir, grid.alignItems]}
+              onPress={() => {
+                optionsSheet.close();
+                setTimeout(() => {
                   let payload = {
                     id: imageData._id,
                     imageKey: imageData.imageKey,
                     userTag: imageData.userTag,
                   };
                   navigation.navigate('TagUser', payload);
-                }}
+                }, 200);
+              }}>
+              <GlobalInclude.BaseIcon
+                containerStyle={{height: scale(20), width: scale(20)}}
+                iconColor={'#2b3252'}
+                iconName={'tag'}
+                iconSize={scale(20)}
+                iconType={IconType[4]}
               />
-              {imageData === null ? (
-                <View style={GlobalInclude.AppStyle.center}>
-                  <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
-                    No Record Found
-                  </Text>
-                </View>
-              ) : (
-                <View style={GlobalInclude.AppStyle.fill}>
-                  <OrientationLocker
-                    orientation={PORTRAIT}
-                    onChange={(orientation) =>
-                      console.log('onChange', orientation)
-                    }
-                    onDeviceChange={(orientation) =>
-                      console.log('onDeviceChange', orientation)
-                    }
-                  />
-                  <ScrollView
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{flexGrow: 1}}>
-                    <TouchableOpacity
-                      onPress={() => {
-                        setTimeout(() => {
-                          openImage();
-                        }, 200);
-                      }}>
-                      <ProgresImage
-                        source={{uri: imageData.imagesLink}}
-                        containerStyle={{
-                          aspectRatio: 16 / 9,
-                          width: imageWidth,
-                        }}
-                        imageStyle={{
-                          aspectRatio: 16 / 9,
-                          width: imageWidth,
-                        }}
-                        mode={'contain'}
-                      />
-                    </TouchableOpacity>
+              <Text
+                style={[
+                  {marginLeft: 15, fontSize: 16},
+                  g.FHNR,
+                  g.colordarkGray,
+                ]}>
+                {'Tag People'}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-                    {imageData.about !== undefined &&
-                    imageData.about !== null &&
-                    imageData.about !== '' ? (
-                      <Text
-                        style={[g.fs14, g.FHNR, g.colorGray1, g.p15, g.pt5]}>
-                        {imageData.about}
-                      </Text>
-                    ) : (
-                      <Text
-                        style={[g.fs14, g.FHNR, g.colorGray1, g.p15, g.pt5]}>
-                        No information Found
-                      </Text>
-                    )}
+          <View
+            style={[
+              g.bb1,
+              {borderBottomColor: '#e5e5e5', padding: 15, paddingLeft: 0},
+            ]}>
+            <TouchableOpacity
+              activeOpacity={1}
+              style={[grid.rowdir, grid.alignItems]}
+              onPress={() => {
+                optionsSheet.close();
+                console.log('imageData', JSON.stringify(imageData));
+                setTimeout(() => {
+                  let payload = {
+                    id: imageData._id,
+                    imageKey: imageData.imageKey,
+                    about: imageData.about,
+                    category: imageData.category,
+                    year: imageData.year,
+                  };
+                  navigation.navigate('AboutPhoto', payload);
+                }, 200);
+              }}>
+              <GlobalInclude.BaseIcon
+                containerStyle={{height: scale(20), width: scale(20)}}
+                iconColor={'#2b3252'}
+                iconName={'info-circle'}
+                iconSize={scale(20)}
+                iconType={IconType[4]}
+              />
+              <Text
+                style={[
+                  {marginLeft: 15, fontSize: 16},
+                  g.FHNR,
+                  g.colordarkGray,
+                ]}>
+                {'About The Photo'}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-                    <View style={[g.p15, g.pt0, grid.flex1]}>
-                      <View
+          <View
+            style={[
+              g.bb1,
+              {borderBottomColor: '#e5e5e5', padding: 15, paddingLeft: 0},
+            ]}>
+            <TouchableOpacity
+              activeOpacity={1}
+              style={[grid.rowdir, grid.alignItems]}
+              onPress={() => {
+                optionsSheet.close();
+                if (!isDownloading) {
+                  selectedId = imageData._id;
+                  _downloadContent(imageData.imagesLink);
+                }
+              }}>
+              <GlobalInclude.BaseIcon
+                containerStyle={{height: scale(20), width: scale(20)}}
+                iconColor={'#2b3252'}
+                iconName={'download'}
+                iconSize={scale(20)}
+                iconType={IconType[4]}
+              />
+              <Text
+                style={[
+                  {marginLeft: 15, fontSize: 16},
+                  g.FHNR,
+                  g.colordarkGray,
+                ]}>
+                {'Download Photo'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={{padding: 15, paddingLeft: 0}}>
+            <TouchableOpacity
+              activeOpacity={1}
+              style={[grid.rowdir, grid.alignItems]}
+              onPress={() => {
+                optionsSheet.close();
+                setTimeout(() => {
+                  setShowReportModal(true);
+                }, 500);
+              }}>
+              <GlobalInclude.BaseIcon
+                containerStyle={{height: scale(20), width: scale(20)}}
+                iconColor={'#2b3252'}
+                iconName={'exclamationcircleo'}
+                iconSize={scale(20)}
+                iconType={IconType[10]}
+              />
+              <Text
+                style={[
+                  {marginLeft: 15, fontSize: 16},
+                  g.FHNR,
+                  g.colordarkGray,
+                ]}>
+                {'Report Photo'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </OptionsSheet>
+    );
+  };
+
+  return (
+    <View style={GlobalInclude.AppStyle.fill}>
+      <HeaderBar
+        navigation={navigation}
+        showBack={true}
+        title={title}
+        showLabel={true}
+        label={'Tag'}
+        onLabelPress={() => {
+          let payload = {
+            id: imageData._id,
+            imageKey: imageData.imageKey,
+            userTag: imageData.userTag,
+          };
+          navigation.navigate('TagUser', payload);
+        }}
+      />
+      <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
+        {isFetching ? (
+          <View style={GlobalInclude.AppStyle.fillCenter}>
+            <ActivityIndicator size={'small'} color={'#2b3252'} />
+          </View>
+        ) : (
+          <View style={GlobalInclude.AppStyle.fill}>
+            {imageData === null ? (
+              <View style={GlobalInclude.AppStyle.center}>
+                <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
+                  No Record Found
+                </Text>
+              </View>
+            ) : (
+              <View style={GlobalInclude.AppStyle.fill}>
+                <OrientationLocker
+                  orientation={PORTRAIT}
+                  onChange={(orientation) =>
+                    console.log('onChange', orientation)
+                  }
+                  onDeviceChange={(orientation) =>
+                    console.log('onDeviceChange', orientation)
+                  }
+                />
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={{flexGrow: 1}}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setTimeout(() => {
+                        openImage();
+                      }, 200);
+                    }}>
+                    <ProgresImage
+                      source={{uri: imageData.imagesLink}}
+                      containerStyle={{
+                        aspectRatio: 16 / 9,
+                        width: imageWidth,
+                      }}
+                      imageStyle={{
+                        aspectRatio: 16 / 9,
+                        width: imageWidth,
+                      }}
+                      mode={'contain'}
+                    />
+                  </TouchableOpacity>
+
+                  {imageData.about !== undefined &&
+                  imageData.about !== null &&
+                  imageData.about !== '' ? (
+                    <Text style={[g.fs14, g.FHNR, g.colorGray1, g.p15, g.pt5]}>
+                      {imageData.about}
+                    </Text>
+                  ) : (
+                    <Text style={[g.fs14, g.FHNR, g.colorGray1, g.p15, g.pt5]}>
+                      No information Found
+                    </Text>
+                  )}
+
+                  <View style={[g.p15, g.pt0, grid.flex1]}>
+                    <View
+                      style={[
+                        grid.rowrow,
+                        grid.alignItems,
+                        grid.justifyContentCenter,
+                        grid.justifyContent,
+                        g.mb10,
+                      ]}>
+                      <Text
                         style={[
-                          grid.rowrow,
+                          g.fs16,
+                          g.FHNB,
+                          g.colordarkGray,
+                          g.ml10,
                           grid.alignItems,
                           grid.justifyContentCenter,
-                          grid.justifyContent,
-                          g.mb10,
+                          g.txtCenter,
                         ]}>
-                        <Text
-                          style={[
-                            g.fs16,
-                            g.FHNB,
-                            g.colordarkGray,
-                            g.ml10,
-                            grid.alignItems,
-                            grid.justifyContentCenter,
-                            g.txtCenter,
-                          ]}>
-                          People in the image
-                        </Text>
-                        <TouchableOpacity
-                          activeOpacity={0.8}
-                          onPress={() => {
-                            if (optionsSheet !== null) {
-                              optionsSheet.open();
-                            }
-                          }}>
-                          <Image
-                            source={GlobalInclude.Assets.Menu}
-                            style={styles.back}
-                            resizeMode="contain"
-                          />
-                        </TouchableOpacity>
-                      </View>
-                      {imageData.userTag !== undefined &&
-                      imageData.userTag !== null &&
-                      imageData.userTag.length > 0 ? (
-                        <View style={[grid.row, g.mt10, grid.flexwrap]}>
-                          {showTaggedUsers(imageData.userTag)}
-                        </View>
-                      ) : (
-                        <View style={GlobalInclude.AppStyle.fillCenter}>
-                          <Text
-                            style={[
-                              g.colorBlack,
-                              g.FHNM,
-                              g.fs12,
-                              g.textCenter,
-                            ]}>
-                            No people tagged in photo
-                          </Text>
-                        </View>
-                      )}
+                        People in the image
+                      </Text>
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          if (optionsSheet !== null) {
+                            optionsSheet.open();
+                          }
+                        }}>
+                        <Image
+                          source={GlobalInclude.Assets.Menu}
+                          style={styles.back}
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
                     </View>
-                  </ScrollView>
-                </View>
-              )}
-            </View>
-          )}
-        </View>
-
-        <OptionsSheet
-          ref={(ref) => {
-            optionsSheet = ref;
-          }}
-          onClose={() => {}}
-          minClosingHeight={50}
-          height={270}
-          duration={200}
-          closeOnDragDown={true}
-          customStyles={{
-            container: {
-              backgroundColor: '#fff',
-              borderTopLeftRadius: 30,
-              borderTopRightRadius: 30,
-              paddingStart: scale(15),
-              paddingEnd: scale(15),
-              paddingTop: scale(10),
-            },
-          }}>
-          <View stylre={[grid.flex1, g.mb10]}>
-            <View
-              style={[
-                g.bb1,
-                {borderBottomColor: '#e5e5e5', padding: 15, paddingLeft: 0},
-              ]}>
-              <TouchableOpacity
-                activeOpacity={1}
-                style={[grid.rowdir, grid.alignItems]}
-                onPress={() => {
-                  optionsSheet.close();
-                  setTimeout(() => {
-                    let payload = {
-                      id: imageData._id,
-                      imageKey: imageData.imageKey,
-                      userTag: imageData.userTag,
-                    };
-                    navigation.navigate('TagUser', payload);
-                  }, 200);
-                }}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={{height: scale(20), width: scale(20)}}
-                  iconColor={'#2b3252'}
-                  iconName={'tag'}
-                  iconSize={scale(20)}
-                  iconType={IconType[4]}
-                />
-                <Text
-                  style={[
-                    {marginLeft: 15, fontSize: 16},
-                    g.FHNR,
-                    g.colordarkGray,
-                  ]}>
-                  {'Tag People'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <View
-              style={[
-                g.bb1,
-                {borderBottomColor: '#e5e5e5', padding: 15, paddingLeft: 0},
-              ]}>
-              <TouchableOpacity
-                activeOpacity={1}
-                style={[grid.rowdir, grid.alignItems]}
-                onPress={() => {
-                  optionsSheet.close();
-                  console.log('imageData', JSON.stringify(imageData));
-                  setTimeout(() => {
-                    let payload = {
-                      id: imageData._id,
-                      imageKey: imageData.imageKey,
-                      about: imageData.about,
-                      category: imageData.category,
-                      year: imageData.year,
-                    };
-                    navigation.navigate('AboutPhoto', payload);
-                  }, 200);
-                }}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={{height: scale(20), width: scale(20)}}
-                  iconColor={'#2b3252'}
-                  iconName={'info-circle'}
-                  iconSize={scale(20)}
-                  iconType={IconType[4]}
-                />
-                <Text
-                  style={[
-                    {marginLeft: 15, fontSize: 16},
-                    g.FHNR,
-                    g.colordarkGray,
-                  ]}>
-                  {'About The Photo'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <View
-              style={[
-                g.bb1,
-                {borderBottomColor: '#e5e5e5', padding: 15, paddingLeft: 0},
-              ]}>
-              <TouchableOpacity
-                activeOpacity={1}
-                style={[grid.rowdir, grid.alignItems]}
-                onPress={() => {
-                  optionsSheet.close();
-                  if (!isDownloading) {
-                    selectedId = imageData._id;
-                    _downloadContent(imageData.imagesLink);
-                  }
-                }}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={{height: scale(20), width: scale(20)}}
-                  iconColor={'#2b3252'}
-                  iconName={'download'}
-                  iconSize={scale(20)}
-                  iconType={IconType[4]}
-                />
-                <Text
-                  style={[
-                    {marginLeft: 15, fontSize: 16},
-                    g.FHNR,
-                    g.colordarkGray,
-                  ]}>
-                  {'Download Photo'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={{padding: 15, paddingLeft: 0}}>
-              <TouchableOpacity
-                activeOpacity={1}
-                style={[grid.rowdir, grid.alignItems]}
-                onPress={() => {
-                  optionsSheet.close();
-                  setShowReportModal(true);
-                }}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={{height: scale(20), width: scale(20)}}
-                  iconColor={'#2b3252'}
-                  iconName={'exclamationcircleo'}
-                  iconSize={scale(20)}
-                  iconType={IconType[10]}
-                />
-                <Text
-                  style={[
-                    {marginLeft: 15, fontSize: 16},
-                    g.FHNR,
-                    g.colordarkGray,
-                  ]}>
-                  {'Report Photo'}
-                </Text>
-              </TouchableOpacity>
-            </View>
+                    {imageData.userTag !== undefined &&
+                    imageData.userTag !== null &&
+                    imageData.userTag.length > 0 ? (
+                      <View style={[grid.row, g.mt10, grid.flexwrap]}>
+                        {showTaggedUsers(imageData.userTag)}
+                      </View>
+                    ) : (
+                      <View style={GlobalInclude.AppStyle.fillCenter}>
+                        <Text
+                          style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
+                          No people tagged in photo
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </ScrollView>
+              </View>
+            )}
           </View>
-        </OptionsSheet>
+        )}
       </SafeAreaView>
 
+      {/* report */}
       <Modal
         transparent={true}
-        visible={showReportModal}
         animationType="fade"
-        statusBarTranslucent
+        supportedOrientations={['landscape', 'portrait']}
         onRequestClose={() => {
           setShowReportModal(false);
-        }}>
-        <ScrollView
-          contentContainerStyle={[
-            g.bgBlack,
-            grid.flex1,
-            g.p15,
-            {paddingTop: '25%'},
-          ]}>
+        }}
+        visible={showReportModal}>
+        <View style={[g.bgBlack, grid.flex1, g.p15, {paddingTop: '25%'}]}>
           <View style={grid.col}>
             <View style={[g.bgWhite, g.p15, g.br3]}>
               <View style={[grid.rowdir, grid.alignItems]}>
@@ -812,8 +800,10 @@ const GalleryDetail = ({route, navigation}) => {
               </View>
             </View>
           </View>
-        </ScrollView>
+        </View>
       </Modal>
+
+      {showOptionsList()}
 
       {/* image slider modal */}
       <Modal
@@ -826,20 +816,21 @@ const GalleryDetail = ({route, navigation}) => {
         visible={showImageModal}>
         <View style={styles.modalView}>
           <View
-            style={{
-              position: 'absolute',
-              zIndex: 9,
-              top: scale(10),
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}>
+            style={[
+              GlobalInclude.AppStyle.space,
+              {
+                position: 'absolute',
+                zIndex: 9,
+                flexDirection: 'row',
+                alignItems: 'center',
+              },
+            ]}>
             <View
               style={{
                 justifyContent: 'flex-start',
                 alignItems: 'flex-start',
                 alignSelf: 'center',
                 flexDirection: 'row',
-                justifyContent: 'center',
                 marginStart: scale(15),
                 flex: 1,
               }}>

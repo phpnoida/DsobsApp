@@ -561,6 +561,7 @@ const Login = ({navigation}) => {
                   onChangeText={(otp) => (otpInput = otp)}
                   placeholder="Enter OTP here"
                   placeholderTextColor={'#ddd'}
+                  textContentType={'oneTimeCode'}
                 />
                 {errorMessage.otp && errorMessage.otp.length > 0 && (
                   <Text style={[g.errorMsg, g.fs12, {marginTop: scale(5)}]}>

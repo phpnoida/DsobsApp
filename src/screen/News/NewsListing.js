@@ -608,15 +608,25 @@ const NewsListing = ({navigation}) => {
             mode={'cover'}
           />
           <View style={g.p10}>
+            {item.users !== undefined &&
+              item.users !== null &&
+              item.users.length > 0 && (
+                <Text style={[g.colorGray2, g.fs14, g.FHNR]} numberOfLines={1}>
+                  {`${Helper.concatName(item.users[0])} (${
+                    item.users[0].batch
+                  })`}
+                </Text>
+              )}
             {item.title ? (
-              <Text style={[g.colorBlack, g.fs16, g.FHNB]} numberOfLines={2}>
+              <Text
+                style={[g.colorBlack, g.fs15, g.FHNB, g.mt5, g.mb5]}
+                numberOfLines={2}>
                 {item.title}
               </Text>
             ) : null}
+
             {item.desc ? (
-              <Text
-                style={[g.colorBlack, g.fs16, g.FHNR, g.mt5]}
-                numberOfLines={2}>
+              <Text style={[g.colorBlack, g.fs13, g.FHNR]} numberOfLines={2}>
                 {item.desc}
               </Text>
             ) : null}
@@ -627,26 +637,26 @@ const NewsListing = ({navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
+    <View style={GlobalInclude.AppStyle.fill}>
+      <TopHeaderView
+        index={2}
+        navigation={navigation}
+        label={'Post News'}
+        showLabel={true}
+        onLabelPress={() => {
+          searchVal = '';
+          setSearchedUser([]);
+          setSelectedUsers([]);
+          setSearchUserQuery('');
+          setShowAddPostModal(true);
+        }}
+      />
       <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
         <View
           style={[
             GlobalInclude.AppStyle.fill,
             GlobalInclude.AppStyle.contentSpace,
           ]}>
-          <TopHeaderView
-            index={2}
-            navigation={navigation}
-            label={'Post News'}
-            showLabel={true}
-            onLabelPress={() => {
-              searchVal = '';
-              setSearchedUser([]);
-              setSelectedUsers([]);
-              setSearchUserQuery('');
-              setShowAddPostModal(true);
-            }}
-          />
           <View style={[grid.rowdir, g.mb15, g.mt10]}>
             <View style={[g.br3, grid.col, g.mr5]}>
               <View style={[g.inputNew, grid.rowdir]}>

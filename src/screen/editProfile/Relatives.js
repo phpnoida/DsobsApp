@@ -20,10 +20,11 @@ import EditLinksExperience from '../../component/EditLinksExperience';
 import {searchUser} from '../../Actions/UserActions';
 import NextPreviousButton from '../../component/NextPreviousButton';
 import {updateUserProfile} from '../../Actions/UserActions';
+import Helpers from '../../helper/Helper';
 
 var lastSelectedIndex = -1;
 let responseMessage = '';
-
+let selectedUser = null;
 const Relatives = (props) => {
   const {profileData} = props;
 
@@ -111,9 +112,14 @@ const Relatives = (props) => {
       setErrorMessage({relativeName: 'This field is required'});
     } else {
       let object = {
+        _id: selectedUser._id,
         relativeName: relativeName,
         relationship: relationship,
         relativeProfileImg: profileImg,
+        batch: selectedUser.batch,
+        house: selectedUser.house,
+        section: selectedUser.section,
+        schoolNumber: selectedUser.schoolNumber,
       };
 
       if (updateMode) {
@@ -125,6 +131,7 @@ const Relatives = (props) => {
         oldData.push(object);
         setMyRelatives([...oldData]);
       }
+      selectedUser = null;
       setIsEdit(false);
       setErrorMessage({});
       setRelativeName('');
@@ -140,23 +147,6 @@ const Relatives = (props) => {
     let oldData = myRelatives;
     oldData.splice(lastSelectedIndex, 1);
     setMyRelatives([...oldData]);
-  };
-
-  const concatName = (item) => {
-    let fullName = '';
-
-    if (
-      item.firstName &&
-      item.firstName !== undefined &&
-      item.firstName !== ''
-    ) {
-      fullName += item.firstName;
-    }
-
-    if (item.lastName && item.lastName !== undefined && item.lastName !== '') {
-      fullName += ' ' + item.lastName;
-    }
-    return fullName;
   };
 
   /**
@@ -216,7 +206,8 @@ const Relatives = (props) => {
           activeOpacity={1}
           style={styles.suggestionContainer}
           onPress={() => {
-            setRelativeName(concatName(row));
+            selectedUser = row;
+            setRelativeName(Helpers.concatName(row));
             setProfileImg(row.profileImg);
             setSearchedUser([]);
           }}>
@@ -227,7 +218,7 @@ const Relatives = (props) => {
               resizeMode={'contain'}
             />
           </View>
-          <Text style={styles.userName}>{concatName(row)}</Text>
+          <Text style={styles.userName}>{Helpers.concatName(row)}</Text>
           {row.batch ? (
             <Text style={[g.fs12, g.colorBlack, g.FHNR, {margin: scale(2)}]}>
               {row.batch}

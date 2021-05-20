@@ -5,6 +5,12 @@ import {scale} from './Scalling';
 import Color from '../theme/Colors';
 
 export default StyleSheet.create({
+  space: {
+    position: 'absolute',
+    top:
+      Platform.OS === 'android' ? scale(15) : getStatusBarHeight() + scale(10),
+    flexDirection: 'row',
+  },
   closeSpace: {
     position: 'absolute',
     right: scale(10),
@@ -25,6 +31,11 @@ export default StyleSheet.create({
     paddingStart: scale(15),
     paddingEnd: scale(15),
     paddingTop: scale(15),
+  },
+  buttonSpace: {
+    paddingStart: scale(15),
+    paddingEnd: scale(15),
+    paddingBottom: scale(15),
   },
   ViewStyle: {
     flex: 1,

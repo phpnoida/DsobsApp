@@ -66,13 +66,13 @@ const AboutYellowPage = ({navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
-      <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
-        <HeaderBar
-          title={'About Yellow Pages'}
-          navigation={navigation}
-          showBack={true}
-        />
+    <View style={GlobalInclude.AppStyle.fill}>
+      <HeaderBar
+        title={'About Yellow Pages'}
+        navigation={navigation}
+        showBack={true}
+      />
+      <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
         {isLoading ? (
           <View style={GlobalInclude.AppStyle.fillCenter}>
             <ActivityIndicator size={'small'} color={'#2b3252'} />

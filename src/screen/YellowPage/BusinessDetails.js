@@ -101,9 +101,30 @@ const BusinessDetails = ({route, navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
-      <SafeAreaView style={GlobalInclude.AppStyle.fill}>
-        <View style={GlobalInclude.AppStyle.parentStyle}>
+    <View style={GlobalInclude.AppStyle.fill}>
+      <HeaderBar
+        title={
+          pageContent !== null &&
+          pageContent.businessName &&
+          pageContent.businessName !== undefined &&
+          pageContent.businessName !== null
+            ? pageContent.businessName
+            : 'N/A'
+        }
+        navigation={navigation}
+        customIcon={{
+          containerStyle: {height: scale(30), width: scale(30)},
+          iconColor: '#2b3252',
+          iconName: 'keyboard-backspace',
+          size: scale(30),
+          type: IconType[1],
+        }}
+        customIconPress={() => {
+          navigation.goBack();
+        }}
+      />
+      <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
+        <View style={[GlobalInclude.AppStyle.fill]}>
           {isLoading ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
               <ActivityIndicator size={'small'} color={'#2b3252'} />
@@ -112,26 +133,6 @@ const BusinessDetails = ({route, navigation}) => {
             <View style={GlobalInclude.AppStyle.fill}>
               {pageContent !== null ? (
                 <View style={GlobalInclude.AppStyle.fill}>
-                  <HeaderBar
-                    title={
-                      pageContent.businessName &&
-                      pageContent.businessName !== undefined &&
-                      pageContent.businessName !== null
-                        ? pageContent.businessName
-                        : 'N/A'
-                    }
-                    navigation={navigation}
-                    customIcon={{
-                      containerStyle: {height: scale(30), width: scale(30)},
-                      iconColor: '#2b3252',
-                      iconName: 'keyboard-backspace',
-                      size: scale(30),
-                      type: IconType[1],
-                    }}
-                    customIconPress={() => {
-                      navigation.goBack();
-                    }}
-                  />
                   <View style={[g.bggray3, g.mt15, g.ml10, g.mr10]}>
                     {pageContent.coverImages &&
                     pageContent.coverImages !== null &&

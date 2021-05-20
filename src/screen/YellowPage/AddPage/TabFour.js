@@ -6,6 +6,7 @@ import GlobalInclude from '../../../globalInclude/Globalinclude';
 import NextPreviousButton from '../../../component/NextPreviousButton';
 import UploadMedia from '../../../component/UploadMedia';
 import {loadMedia} from '../../../component/MediaComponent';
+import {uploadMediaButton} from '../../../component/Common';
 
 const TabFour = ({
   onSaveTab,
@@ -38,38 +39,11 @@ const TabFour = ({
           showsVerticalScrollIndicator={false}>
           <View>
             <View style={g.mb15}>
-              <TouchableOpacity
-                style={grid.rowdir}
-                onPress={() => {
-                  if (uploadRef.current !== null) {
-                    uploadRef.current.open();
-                  }
-                }}
-                activeOpacity={0.7}>
-                <View
-                  style={[
-                    g.bglightGray,
-                    grid.col,
-                    g.mr10,
-                    {padding: 15, borderRadius: 10},
-                  ]}>
-                  <Text style={[g.fs16, g.FHNR, g.colorLightGray]}>
-                    Upload Media
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    g.p15,
-                    g.bglightGray,
-                    {width: 50, height: 50, borderRadius: 10},
-                  ]}>
-                  <Image
-                    source={GlobalInclude.Assets.UploadIcon}
-                    resizeMode="contain"
-                    style={[g.w20, {height: 23}]}
-                  />
-                </View>
-              </TouchableOpacity>
+              {uploadMediaButton(() => {
+                if (uploadRef.current !== null) {
+                  uploadRef.current.open();
+                }
+              })}
             </View>
 
             {/* media data */}

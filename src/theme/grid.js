@@ -76,7 +76,7 @@ export default {
   },
 
   c2: {
-    width: '48%',
+    width: '47.5%',
     margin: '1%',
   },
 

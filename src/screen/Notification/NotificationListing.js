@@ -330,13 +330,13 @@ const NotificationListing = ({navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
-      <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
-        <HeaderBar
-          navigation={navigation}
-          title={'NOTIFICATIONS'}
-          showBack={true}
-        />
+    <View style={GlobalInclude.AppStyle.fill}>
+      <HeaderBar
+        navigation={navigation}
+        title={'NOTIFICATIONS'}
+        showBack={true}
+      />
+      <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
         <View
           style={[
             GlobalInclude.AppStyle.fill,

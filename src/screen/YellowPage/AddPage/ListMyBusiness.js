@@ -13,7 +13,6 @@ import TabTwo from './TabTwo';
 import TabThree from './TabThree';
 import TabFour from './TabFour';
 import TabFive from './TabFive';
-import Toast from '../../../component/Toast';
 import {getDirectory} from '../../../Actions/DirectoryActions';
 import {doSearchCity, uploadMedia} from '../../../Actions/CommonActions';
 import {getProfessionList} from '../../../Actions/UserActions';
@@ -220,12 +219,7 @@ const ListMyBusiness = ({route, navigation}) => {
       },
       (statusCode, message) => {
         setIsLoading(false);
-        Toast.show({
-          title: 'Error while uploading',
-          text: message,
-          color: '#f39c12',
-          timing: 3000,
-        });
+        Alert.alert('Error while uploading', message);
       },
     );
   };
@@ -292,7 +286,29 @@ const ListMyBusiness = ({route, navigation}) => {
       images: mediaData,
       videos: [],
       docs: [],
-      editors: [],
+      editors: [
+        {
+          profileImg: global.userDetails.profileImg,
+          lastName: global.userDetails.lastName,
+          countryCode: global.userDetails.countryCode,
+          profession: global.userDetails.profession,
+          designation: global.userDetails.designation,
+          schoolNumber: global.userDetails.schoolNumber,
+          batch: global.userDetails.batch,
+          house: global.userDetails.house,
+          section: global.userDetails.section,
+          status: global.userDetails.status,
+          lastseen: global.userDetails.lastseen,
+          deviceType: global.userDetails.deviceType,
+          deviceTypeTxt: global.userDetails.deviceTypeTxt,
+          deviceModelNumber: global.userDetails.deviceModelNumber,
+          _id: global.userDetails._id,
+          firstName: global.userDetails.firstName,
+          email: global.userDetails.email,
+          phone: global.userDetails.phone,
+          name: global.userDetails.name,
+        },
+      ],
       alumniInBusiness: selectedUser,
       amountReceived: 0,
       amountDateOfRecived: 0,
@@ -456,10 +472,10 @@ const ListMyBusiness = ({route, navigation}) => {
       }
        */
     } else if (step === 3) {
-      if (selectedUser.length === 0) {
+      /*if (selectedUser.length === 0) {
         setErrorMessage({selectedAlumini: 'This field is required'});
         return;
-      }
+      }*/
     } else if (step === 5) {
       /**
        * else if (designation.trim() === '') {
@@ -505,6 +521,7 @@ const ListMyBusiness = ({route, navigation}) => {
   };
 
   const handleInput = (key, value) => {
+    setErrorMessage({});
     if (key === 'businessName') {
       setBusinessName(value);
     } else if (key === 'businessLocation') {
@@ -582,6 +599,7 @@ const ListMyBusiness = ({route, navigation}) => {
               searchProfession(search);
             }}
             onPreofessionSelect={(profession) => {
+              setErrorMessage({});
               setSelectedProfession(profession);
               setProfessionList([...professionListMain]);
             }}
@@ -603,6 +621,7 @@ const ListMyBusiness = ({route, navigation}) => {
             setSelectedCities={(city, countryCode) => {
               let oldData = selectedCities;
               oldData.push(`${Helper.capitalize(city)} (${countryCode})`);
+              setErrorMessage({});
               setSelectedCities([...oldData]);
             }}
             onRemoveCity={(index) => {
@@ -633,12 +652,7 @@ const ListMyBusiness = ({route, navigation}) => {
             productTags={productTags}
             addTag={() => {
               if (tag.trim() === '') {
-                Toast.show({
-                  title: 'Tag Required',
-                  text: 'Tag is required',
-                  color: '#f39c12',
-                  timing: 3000,
-                });
+                Alert.alert('Tag Required', 'Tag is required');
               } else {
                 Keyboard.dismiss();
                 let oldData = productTags;
@@ -650,12 +664,7 @@ const ListMyBusiness = ({route, navigation}) => {
                   delete msg.tag;
                   setErrorMessage(msg);
                 } else {
-                  Toast.show({
-                    title: 'Duplicate Tag',
-                    text: 'Tag is Already Exists',
-                    color: '#f39c12',
-                    timing: 3000,
-                  });
+                  Alert.alert('Duplicate Tag', 'Tag is Already Exists');
                 }
               }
             }}
@@ -688,6 +697,7 @@ const ListMyBusiness = ({route, navigation}) => {
             onUserSelect={(row, index) => {
               let oldData = selectedUser;
               oldData.push(row);
+              setErrorMessage({});
               setSelectedUser([...oldData]);
               setSearchUserName('');
               setSearchedUser([]);
@@ -740,15 +750,15 @@ const ListMyBusiness = ({route, navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
-      <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
-        <HeaderBar
-          title={
-            inEditMode ? `Edit ${setDefaultBusinessName}` : 'List My Business'
-          }
-          navigation={navigation}
-          showBack={true}
-        />
+    <View style={GlobalInclude.AppStyle.fill}>
+      <HeaderBar
+        title={
+          inEditMode ? `Edit ${setDefaultBusinessName}` : 'List My Business'
+        }
+        navigation={navigation}
+        showBack={true}
+      />
+      <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
         <View style={GlobalInclude.AppStyle.fill}>{loadTab(step)}</View>
       </SafeAreaView>
       {isLoading && (

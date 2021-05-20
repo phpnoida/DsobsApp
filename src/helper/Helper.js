@@ -407,6 +407,35 @@ const Helpers = {
       return 'N/A';
     }
   },
+  showUserSchoolDetail: function (item) {
+    let title = '';
+
+    if (
+      item.schoolNumber !== undefined &&
+      item.schoolNumber !== null &&
+      item.schoolNumber !== ''
+    ) {
+      title += item.schoolNumber + ' ';
+    }
+
+    if (item.house !== undefined && item.house !== null && item.house !== '') {
+      title += item.house + ' ';
+    }
+
+    if (
+      item.section !== undefined &&
+      item.section !== null &&
+      item.section !== ''
+    ) {
+      title += item.section + ' ';
+    }
+
+    if (item.batch !== undefined && item.batch !== null && item.batch !== '') {
+      title += item.batch;
+    }
+
+    return title;
+  },
 };
 
 export default Helpers;

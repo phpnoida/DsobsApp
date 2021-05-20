@@ -12,6 +12,7 @@ import {
   FlatList,
   ScrollView,
   Animated,
+  Alert,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
@@ -25,7 +26,6 @@ import {
   doGetAllCategories,
 } from '../../Actions/TeachersActions.js';
 import Helpers from '../../helper/Helper';
-import Toast from '../../component/Toast';
 
 const {height, width} = Dimensions.get('window');
 let searchVal = '';
@@ -43,7 +43,6 @@ let filterObject = {
 
 const VolunteerList = ({navigation}) => {
   const [firstTimeLoad, setFirstTimeLoad] = useState(true);
-  const [filterQuery, setFilterQuery] = useState('');
   const [pageContent, setPageContent] = useState([]);
   const [categoryList, setCategoryList] = useState([]);
   const [paginationStatus, setPaginationStatus] = useState(
@@ -215,19 +214,35 @@ const VolunteerList = ({navigation}) => {
           g.mb10,
           g.ml15,
           g.mr15,
-          {height: scale(80)},
+          {height: scale(85)},
         ]}>
         <View style={[grid.rowdir]}>
           <View style={[grid.col, grid.justifyContent]}>
             <Text style={[g.colordarkGray, g.FHNB, g.fs15]}>
               {createFullName(item)}
             </Text>
-            <Text style={[g.colorLightGray, g.FHNR, g.fs14]}>
+            <Text
+              style={[
+                g.colorLightGray,
+                g.FHNR,
+                g.fs14,
+                g.mt5,
+                g.mb5,
+                GlobalInclude.AppStyle.transform,
+              ]}>{`${item.schoolNumber} ${item.house} ${item.section} ${item.batch}`}</Text>
+            <Text style={[g.colorLightGray, g.FHNR, g.fs13]}>
               {item.category}
             </Text>
           </View>
           <View
-            style={[g.w50, g.bggray, g.br3, g.oh, g.mr10, {height: scale(50)}]}>
+            style={[
+              g.w50,
+              g.bggray,
+              g.br3,
+              g.oh,
+              g.mr10,
+              {height: scale(50), alignSelf: 'center'},
+            ]}>
             {item.profilePic !== null &&
               item.profilePic !== undefined &&
               item.profilePic !== '' && (
@@ -256,14 +271,12 @@ const VolunteerList = ({navigation}) => {
                   item.phone !== null &&
                   item.phone !== ''
                 ) {
-                  Linking.openURL(`tel:${item.phone}`);
+                  Linking.openURL(`tel:${item.countryCode} ${item.phone}`);
                 } else {
-                  Toast.show({
-                    title: 'Not supported',
-                    text: 'Your device not supported call facility',
-                    color: '#f39c12',
-                    timing: 5000,
-                  });
+                  Alert.alert(
+                    'Not supported',
+                    'Your device not supported call facility',
+                  );
                 }
               }}>
               <GlobalInclude.BaseIcon
@@ -284,12 +297,10 @@ const VolunteerList = ({navigation}) => {
                 ) {
                   Linking.openURL(`mailto:${item.email}`);
                 } else {
-                  Toast.show({
-                    title: 'Not supported',
-                    text: 'Your device not supported email facility',
-                    color: '#f39c12',
-                    timing: 5000,
-                  });
+                  Alert.alert(
+                    'Not supported',
+                    'Your device not supported email facility',
+                  );
                 }
               }}>
               <GlobalInclude.BaseIcon
@@ -338,7 +349,10 @@ const VolunteerList = ({navigation}) => {
     const sort_by_category_list = categoryList;
     return sort_by_category_list.map((item, index) => {
       return (
-        <TouchableOpacity activeOpacity={0.8} onPress={() => sortData(item)}>
+        <TouchableOpacity
+          key={index}
+          activeOpacity={0.8}
+          onPress={() => sortData(item)}>
           <View
             style={[
               g.fliterBtn,
@@ -363,13 +377,9 @@ const VolunteerList = ({navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
-      <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
-        <HeaderBar
-          title={'Volunteer'}
-          navigation={navigation}
-          showBack={true}
-        />
+    <View style={GlobalInclude.AppStyle.fill}>
+      <HeaderBar title={'Volunteers'} navigation={navigation} showBack={true} />
+      <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
         <View style={[GlobalInclude.AppStyle.fill]}>
           {firstTimeLoad ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
@@ -377,8 +387,6 @@ const VolunteerList = ({navigation}) => {
             </View>
           ) : (
             <View style={GlobalInclude.AppStyle.fill}>
-              <View keyboardShouldPersistTaps="handle"></View>
-
               <View style={GlobalInclude.AppStyle.contentSpace}>
                 <ScrollView
                   style={[g.pt10, g.pb10]}

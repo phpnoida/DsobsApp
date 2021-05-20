@@ -212,7 +212,6 @@ const TabOne = ({
                   height: scale(100),
                   width: scale(120),
                   borderRadius: scale(6),
-                  marginBottom: scale(12),
                 }}
                 imageStyle={{
                   height: scale(100),
@@ -225,7 +224,7 @@ const TabOne = ({
             {errorMessage.coverImage && errorMessage.coverImage.length > 0 && (
               <Text style={[g.errorMsg, g.pt5]}>{errorMessage.coverImage}</Text>
             )}
-            <View>
+            <View style={g.mt10}>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -374,7 +373,7 @@ const TabOne = ({
                     return (
                       <TouchableOpacity
                         key={i.toString()}
-                        onLongPress={() => {
+                        onPress={() => {
                           selectedIndex = i;
                           setShowRemoveAlert(true);
                         }}
@@ -389,6 +388,16 @@ const TabOne = ({
                             ]}>
                             {v}
                           </Text>
+                          <GlobalInclude.BaseIcon
+                            containerStyle={{
+                              height: scale(18),
+                              width: scale(18),
+                            }}
+                            iconColor={'#333333'}
+                            iconName={'remove'}
+                            iconSize={scale(18)}
+                            iconType={IconType[4]}
+                          />
                         </View>
                       </TouchableOpacity>
                     );

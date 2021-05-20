@@ -53,7 +53,7 @@ const TabThree = ({
         <View style={[grid.flex1, g.pb30]}>
           <View>
             {generateHeader('Alumini In Business', false)}
-            <View style={[grid.rowdir, g.mb5, g.pt10]}>
+            <View style={[grid.rowdir, g.pt10]}>
               <View style={[g.br3, grid.col, g.mr5]}>
                 <View style={[g.inputNew, grid.rowdir]}>
                   <GlobalInclude.BaseIcon

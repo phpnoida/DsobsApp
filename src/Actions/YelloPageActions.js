@@ -73,10 +73,6 @@ export function getYellowPageAbout(callback, errCallback) {
 export function getMyBusinessList(callback, errCallback) {
   let requestPath = `${SERVER_PATH}yellowPages/my`;
 
-  console.log('====================================');
-  console.log('global.accessToken', global.accessToken);
-  console.log('====================================');
-
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
     .then((res) => callback(res))

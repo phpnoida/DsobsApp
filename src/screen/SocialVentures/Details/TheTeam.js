@@ -40,7 +40,13 @@ const showTaggedUsers = (navigation, users) => {
         <View activeOpacity={0.8} style={styles.viewCenter}>
           <View style={[g.bglightGray, g.oh, styles.profileBackground]}>
             <ProgresImage
-              source={GlobalInclude.Assets.DefaultProfile}
+              source={
+                item.profilePic !== undefined &&
+                item.profilePic !== null &&
+                item.profilePic !== ''
+                  ? {uri: item.profilePic}
+                  : GlobalInclude.Assets.DefaultProfile
+              }
               containerStyle={styles.imageStyle}
               mode={'cover'}
             />
@@ -101,12 +107,12 @@ const TheTeam = ({content, navigation}) => (
     contentContainerStyle={g.pb30}
     showsVerticalScrollIndicator={false}>
     <View style={g.p5}>
-      {content.participants &&
-      content.participants !== undefined &&
-      content.participants !== null &&
-      content.participants.length > 0 ? (
+      {content.organizer &&
+      content.organizer !== undefined &&
+      content.organizer !== null &&
+      content.organizer.length > 0 ? (
         <View style={grid.displayinlineBlock}>
-          {showTaggedUsers(navigation, content.participants)}
+          {showTaggedUsers(navigation, content.organizer)}
         </View>
       ) : (
         <View>

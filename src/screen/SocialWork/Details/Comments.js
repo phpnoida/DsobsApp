@@ -17,7 +17,6 @@ import {scale} from '../../../theme/Scalling';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import ProgressImage from '../../../component/ProgresImage';
 import {IconType} from '../../../helper/Constants';
-import Toast from '../../../component/Toast';
 import Helper from '../../../helper/Helper';
 import moment from 'moment';
 import {renderNoDataComponent} from '../../../component/Common';
@@ -203,12 +202,7 @@ const Comments = ({workId, navigation}) => {
               setCommentError('');
               setCommentText('');
               hideModal();
-              Toast.show({
-                title: 'Congratulations',
-                text: 'Comment added successfully',
-                color: '#228B22',
-                timing: 3000,
-              });
+              Alert.alert('Congratulations', 'Comment added successfully');
             } else {
               hideModal();
             }
@@ -221,12 +215,7 @@ const Comments = ({workId, navigation}) => {
         setCommentError('');
         setCommentText('');
         hideModal();
-        Toast.show({
-          title: 'Something went wrong',
-          text: error,
-          color: '#f39c12',
-          timing: 3000,
-        });
+        Alert.alert('Something went wrong', error);
       },
     );
   };
@@ -263,12 +252,7 @@ const Comments = ({workId, navigation}) => {
               setCommentError('');
               setCommentText('');
               hideModal();
-              Toast.show({
-                title: 'Congratulations',
-                text: 'Comment updated successfully',
-                color: '#228B22',
-                timing: 3000,
-              });
+              Alert.alert('Congratulations', 'Comment updated successfully');
             } else {
               hideModal();
             }
@@ -281,12 +265,7 @@ const Comments = ({workId, navigation}) => {
         setCommentError('');
         setCommentText('');
         hideModal();
-        Toast.show({
-          title: 'Something went wrong',
-          text: error,
-          color: '#f39c12',
-          timing: 3000,
-        });
+        Alert.alert('Something went wrong', error);
       },
     );
   };
@@ -312,13 +291,7 @@ const Comments = ({workId, navigation}) => {
               commentId = '';
               setCommentError('');
               setCommentText('');
-
-              Toast.show({
-                title: 'Congratulations',
-                text: 'Comment removed successfully',
-                color: '#228B22',
-                timing: 3000,
-              });
+              Alert.alert('Congratulations', 'Comment removed successfully');
             }
           }
         }
@@ -328,12 +301,7 @@ const Comments = ({workId, navigation}) => {
         commentId = '';
         setCommentError('');
         setCommentText('');
-        Toast.show({
-          title: 'Something went wrong',
-          text: error,
-          color: '#f39c12',
-          timing: 3000,
-        });
+        Alert.alert('Something went wrong', error);
       },
     );
   };
@@ -514,6 +482,10 @@ const Comments = ({workId, navigation}) => {
         <Text
           style={g.btn}
           onPress={() => {
+            lastIndex = -1;
+            commentId = '';
+            setCommentError('');
+            setCommentText('');
             setShowCommentModal(true);
           }}>
           {'Submit your comments'}

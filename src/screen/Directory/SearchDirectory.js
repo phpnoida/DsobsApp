@@ -590,11 +590,9 @@ const SearchDirectory = ({route, navigation}) => {
    */
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpaceWithoutFlex}>
+    <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
+      <TopHeaderView navigation={navigation} index={0} showBack={true} />
       <SafeAreaView>
-        <View style={GlobalInclude.AppStyle.contentSpace}>
-          <TopHeaderView navigation={navigation} index={0} showBack={true} />
-        </View>
         <ScrollView
           ref={scrollRef}
           style={{

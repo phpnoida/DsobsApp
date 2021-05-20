@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React from 'react';
 import {Text, View, TouchableOpacity, TextInput} from 'react-native';
 import g from '../../../theme/global';
 import grid from '../../../theme/grid';

@@ -138,7 +138,10 @@ const YellowPages = ({navigation}) => {
           }
         }
       },
-      (error, message) => {},
+      (error, message) => {
+        console.log(message);
+        console.log(error);
+      },
     );
   };
 
@@ -776,28 +779,25 @@ const YellowPages = ({navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
-      <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
-        <View
-          style={[GlobalInclude.AppStyle.contentSpace, {zIndex: 1}, g.bgWhite]}>
-          <TopHeaderView
-            navigation={navigation}
-            index={5}
-            customIcon={{
-              containerStyle: {height: scale(24), width: scale(24)},
-              iconColor: '#2b3252',
-              iconName: 'dots-horizontal',
-              size: scale(24),
-              type: IconType[1],
-            }}
-            customIconPress={() => {
-              if (refRBSheet.current !== null) {
-                refRBSheet.current.open();
-              }
-            }}
-          />
-        </View>
-        <View style={[GlobalInclude.AppStyle.fill]}>
+    <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
+      <TopHeaderView
+        navigation={navigation}
+        index={5}
+        customIcon={{
+          containerStyle: {height: scale(24), width: scale(24)},
+          iconColor: '#2b3252',
+          iconName: 'dots-horizontal',
+          size: scale(24),
+          type: IconType[1],
+        }}
+        customIconPress={() => {
+          if (refRBSheet.current !== null) {
+            refRBSheet.current.open();
+          }
+        }}
+      />
+      <SafeAreaView style={GlobalInclude.AppStyle.fill}>
+        <View style={GlobalInclude.AppStyle.fill}>
           {firstTimeLoad ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
               <ActivityIndicator size={'small'} color={'#2b3252'} />
@@ -818,7 +818,8 @@ const YellowPages = ({navigation}) => {
                 ListFooterComponent={renderFooter}
                 contentContainerStyle={{
                   marginTop: animatedHeight,
-                  paddingBottom: scale(230),
+                  paddingBottom:
+                    searchedCityCompany.length > 0 ? scale(400) : scale(230),
                 }}
                 scrollEventThrottle={16}
                 onScroll={Animated.event(

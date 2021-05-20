@@ -147,10 +147,6 @@ const AboutPhoto = ({route, navigation}) => {
 
       setShowLoader(true);
 
-      console.log('====================================');
-      console.log('requestData', requestData);
-      console.log('====================================');
-
       doUpdateImageInformation(
         imageId,
         requestData,
@@ -194,99 +190,92 @@ const AboutPhoto = ({route, navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
-      <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
-        <View style={GlobalInclude.AppStyle.fill}>
-          <HeaderBar
-            navigation={navigation}
-            title={'About the Photo'}
-            showLabel={false}
-            showBack={true}
-          />
-          <View
-            style={{
-              paddingLeft: 15,
-              paddingRight: 15,
-              paddingTop: scale(15),
-              paddingBottom: 15,
-              flex: 1,
-            }}>
-            <View style={{flex: 1}}>
-              <View style={{marginTop: 15}}>
-                <Text style={[g.labeltext1]}>
-                  {'About this photo'}
-                  <Text style={g.colorRed}>*</Text>
-                </Text>
-                <View style={[grid.rowdir]}>
-                  <TextInput
-                    underlineColorAndroid="transparent"
-                    style={[
-                      g.inputWhite,
-                      {height: 120, color: 'black', textAlignVertical: 'top'},
-                    ]}
-                    multiline={true}
-                    value={about}
-                    placeholder={'Enter words separated by comma'}
-                    onChangeText={(tag) => {
-                      setAbout(tag);
-                    }}
-                  />
-                </View>
-              </View>
-              {errorMessage.emptyAbout &&
-                errorMessage.emptyAbout.length > 0 && (
-                  <Text style={[g.errorMsg, g.pt5]}>
-                    {errorMessage.emptyAbout}
-                  </Text>
-                )}
-
-              <TouchableOpacity
-                activeOpacity={1}
-                onPress={() => {
-                  if (refRBSheet.current !== null) {
-                    refRBSheet.current.open();
-                  }
-                }}
-                style={[grid.rowdir, grid.alignItems, g.inputWhite, g.mt15]}>
-                <Text style={[grid.col, g.FHNR]} numberOfLines={1}>
-                  {selectedYear !== -1 ? selectedYear : 'Select Year'}
-                </Text>
-                <View style={styles.triangleShape} />
-              </TouchableOpacity>
-              {errorMessage.emptyPhotoYear &&
-                errorMessage.emptyPhotoYear.length > 0 && (
-                  <Text style={[g.errorMsg, g.pt5]}>
-                    {errorMessage.emptyPhotoYear}
-                  </Text>
-                )}
-              <TouchableOpacity
-                activeOpacity={1}
-                onPress={() => {
-                  if (refRBFilter.current !== null) {
-                    refRBFilter.current.open();
-                  }
-                }}
-                style={[grid.rowdir, grid.alignItems, g.inputWhite, g.mt15]}>
-                <Text style={[grid.col, g.FHNR]} numberOfLines={1}>
-                  {selectedCategory}
-                </Text>
-                <View style={styles.triangleShape} />
-              </TouchableOpacity>
-              {errorMessage.emptyCategory &&
-                errorMessage.emptyCategory.length > 0 && (
-                  <Text style={[g.errorMsg, g.pt5]}>
-                    {errorMessage.emptyCategory}
-                  </Text>
-                )}
-            </View>
-            <CommonButton
-              showLoader={showLoader}
-              title={'Update'}
-              onPress={() => {
-                updateData();
+    <View style={GlobalInclude.AppStyle.fill}>
+      <HeaderBar
+        navigation={navigation}
+        title={'About the Photo'}
+        showLabel={false}
+        showBack={true}
+      />
+      <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
+        <View
+          style={[
+            GlobalInclude.AppStyle.fill,
+            GlobalInclude.AppStyle.contentSpace,
+          ]}>
+          <Text style={[g.labeltext1]}>
+            {'About this photo'}
+            <Text style={g.colorRed}>*</Text>
+          </Text>
+          <View style={[g.mb15]}>
+            <TextInput
+              underlineColorAndroid="transparent"
+              style={[
+                g.inputWhite,
+                {height: 120, color: 'black', textAlignVertical: 'top'},
+              ]}
+              multiline={true}
+              value={about}
+              placeholder={'Enter words separated by comma'}
+              onChangeText={(tag) => {
+                setAbout(tag);
               }}
             />
+            {errorMessage.emptyAbout && errorMessage.emptyAbout.length > 0 && (
+              <Text style={[g.errorMsg, g.pt5]}>{errorMessage.emptyAbout}</Text>
+            )}
           </View>
+          <View style={[g.mb15]}>
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={() => {
+                if (refRBSheet.current !== null) {
+                  refRBSheet.current.open();
+                }
+              }}
+              style={[grid.rowdir, grid.alignItems, g.inputWhite]}>
+              <Text style={[grid.col, g.FHNR]} numberOfLines={1}>
+                {selectedYear !== -1 ? selectedYear : 'Select Year'}
+              </Text>
+              <View style={styles.triangleShape} />
+            </TouchableOpacity>
+            {errorMessage.emptyPhotoYear &&
+              errorMessage.emptyPhotoYear.length > 0 && (
+                <Text style={[g.errorMsg, g.pt5]}>
+                  {errorMessage.emptyPhotoYear}
+                </Text>
+              )}
+          </View>
+          <View style={[g.mb15]}>
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={() => {
+                if (refRBFilter.current !== null) {
+                  refRBFilter.current.open();
+                }
+              }}
+              style={[grid.rowdir, grid.alignItems, g.inputWhite, g.mt15]}>
+              <Text style={[grid.col, g.FHNR]} numberOfLines={1}>
+                {selectedCategory}
+              </Text>
+              <View style={styles.triangleShape} />
+            </TouchableOpacity>
+            {errorMessage.emptyCategory &&
+              errorMessage.emptyCategory.length > 0 && (
+                <Text style={[g.errorMsg, g.pt5]}>
+                  {errorMessage.emptyCategory}
+                </Text>
+              )}
+          </View>
+        </View>
+        <View style={GlobalInclude.AppStyle.buttonSpace}>
+          <CommonButton
+            showLoader={showLoader}
+            title={'Update'}
+            onPress={() => {
+              updateData();
+            }}
+          />
         </View>
       </SafeAreaView>
 

@@ -8,9 +8,6 @@ import {IconType} from '../helper/Constants';
 import GlobalInclude from '../globalInclude/Globalinclude';
 
 const EditLinksExperience = (props) => {
-  console.log('====================================');
-  console.log(props);
-  console.log('====================================');
   return (
     <TouchableOpacity activeOpacity={1}>
       <View

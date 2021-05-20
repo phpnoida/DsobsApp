@@ -23,7 +23,7 @@ const TabOne = (props) => {
         </View>
         <View style={[grid.col, g.ml5]}>
           <View style={[grid.rowdir, grid.alignItemsTop]}>
-            <Text style={[g.labeltext1]}>Pet Name</Text>
+            <Text style={[g.labeltext1]}>Nickname</Text>
           </View>
           <TextInput
             underlineColorAndroid="transparent"

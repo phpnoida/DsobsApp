@@ -10,6 +10,7 @@ import {
   StyleSheet,
   SafeAreaView,
   FlatList,
+  Alert,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
@@ -20,7 +21,6 @@ import HeaderBar from '../../component/HeaderBar';
 import ProgresImage from '../../component/ProgresImage';
 import {doFilterTeachers} from '../../Actions/TeachersActions.js';
 import Helpers from '../../helper/Helper';
-import Toast from '../../component/Toast';
 
 const {height, width} = Dimensions.get('window');
 let searchVal = '';
@@ -219,14 +219,12 @@ const TeachersList = ({navigation}) => {
                   item.phone !== null &&
                   item.phone !== ''
                 ) {
-                  Linking.openURL(`tel:${item.phone}`);
+                  Linking.openURL(`tel:${item.countryCode} ${item.phone}`);
                 } else {
-                  Toast.show({
-                    title: 'Not supported',
-                    text: 'Your device not supported call facility',
-                    color: '#f39c12',
-                    timing: 5000,
-                  });
+                  Alert.alert(
+                    'Not supported',
+                    'Your device not supported call facility',
+                  );
                 }
               }}>
               <GlobalInclude.BaseIcon
@@ -247,12 +245,10 @@ const TeachersList = ({navigation}) => {
                 ) {
                   Linking.openURL(`mailto:${item.email}`);
                 } else {
-                  Toast.show({
-                    title: 'Not supported',
-                    text: 'Your device not supported email facility',
-                    color: '#f39c12',
-                    timing: 5000,
-                  });
+                  Alert.alert(
+                    'Not supported',
+                    'Your device not supported email facility',
+                  );
                 }
               }}>
               <GlobalInclude.BaseIcon
@@ -298,9 +294,9 @@ const TeachersList = ({navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
-      <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
-        <HeaderBar title={'Teachers'} navigation={navigation} showBack={true} />
+    <View style={GlobalInclude.AppStyle.fill}>
+      <HeaderBar title={'Teachers'} navigation={navigation} showBack={true} />
+      <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
         <View style={[GlobalInclude.AppStyle.fill]}>
           {firstTimeLoad ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>

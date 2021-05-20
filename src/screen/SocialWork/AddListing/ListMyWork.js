@@ -2,7 +2,6 @@ import React, {useState, useEffect} from 'react';
 import {View, Keyboard, SafeAreaView, Alert} from 'react-native';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import HeaderBar from '../../../component/HeaderBar';
-import Toast from '../../../component/Toast';
 import Helper from '../../../helper/Helper';
 import BasicDetails from './BasicDetails';
 import VentureDetails from './VentureDetails';
@@ -485,12 +484,7 @@ const ListMyWork = ({route, navigation}) => {
             }}
             addTag={() => {
               if (tag.trim() === '') {
-                Toast.show({
-                  title: 'Tag Required',
-                  text: 'Tag is required',
-                  color: '#f39c12',
-                  timing: 3000,
-                });
+                Alert.alert('Tag Required', 'Tag is required');
               } else {
                 Keyboard.dismiss();
                 let oldData = selectedTags;
@@ -502,12 +496,7 @@ const ListMyWork = ({route, navigation}) => {
                   delete msg.tag;
                   setErrorMessage(msg);
                 } else {
-                  Toast.show({
-                    title: 'Duplicate Tag',
-                    text: 'Tag is Already Exists',
-                    color: '#f39c12',
-                    timing: 3000,
-                  });
+                  Alert.alert('Duplicate Tag', 'Tag is Already Exists');
                 }
               }
             }}

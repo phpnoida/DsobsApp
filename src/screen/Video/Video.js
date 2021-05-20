@@ -485,22 +485,22 @@ const Video = ({navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
+    <View style={GlobalInclude.AppStyle.fill}>
+      <TopHeaderView
+        index={3}
+        navigation={navigation}
+        label={'Post Video'}
+        showLabel={true}
+        onLabelPress={() => {
+          setShowAddPostModal(true);
+        }}
+      />
       <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
         <View
           style={[
             GlobalInclude.AppStyle.fill,
             GlobalInclude.AppStyle.contentSpace,
           ]}>
-          <TopHeaderView
-            index={3}
-            navigation={navigation}
-            label={'Post Video'}
-            showLabel={true}
-            onLabelPress={() => {
-              setShowAddPostModal(true);
-            }}
-          />
           <View style={[grid.rowdir, g.mb10, g.mt10]}>
             <View style={[g.br3, grid.col, g.mr5]}>
               <View style={[g.inputNew, grid.rowdir]}>

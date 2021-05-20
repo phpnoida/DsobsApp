@@ -129,7 +129,7 @@ const Contact = (props) => {
           {generateView(
             IconType[4],
             'user-o',
-            'Pet Name',
+            'Nickname',
             props.petName ? props.petName : 'N/A',
             () => {},
           )}

@@ -8,6 +8,7 @@ import {
   FlatList,
   Linking,
   Animated,
+  Platform,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -19,6 +20,7 @@ import ImageShareModal from '../../component/ImageShareModal';
 import {getAlbums, getGalleryCategory} from '../../Actions/GalleryActions';
 import {getDirectory} from '../../Actions/DirectoryActions';
 import axios from 'axios';
+import {getStatusBarHeight} from 'react-native-iphone-x-helper';
 
 import AutoCompleteSearch from '../../component/AutoCompleteSearch';
 import YearSelection from '../../component/YearSelectionSheet';
@@ -293,10 +295,10 @@ const GalleryListing = ({navigation}) => {
   const renderHeaderComponents = () => {
     return (
       <View
-        style={[
-          GlobalInclude.AppStyle.contentSpace,
-          {marginBottom: scale(10)},
-        ]}>
+        style={{
+          paddingHorizontal: scale(15),
+          marginBottom: scale(10),
+        }}>
         <AutoCompleteSearch
           mainTitle={'Search By'}
           chkType={checkedType}
@@ -393,40 +395,29 @@ const GalleryListing = ({navigation}) => {
   });
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
-      <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
+    <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
+      <TopHeaderView
+        index={4}
+        navigation={navigation}
+        label={'Send Photos'}
+        showLabel={true}
+        onLabelPress={() => {
+          if (userData !== undefined && userData !== null) {
+            let house =
+              userData.house.toLowerCase().charAt(0).toUpperCase() +
+              userData.house.slice(1);
+            Linking.openURL(
+              `mailto:info@alumbus.com?subject=Photos from ${APP_NAME} user ${userData.firstName} ${userData.lastName}, ${userData.schoolNumber}, ${house}, ${userData.batch} &body=Please send us a note about the photographs. Upload photos upto 20MB here. For larger photos please use Google Drive or a WeTransfer link to send images.`,
+            );
+          } else {
+            Linking.openURL(
+              `mailto:info@alumbus.com?subject=Photos from ${APP_NAME} user FullName: School No: House: Batch: &body=Please send us a note about the photographs. Upload photos upto 20MB here. For larger photos please use Google Drive or a WeTransfer link to send images.`,
+            );
+          }
+        }}
+      />
+      <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.fill}>
-          <View
-            style={{
-              paddingLeft: 15,
-              paddingRight: 15,
-              paddingTop: scale(15),
-              paddingBottom: 0,
-              zIndex: 1,
-              backgroundColor: 'white',
-            }}>
-            <TopHeaderView
-              index={4}
-              navigation={navigation}
-              label={'Send Photos'}
-              showLabel={true}
-              onLabelPress={() => {
-                if (userData !== undefined && userData !== null) {
-                  let house =
-                    userData.house.toLowerCase().charAt(0).toUpperCase() +
-                    userData.house.slice(1);
-
-                  Linking.openURL(
-                    `mailto:info@alumbus.com?subject=Photos from ${APP_NAME} user ${userData.firstName} ${userData.lastName}, ${userData.schoolNumber}, ${house}, ${userData.batch} &body=Please send us a note about the photographs. Upload photos upto 20MB here. For larger photos please use Google Drive or a WeTransfer link to send images.`,
-                  );
-                } else {
-                  Linking.openURL(
-                    `mailto:info@alumbus.com?subject=Photos from ${APP_NAME} user FullName: School No: House: Batch: &body=Please send us a note about the photographs. Upload photos upto 20MB here. For larger photos please use Google Drive or a WeTransfer link to send images.`,
-                  );
-                }
-              }}
-            />
-          </View>
           {firstTimeLoad ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
               <ActivityIndicator size={'small'} color={'#2b3252'} />
@@ -476,64 +467,64 @@ const GalleryListing = ({navigation}) => {
             </View>
           )}
         </View>
-      </SafeAreaView>
 
-      {/* filter sheet */}
-      <CategoryFilter
-        refRBSheet={refRBFilter}
-        title={'Filter Gallery By'}
-        buttonText={'Apply'}
-        dataList={filterCategory}
-        onPress={(item, index) => {
-          categoryName = item.label;
-          selectCategory(index);
-        }}
-        onSelect={() => {
-          refRBFilter.current.close();
+        {/* filter sheet */}
+        <CategoryFilter
+          refRBSheet={refRBFilter}
+          title={'Filter Gallery By'}
+          buttonText={'Apply'}
+          dataList={filterCategory}
+          onPress={(item, index) => {
+            categoryName = item.label;
+            selectCategory(index);
+          }}
+          onSelect={() => {
+            refRBFilter.current.close();
 
-          navigation.navigate('FilteredResult', {
-            filterBy: {category: categoryName, index: 0, size: 10},
-            pageTitle: `Search By: ${categoryName}`,
-          });
-        }}
-      />
-      {/* filter sheet */}
-
-      {/* image share modal */}
-      {showShareModal && (
-        <ImageShareModal
-          status={showShareModal}
-          onCloseAction={(type) => {
-            setShowShareModal(!showShareModal);
+            navigation.navigate('FilteredResult', {
+              filterBy: {category: categoryName, index: 0, size: 10},
+              pageTitle: `Search By: ${categoryName}`,
+            });
           }}
         />
-      )}
+        {/* filter sheet */}
 
-      {/* loader when search or other opertations */}
-      {isLoading && (
-        <View style={{position: 'absolute', botttom: 0, top: 0, zIndex: 2}}>
-          <View style={GlobalInclude.AppStyle.fillCenter}>
-            <ActivityIndicator size={'small'} color={'#2b3252'} />
+        {/* image share modal */}
+        {showShareModal && (
+          <ImageShareModal
+            status={showShareModal}
+            onCloseAction={(type) => {
+              setShowShareModal(!showShareModal);
+            }}
+          />
+        )}
+
+        {/* loader when search or other opertations */}
+        {isLoading && (
+          <View style={{position: 'absolute', botttom: 0, top: 0, zIndex: 2}}>
+            <View style={GlobalInclude.AppStyle.fillCenter}>
+              <ActivityIndicator size={'small'} color={'#2b3252'} />
+            </View>
           </View>
-        </View>
-      )}
+        )}
 
-      {/* year select */}
-      <YearSelection
-        refRBSheet={refRBSheet}
-        title={'Select Year'}
-        onSelect={(value) => {
-          refRBSheet.current.close();
-          setCheckedType(-1);
-          setTimeout(() => {
-            navigation.navigate('FilteredResult', {
-              filterBy: {year: value.text.toString(), index: 0, size: 10},
-              pageTitle: `Search By: ${value.text.toString()}`,
-            });
-          }, 100);
-        }}
-      />
-      {/* year select */}
+        {/* year select */}
+        <YearSelection
+          refRBSheet={refRBSheet}
+          title={'Select Year'}
+          onSelect={(value) => {
+            refRBSheet.current.close();
+            setCheckedType(-1);
+            setTimeout(() => {
+              navigation.navigate('FilteredResult', {
+                filterBy: {year: value.text.toString(), index: 0, size: 10},
+                pageTitle: `Search By: ${value.text.toString()}`,
+              });
+            }, 100);
+          }}
+        />
+        {/* year select */}
+      </SafeAreaView>
     </View>
   );
 };
@@ -566,6 +557,12 @@ const style = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
   },
+  topContainer: {
+    height: Platform.OS === 'android' ? 0 : getStatusBarHeight(),
+    width: '100%',
+    backgroundColor: 'white',
+  },
+  headerContainer: {zIndex: 1, backgroundColor: 'white'},
 });
 
 export default GalleryListing;

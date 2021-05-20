@@ -11,6 +11,7 @@ import GlobalInclude from '../globalInclude/Globalinclude';
 import g from '../theme/global';
 import grid from '../theme/grid';
 import {scale} from '../theme/Scalling';
+import Helper from '../helper/Helper';
 
 const UserProfileHeader = (props) => {
   const showLastSeen = (timestamp) => {
@@ -82,7 +83,7 @@ const UserProfileHeader = (props) => {
                   g.fs14,
                   g.FHNR,
                   g.mt5,
-                  {textTransform: 'capitalize'},
+                  GlobalInclude.AppStyle.transform,
                 ]}>{`${props.schoolNo} ${props.house} ${props.section} ${props.batch}`}</Text>
             ) : null}
           </View>

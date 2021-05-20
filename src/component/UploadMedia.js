@@ -20,7 +20,6 @@ import GlobalInclude from '../globalInclude/Globalinclude';
 import RNFetchBlob from 'rn-fetch-blob';
 import ImagePicker from 'react-native-image-crop-picker';
 import DocumentPicker from 'react-native-document-picker';
-import Toast from './Toast';
 import {uploadMedia} from '../Actions/CommonActions';
 import CommonButton from './CommonButton';
 import getPath from '@flyerhq/react-native-android-uri-path';
@@ -327,9 +326,17 @@ const UploadMedia = ({
             resizeMode={'contain'}
             resizeMethod={'auto'}
             style={styles.menuIcon}
+            tintColor={enabled ? '#ebebe4' : undefined}
           />
         </View>
-        <Text style={[g.txtCenter, g.fs16, g.pt5, g.FHNB, g.colordarkGray]}>
+        <Text
+          style={[
+            g.txtCenter,
+            g.fs16,
+            g.pt5,
+            g.FHNB,
+            enabled ? g.colorDisabled : g.colordarkGray,
+          ]}>
           {label}
         </Text>
       </TouchableOpacity>

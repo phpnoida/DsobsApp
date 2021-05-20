@@ -205,7 +205,8 @@ const Magazine = ({route, navigation}) => {
    */
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
+    <View style={GlobalInclude.AppStyle.fill}>
+      <TopHeaderView index={1} navigation={navigation} />
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.parentStyle}>
           <View
@@ -231,7 +232,6 @@ const Magazine = ({route, navigation}) => {
                   </View>
                 ) : (
                   <View style={GlobalInclude.AppStyle.fill}>
-                    <TopHeaderView index={1} navigation={navigation} />
                     <View style={[g.br3, g.mb15, g.mt5]}>
                       <View style={[g.inputNew, grid.rowdir]}>
                         <GlobalInclude.BaseIcon

@@ -140,6 +140,9 @@ export default {
   colordarkGray: {
     color: '#333333',
   },
+  colorDisabled: {
+    color: '#ebebe4',
+  },
   colorGreen: {
     color: 'green',
   },

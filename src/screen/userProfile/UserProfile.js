@@ -66,16 +66,16 @@ let profileSheet = null,
   moveToTab = 1;
 
 const UserProfile = ({route, navigation}) => {
-  if (route !== null) {
-    if (route.params && route.params !== undefined && route.params !== null) {
-      userId = route.params.userId;
-    }
-  }
   const [step, setStep] = useState(1);
   const [profileData, setProfileData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    if (route !== null) {
+      if (route.params && route.params !== undefined && route.params !== null) {
+        userId = route.params.userId;
+      }
+    }
     profileSheet = null;
 
     birthDate = 'N/A';
@@ -116,7 +116,7 @@ const UserProfile = ({route, navigation}) => {
                   ? data.data[0]
                   : null;
 
-              console.log('profile', profile);
+              //console.log('profile', profile);
 
               global.userDetails = profile;
               global.firstName = profile.firstName;
@@ -125,35 +125,7 @@ const UserProfile = ({route, navigation}) => {
               AsyncStorage.setItem('userDetails', JSON.stringify(profile)).then(
                 () => {
                   userId = profile._id;
-                  if (profile._id !== global.userId) {
-                    profileSheetMenu.splice(0, 1);
-                    profileSheetMenu.splice(3, 1);
-                  }
-                  if (
-                    profile.dob &&
-                    profile.dob !== undefined &&
-                    profile.dob !== '' &&
-                    profile.dob !== 'Invalid date'
-                  ) {
-                    var formatedDate = new Date(profile.dob);
-                    let month = '';
-                    if (formatedDate.getMonth() + 1 < 10) {
-                      month = '0' + (formatedDate.getMonth() + 1).toString();
-                    } else {
-                      month = (formatedDate.getMonth() + 1).toString();
-                    }
-
-                    let date = '';
-
-                    if (formatedDate.getDate() < 10) {
-                      date = '0' + formatedDate.getDate().toString();
-                    } else {
-                      date = formatedDate.getDate().toString();
-                    }
-
-                    birthDate = `${date}/${month}/${formatedDate.getFullYear()}`;
-                  }
-                  setProfileData(profile);
+                  manageProfile(profile);
                 },
               );
             }
@@ -187,37 +159,12 @@ const UserProfile = ({route, navigation}) => {
                   ? data.data[0]
                   : null;
 
-              console.log('profile', profile);
-              userId = profile._id;
+              console.log('otherProfile', profile);
 
-              if (profile._id !== global.userId) {
-                profileSheetMenu.splice(0, 1);
-                profileSheetMenu.splice(3, 1);
-              }
-              if (
-                profile.dob &&
-                profile.dob !== undefined &&
-                profile.dob !== 'Invalid date'
-              ) {
-                var formatedDate = new Date(profile.dob);
-                let month = '';
-                if (formatedDate.getMonth() + 1 < 10) {
-                  month = '0' + (formatedDate.getMonth() + 1).toString();
-                } else {
-                  month = (formatedDate.getMonth() + 1).toString();
-                }
+              profileSheetMenu.splice(0, 1);
+              profileSheetMenu.splice(3, 1);
 
-                let date = '';
-
-                if (formatedDate.getDate() < 10) {
-                  date = '0' + formatedDate.getDate().toString();
-                } else {
-                  date = formatedDate.getDate().toString();
-                }
-
-                birthDate = `${date}/${month}/${formatedDate.getFullYear()}`;
-              }
-              setProfileData(profile);
+              manageProfile(profile);
             }
           }
         }
@@ -229,14 +176,54 @@ const UserProfile = ({route, navigation}) => {
     );
   };
 
+  const manageProfile = (profile) => {
+    if (
+      profile.dob &&
+      profile.dob !== undefined &&
+      profile.dob !== 'Invalid date'
+    ) {
+      var formatedDate = new Date(profile.dob);
+      let month = '';
+      if (formatedDate.getMonth() + 1 < 10) {
+        month = '0' + (formatedDate.getMonth() + 1).toString();
+      } else {
+        month = (formatedDate.getMonth() + 1).toString();
+      }
+
+      let date = '';
+
+      if (formatedDate.getDate() < 10) {
+        date = '0' + formatedDate.getDate().toString();
+      } else {
+        date = formatedDate.getDate().toString();
+      }
+
+      birthDate = `${date}/${month}/${formatedDate.getFullYear()}`;
+    }
+    setProfileData(profile);
+  };
+
   /*
    * ************************************************
    * API Section End
    * ************************************************
    */
+  const openProfile = (selectedId) => {
+    birthDate = 'N/A';
+    moveToTab = 1;
+
+    console.log('====================================');
+    console.log('selectedId', selectedId);
+    console.log('====================================');
+    userId = selectedId;
+    onRefresh();
+  };
 
   const onRefresh = () => {
     setStep(1);
+    console.log('====================================');
+    console.log('onRefresh- userId', userId);
+    console.log('====================================');
     if (userId === global.userId) {
       getProfile();
     } else {
@@ -355,6 +342,7 @@ const UserProfile = ({route, navigation}) => {
                         />
                       </TouchableOpacity>
                     </View>
+                    {console.log('Line 365-', userId)}
                     <UserProfileHeader
                       profileImg={profileData.profileImg}
                       firstName={profileData.firstName}
@@ -445,6 +433,8 @@ const UserProfile = ({route, navigation}) => {
                     <MyRelatives
                       tabLabel={'Relatives in School'}
                       profileData={profileData}
+                      navigation={navigation}
+                      openProfile={openProfile}
                     />
                     <MyFamily
                       tabLabel={'My Family'}
@@ -456,7 +446,8 @@ const UserProfile = ({route, navigation}) => {
                         <Links tabLabel={'Links'} profileData={profileData} />
                       )}
                   </ScrollableTabView>
-
+                  {console.log('matched', userId === global.userId)}
+                  {console.log('matched', global.userId)}
                   {userId === global.userId ? (
                     <TouchableOpacity
                       onPress={() => {

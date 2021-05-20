@@ -110,6 +110,8 @@ const Dashboard = ({props, navigation}) => {
        *
        */
       validatePushNotification();
+
+      console.log('global.userDetails.fcmTopic', global.userDetails.fcmTopic);
     });
 
     if (refreshState) {
@@ -768,10 +770,11 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    bottomSheet.close();
-                    setTimeout(() => {
-                      navigation.navigate('SocialListing');
-                    }, 200);
+                    // bottomSheet.close();
+                    // setTimeout(() => {
+                    //   navigation.navigate('SocialListing');
+                    // }, 200);
+                    Alert.alert('Coming soon...');
                   }}>
                   <Image
                     source={GlobalInclude.Assets.Social}
@@ -805,10 +808,11 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    bottomSheet.close();
-                    setTimeout(() => {
-                      navigation.navigate('SocialVenture');
-                    }, 200);
+                    Alert.alert('Coming soon...');
+                    //bottomSheet.close();
+                    // setTimeout(() => {
+                    //   navigation.navigate('SocialVenture');
+                    // }, 200);
                   }}>
                   <Image
                     source={GlobalInclude.Assets.Venture}

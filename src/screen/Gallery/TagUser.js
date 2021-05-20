@@ -163,11 +163,6 @@ const TagUser = ({route, navigation}) => {
         return;
       }
     }
-
-    console.log('====================================');
-    console.log('item', item);
-    console.log('====================================');
-
     let oldItem = taggedUsers;
 
     oldItem.push(item);
@@ -260,41 +255,36 @@ const TagUser = ({route, navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
-      <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
-        <View style={GlobalInclude.AppStyle.fill}>
-          <HeaderBar
-            navigation={navigation}
-            title={'Tag People'}
-            showLabel={false}
-            showBack={true}
-          />
-          <ScrollView
-            style={{
-              paddingLeft: 15,
-              paddingRight: 15,
-              paddingTop: scale(15),
-              paddingBottom: 15,
-            }}
-            showsVerticalScrollIndicator={false}>
-            <View style={{marginTop: 15}}>
-              <TextInput
-                underlineColorAndroid="transparent"
-                value={searchQuery}
-                placeholder={'Tag People in the Photo'}
-                placeholderTextColor={'#202020'}
-                style={[g.inputWhite, {color: 'black'}]}
-                onChangeText={(value) => {
-                  searchVal = value;
-                  setSearchQuery(value);
-                  if (value.length > 0) {
-                    doSearchUser(value);
-                  } else {
-                    setSearchedUser([]);
-                  }
-                }}
-              />
-            </View>
+    <View style={GlobalInclude.AppStyle.fill}>
+      <HeaderBar
+        navigation={navigation}
+        title={'Tag People'}
+        showLabel={false}
+        showBack={true}
+      />
+      <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
+        <View
+          style={[
+            GlobalInclude.AppStyle.fill,
+            GlobalInclude.AppStyle.contentSpace,
+          ]}>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <TextInput
+              underlineColorAndroid="transparent"
+              value={searchQuery}
+              placeholder={'Tag People in the Photo'}
+              placeholderTextColor={'#202020'}
+              style={[g.inputWhite, {color: 'black'}]}
+              onChangeText={(value) => {
+                searchVal = value;
+                setSearchQuery(value);
+                if (value.length > 0) {
+                  doSearchUser(value);
+                } else {
+                  setSearchedUser([]);
+                }
+              }}
+            />
             {errorMessage.emptyTag && errorMessage.emptyTag.length > 0 && (
               <Text style={[g.errorMsg, g.pt5]}>{errorMessage.emptyTag}</Text>
             )}
@@ -385,29 +375,22 @@ const TagUser = ({route, navigation}) => {
               </View>
             </View>
           </ScrollView>
-          <View
-            style={[
-              grid.rowdir,
-              grid.alignItems,
-              grid.justifyContentCenter,
-              g.bgWhite,
-              {
-                paddingTop: 15,
-                padding: 20,
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                bottom: 0,
-              },
-            ]}>
-            <CommonButton
-              showLoader={showLoader}
-              title={'Update'}
-              onPress={() => {
-                submitData();
-              }}
-            />
-          </View>
+        </View>
+        <View
+          style={[
+            grid.alignItems,
+            grid.justifyContentCenter,
+            g.ml15,
+            g.mr15,
+            g.mb15,
+          ]}>
+          <CommonButton
+            showLoader={showLoader}
+            title={'Update'}
+            onPress={() => {
+              submitData();
+            }}
+          />
         </View>
       </SafeAreaView>
 

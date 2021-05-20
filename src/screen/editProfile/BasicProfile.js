@@ -937,7 +937,7 @@ const BasicProfile = (props) => {
                 />
               </View>
               <View style={[grid.col, g.ml5]}>
-                {generateHeader('Pet Name', false)}
+                {generateHeader('Nickname', false)}
 
                 <TextInput
                   underlineColorAndroid="transparent"

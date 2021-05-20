@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Image, Text} from 'react-native';
+import {View, Image, Text, TouchableOpacity} from 'react-native';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import g from '../theme/global';
 import grid from '../theme/grid';
@@ -40,5 +40,40 @@ export const renderNoDataComponent = () => {
         No Record Found
       </Text>
     </View>
+  );
+};
+
+export const uploadMediaButton = (onPress) => {
+  return (
+    <TouchableOpacity style={grid.rowdir} onPress={onPress} activeOpacity={0.7}>
+      <View
+        style={[
+          g.bglightGray,
+          grid.col,
+          g.mr10,
+          {padding: 15, borderRadius: 10},
+        ]}>
+        <Text style={[g.fs16, g.FHNR, g.colorLightGray]}>Upload Media</Text>
+      </View>
+      <View
+        style={[
+          g.p15,
+          g.bglightGray,
+          {
+            width: 50,
+            height: 50,
+            borderRadius: 10,
+            alignSelf: 'center',
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
+        ]}>
+        <Image
+          source={GlobalInclude.Assets.UploadIcon}
+          resizeMode="contain"
+          style={[g.w20, {height: 23}, grid.justifyContent, grid.alignItems]}
+        />
+      </View>
+    </TouchableOpacity>
   );
 };

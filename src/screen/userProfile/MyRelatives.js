@@ -13,12 +13,12 @@ import grid from '../../theme/grid';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
 import ZoomImage from '../../component/ZoomImage';
+import Helper from '../../helper/Helper';
 
 let imageArray = [];
 
-const ProfessionalDetail = (props) => {
+const MyRelatives = ({profileData, navigation, openProfile}) => {
   const [showImageModal, setShowImageModal] = useState(false);
-  const {profileData} = props;
 
   const generateWorkExperience = ({item, index}) => {
     return (
@@ -26,7 +26,15 @@ const ProfessionalDetail = (props) => {
         <TouchableOpacity
           key={index}
           activeOpacity={1}
-          onPress={() => {}}
+          onPress={() => {
+            if (
+              item._id !== undefined &&
+              item._id !== null &&
+              item._id !== ''
+            ) {
+              openProfile(item._id);
+            }
+          }}
           style={[g.boxShadow, g.bgWhite, g.br3, g.mb10, g.p15]}>
           <View style={[grid.rowdir, grid.alignItems]}>
             <TouchableOpacity onPress={() => {}} activeOpacity={0.8}>
@@ -65,9 +73,17 @@ const ProfessionalDetail = (props) => {
               </View>
             </TouchableOpacity>
             <View style={[grid.col, g.pl10]}>
-              <Text style={styles.menuHeader}>{item.relationship}</Text>
-              <View style={{margin: scale(5)}} />
-              <Text style={styles.menuTitle}>{item.relativeName}</Text>
+              <Text style={styles.menuHeader}>{item.relativeName}</Text>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  g.mt5,
+                  g.mb5,
+                  GlobalInclude.AppStyle.transform,
+                ]}>
+                {Helper.showUserSchoolDetail(item)}
+              </Text>
+              <Text style={styles.menuTitle}>{item.relationship}</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -106,7 +122,7 @@ const ProfessionalDetail = (props) => {
 const styles = StyleSheet.create({
   menuTitle: {
     color: '#bababa',
-    fontSize: scale(13),
+    fontSize: scale(12),
     fontFamily: 'Lato-Regular',
     textAlign: 'left',
   },
@@ -118,4 +134,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProfessionalDetail;
+export default MyRelatives;
