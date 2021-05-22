@@ -629,7 +629,7 @@ const DirectoryDetails = ({route, navigation}) => {
             }}>
             <GlobalInclude.BaseIcon
               containerStyle={style.filterIcon}
-              iconColor={showFilter ? '#2b3252' : '#000'}
+              iconColor={showFilter ? GlobalInclude.Color.ColorPrimary : '#000'}
               iconName={'filter'}
               iconSize={scale(14)}
               iconType={IconType[4]}
@@ -757,7 +757,7 @@ const DirectoryDetails = ({route, navigation}) => {
           <View style={{height: scale(60)}}>
             {paginationStatus === PaginationStatus.waiting ? (
               <View style={g.p10}>
-                <ActivityIndicator size={'large'} color={'#2b3252'} />
+                <ActivityIndicator size={'large'} color={GlobalInclude.Color.ColorPrimary} />
               </View>
             ) : null}
           </View>
@@ -779,7 +779,7 @@ const DirectoryDetails = ({route, navigation}) => {
           <View style={GlobalInclude.AppStyle.fill}>
             {isLoading ? (
               <View style={GlobalInclude.AppStyle.fillCenter}>
-                <ActivityIndicator size={'small'} color={'#2b3252'} />
+                <ActivityIndicator size={'small'} color={GlobalInclude.Color.ColorPrimary} />
               </View>
             ) : (
               <View style={GlobalInclude.AppStyle.fill}>
@@ -910,7 +910,7 @@ const style = StyleSheet.create({
     justifyContent: 'center',
   },
   tabsbut: {
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     color: '#ffffff',
     width: scale(100),
     paddingTop: 9,
@@ -922,7 +922,7 @@ const style = StyleSheet.create({
   },
   bbtbgnactive: {
     backgroundColor: '#f8f8f8',
-    color: '#2b3252',
+    color: GlobalInclude.Color.ColorPrimary,
   },
   tabBarText: {
     color: '#333333',

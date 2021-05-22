@@ -343,7 +343,10 @@ const Comments = ({ventureId, navigation}) => {
           <View style={{height: scale(30)}}>
             {paginationStatus === PaginationStatus.waiting ? (
               <View style={g.p10}>
-                <ActivityIndicator size={'small'} color={'#2b3252'} />
+                <ActivityIndicator
+                  size={'small'}
+                  color={GlobalInclude.Color.ColorPrimary}
+                />
               </View>
             ) : null}
           </View>
@@ -482,6 +485,10 @@ const Comments = ({ventureId, navigation}) => {
         <Text
           style={g.btn}
           onPress={() => {
+            lastIndex = -1;
+            commentId = '';
+            setCommentError('');
+            setCommentText('');
             setShowCommentModal(true);
           }}>
           {'Submit your comments'}
@@ -489,7 +496,10 @@ const Comments = ({ventureId, navigation}) => {
       </View>
       {firstTimeLoad ? (
         <View style={GlobalInclude.AppStyle.fillCenter}>
-          <ActivityIndicator size={'small'} color={'#2b3252'} />
+          <ActivityIndicator
+            size={'small'}
+            color={GlobalInclude.Color.ColorPrimary}
+          />
         </View>
       ) : (
         <FlatList

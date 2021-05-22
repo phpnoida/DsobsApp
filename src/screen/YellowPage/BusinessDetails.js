@@ -114,7 +114,7 @@ const BusinessDetails = ({route, navigation}) => {
         navigation={navigation}
         customIcon={{
           containerStyle: {height: scale(30), width: scale(30)},
-          iconColor: '#2b3252',
+          iconColor: GlobalInclude.Color.ColorPrimary,
           iconName: 'keyboard-backspace',
           size: scale(30),
           type: IconType[1],
@@ -127,7 +127,10 @@ const BusinessDetails = ({route, navigation}) => {
         <View style={[GlobalInclude.AppStyle.fill]}>
           {isLoading ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
-              <ActivityIndicator size={'small'} color={'#2b3252'} />
+              <ActivityIndicator
+                size={'small'}
+                color={GlobalInclude.Color.ColorPrimary}
+              />
             </View>
           ) : (
             <View style={GlobalInclude.AppStyle.fill}>
@@ -221,7 +224,7 @@ const BusinessDetails = ({route, navigation}) => {
                   <ScrollableTabView
                     underlineColor={'#ffffff'}
                     initialPage={0}
-                    tabBarActiveTextColor={'#2b3252'}
+                    tabBarActiveTextColor={GlobalInclude.Color.ColorPrimary}
                     tabBarInactiveTextColor={'#bababa'}
                     tabBarTextStyle={{
                       fontSize: scale(15),

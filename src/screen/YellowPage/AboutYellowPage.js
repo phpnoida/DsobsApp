@@ -75,7 +75,10 @@ const AboutYellowPage = ({navigation}) => {
       <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
         {isLoading ? (
           <View style={GlobalInclude.AppStyle.fillCenter}>
-            <ActivityIndicator size={'small'} color={'#2b3252'} />
+            <ActivityIndicator
+              size={'small'}
+              color={GlobalInclude.Color.ColorPrimary}
+            />
           </View>
         ) : (
           <View style={GlobalInclude.AppStyle.fill}>

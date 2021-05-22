@@ -265,7 +265,7 @@ const NotificationListing = ({navigation}) => {
               <Text
                 numberOfLines={2}
                 ellipsizeMode={'tail'}
-                style={[g.fs14, g.colorBlue1, g.FHNB, grid.flex1]}>
+                style={[g.fs14, g.colorBlue, g.FHNB, grid.flex1]}>
                 {item.notification_type === 'pop'
                   ? 'POP Notification'
                   : item.title !== undefined && item.title !== null
@@ -288,7 +288,7 @@ const NotificationListing = ({navigation}) => {
               numberOfLines={1}
               ellipsizeMode={'tail'}
               style={{
-                color: '#2b3252',
+                color: GlobalInclude.Color.ColorPrimary,
                 fontSize: scale(11),
                 textAlign: 'left',
                 fontWeight: '600',
@@ -320,7 +320,10 @@ const NotificationListing = ({navigation}) => {
           <View style={{height: scale(30)}}>
             {paginationStatus === PaginationStatus.waiting ? (
               <View style={g.p10}>
-                <ActivityIndicator size={'small'} color={'#2b3252'} />
+                <ActivityIndicator
+                  size={'small'}
+                  color={GlobalInclude.Color.ColorPrimary}
+                />
               </View>
             ) : null}
           </View>
@@ -344,7 +347,10 @@ const NotificationListing = ({navigation}) => {
           ]}>
           {isLoading ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
-              <ActivityIndicator size={'small'} color={'#2b3252'} />
+              <ActivityIndicator
+                size={'small'}
+                color={GlobalInclude.Color.ColorPrimary}
+              />
             </View>
           ) : (
             <View style={GlobalInclude.AppStyle.fill}>

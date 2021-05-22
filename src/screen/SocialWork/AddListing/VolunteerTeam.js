@@ -179,7 +179,10 @@ const VolunteerTeam = ({
                           grid.alignItems,
                           grid.justifyContentCenter,
                         ]}>
-                        <ActivityIndicator size={'small'} color={'#2b3252'} />
+                        <ActivityIndicator
+                          size={'small'}
+                          color={GlobalInclude.Color.ColorPrimary}
+                        />
                       </View>
                     ) : (
                       <Text
@@ -245,7 +248,7 @@ const VolunteerTeam = ({
 
 const styles = StyleSheet.create({
   addTag: {
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     color: '#ffffff',
     textAlign: 'center',
     fontSize: scale(16),
@@ -262,7 +265,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: -5,
     top: -5,
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     borderRadius: scale(24),
   },
 });

@@ -45,7 +45,7 @@ const CommonWebPage = ({route, navigation}) => {
           {isLoading && (
             <ActivityIndicator
               size={'large'}
-              color={'#2b3252'}
+              color={GlobalInclude.Color.ColorPrimary}
               style={{
                 alignSelf: 'center',
                 position: 'absolute',

@@ -4,7 +4,7 @@ import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
 import {launchImageLibrary} from 'react-native-image-picker';
-import Globalinclude from '../../globalInclude/Globalinclude';
+import GlobalInclude from '../../globalInclude/Globalinclude';
 
 const options = {
   title: 'Select Image',
@@ -57,8 +57,8 @@ const TabSeven = (props) => {
                 width: scale(144),
                 borderRadius: 100,
                 borderWidth: 3,
-                borderColor: '#2b3252',
-                alignContent:'center'
+                borderColor: GlobalInclude.Color.ColorPrimary,
+                alignContent: 'center',
               },
             ]}>
             {props.profileImg !== '' ? (
@@ -69,9 +69,14 @@ const TabSeven = (props) => {
               />
             ) : (
               <Image
-                style={{height: scale(144), width: scale(144),justifyContent:'center',alignSelf:'center'}}
+                style={{
+                  height: scale(144),
+                  width: scale(144),
+                  justifyContent: 'center',
+                  alignSelf: 'center',
+                }}
                 resizeMode="contain"
-                source={Globalinclude.Assets.AppLogo}
+                source={GlobalInclude.Assets.AppLogo}
               />
             )}
           </View>

@@ -21,7 +21,12 @@ function ProgressBar() {
   return (
     <View style={{width: '100%', alignItems: 'center'}}>
       <View style={styles.progress}>
-        <View style={{flex: progress.position, backgroundColor: '#2b3252'}} />
+        <View
+          style={{
+            flex: progress.position,
+            backgroundColor: GlobalInclude.Color.ColorPrimary,
+          }}
+        />
         <View
           style={{
             flex: progress.duration - progress.position,
@@ -89,7 +94,7 @@ export default function Player(props) {
           <TouchableOpacity onPress={onTogglePlayback}>
             <GlobalInclude.BaseIcon
               containerStyle={{height: 48, width: 48}}
-              iconColor={'#2b3252'}
+              iconColor={GlobalInclude.Color.ColorPrimary}
               iconName={
                 playbackState === TrackPlayer.STATE_PLAYING ||
                 playbackState === TrackPlayer.STATE_BUFFERING

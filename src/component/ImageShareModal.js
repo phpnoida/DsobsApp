@@ -11,7 +11,7 @@ import {
 import g from '../theme/global';
 import {scale} from '../theme/Scalling';
 import Icon from 'react-native-vector-icons/AntDesign';
-import GlobaInclude from '../globalInclude/Globalinclude';
+import GlobalInclude from '../globalInclude/Globalinclude';
 import {IconType} from '../helper/Constants';
 
 const windowWidth = Dimensions.get('window').width;
@@ -38,7 +38,7 @@ const ImageShareModal = (props) => {
               }}
               style={styles.buttonCircle}
               background={TouchableNativeFeedback.SelectableBackground()}>
-              <GlobaInclude.BaseIcon
+              <GlobalInclude.BaseIcon
                 containerStyle={{height: scale(26), width: scale(26)}}
                 iconColor={'#808080'}
                 iconName={'close'}
@@ -61,7 +61,7 @@ const ImageShareModal = (props) => {
                 }}
                 style={styles.buttonBlue}
                 background={TouchableNativeFeedback.SelectableBackground()}>
-                <GlobaInclude.BaseIcon
+                <GlobalInclude.BaseIcon
                   containerStyle={{height: scale(20), width: scale(20)}}
                   iconColor={'#fff'}
                   iconName={'share-alt'}
@@ -78,7 +78,7 @@ const ImageShareModal = (props) => {
                 }}
                 style={styles.buttonBlue}
                 background={TouchableNativeFeedback.SelectableBackground()}>
-                <GlobaInclude.BaseIcon
+                <GlobalInclude.BaseIcon
                   containerStyle={{height: scale(20), width: scale(20)}}
                   iconColor={'#fff'}
                   iconName={'share-alt'}
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   },
   buttonBlue: {
     borderRadius: scale(5),
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     flex: 1,
     height: scale(35),
     paddingStart: scale(5),

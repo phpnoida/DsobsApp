@@ -1,15 +1,19 @@
 import React from 'react';
-import {View, Image, Text, TouchableOpacity} from 'react-native';
+import {View, Image, Text, TouchableOpacity, Dimensions} from 'react-native';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import g from '../theme/global';
+import {scale} from '../theme/Scalling';
 import grid from '../theme/grid';
 import CheckBoxIOS from 'react-native-check-box';
+import ProgressImage from './ProgresImage';
+import Helper from '../helper/Helper';
+const {height, width} = Dimensions.get('window');
 
 export const drawCheckbox = (title, checked, onClick) => {
   return (
     <View style={[grid.rowdir, grid.alignItems]}>
       <CheckBoxIOS
-        checkBoxColor={'#2b3252'}
+        checkBoxColor={GlobalInclude.Color.ColorPrimary}
         style={[g.mr2, g.br3, {maxWidth: 23, height: 20}]}
         onClick={() => {
           onClick();
@@ -75,5 +79,76 @@ export const uploadMediaButton = (onPress) => {
         />
       </View>
     </TouchableOpacity>
+  );
+};
+
+export const showUser = (image, title, subTitle, onPress) => {
+  return (
+    <View
+      style={[
+        g.ml10,
+        g.mb15,
+        {
+          width: width / 3 - 40,
+          marginRight: 10,
+          justifyContent: 'center',
+          alignSelf: 'center',
+        },
+      ]}>
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={onPress}
+        style={{
+          justifyContent: 'center',
+          alignSelf: 'center',
+        }}>
+        <View
+          style={[
+            g.bglightGray,
+            g.oh,
+            {
+              borderRadius: 100,
+              justifyContent: 'center',
+              alignSelf: 'center',
+            },
+          ]}>
+          <ProgressImage
+            source={
+              image !== undefined && image !== null && image !== ''
+                ? {uri: image}
+                : GlobalInclude.Assets.DefaultProfile
+            }
+            containerStyle={{
+              aspectRatio: 1 / 1,
+              height: scale(70),
+              alignSelf: 'center',
+              justifyContent: 'center',
+            }}
+            imageStyle={{
+              aspectRatio: 1 / 1,
+            }}
+            mode={'cover'}
+          />
+        </View>
+        <View style={{height: 65, width: 100}}>
+          {title && title !== undefined && title !== null && title !== '' ? (
+            <Text
+              style={[g.fs14, g.FHNR, g.txtCenter, g.colorBlack, g.mt5, g.mb5]}
+              numberOfLines={2}>
+              {title}
+            </Text>
+          ) : null}
+
+          {subTitle &&
+          subTitle !== undefined &&
+          subTitle !== null &&
+          subTitle !== '' ? (
+            <Text style={[g.fs14, g.FHNR, g.txtCenter, g.colorGray1]}>
+              {subTitle}
+            </Text>
+          ) : null}
+        </View>
+      </TouchableOpacity>
+    </View>
   );
 };

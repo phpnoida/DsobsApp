@@ -634,7 +634,7 @@ const SearchDirectory = ({route, navigation}) => {
                 <View style={{width: scale(115)}}>
                   <View style={[grid.rowdir, grid.alignItems]}>
                     <CheckBoxIOS
-                      checkBoxColor={'#2b3252'}
+                      checkBoxColor={GlobalInclude.Color.ColorPrimary}
                       style={[g.mr2, g.br3, {maxWidth: 23, height: 20}]}
                       onClick={() => {
                         setSearchedCityCompany([]);
@@ -668,7 +668,7 @@ const SearchDirectory = ({route, navigation}) => {
                   }}>
                   <View style={[grid.rowdir, grid.alignItems]}>
                     <CheckBoxIOS
-                      checkBoxColor={'#2b3252'}
+                      checkBoxColor={GlobalInclude.Color.ColorPrimary}
                       style={[g.mr2, g.br3, {maxWidth: 23, height: 20}]}
                       onClick={() => {
                         setSearchedCityCompany([]);
@@ -697,7 +697,7 @@ const SearchDirectory = ({route, navigation}) => {
                 <View style={{width: scale(75)}}>
                   <View style={[grid.rowdir, grid.alignItems]}>
                     <CheckBoxIOS
-                      checkBoxColor={'#2b3252'}
+                      checkBoxColor={GlobalInclude.Color.ColorPrimary}
                       style={[g.mr2, g.br3, {maxWidth: 23, height: 20}]}
                       onClick={() => {
                         setSearchedCityCompany([]);
@@ -726,7 +726,7 @@ const SearchDirectory = ({route, navigation}) => {
                 <View style={[grid.col, {marginStart: scale(3)}]}>
                   <View style={[grid.rowdir, grid.alignItems]}>
                     <CheckBoxIOS
-                      checkBoxColor={'#2b3252'}
+                      checkBoxColor={GlobalInclude.Color.ColorPrimary}
                       style={[g.mr2, g.br3, {maxWidth: 23, height: 20}]}
                       onClick={() => {
                         setSearchedCityCompany([]);
@@ -995,7 +995,7 @@ const style = StyleSheet.create({
     marginStart: scale(6),
   },
   tabsbut: {
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     color: '#ffffff',
     width: scale(100),
     paddingTop: scale(10),
@@ -1007,7 +1007,7 @@ const style = StyleSheet.create({
   },
   bbtbgnactive: {
     backgroundColor: '#f8f8f8',
-    color: '#2b3252',
+    color: GlobalInclude.Color.ColorPrimary,
   },
   tabBarText: {
     color: '#333333',

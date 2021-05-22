@@ -1790,7 +1790,7 @@ const styles = StyleSheet.create({
     width: scale(144),
     borderRadius: scale(144),
     borderWidth: 3,
-    borderColor: '#2b3252',
+    borderColor: GlobalInclude.Color.ColorPrimary,
     overflow: 'hidden',
   },
   lgbtqia: {

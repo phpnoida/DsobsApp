@@ -22,8 +22,8 @@ const menuOptions = [
   {screen: 'GalleryListing', visible: true, value: 4, label: 'Gallery'},
   {screen: 'YellowPages', visible: true, value: 5, label: 'Yellow Pages'},
   {screen: 'Teachers', visible: true, value: 6, label: 'Masters'},
-  {screen: 'SocialListing', visible: false, value: 7, label: 'Social Work'},
-  {screen: 'SocialVenture', visible: false, value: 8, label: 'Venture'},
+  {screen: 'SocialListing', visible: true, value: 7, label: 'Social Work'},
+  {screen: 'SocialVenture', visible: true, value: 8, label: 'Ventures'},
 ];
 
 const TopHeaderView = ({
@@ -64,7 +64,7 @@ const TopHeaderView = ({
               {menuOptions.map(function (item, i) {
                 let arrayStyle = [styles.menuDefaultStyle];
                 if (item.label === selectedTab) {
-                  arrayStyle.push({color: '#2b3252'});
+                  arrayStyle.push({color: GlobalInclude.Color.ColorPrimary});
                 } else {
                   arrayStyle.push({color: '#bababa'});
                 }

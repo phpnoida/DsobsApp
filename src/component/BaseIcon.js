@@ -3,7 +3,7 @@ import {View} from 'react-native';
 import {Icon} from 'react-native-elements';
 import PropTypes from 'prop-types';
 import {scale} from '../theme/Scalling';
-
+import Color from '../theme/Colors';
 const BaseIcon = ({
   containerStyle,
   iconSize,
@@ -28,7 +28,7 @@ BaseIcon.propTypes = {
 BaseIcon.defaultProps = {
   containerStyle: {},
   iconSize: scale(20),
-  iconColor: '#2b3252',
+  iconColor: Color.ColorPrimary,
   iconType: 'material',
   iconName: '',
 };

@@ -14,6 +14,7 @@ import {
   FlatList,
   Linking,
   TouchableNativeFeedback,
+  DeviceEventEmitter,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -33,6 +34,8 @@ let imageId = '';
 let imageKey = '';
 let responseMessage = '';
 let isRemoved = false;
+let selectedIndex = 0;
+let filterObject = 0;
 const TagUser = ({route, navigation}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchedUser, setSearchedUser] = useState([]);
@@ -42,12 +45,19 @@ const TagUser = ({route, navigation}) => {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
+    console.log('====================================');
+    console.log(route);
+    console.log('====================================');
     if (route.params !== undefined && route.params !== null) {
       imageId = route.params.id;
       imageKey = route.params.imageKey;
+      selectedIndex = route.params.index;
+      filterObject = route.params.filterObject;
       setTaggedUsers([...route.params.userTag]);
     }
-    return () => {};
+    return () => {
+      DeviceEventEmitter.removeAllListeners('event.updateEvent');
+    };
   }, []);
 
   /**
@@ -132,6 +142,10 @@ const TagUser = ({route, navigation}) => {
                 setShowModal(false);
 
                 setTimeout(() => {
+                  DeviceEventEmitter.emit('event.updateEvent', {
+                    selectedIndex: selectedIndex,
+                    filterObject: filterObject,
+                  });
                   navigation.goBack();
                 }, 100);
               }, 2000);
@@ -363,7 +377,7 @@ const TagUser = ({route, navigation}) => {
                         background={TouchableNativeFeedback.SelectableBackground()}>
                         <GlobalInclude.BaseIcon
                           containerStyle={{height: scale(18), width: scale(18)}}
-                          iconColor={'#2b3252'}
+                          iconColor={GlobalInclude.Color.ColorPrimary}
                           iconName={'close'}
                           iconSize={scale(16)}
                           iconType={IconType[4]}

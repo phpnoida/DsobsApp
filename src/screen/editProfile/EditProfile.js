@@ -344,7 +344,7 @@ const EditProfile = ({route, navigation}) => {
                   borderRadius={scale(10)}
                   borderWidth={0}
                   unfilledColor={'#f8f8f8'}
-                  color={'#2b3252'}
+                  color={GlobalInclude.Color.ColorPrimary}
                 />
               </View>
               {openDropDown ? (
@@ -366,7 +366,7 @@ const EditProfile = ({route, navigation}) => {
                       {menuOptions.map(function (item, i) {
                         let arrayStyle = [styles.menuDefaultStyle];
                         if (item.label === selectedTab) {
-                          arrayStyle.push({color: '#2b3252'});
+                          arrayStyle.push({color: GlobalInclude.Color.ColorPrimary});
                         } else {
                           arrayStyle.push({color: '#bababa'});
                         }

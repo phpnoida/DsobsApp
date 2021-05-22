@@ -83,6 +83,7 @@ const GalleryDetail = ({route, navigation}) => {
       setTitle(pageTitle);
       setData([...arrayItems]);
       setIastIndex(index);
+      
     }
 
     const unsubscribe = navigation.addListener('focus', () => {
@@ -478,7 +479,7 @@ const GalleryDetail = ({route, navigation}) => {
               }}>
               <GlobalInclude.BaseIcon
                 containerStyle={{height: scale(20), width: scale(20)}}
-                iconColor={'#2b3252'}
+                iconColor={GlobalInclude.Color.ColorPrimary}
                 iconName={'tag'}
                 iconSize={scale(20)}
                 iconType={IconType[4]}
@@ -518,7 +519,7 @@ const GalleryDetail = ({route, navigation}) => {
               }}>
               <GlobalInclude.BaseIcon
                 containerStyle={{height: scale(20), width: scale(20)}}
-                iconColor={'#2b3252'}
+                iconColor={GlobalInclude.Color.ColorPrimary}
                 iconName={'info-circle'}
                 iconSize={scale(20)}
                 iconType={IconType[4]}
@@ -551,7 +552,7 @@ const GalleryDetail = ({route, navigation}) => {
               }}>
               <GlobalInclude.BaseIcon
                 containerStyle={{height: scale(20), width: scale(20)}}
-                iconColor={'#2b3252'}
+                iconColor={GlobalInclude.Color.ColorPrimary}
                 iconName={'download'}
                 iconSize={scale(20)}
                 iconType={IconType[4]}
@@ -579,7 +580,7 @@ const GalleryDetail = ({route, navigation}) => {
               }}>
               <GlobalInclude.BaseIcon
                 containerStyle={{height: scale(20), width: scale(20)}}
-                iconColor={'#2b3252'}
+                iconColor={GlobalInclude.Color.ColorPrimary}
                 iconName={'exclamationcircleo'}
                 iconSize={scale(20)}
                 iconType={IconType[10]}
@@ -619,7 +620,10 @@ const GalleryDetail = ({route, navigation}) => {
       <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
         {isFetching ? (
           <View style={GlobalInclude.AppStyle.fillCenter}>
-            <ActivityIndicator size={'small'} color={'#2b3252'} />
+            <ActivityIndicator
+              size={'small'}
+              color={GlobalInclude.Color.ColorPrimary}
+            />
           </View>
         ) : (
           <View style={GlobalInclude.AppStyle.fill}>

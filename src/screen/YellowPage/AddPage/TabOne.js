@@ -451,7 +451,7 @@ const style = StyleSheet.create({
     width: scale(24),
     height: scale(24),
     borderRadius: scale(24),
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'flex-end',
@@ -463,7 +463,7 @@ const style = StyleSheet.create({
   nextIconBox: {
     height: scale(30),
     width: scale(30),
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     borderRadius: scale(38),
     justifyContent: 'center',
     alignItems: 'center',

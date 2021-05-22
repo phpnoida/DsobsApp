@@ -218,7 +218,10 @@ const SocialVenture = ({navigation}) => {
           <View style={{height: scale(30)}}>
             {paginationStatus === PaginationStatus.waiting ? (
               <View style={g.p10}>
-                <ActivityIndicator size={'small'} color={'#2b3252'} />
+                <ActivityIndicator
+                  size={'small'}
+                  color={GlobalInclude.Color.ColorPrimary}
+                />
               </View>
             ) : null}
           </View>
@@ -325,8 +328,8 @@ const SocialVenture = ({navigation}) => {
                   g.fs14,
                   g.mt5,
                   g.FHNB,
-                  g.colorBlue,
                   GlobalInclude.AppStyle.transform,
+                  style.grayColorText,
                 ]}
                 numberOfLines={1}>
                 {item.founder &&
@@ -417,60 +420,54 @@ const SocialVenture = ({navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
-      <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
+    <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
+      <TopHeaderView
+        index={8}
+        navigation={navigation}
+        label={'Post a Venture'}
+        showLabel={true}
+        onLabelPress={() => {
+          navigation.navigate('ListSocialVenture');
+        }}
+      />
+      <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.fill}>
-          <View
-            style={[
-              GlobalInclude.AppStyle.contentSpace,
-              {zIndex: 1},
-              g.bgWhite,
-            ]}>
-            <TopHeaderView
-              index={8}
-              navigation={navigation}
-              label={'Post Venture'}
-              showLabel={true}
-              onLabelPress={() => {
-                navigation.navigate('ListSocialVenture');
-              }}
-            />
-          </View>
-          <View style={GlobalInclude.AppStyle.fill}>
-            {firstTimeLoad ? (
-              <View style={GlobalInclude.AppStyle.fillCenter}>
-                <ActivityIndicator size={'small'} color={'#2b3252'} />
-              </View>
-            ) : (
-              <View style={GlobalInclude.AppStyle.fill}>
-                <Animated.FlatList
-                  ref={flatList}
-                  showsVerticalScrollIndicator={false}
-                  extraData={pageContent}
-                  data={pageContent}
-                  renderItem={renderItem}
-                  keyExtractor={(item, index) => index.toString()}
-                  onEndReachedThreshold={0.1}
-                  onEndReached={onEndReached}
-                  refreshing={isRefreshing}
-                  onRefresh={handleRefresh}
-                  ListEmptyComponent={renderNoDataComponent}
-                  ListFooterComponent={renderFooter}
-                  contentContainerStyle={{
-                    marginTop: animatedHeight,
-                    paddingBottom:
-                      searchCategory.length > 0 ? scale(280) : scale(130),
-                  }}
-                  scrollEventThrottle={16}
-                  onScroll={Animated.event(
-                    [{nativeEvent: {contentOffset: {y: curY}}}],
-                    {useNativeDriver: true},
-                  )}
-                />
-                {renderHeader()}
-              </View>
-            )}
-          </View>
+          {firstTimeLoad ? (
+            <View style={GlobalInclude.AppStyle.fillCenter}>
+              <ActivityIndicator
+                size={'small'}
+                color={GlobalInclude.Color.ColorPrimary}
+              />
+            </View>
+          ) : (
+            <View style={GlobalInclude.AppStyle.fill}>
+              <Animated.FlatList
+                ref={flatList}
+                showsVerticalScrollIndicator={false}
+                extraData={pageContent}
+                data={pageContent}
+                renderItem={renderItem}
+                keyExtractor={(item, index) => index.toString()}
+                onEndReachedThreshold={0.1}
+                onEndReached={onEndReached}
+                refreshing={isRefreshing}
+                onRefresh={handleRefresh}
+                ListEmptyComponent={renderNoDataComponent}
+                ListFooterComponent={renderFooter}
+                contentContainerStyle={{
+                  marginTop: animatedHeight,
+                  paddingBottom:
+                    searchCategory.length > 0 ? scale(280) : scale(130),
+                }}
+                scrollEventThrottle={16}
+                onScroll={Animated.event(
+                  [{nativeEvent: {contentOffset: {y: curY}}}],
+                  {useNativeDriver: true},
+                )}
+              />
+              {renderHeader()}
+            </View>
+          )}
         </View>
       </SafeAreaView>
 

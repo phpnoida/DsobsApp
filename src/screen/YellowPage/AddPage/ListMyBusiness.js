@@ -773,7 +773,10 @@ const ListMyBusiness = ({route, navigation}) => {
             right: 0,
             justifyContent: 'center',
           }}>
-          <ActivityIndicator size={'large'} color={'#2b3252'} />
+          <ActivityIndicator
+            size={'large'}
+            color={GlobalInclude.Color.ColorPrimary}
+          />
         </View>
       )}
 

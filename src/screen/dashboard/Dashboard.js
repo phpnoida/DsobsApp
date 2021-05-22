@@ -111,7 +111,7 @@ const Dashboard = ({props, navigation}) => {
        */
       validatePushNotification();
 
-      console.log('global.userDetails.fcmTopic', global.userDetails.fcmTopic);
+      //console.log('global.userDetails.fcmTopic', global.userDetails.fcmTopic);
     });
 
     if (refreshState) {
@@ -705,10 +705,10 @@ const Dashboard = ({props, navigation}) => {
                     source={GlobalInclude.Assets.CommonRoom}
                     resizeMode={'contain'}
                     resizeMethod={'auto'}
-                    tintColor={'#2b3252'}
+                    tintColor={GlobalInclude.Color.ColorPrimary}
                     style={[
                       styles.menuIcon,
-                      {...Platform.select({ios: {tintColor: '#2b3252'}})},
+                      {...Platform.select({ios: {tintColor: GlobalInclude.Color.ColorPrimary}})},
                     ]}
                   />
                   <View style={styles.menuText}>
@@ -732,10 +732,10 @@ const Dashboard = ({props, navigation}) => {
                     source={GlobalInclude.Assets.YellowPage}
                     resizeMode={'contain'}
                     resizeMethod={'auto'}
-                    tintColor={'#2b3252'}
+                    tintColor={GlobalInclude.Color.ColorPrimary}
                     style={[
                       styles.menuIcon,
-                      {...Platform.select({ios: {tintColor: '#2b3252'}})},
+                      {...Platform.select({ios: {tintColor: GlobalInclude.Color.ColorPrimary}})},
                     ]}
                   />
                   <View style={styles.menuText}>
@@ -770,11 +770,10 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    // bottomSheet.close();
-                    // setTimeout(() => {
-                    //   navigation.navigate('SocialListing');
-                    // }, 200);
-                    Alert.alert('Coming soon...');
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('SocialListing');
+                    }, 200);
                   }}>
                   <Image
                     source={GlobalInclude.Assets.Social}
@@ -808,11 +807,10 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    Alert.alert('Coming soon...');
-                    //bottomSheet.close();
-                    // setTimeout(() => {
-                    //   navigation.navigate('SocialVenture');
-                    // }, 200);
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('SocialVenture');
+                    }, 200);
                   }}>
                   <Image
                     source={GlobalInclude.Assets.Venture}
@@ -945,7 +943,7 @@ const Dashboard = ({props, navigation}) => {
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: '#2b3252'}}>
+    <SafeAreaView style={{flex: 1, backgroundColor: GlobalInclude.Color.ColorPrimary}}>
       <View style={GlobalInclude.AppStyle.fill}>
         <View style={styles.videoContainerAndroid}>
           {showPopNotification &&
@@ -1158,7 +1156,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   menuStyle: {
-    color: '#2b3252',
+    color: GlobalInclude.Color.ColorPrimary,
     fontSize: scale(12.5),
     textAlign: 'center',
     fontFamily: 'Lato-bold',

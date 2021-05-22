@@ -167,7 +167,10 @@ const Summary = ({route, navigation}) => {
             ]}>
             {isLoading ? (
               <View style={GlobalInclude.AppStyle.fillCenter}>
-                <ActivityIndicator size={'small'} color={'#2b3252'} />
+                <ActivityIndicator
+                  size={'small'}
+                  color={GlobalInclude.Color.ColorPrimary}
+                />
               </View>
             ) : (
               <View style={GlobalInclude.AppStyle.fill}>
@@ -200,7 +203,7 @@ const Summary = ({route, navigation}) => {
                           style={grid.col}>
                           <GlobalInclude.BaseIcon
                             containerStyle={style.backIcon}
-                            iconColor={'#2b3252'}
+                            iconColor={GlobalInclude.Color.ColorPrimary}
                             iconName={'arrowleft'}
                             iconSize={scale(30)}
                             iconType={IconType[10]}

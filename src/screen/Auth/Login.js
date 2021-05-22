@@ -407,7 +407,10 @@ const Login = ({navigation}) => {
             activeOpacity={1}
             style={[
               g.mr15,
-              {borderBottomWidth: 1.5, borderBottomColor: '#2b3252'},
+              {
+                borderBottomWidth: 1.5,
+                borderBottomColor: GlobalInclude.Color.ColorPrimary,
+              },
             ]}>
             <Text style={[g.colorBlue, g.fs24, g.pb2]}>Sign In</Text>
           </TouchableOpacity>
@@ -422,7 +425,7 @@ const Login = ({navigation}) => {
             }}
             style={{
               borderBottomWidth: 0,
-              borderBottomColor: '#2b3252',
+              borderBottomColor: GlobalInclude.Color.ColorPrimary,
               opacity: 0.5,
             }}>
             <Text style={[g.colorBlue, g.fs24, g.pb2, {opacity: 0.7}]}>

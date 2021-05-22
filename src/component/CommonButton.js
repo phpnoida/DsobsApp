@@ -2,13 +2,14 @@ import React from 'react';
 import {Text, View, TouchableOpacity, ActivityIndicator} from 'react-native';
 import g from '../theme/global';
 import {scale} from '../theme/Scalling';
+import Color from '../theme/Colors';
 
 const CommonButton = (props) => {
   return (
     <TouchableOpacity
       activeOpacity={1}
       style={{
-        backgroundColor: '#2b3252',
+        backgroundColor: Color.ColorPrimary,
         textAlign: 'center',
         fontSize: scale(16),
         borderRadius: props.radius ? props.radius : scale(8),

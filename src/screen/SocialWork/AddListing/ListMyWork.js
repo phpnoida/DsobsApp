@@ -153,10 +153,7 @@ const ListMyWork = ({route, navigation}) => {
     let participants = [];
 
     volunteers.map((item, index) => {
-      if (
-        item.volunteerName.trim() !== '' &&
-        item.volunteerRole.trim() !== ''
-      ) {
+      if (item.volunteerName.trim() !== '') {
         let request = {
           fromSchool: item.fromSchool,
           name: item.volunteerName,

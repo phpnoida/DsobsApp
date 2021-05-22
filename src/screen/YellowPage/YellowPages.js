@@ -550,7 +550,10 @@ const YellowPages = ({navigation}) => {
           <View style={{height: scale(30)}}>
             {paginationStatus === PaginationStatus.waiting ? (
               <View style={g.p10}>
-                <ActivityIndicator size={'small'} color={'#2b3252'} />
+                <ActivityIndicator
+                  size={'small'}
+                  color={GlobalInclude.Color.ColorPrimary}
+                />
               </View>
             ) : null}
           </View>
@@ -785,7 +788,7 @@ const YellowPages = ({navigation}) => {
         index={5}
         customIcon={{
           containerStyle: {height: scale(24), width: scale(24)},
-          iconColor: '#2b3252',
+          iconColor: GlobalInclude.Color.ColorPrimary,
           iconName: 'dots-horizontal',
           size: scale(24),
           type: IconType[1],
@@ -800,7 +803,10 @@ const YellowPages = ({navigation}) => {
         <View style={GlobalInclude.AppStyle.fill}>
           {firstTimeLoad ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
-              <ActivityIndicator size={'small'} color={'#2b3252'} />
+              <ActivityIndicator
+                size={'small'}
+                color={GlobalInclude.Color.ColorPrimary}
+              />
             </View>
           ) : (
             <View style={GlobalInclude.AppStyle.fill}>
@@ -958,7 +964,7 @@ const style = StyleSheet.create({
     flexDirection: 'row',
   },
   tabsbut: {
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     color: '#ffffff',
     width: scale(100),
     paddingTop: scale(10),
@@ -970,7 +976,7 @@ const style = StyleSheet.create({
   },
   bbtbgnactive: {
     backgroundColor: '#f8f8f8',
-    color: '#2b3252',
+    color: GlobalInclude.Color.ColorPrimary,
   },
   tabBarText: {
     color: '#333333',

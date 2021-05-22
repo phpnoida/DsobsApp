@@ -365,7 +365,10 @@ const Register = (props) => {
                 activeOpacity={1}
                 style={[
                   g.mr15,
-                  {borderBottomWidth: 1.5, borderBottomColor: '#2b3252'},
+                  {
+                    borderBottomWidth: 1.5,
+                    borderBottomColor: GlobalInclude.Color.ColorPrimary,
+                  },
                 ]}>
                 <Text style={[g.colorBlue, g.fs24, g.pb2]}>Sign Up</Text>
               </TouchableOpacity>
@@ -385,7 +388,7 @@ const Register = (props) => {
               style={[g.ml15, {padding: scale(10)}]}>
               <AntDesign
                 name={'arrowleft'}
-                color={'#2b3252'}
+                color={GlobalInclude.Color.ColorPrimary}
                 size={scale(30)}
               />
             </TouchableOpacity>
@@ -807,7 +810,7 @@ const Register = (props) => {
           Select Batch
         </Text>
         <RadioButton
-          PROP={Helper.generateYearList(false,-1)}
+          PROP={Helper.generateYearList(false, -1)}
           onRadioSelect={(value) => {
             setSelectedBatch(value.text.toString());
             batchSheet.close();

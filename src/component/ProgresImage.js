@@ -3,7 +3,7 @@ import {Platform, Animated} from 'react-native';
 import {scale} from '../theme/Scalling';
 import FastImage from 'react-native-fast-image';
 import {createImageProgress} from 'react-native-image-progress';
-
+import Color from '../theme/Colors';
 const AnimatedFastImage = Animated.createAnimatedComponent(FastImage);
 const ProgressImage = createImageProgress(AnimatedFastImage);
 let opacity = new Animated.Value(0.0);
@@ -26,7 +26,7 @@ const ProgresImage = ({source, containerStyle, imageStyle, mode}) => (
     }}
     indicatorProps={{
       animated: true,
-      color: '#2b3252',
+      color: Color.ColorPrimary,
       direction: Platform.os === 'android' ? 'clockwise' : 'rtl',
       indeterminate: true,
       progress: 100,

@@ -293,7 +293,11 @@ const UserProfile = ({route, navigation}) => {
               Alert.alert('Coming soon...');
             }
           }}>
-          <Icons name={item.item.icon} color={'#2b3252'} size={scale(26)} />
+          <Icons
+            name={item.item.icon}
+            color={GlobalInclude.Color.ColorPrimary}
+            size={scale(26)}
+          />
           <Text style={[g.fs16, g.FHNB, g.colorBlack, g.ml15]}>
             {item.item.title}
           </Text>
@@ -308,7 +312,10 @@ const UserProfile = ({route, navigation}) => {
         <View style={GlobalInclude.AppStyle.parentStyle}>
           {isLoading ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
-              <ActivityIndicator size={'small'} color={'#2b3252'} />
+              <ActivityIndicator
+                size={'small'}
+                color={GlobalInclude.Color.ColorPrimary}
+              />
             </View>
           ) : (
             <View style={GlobalInclude.AppStyle.fill}>
@@ -361,7 +368,7 @@ const UserProfile = ({route, navigation}) => {
                   <ScrollableTabView
                     underlineColor={'#ffffff'}
                     style={{paddingLeft: 0, paddingRight: 0, margin: 0}}
-                    tabBarActiveTextColor={'#2b3252'}
+                    tabBarActiveTextColor={GlobalInclude.Color.ColorPrimary}
                     tabBarInactiveTextColor={'#bababa'}
                     tabBarTextStyle={{
                       fontSize: scale(15),
@@ -538,7 +545,7 @@ const styles = StyleSheet.create({
     borderRadius: scale(60),
     width: scale(60),
     height: scale(60),
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -8,7 +8,7 @@ import CheckBoxIOS from 'react-native-check-box';
 const DrawCheckbox = ({title, checked, onClick}) => (
   <View style={[grid.rowdir, grid.alignItems]}>
     <CheckBoxIOS
-      checkBoxColor={'#2b3252'}
+      checkBoxColor={GlobalInclude.Color.ColorPrimary}
       style={[g.mr2, g.br3, {maxWidth: 23, height: 20}]}
       onClick={() => {
         onClick();

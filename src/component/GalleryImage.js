@@ -121,14 +121,14 @@ class GalleryImage extends Component {
                     onPress={() => {
                       this.props.expandSelectedPanel();
                     }}>
-                    <Text style={[g.colorBlue1, g.fs13]}>0 More</Text>
+                    <Text style={[g.colorBlue, g.fs13]}>0 More</Text>
                   </TouchableOpacity>
                 ) : (
                   <TouchableOpacity
                     onPress={() => {
                       this.props.expandSelectedPanel();
                     }}>
-                    <Text style={[g.colorBlue1, g.fs13]}>
+                    <Text style={[g.colorBlue, g.fs13]}>
                       +
                       {this.props.images && this.props.images.length > 5
                         ? this.props.images.length - 6

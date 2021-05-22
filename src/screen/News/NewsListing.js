@@ -567,7 +567,10 @@ const NewsListing = ({navigation}) => {
           <View style={{height: scale(30)}}>
             {paginationStatus === PaginationStatus.waiting ? (
               <View style={g.p10}>
-                <ActivityIndicator size={'small'} color={'#2b3252'} />
+                <ActivityIndicator
+                  size={'small'}
+                  color={GlobalInclude.Color.ColorPrimary}
+                />
               </View>
             ) : null}
           </View>
@@ -727,7 +730,10 @@ const NewsListing = ({navigation}) => {
           </View>
           {isLoading ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
-              <ActivityIndicator size={'small'} color={'#2b3252'} />
+              <ActivityIndicator
+                size={'small'}
+                color={GlobalInclude.Color.ColorPrimary}
+              />
             </View>
           ) : (
             <View style={GlobalInclude.AppStyle.fill}>
@@ -811,7 +817,7 @@ const NewsListing = ({navigation}) => {
                         }}>
                         <GlobalInclude.BaseIcon
                           containerStyle={{height: scale(16), width: scale(16)}}
-                          iconColor={'#2b3252'}
+                          iconColor={GlobalInclude.Color.ColorPrimary}
                           iconName={item.isVisible ? 'caretup' : 'caretdown'}
                           iconSize={scale(16)}
                           iconType={IconType[10]}
@@ -835,7 +841,7 @@ const NewsListing = ({navigation}) => {
                                       paddingBottom: 10,
                                       paddingRight: 5,
                                       color: child.selected
-                                        ? '#2b3252'
+                                        ? GlobalInclude.Color.ColorPrimary
                                         : '#a6a6a6',
                                     },
                                   ]}
@@ -1134,7 +1140,7 @@ const style = StyleSheet.create({
     position: 'absolute',
     top: -6,
     right: -6,
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     borderRadius: scale(30),
   },
   userNameView: {

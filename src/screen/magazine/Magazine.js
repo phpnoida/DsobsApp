@@ -216,7 +216,10 @@ const Magazine = ({route, navigation}) => {
             ]}>
             {isLoading ? (
               <View style={GlobalInclude.AppStyle.fillCenter}>
-                <ActivityIndicator size={'small'} color={'#2b3252'} />
+                <ActivityIndicator
+                  size={'small'}
+                  color={GlobalInclude.Color.ColorPrimary}
+                />
               </View>
             ) : (
               <View style={GlobalInclude.AppStyle.fill}>
@@ -312,7 +315,7 @@ const Magazine = ({route, navigation}) => {
                                   {isDownloading && item._id === selectedId ? (
                                     <ActivityIndicator
                                       size={'small'}
-                                      color={'#2b3252'}
+                                      color={GlobalInclude.Color.ColorPrimary}
                                     />
                                   ) : (
                                     <TouchableOpacity
@@ -326,7 +329,9 @@ const Magazine = ({route, navigation}) => {
                                       }}>
                                       <GlobalInclude.BaseIcon
                                         containerStyle={style.downloadIcon}
-                                        iconColor={'#2b3252'}
+                                        iconColor={
+                                          GlobalInclude.Color.ColorPrimary
+                                        }
                                         iconName={'download'}
                                         iconSize={scale(20)}
                                         iconType={IconType[4]}

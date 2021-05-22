@@ -38,7 +38,7 @@ const TabSix = ({onSaveTab}) => {
                 style={{
                   fontSize: large ? scale(20) : scale(16),
                   fontFamily: 'Lato-Bold',
-                  color: large ? '#2b3252' : '#000000',
+                  color: large ? GlobalInclude.Color.ColorPrimary : '#000000',
                   marginBottom: scale(5),
                 }}>
                 {formattedValue}

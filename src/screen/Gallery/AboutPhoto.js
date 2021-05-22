@@ -2,7 +2,7 @@ import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
+  Keyboard,
   TextInput,
   SafeAreaView,
   Text,
@@ -18,13 +18,10 @@ import HeaderBar from '../../component/HeaderBar';
 import CommonButton from '../../component/CommonButton';
 import YearSelection from '../../component/YearSelectionSheet';
 import CategoryFilter from '../../component/CategoryFilterSheet';
-import FilterSheet from 'react-native-raw-bottom-sheet';
 import {
   getGalleryCategory,
   doUpdateImageInformation,
 } from '../../Actions/GalleryActions';
-
-let filterSheet = null;
 
 const {height, width} = Dimensions.get('window');
 
@@ -210,12 +207,25 @@ const AboutPhoto = ({route, navigation}) => {
           <View style={[g.mb15]}>
             <TextInput
               underlineColorAndroid="transparent"
-              style={[
-                g.inputWhite,
-                {height: 120, color: 'black', textAlignVertical: 'top'},
-              ]}
+              style={{
+                height: 120,
+                color: 'black',
+                textAlignVertical: 'top',
+                backgroundColor: '#f8f8f8',
+                padding: scale(10),
+                margin: 0,
+                fontSize: scale(12),
+                borderRadius: scale(8),
+                fontFamily: 'Lato-Regular',
+                justifyContent: 'center',
+              }}
               multiline={true}
               value={about}
+              returnKeyType="done"
+              blurOnSubmit={true}
+              onSubmitEditing={() => {
+                Keyboard.dismiss();
+              }}
               placeholder={'Enter words separated by comma'}
               onChangeText={(tag) => {
                 setAbout(tag);

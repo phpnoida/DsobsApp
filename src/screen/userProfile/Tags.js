@@ -1,7 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 import {Text, View, ScrollView, StyleSheet} from 'react-native';
-import Globalinclude from '../../globalInclude/Globalinclude';
+import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
 
@@ -24,7 +24,7 @@ const Tags = (props) => {
   return (
     <View style={{paddingStart: scale(15), paddingEnd: scale(15), flex: 1}}>
       {tags.length === 0 ? (
-        <View style={Globalinclude.AppStyle.fillCenter}>
+        <View style={GlobalInclude.AppStyle.fillCenter}>
           <Text style={[g.fs16, g.FHNB, g.colorBlack]}>
             Currently No Data Uploaded!
           </Text>
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     paddingBottom: scale(6),
   },
   tagView: {
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     borderRadius: 30,
     paddingTop: 8,
     paddingBottom: 8,

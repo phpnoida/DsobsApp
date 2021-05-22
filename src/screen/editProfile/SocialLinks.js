@@ -502,7 +502,7 @@ const SocialLinks = (props) => {
             </View>
 
             <View style={[grid.rowdir, grid.alignItemsTop]}>
-              <Text style={[g.colorBlue1, g.fs16, g.FHNB]}>My Links</Text>
+              <Text style={[g.colorBlue, g.fs16, g.FHNB]}>My Links</Text>
             </View>
 
             <View>

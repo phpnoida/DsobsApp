@@ -155,10 +155,7 @@ const ListSocialVenture = ({route, navigation}) => {
     let participants = [];
 
     volunteers.map((item, index) => {
-      if (
-        item.volunteerName.trim() !== '' &&
-        item.volunteerRole.trim() !== ''
-      ) {
+      if (item.volunteerName.trim() !== '') {
         let request = {
           fromSchool: item.fromSchool,
           name: item.volunteerName,
@@ -255,34 +252,28 @@ const ListSocialVenture = ({route, navigation}) => {
    */
 
   const handleInput = (key, value) => {
+    setErrorMessage({});
     switch (key) {
       case 'projectName':
         setProjectName(value);
-        setErrorMessage({});
         break;
       case 'initiatedBy':
         setInitiatedBy(value);
-        setErrorMessage({});
         break;
       case 'facebook':
         setFacebook(value);
-        setErrorMessage({});
         break;
       case 'twitter':
         setTwitter(value);
-        setErrorMessage({});
         break;
       case 'wikipedia':
         setWikipedia(value);
-        setErrorMessage({});
         break;
       case 'ventureVideoLink':
         setVentureVideoLink(value);
-        setErrorMessage({});
         break;
       case 'aboutVenture':
         setAboutVenture(value);
-        setErrorMessage({});
         break;
     }
   };
@@ -308,11 +299,11 @@ const ListSocialVenture = ({route, navigation}) => {
       if (selectedCategory.trim() === '') {
         setErrorMessage({selectedCategory: 'This field is required'});
         return;
-      } else if (projectName.trim() === '') {
-        setErrorMessage({projectName: 'This field is required'});
-        return;
       } else if (selectedYear === -1) {
         setErrorMessage({selectedYear: 'This field is required'});
+        return;
+      } else if (projectName.trim() === '') {
+        setErrorMessage({projectName: 'This field is required'});
         return;
       } else if (closingDate.trim() === '') {
         setErrorMessage({closingDate: 'This field is required'});
@@ -417,12 +408,6 @@ const ListSocialVenture = ({route, navigation}) => {
       ) {
         element.errorMessage.volunteerName = 'This field is required';
         isValid = false;
-      } else if (
-        element.volunteerRole === '' ||
-        element.volunteerRole.trim().length === 0
-      ) {
-        element.errorMessage.volunteerRole = 'This field is required';
-        isValid = false;
       } else {
         element.errorMessage = {};
       }
@@ -466,14 +451,15 @@ const ListSocialVenture = ({route, navigation}) => {
             wikipedia={wikipedia}
             closingDate={closingDate}
             setDate={(obj) => {
+              setErrorMessage({});
               setClosingDate(obj.displayDate);
-              //obj.serverDate
               let closeDate = new Date(obj.serverDate);
-              investmentClosingDate = closeDate.getTime();
+              investmentClosingDate = Math.round(closeDate.getTime() / 1000);
             }}
             searchCategory={searchCategory}
             onCategorySelect={(category) => {
               setSelectedCategory(category);
+              setErrorMessage({});
               setCategoryList([...categoryListMain]);
             }}
             setYear={(value) => {
@@ -496,6 +482,7 @@ const ListSocialVenture = ({route, navigation}) => {
             selectedTags={selectedTags}
             socialPhoto={socialPhoto}
             uploadMedia={(media) => {
+              setErrorMessage({});
               setSocialPhoto(media);
             }}
             tag={tag}

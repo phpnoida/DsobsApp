@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
-import Globalinclude from '../../globalInclude/Globalinclude';
+import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
 import {IconType} from '../../helper/Constants';
 
@@ -27,9 +27,9 @@ const generateView = (type, icon, title, subTitle, callback) => {
         style={[g.boxShadow, g.bgWhite, g.br3, g.mb10, g.p15]}>
         <View style={[grid.rowdir, grid.alignItems]}>
           {icon !== '' && (
-            <Globalinclude.BaseIcon
+            <GlobalInclude.BaseIcon
               containerStyle={{height: scale(26), width: scale(26)}}
-              iconColor={'#2b3252'}
+              iconColor={GlobalInclude.Color.ColorPrimary}
               iconName={icon}
               iconSize={scale(24)}
               iconType={type}

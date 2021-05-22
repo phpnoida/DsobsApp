@@ -259,13 +259,15 @@ const GalleryListing = ({navigation}) => {
         expandSelectedPanel={() => {
           expandSelectedPanel(index);
         }}
-        onImagePress={(imageData, index) => {
+        onImagePress={(imageData, subIndex) => {
           let payload = {
-            index: index,
+            galleryId: item._id,
+            index: subIndex,
             data: item.images,
             title: item.title,
           };
-          navigation.navigate('GalleryDetail', payload);
+          //navigation.navigate('GalleryDetail', payload);
+          navigation.navigate('ImageList', payload);
         }}
         onLongPress={() => {
           setShowShareModal(true);
@@ -283,7 +285,10 @@ const GalleryListing = ({navigation}) => {
           <View style={{height: scale(30)}}>
             {paginationStatus === PaginationStatus.waiting ? (
               <View style={g.p10}>
-                <ActivityIndicator size={'small'} color={'#2b3252'} />
+                <ActivityIndicator
+                  size={'small'}
+                  color={GlobalInclude.Color.ColorPrimary}
+                />
               </View>
             ) : null}
           </View>
@@ -420,7 +425,10 @@ const GalleryListing = ({navigation}) => {
         <View style={GlobalInclude.AppStyle.fill}>
           {firstTimeLoad ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
-              <ActivityIndicator size={'small'} color={'#2b3252'} />
+              <ActivityIndicator
+                size={'small'}
+                color={GlobalInclude.Color.ColorPrimary}
+              />
             </View>
           ) : (
             <View style={GlobalInclude.AppStyle.fill}>
@@ -503,7 +511,10 @@ const GalleryListing = ({navigation}) => {
         {isLoading && (
           <View style={{position: 'absolute', botttom: 0, top: 0, zIndex: 2}}>
             <View style={GlobalInclude.AppStyle.fillCenter}>
-              <ActivityIndicator size={'small'} color={'#2b3252'} />
+              <ActivityIndicator
+                size={'small'}
+                color={GlobalInclude.Color.ColorPrimary}
+              />
             </View>
           </View>
         )}

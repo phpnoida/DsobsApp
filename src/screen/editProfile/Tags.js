@@ -185,7 +185,7 @@ const Tags = (props) => {
                   onPress={() => addTags()}>
                   <Text
                     style={{
-                      backgroundColor: '#2b3252',
+                      backgroundColor: GlobalInclude.Color.ColorPrimary,
                       color: '#ffffff',
                       textAlign: 'center',
                       fontSize: scale(16),
@@ -276,7 +276,7 @@ const Tags = (props) => {
 const styles = StyleSheet.create({
   styletag: {
     borderWidth: 1,
-    borderColor: '#2b3252',
+    borderColor: GlobalInclude.Color.ColorPrimary,
     borderRadius: 30,
     paddingTop: 8,
     paddingBottom: 8,
@@ -287,8 +287,8 @@ const styles = StyleSheet.create({
   },
   styletagnew: {
     borderWidth: 1,
-    borderColor: '#2b3252',
-    backgroundColor: '#2b3252',
+    borderColor: GlobalInclude.Color.ColorPrimary,
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     borderRadius: 30,
     paddingTop: 8,
     paddingBottom: 8,

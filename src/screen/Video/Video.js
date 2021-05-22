@@ -316,7 +316,7 @@ const Video = ({navigation}) => {
                   }}>
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(11), width: scale(11)}}
-                    iconColor={'#2b3252'}
+                    iconColor={GlobalInclude.Color.ColorPrimary}
                     iconName={'share-alt'}
                     iconSize={scale(11)}
                     iconType={IconType[4]}
@@ -385,7 +385,7 @@ const Video = ({navigation}) => {
                   ]}>
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(14), width: scale(14)}}
-                    iconColor={'#2b3252'}
+                    iconColor={GlobalInclude.Color.ColorPrimary}
                     iconName={item.isShowing ? 'caretdown' : 'caretright'}
                     iconSize={scale(14)}
                     iconType={IconType[10]}
@@ -419,7 +419,7 @@ const Video = ({navigation}) => {
                       ]}>
                       <GlobalInclude.BaseIcon
                         containerStyle={{height: scale(14), width: scale(14)}}
-                        iconColor={'#2b3252'}
+                        iconColor={GlobalInclude.Color.ColorPrimary}
                         iconName={'podcast'}
                         iconSize={scale(14)}
                         iconType={IconType[4]}
@@ -459,7 +459,7 @@ const Video = ({navigation}) => {
                   }}>
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(11), width: scale(11)}}
-                    iconColor={'#2b3252'}
+                    iconColor={GlobalInclude.Color.ColorPrimary}
                     iconName={'share-alt'}
                     iconSize={scale(11)}
                     iconType={IconType[4]}
@@ -548,7 +548,7 @@ const Video = ({navigation}) => {
           </View>
           {isLoading ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
-              <ActivityIndicator size={'small'} color={'#2b3252'} />
+              <ActivityIndicator size={'small'} color={GlobalInclude.Color.ColorPrimary} />
             </View>
           ) : (
             <View style={GlobalInclude.AppStyle.fill}>

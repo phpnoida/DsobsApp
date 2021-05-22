@@ -13,7 +13,6 @@ import {scale} from '../theme/Scalling';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import {IconType} from '../helper/Constants';
 import CommonButton from './CommonButton';
-
 import FastImage from 'react-native-fast-image';
 import {createImageProgress} from 'react-native-image-progress';
 
@@ -59,7 +58,7 @@ const ZoomImage = (props) => {
                   animated: true,
                   borderColor: 'red',
                   borderWidth: 2,
-                  color: '#2b3252',
+                  color: GlobalInclude.Color.ColorPrimary,
                   direction: Platform.os === 'android' ? 'clockwise' : 'rtl',
                   indeterminate: true,
                   progress: 100,

@@ -102,7 +102,10 @@ const ListingDetails = ({route, navigation}) => {
         <View style={GlobalInclude.AppStyle.parentStyle}>
           {isLoading ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
-              <ActivityIndicator size={'small'} color={'#2b3252'} />
+              <ActivityIndicator
+                size={'small'}
+                color={GlobalInclude.Color.ColorPrimary}
+              />
             </View>
           ) : (
             <View style={GlobalInclude.AppStyle.fill}>
@@ -118,7 +121,7 @@ const ListingDetails = ({route, navigation}) => {
                 navigation={navigation}
                 customIcon={{
                   containerStyle: {height: scale(30), width: scale(30)},
-                  iconColor: '#2b3252',
+                  iconColor: GlobalInclude.Color.ColorPrimary,
                   iconName: 'keyboard-backspace',
                   size: scale(30),
                   type: IconType[1],
@@ -193,11 +196,11 @@ const ListingDetails = ({route, navigation}) => {
                     <View style={[grid.rowdir, g.mt8]}>
                       <View style={grid.flex1}>
                         <Text style={[g.FHNR, g.fs14, g.colorGray1]}>
-                          {'Initiated By'}:{' '}
-                          {pageContent.initiatedBy &&
-                          pageContent.initiatedBy !== undefined &&
-                          pageContent.initiatedBy !== null
-                            ? pageContent.initiatedBy
+                          {'Founder'}:{' '}
+                          {pageContent.founder &&
+                          pageContent.founder !== undefined &&
+                          pageContent.founder !== null
+                            ? pageContent.founder
                             : 'N/A'}
                         </Text>
                       </View>
@@ -213,7 +216,7 @@ const ListingDetails = ({route, navigation}) => {
                   <ScrollableTabView
                     underlineColor={'#ffffff'}
                     initialPage={0}
-                    tabBarActiveTextColor={'#2b3252'}
+                    tabBarActiveTextColor={GlobalInclude.Color.ColorPrimary}
                     tabBarInactiveTextColor={'#bababa'}
                     tabBarTextStyle={style.tabTextStyle}
                     tabBarUnderlineStyle={style.tabBarUnderlineStyle}
@@ -305,10 +308,8 @@ const style = StyleSheet.create({
   playIconstyle: {
     position: 'absolute',
     zIndex: 9,
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
+    bottom: 12,
+    left: 12,
     alignSelf: 'center',
     justifyContent: 'center',
     alignItems: 'center',

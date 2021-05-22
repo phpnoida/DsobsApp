@@ -11,6 +11,7 @@ import {
 import g from '../theme/global';
 import {scale} from '../theme/Scalling';
 import Icon from 'react-native-vector-icons/AntDesign';
+import Color from '../theme/Colors';
 
 const windowWidth = Dimensions.get('window').width;
 
@@ -41,7 +42,7 @@ const ModalAlert = (props) => {
               }}
               style={styles.buttonCircle}
               background={TouchableNativeFeedback.SelectableBackground()}>
-              <Icon name="close" color="#2b3252" size={24} />
+              <Icon name="close" color={Color.ColorPrimary} size={24} />
             </TouchableOpacity>
 
             {header && <Text style={styles.headerText}>{header}</Text>}
@@ -134,7 +135,7 @@ const styles = StyleSheet.create({
   },
   buttonBlue: {
     borderRadius: scale(5),
-    backgroundColor: '#2b3252',
+    backgroundColor: Color.ColorPrimary,
     minWidth: scale(100),
     height: scale(35),
     paddingStart: scale(15),

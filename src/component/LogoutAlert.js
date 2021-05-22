@@ -13,6 +13,7 @@ import {scale} from '../theme/Scalling';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import messaging from '@react-native-firebase/messaging';
 import {CommonActions} from '@react-navigation/native';
+import GlobalInclude from '../globalInclude/Globalinclude';
 const windowWidth = Dimensions.get('window').width;
 
 class LogoutAlert extends Component {
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
   },
   buttonBlue: {
     borderRadius: scale(5),
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     minWidth: scale(100),
     height: scale(35),
     paddingStart: scale(15),

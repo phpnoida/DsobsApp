@@ -170,7 +170,7 @@ const DocViewer = (props) => {
                 width: scale(30),
                 height: scale(30),
                 borderRadius: scale(30),
-                backgroundColor: '#2b3252',
+                backgroundColor: GlobalInclude.Color.ColorPrimary,
                 justifyContent: 'center',
                 alignItems: 'center',
               }}
@@ -194,7 +194,7 @@ const DocViewer = (props) => {
                 width: scale(30),
                 height: scale(30),
                 borderRadius: scale(30),
-                backgroundColor: '#2b3252',
+                backgroundColor: GlobalInclude.Color.ColorPrimary,
                 justifyContent: 'center',
                 alignItems: 'center',
                 marginEnd: scale(8),
@@ -219,7 +219,7 @@ const DocViewer = (props) => {
                 width: scale(30),
                 height: scale(30),
                 borderRadius: scale(30),
-                backgroundColor: '#2b3252',
+                backgroundColor: GlobalInclude.Color.ColorPrimary,
                 justifyContent: 'center',
                 alignItems: 'center',
               }}

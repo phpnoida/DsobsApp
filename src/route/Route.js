@@ -21,6 +21,7 @@ import Video from '../screen/Video/Video';
 import NewsListing from '../screen/News/NewsListing';
 import GalleryListing from '../screen/Gallery/GalleryListing';
 import GalleryDetail from '../screen/Gallery/GalleryDetail';
+import ImageList from '../screen/Gallery/ImageList';
 import TagUser from '../screen/Gallery/TagUser';
 import AboutPhoto from '../screen/Gallery/AboutPhoto';
 import FilteredResult from '../screen/Gallery/FilteredResult';
@@ -153,6 +154,11 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="GalleryDetail"
         component={GalleryDetail}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ImageList"
+        component={ImageList}
         options={{headerShown: false}}
       />
       <Stack.Screen

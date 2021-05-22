@@ -397,7 +397,7 @@ const Helpers = {
     ];
     if (timestamp > 0) {
       //console.log(timestamp);
-      var dateVal = new Date(timestamp);
+      var dateVal = new Date(timestamp * 1000);
       var date = dateVal.getDate();
       var month = dateVal.getMonth();
       var year = dateVal.getFullYear();

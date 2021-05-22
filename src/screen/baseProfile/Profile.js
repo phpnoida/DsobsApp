@@ -893,7 +893,7 @@ const Profile = ({navigation}) => {
       }}>
       {isLoading ? (
         <View style={GlobalInclude.AppStyle.fillCenter}>
-          <ActivityIndicator size={'small'} color={'#2b3252'} />
+          <ActivityIndicator size={'small'} color={GlobalInclude.Color.ColorPrimary} />
         </View>
       ) : (
         <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
@@ -931,7 +931,7 @@ const Profile = ({navigation}) => {
                     borderRadius={scale(10)}
                     borderWidth={0}
                     unfilledColor={'#f8f8f8'}
-                    color={'#2b3252'}
+                    color={GlobalInclude.Color.ColorPrimary}
                   />
                 </View>
               </View>

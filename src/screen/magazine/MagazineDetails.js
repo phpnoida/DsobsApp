@@ -105,7 +105,7 @@ const MagazineDetails = ({route, navigation}) => {
                   ref={scrollViewRef}
                   underlineColor={'#ffffff'}
                   style={{paddingLeft: 0, paddingRight: 0}}
-                  tabBarActiveTextColor={'#2b3252'}
+                  tabBarActiveTextColor={GlobalInclude.Color.ColorPrimary}
                   tabBarInactiveTextColor={'#bababa'}
                   tabBarTextStyle={{
                     fontSize: scale(15),
@@ -143,7 +143,9 @@ const MagazineDetails = ({route, navigation}) => {
                                     onPress={() => navigation.goBack()}>
                                     <GlobalInclude.BaseIcon
                                       containerStyle={styles.backIcon}
-                                      iconColor={'#2b3252'}
+                                      iconColor={
+                                        GlobalInclude.Color.ColorPrimary
+                                      }
                                       iconName={'arrowleft'}
                                       iconSize={scale(30)}
                                       iconType={IconType[10]}
@@ -157,7 +159,9 @@ const MagazineDetails = ({route, navigation}) => {
                                     style={{marginStart: scale(5)}}>
                                     <GlobalInclude.BaseIcon
                                       containerStyle={styles.backIcon}
-                                      iconColor={'#2b3252'}
+                                      iconColor={
+                                        GlobalInclude.Color.ColorPrimary
+                                      }
                                       iconName={'sharealt'}
                                       iconSize={scale(24)}
                                       iconType={IconType[10]}

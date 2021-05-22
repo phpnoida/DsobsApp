@@ -6,6 +6,7 @@ import {
   TextInput,
   StyleSheet,
   ActivityIndicator,
+  Keyboard,
 } from 'react-native';
 import g from '../../../theme/global';
 import grid from '../../../theme/grid';
@@ -201,7 +202,6 @@ const VentureDetails = ({
             <TextInput
               underlineColorAndroid="transparent"
               numberOfLines={16}
-              multiline={true}
               style={[
                 g.inputWhite,
                 {height: scale(160), textAlignVertical: 'top'},
@@ -209,7 +209,12 @@ const VentureDetails = ({
               value={aboutVenture}
               keyboardType={'default'}
               autoCapitalize={'sentences'}
-              returnKeyType={'done'}
+              multiline={true}
+              blurOnSubmit={true}
+              onSubmitEditing={() => {
+                Keyboard.dismiss();
+              }}
+              returnKeyType="done"
               placeholder={'Write text here'}
               onChangeText={(value) => {
                 handleInput('aboutVenture', value);
@@ -308,7 +313,7 @@ const VentureDetails = ({
 
 const styles = StyleSheet.create({
   addTag: {
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     color: '#ffffff',
     textAlign: 'center',
     fontSize: scale(16),
@@ -331,7 +336,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: -5,
     top: -5,
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     borderRadius: scale(24),
   },
 });

@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   headerView: {
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     padding: scale(5),
     flexDirection: 'row',
     width: '100%',
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   },
   buttonBlue: {
     borderRadius: scale(5),
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     minWidth: scale(100),
     height: scale(35),
     paddingStart: scale(15),

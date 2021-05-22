@@ -308,7 +308,7 @@ const VentureDetails = ({
 
 const styles = StyleSheet.create({
   addTag: {
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     color: '#ffffff',
     textAlign: 'center',
     fontSize: scale(16),
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: -5,
     top: -5,
-    backgroundColor: '#2b3252',
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
     borderRadius: scale(24),
   },
 });
