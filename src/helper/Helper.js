@@ -3,6 +3,7 @@ import {APP_NAME, WHATSAPP_NO} from '../helper/Constants';
 import PushNotification from 'react-native-push-notification';
 import PushNotificationIOS from '@react-native-community/push-notification-ios';
 import RNFetchBlob from 'rn-fetch-blob';
+import moment from 'moment';
 
 const Helpers = {
   ToastShow: function (name, style) {
@@ -380,29 +381,13 @@ const Helpers = {
     }
     return arrOfWordsCased.join(' ');
   },
-  showFormatedDate: function (timestamp) {
-    let month_names = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
+  showFormatedDate: function (timestamp, withTime) {
     if (timestamp > 0) {
-      //console.log(timestamp);
       var dateVal = new Date(timestamp * 1000);
-      var date = dateVal.getDate();
-      var month = dateVal.getMonth();
-      var year = dateVal.getFullYear();
-
-      return `${month_names[month]} ${date}, ${year}`;
+      if (withTime) {
+        return moment(dateVal, ['HH']).format('MMM DD, YYYY h:mm A');
+      }
+      return moment(dateVal).format('MMM DD, YYYY');
     } else {
       return 'N/A';
     }
@@ -435,6 +420,27 @@ const Helpers = {
     }
 
     return title;
+  },
+  getLatLngFromMap: function (link) {
+    var regex = /@(-?\d+\.\d+),(-?\d+\.\d+),(\d+\.?\d?)+z/g,
+      params = {},
+      match;
+    var latitude = 0,
+      longitude = 0;
+
+    while ((match = regex.exec(link))) {
+      params[match[1]] = match[2];
+    }
+
+    if (params !== undefined && params !== null) {
+      for (var key in params) {
+        if (params.hasOwnProperty(key)) {
+          latitude = parseFloat(key);
+          longitude = parseFloat(params[key]);
+        }
+      }
+    }
+    return {latitude: latitude, longitude: longitude};
   },
 };
 

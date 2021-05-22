@@ -61,17 +61,10 @@ const DatePickerView = (props) => {
               width: '100%',
               padding: scale(6),
             }}>
-            {/* <DatePicker
-                date={date}
-                onDateChange={setDate}
-                mode={'date'}
-                androidVariant={'iosClone'}
-                maximumDate={new Date()}
-              /> */}
             <DateTimePicker
               testID={'dateTimePicker'}
               value={date}
-              mode={'date'}
+              mode={props.mode ? props.mode : 'date'}
               display={'spinner'}
               maximumDate={props.maxDate ? props.maxDate : undefined}
               minimumDate={props.minDate ? props.minDate : undefined}

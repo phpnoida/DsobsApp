@@ -6,6 +6,7 @@ import {scale} from '../theme/Scalling';
 import grid from '../theme/grid';
 import CheckBoxIOS from 'react-native-check-box';
 import ProgressImage from './ProgresImage';
+import Radio from './Radio';
 import Helper from '../helper/Helper';
 const {height, width} = Dimensions.get('window');
 
@@ -82,7 +83,7 @@ export const uploadMediaButton = (onPress) => {
   );
 };
 
-export const showUser = (image, title, subTitle, onPress) => {
+export const showUser = (image, title, subTitle, extraTitle, onPress) => {
   return (
     <View
       style={[
@@ -130,25 +131,89 @@ export const showUser = (image, title, subTitle, onPress) => {
             mode={'cover'}
           />
         </View>
-        <View style={{height: 65, width: 100}}>
-          {title && title !== undefined && title !== null && title !== '' ? (
-            <Text
-              style={[g.fs14, g.FHNR, g.txtCenter, g.colorBlack, g.mt5, g.mb5]}
-              numberOfLines={2}>
-              {title}
-            </Text>
-          ) : null}
+        <View style={{minHeight: 65, width: 100}}>
+          <Text
+            style={[g.fs14, g.FHNM, g.txtCenter, g.colorBlack]}
+            numberOfLines={2}>
+            {title && title !== undefined && title !== null && title !== ''
+              ? title
+              : 'N/A'}
+          </Text>
 
-          {subTitle &&
-          subTitle !== undefined &&
-          subTitle !== null &&
-          subTitle !== '' ? (
-            <Text style={[g.fs14, g.FHNR, g.txtCenter, g.colorGray1]}>
-              {subTitle}
+          <View style={{marginVertical: scale(2)}} />
+          <Text
+            style={[
+              g.fs12,
+              g.FHNR,
+              g.txtCenter,
+              g.colorGray1,
+              grid.alignItems,
+              grid.justifyContentCenter,
+            ]}>
+            {subTitle &&
+            subTitle !== undefined &&
+            subTitle !== null &&
+            subTitle !== ''
+              ? subTitle
+              : 'N/A'}
+          </Text>
+
+          <View style={{marginVertical: scale(2)}} />
+          {extraTitle &&
+          extraTitle !== undefined &&
+          extraTitle !== null &&
+          extraTitle !== '' ? (
+            <Text
+              style={[
+                g.fs12,
+                g.FHNR,
+                g.txtCenter,
+                grid.alignItems,
+                grid.justifyContentCenter,
+                g.colorGray1,
+              ]}>
+              {extraTitle}
             </Text>
           ) : null}
         </View>
       </TouchableOpacity>
     </View>
   );
+};
+
+export const renderRadioButton = (radioObj, onSelect) => {
+  return radioObj.map((item, key) => {
+    return (
+      <View
+        key={key}
+        style={{
+          marginEnd: scale(8),
+          marginStart: scale(2),
+          alignSelf: 'center',
+        }}>
+        <Radio
+          item={item}
+          title={item.label}
+          onRadioSelect={onSelect}
+          selected={item.selected}
+          radioStyle={{
+            height: scale(15),
+            width: scale(15),
+            borderRadius: 100,
+            borderWidth: scale(1.5),
+            borderColor: GlobalInclude.Color.ColorPrimary,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: scale(3),
+          }}
+          selectedStyle={{
+            height: scale(6),
+            width: scale(6),
+            borderRadius: scale(30),
+            backgroundColor: GlobalInclude.Color.ColorPrimary,
+          }}
+        />
+      </View>
+    );
+  });
 };

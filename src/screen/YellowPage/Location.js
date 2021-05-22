@@ -14,18 +14,6 @@ const Location = ({latitude, longitude, content}) => {
 
   const travelType = 'public_transport';
 
-  useEffect(() => {
-    Geocoder.init(MAP_KEY);
-
-    Geocoder.from(latitude, longitude)
-      .then((json) => {
-        var addressComponent = json.results[0].address_components[0];
-        console.log(addressComponent);
-      })
-      .catch((error) => console.warn(error));
-    return () => {};
-  }, [latitude, longitude]);
-
   return (
     <ScrollView
       style={[g.pl10, g.pr10, grid.flex1]}

@@ -40,6 +40,9 @@ import SamplePage from '../screen/SamplePage';
 import ListSocialVenture from '../screen/SocialVentures/AddListing/ListSocialVenture';
 import SocialVenture from '../screen/SocialVentures/SocialVenture';
 import SocialVentureDetails from '../screen/SocialVentures/Details';
+import SocialEvents from '../screen/Events/';
+import ListSocialEvent from '../screen/Events/AddListing';
+import EventDetails from '../screen/Events/Details';
 
 const Stack = createStackNavigator();
 
@@ -244,6 +247,21 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="SocialVentureDetails"
         component={SocialVentureDetails}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="SocialEvents"
+        component={SocialEvents}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ListSocialEvent"
+        component={ListSocialEvent}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="EventDetails"
+        component={EventDetails}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

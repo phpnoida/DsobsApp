@@ -320,7 +320,7 @@ const SocialVenture = ({navigation}) => {
                 {item.investmentClosingDate &&
                 item.investmentClosingDate !== undefined &&
                 item.investmentClosingDate !== null
-                  ? Helper.showFormatedDate(item.investmentClosingDate)
+                  ? Helper.showFormatedDate(item.investmentClosingDate, false)
                   : 'N/A'}
               </Text>
               <Text
