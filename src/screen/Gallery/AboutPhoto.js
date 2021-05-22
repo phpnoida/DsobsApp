@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Modal,
+  DeviceEventEmitter,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -29,6 +30,9 @@ let imageId = '';
 let imageKey = '';
 let responseMessage = '';
 let selectedCategoryName = '';
+let selectedIndex = 0;
+let filterObject = 0;
+
 const AboutPhoto = ({route, navigation}) => {
   const refRBSheet = useRef();
   const refRBFilter = useRef();
@@ -49,6 +53,8 @@ const AboutPhoto = ({route, navigation}) => {
     if (route.params !== undefined && route.params !== null) {
       imageId = route.params.id;
       imageKey = route.params.imageKey;
+      selectedIndex = route.params.index;
+      filterObject = route.params.filterObject;
 
       if (
         route.params.about !== undefined &&
@@ -76,7 +82,9 @@ const AboutPhoto = ({route, navigation}) => {
       }
     }
     getFilterCategory();
-    return () => {};
+    return () => {
+      DeviceEventEmitter.removeAllListeners('event.updateEvent');
+    };
   }, []);
   /**
    *
@@ -167,7 +175,13 @@ const AboutPhoto = ({route, navigation}) => {
                 setShowModal(false);
 
                 setTimeout(() => {
-                  navigation.goBack();
+                  setTimeout(() => {
+                    DeviceEventEmitter.emit('event.updateEvent', {
+                      selectedIndex: selectedIndex,
+                      filterObject: filterObject,
+                    });
+                    navigation.goBack();
+                  }, 100);
                 }, 100);
               }, 2000);
             }

@@ -63,7 +63,6 @@ let currentOriantation = '';
 let responseMessage = '';
 let reportText = '';
 let imageArray = [];
-let gallery = [];
 let itemHeights = [];
 
 function GalleryImage({
@@ -151,7 +150,6 @@ const ImageList = ({route, navigation}) => {
   const [title, setTitle] = useState(APP_NAME);
   const [imageData, setImageData] = useState([]);
   const [taggedUser, setTaggedUser] = useState([]);
-  const [lastIndex, setIastIndex] = useState(0);
   const [isFetching, setIsFetching] = useState(true);
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
@@ -163,7 +161,6 @@ const ImageList = ({route, navigation}) => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
-  const [tmpIndex, setTmpIndex] = useState(0);
   const [imageViewerArray, setImageViewerArray] = useState([]);
   useEffect(() => {
     clearFields();
@@ -178,7 +175,6 @@ const ImageList = ({route, navigation}) => {
         pickedIndex > 0 ? Math.ceil(pickedIndex / 10) * 10 : 10;
       filterObject.galleryId = galleryId;
       setTitle(pageTitle);
-      setIastIndex(pickedIndex);
       getGalleryData();
     }
 
@@ -192,7 +188,6 @@ const ImageList = ({route, navigation}) => {
       filterObject.size = Math.ceil(eventData.selectedIndex / 10) * 10;
       filterObject.galleryId = eventData.filterObject.galleryId;
       pickedIndex = eventData.selectedIndex;
-      setIastIndex(pickedIndex);
       getGalleryData();
     });
 
@@ -208,7 +203,6 @@ const ImageList = ({route, navigation}) => {
     galleryId = '';
     reportText = '';
     imageArray = [];
-    gallery = [];
   };
 
   const _orientationDidChange = (orientation) => {
@@ -241,35 +235,10 @@ const ImageList = ({route, navigation}) => {
                 filterObject.size = 10;
                 totalCount = responseData.totalCount;
                 setImageData([...results]);
-
-                if (pickedIndexClone >= 0) {
-                  setTimeout(() => {
-                    flatList.current !== undefined &&
-                      flatList.current !== null &&
-                      flatList.current.scrollToIndex({
-                        animated: true,
-                        index:
-                          pickedIndexClone > 0
-                            ? pickedIndexClone - 1
-                            : pickedIndexClone,
-                      });
-                    pickedIndexClone = -1;
-                  }, 500);
-                }
               } else {
                 setImageData([...imageData, ...results]);
               }
-              let tmp = gallery.concat(results);
 
-              gallery = tmp;
-
-              if (filterObject.index > 0) {
-                setTimeout(() => {
-                  if (showImageModal) {
-                    addImageToGallery();
-                  }
-                }, 100);
-              }
               setPaginationStatus(PaginationStatus.waiting);
             }
           }
@@ -402,23 +371,16 @@ const ImageList = ({route, navigation}) => {
     filterObject.size = 10;
   };
 
-  const addImageToGallery = () => {
+  const openImage = () => {
     imageArray = [];
-    gallery.map((item) => {
-      imageArray.push({url: item.imagesLink, imageId: item.imageId});
+    imageArray.push({
+      url: selectedItem.imagesLink,
+      imageId: selectedItem.imageId,
     });
-    setImageViewerArray([...imageViewerArray, ...imageArray]);
+    setImageViewerArray([...imageArray]);
     setTimeout(() => {
       setShowImageModal(true);
     }, 500);
-  };
-
-  const openImage = () => {
-    setTmpIndex(pickedIndex);
-    addImageToGallery();
-    // setTimeout(() => {
-    //   setShowImageModal(true);
-    // }, 500);
   };
 
   const downloadImage = async () => {
@@ -587,6 +549,8 @@ const ImageList = ({route, navigation}) => {
                 about: selectedItem.about,
                 category: selectedItem.category,
                 year: selectedItem.year,
+                index: selectedIndex,
+                filterObject: filterObject,
               };
               navigation.navigate('AboutPhoto', payload);
             }, 200);
@@ -650,6 +614,8 @@ const ImageList = ({route, navigation}) => {
           }
         }}
         onTouchImage={() => {
+          selectedItem = item;
+          selectedIndex = index;
           openImage();
         }}
       />
@@ -671,17 +637,6 @@ const ImageList = ({route, navigation}) => {
   const closeImageViewer = () => {
     Orientation.lockToPortrait();
     setShowImageModal(false);
-    setIastIndex(pickedIndex);
-    //setIsFetching(true);
-    setTimeout(() => {
-      flatList.current !== undefined &&
-        flatList.current !== null &&
-        flatList.current.scrollToIndex({
-          animated: true,
-          index: pickedIndex > 0 ? pickedIndex : pickedIndex,
-        });
-      pickedIndex = -1;
-    }, 500);
   };
 
   return (
@@ -716,12 +671,14 @@ const ImageList = ({route, navigation}) => {
                 onEndReached={onEndReached}
                 refreshing={isRefreshing}
                 onRefresh={handleRefresh}
-                initialNumToRender={pickedIndex + 1}
+                initialScrollIndex={pickedIndex}
+                initialNumToRender={imageData.length}
                 ListEmptyComponent={renderNoDataComponent}
                 ListFooterComponent={renderFooter}
                 contentContainerStyle={{paddingBottom: scale(130)}}
                 getItemLayout={getItemLayout}
                 onScrollToIndexFailed={(error) => {
+                  console.log('failed', error);
                   flatList.current.scrollToOffset({
                     offset: error.averageItemLength * error.index,
                     animated: true,
@@ -731,7 +688,7 @@ const ImageList = ({route, navigation}) => {
                       index: error.index,
                       animated: true,
                     });
-                  }, 100);
+                  }, 500);
                 }}
               />
             ) : null}
@@ -844,7 +801,7 @@ const ImageList = ({route, navigation}) => {
           closeImageViewer();
         }}
         visible={showImageModal}>
-        <View style={style.modalView}>
+        <View style={[style.modalView, g.bgBlack]}>
           <View
             style={[
               GlobalInclude.AppStyle.space,
@@ -866,9 +823,7 @@ const ImageList = ({route, navigation}) => {
               }}>
               <Text style={[g.fs14, g.colorWhite, g.FHNB, grid.col]}>
                 {`Photo Id: ${
-                  imageViewerArray !== null && imageViewerArray.length > 0
-                    ? imageViewerArray[tmpIndex].imageId
-                    : ''
+                  selectedItem !== null ? selectedItem.imageId : ''
                 } `}
               </Text>
             </View>
@@ -879,7 +834,6 @@ const ImageList = ({route, navigation}) => {
                 alignItems: 'flex-end',
                 alignSelf: 'flex-end',
                 flexDirection: 'row',
-                marginEnd: scale(5),
               }}>
               {generateSliderOptions(1, 'phone-rotate-landscape', () => {
                 if (currentOriantation === 'PORTRAIT') {
@@ -906,20 +860,9 @@ const ImageList = ({route, navigation}) => {
               })}
             </View>
           </View>
-          
-          {/* <ImageViewer
+
+          <ImageViewer
             imageUrls={imageViewerArray}
-            index={lastIndex}
-            onChange={(newIndex) => {
-              setTmpIndex(newIndex);
-              pickedIndex = newIndex;
-              if (
-                newIndex === imageViewerArray.length - 2 &&
-                !imageViewerArray.length < 10
-              ) {
-                callNextBatch();
-              }
-            }}
             backgroundColor={'#000000'}
             useNativeDriver
             loadingRender={() => {
@@ -928,7 +871,7 @@ const ImageList = ({route, navigation}) => {
             renderIndicator={() => {
               <View />;
             }}
-          /> */}
+          />
         </View>
       </Modal>
     </View>
