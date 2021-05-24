@@ -75,13 +75,6 @@ const Tags = ({content}) => (
           style={{
             marginVertical: scale(5),
             marginHorizontal: scale(5),
-            backgroundColor: '#ffffff',
-            borderRadius: scale(10),
-            shadowColor: '#333333',
-            shadowOffset: {width: 0, height: 2},
-            shadowOpacity: 0.2,
-            shadowRadius: 6,
-            elevation: 3,
             padding: scale(6),
             flexDirection: 'row',
           }}>

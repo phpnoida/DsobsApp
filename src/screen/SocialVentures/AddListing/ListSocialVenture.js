@@ -162,7 +162,7 @@ const ListSocialVenture = ({route, navigation}) => {
           batch: item.volunteerRole,
           profilePic:
             item.imageData !== null && item.imageData !== undefined
-              ? item.imageData.thumbnail
+              ? item.imageData
               : '',
         };
         if (item._id !== undefined && item._id !== null && item._id !== '') {
@@ -226,7 +226,7 @@ const ListSocialVenture = ({route, navigation}) => {
 
             if (data.status) {
               isSuccess = true;
-              responseMessage = `Congratulations your venture has been successfully sent to ${APP_NAME} for approval.`;
+              responseMessage = `Congratulations your Venture has been successfully sent to ${APP_NAME} for approval.`;
               setShowErrorMessage(true);
             } else {
               responseMessage = 'Error while posting your request!';
@@ -385,6 +385,7 @@ const ListSocialVenture = ({route, navigation}) => {
     if (key === 'userData') {
       item._id = value._id;
       item.volunteerName = Helper.concatName(value);
+      item.imageData = value.profileImg;
       item[key] = value;
       item.errorMessage = {};
     } else {

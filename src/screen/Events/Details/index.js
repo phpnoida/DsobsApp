@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   Clipboard,
+  Platform,
 } from 'react-native';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import g from '../../../theme/global';
@@ -28,9 +29,14 @@ import PitchDocument from './PitchDocument';
 import Tags from './Tags';
 import Comments from './Comments';
 import Location from './Location';
-import {doFitlerSocialWork} from '../../../Actions/SocialEventsActions';
+import {
+  doFitlerSocialWork,
+  updateEvent,
+} from '../../../Actions/SocialEventsActions';
 import Share, {ShareSheet, Button} from 'react-native-share';
 import NumberFormat from 'react-number-format';
+import SharingSheet from '../../../component/SharingSheet';
+import RNFetchBlob from 'rn-fetch-blob';
 
 const {urlRegex} = URL_REGX;
 let filterObject = {};
@@ -38,8 +44,9 @@ let shareContent = {};
 
 const EventDetails = ({route, navigation}) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [pageContent, setPageContent] = useState({});
+  const [pageContent, setPageContent] = useState(null);
   const [showSharingSheet, setShowSharingSheet] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     if (route.params && route.params !== undefined && route.params !== null) {
@@ -82,12 +89,12 @@ const EventDetails = ({route, navigation}) => {
                 data.data.length > 0
               ) {
                 setPageContent(data.data[0]);
+
+                setTimeout(() => {
+                  createShareContent(data.data[0]);
+                }, 200);
               }
             }
-
-            console.log('====================================');
-            console.log(JSON.stringify(data));
-            console.log('====================================');
           }
         }
       },
@@ -98,11 +105,160 @@ const EventDetails = ({route, navigation}) => {
     );
   };
 
+  const manageRSVP = (remove) => {
+    if (pageContent !== undefined && pageContent !== null) {
+      let attendees = JSON.parse(
+        JSON.stringify(
+          pageContent.attendees && pageContent.attendees !== null
+            ? pageContent.attendees
+            : [],
+        ),
+      );
+
+      if (remove) {
+        for (let i = 0; i < attendees.length; i++) {
+          const element = attendees[i];
+          if (
+            element._id &&
+            element._id !== undefined &&
+            element._id !== null &&
+            element._id !== ''
+          ) {
+            if (element._id === global.userId) {
+              attendees.splice(i, 1);
+              break;
+            }
+          }
+        }
+      } else {
+        let addMember = {
+          fromSchool: true,
+          name:
+            global.userDetails.firstName + ' ' + global.userDetails.lastName,
+          batch: '',
+          profilePic: global.userDetails.profileImg,
+          _id: global.userDetails._id,
+        };
+
+        attendees.push(addMember);
+      }
+      return attendees;
+    }
+    return [];
+  };
+
+  const updateRSVP = (wantRemove) => {
+    let requestObject = {
+      attendees: manageRSVP(wantRemove),
+    };
+
+    updateEvent(
+      requestObject,
+      filterObject.id,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            if (data.status) {
+              Alert.alert(
+                'Congratulations',
+                'Your request updated successfully.',
+              );
+              setTimeout(() => {
+                getSocialWork();
+              }, 200);
+            } else {
+            }
+          }
+        }
+      },
+      (code, error) => {
+        Alert.alert('Something went wrong', error);
+      },
+    );
+  };
+
   /****
    *
    * API Section
    *
    */
+
+  const createShareContent = (content) => {
+    shareContent = {};
+    shareContent.title = `Event : ${
+      content !== null &&
+      content.title &&
+      content.title !== undefined &&
+      content.title !== null
+        ? content.title
+        : APP_NAME
+    }`;
+    shareContent.message = `Hey,\nThought you might find this interesting!Check out this event taking place at ${APP_NAME}.\nDate&Time : ${Helpers.showFormatedDate(
+      content.eventTime,
+      true,
+    )}`;
+
+    let attachment =
+      content.eventVideo !== undefined &&
+      content.eventVideo !== null &&
+      content.eventVideo !== ''
+        ? Helpers.loadYoutubeThumb(Helpers.GetYoutubeId(content.eventVideo))
+        : content.eventImage;
+
+    getEventImage(attachment);
+
+    shareContent.attachment = attachment;
+    shareContent.subject = shareContent.title;
+    shareContent.type = 'image/*';
+  };
+
+  const getEventImage = (attachment) => {
+    RNFetchBlob.config({
+      fileCache: true,
+    })
+      .fetch('GET', attachment)
+      .then((resp) => {
+        return resp.readFile('base64');
+      })
+      .then((base64Data) => {
+        let attachementFile =
+          Platform.OS === 'ios'
+            ? shareContent.attachment
+            : base64Data !== null &&
+              base64Data !== undefined &&
+              base64Data !== ''
+            ? 'data:image/png;base64,' + base64Data
+            : '';
+        shareContent.url = attachementFile;
+      });
+  };
+
+  const checkForRSVP = () => {
+    if (pageContent !== undefined && pageContent !== null) {
+      let attendees = pageContent.attendees;
+      for (let i = 0; i < attendees.length; i++) {
+        const element = attendees[i];
+
+        if (
+          element._id &&
+          element._id !== undefined &&
+          element._id !== null &&
+          element._id !== ''
+        ) {
+          if (element._id === global.userId) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+    return false;
+  };
 
   return (
     <View style={GlobalInclude.AppStyle.topSpace}>
@@ -268,7 +424,11 @@ const EventDetails = ({route, navigation}) => {
                     renderTabBar={() => (
                       <ScrollableTabBar style={style.tabBarStyle} />
                     )}>
-                    <TheTeam tabLabel={'Attendees'} content={pageContent} />
+                    <TheTeam
+                      tabLabel={'Attendees'}
+                      content={pageContent}
+                      navigation={navigation}
+                    />
                     <Description
                       tabLabel={'Description'}
                       content={pageContent}
@@ -293,50 +453,53 @@ const EventDetails = ({route, navigation}) => {
             </View>
           )}
         </View>
-
-        <View style={style.buttonContainer}>
-          <View style={grid.flex1}>
-            <TouchableOpacity
-              activeOpacity={1}
-              style={style.button}
-              onPress={() => {
-                shareContent = {};
-                shareContent.title = 'Hello';
-                shareContent.message = 'Hello';
-                shareContent.attachment = 'Hello';
-                shareContent.type = 'text/plain';
-                setShowSharingSheet(true);
-              }}>
-              <Text style={[g.fs16, g.FHNB, g.colorBlack, grid.textCenter]}>
-                Share
-              </Text>
-            </TouchableOpacity>
+        {pageContent !== null ? (
+          <View style={style.buttonContainer}>
+            <View style={grid.flex1}>
+              <TouchableOpacity
+                activeOpacity={1}
+                style={style.button}
+                onPress={() => {
+                  setShowSharingSheet(true);
+                }}>
+                <Text style={[g.fs16, g.FHNB, g.colorBlack, grid.textCenter]}>
+                  Share
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <View style={{marginHorizontal: scale(10)}} />
+            <View style={grid.flex1}>
+              <TouchableOpacity
+                activeOpacity={1}
+                style={[style.button, g.bgBlue]}
+                onPress={() => {
+                  setShowModal(!showModal);
+                }}>
+                <Text
+                  style={[
+                    g.fs16,
+                    g.FHNB,
+                    g.colorWhite,
+                    grid.textCenter,
+                    g.mr5,
+                  ]}>
+                  RSVP
+                </Text>
+                <GlobalInclude.BaseIcon
+                  containerStyle={{
+                    height: scale(17),
+                    width: scale(17),
+                  }}
+                  iconColor={'#fff'}
+                  iconName={checkForRSVP() ? 'check-circle-o' : 'plus-circle'}
+                  iconSize={scale(17)}
+                  iconType={IconType[4]}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
-          <View style={{marginHorizontal: scale(10)}} />
-          <View style={grid.flex1}>
-            <TouchableOpacity
-              activeOpacity={1}
-              style={[style.button, g.bgBlue]}
-              onPress={() => {}}>
-              <Text
-                style={[g.fs16, g.FHNB, g.colorWhite, grid.textCenter, g.mr5]}>
-                RSVP
-              </Text>
-              <GlobalInclude.BaseIcon
-                containerStyle={{
-                  height: scale(17),
-                  width: scale(17),
-                }}
-                iconColor={'#fff'}
-                iconName={'plus-circle'}
-                iconSize={scale(17)}
-                iconType={IconType[4]}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
+        ) : null}
       </SafeAreaView>
-
       <ShareSheet
         visible={showSharingSheet}
         onCancel={() => {
@@ -422,6 +585,32 @@ const EventDetails = ({route, navigation}) => {
           More
         </Button>
       </ShareSheet>
+
+      {showModal && (
+        <GlobalInclude.ModalAlert
+          status={showModal}
+          header={'Attend Event'}
+          subHeader={'Are you sure you want to attend event?'}
+          okButton={'Yes'}
+          cancelButton={'No'}
+          okAction={() => {
+            setShowModal(!showModal);
+
+            if (!checkForRSVP()) {
+              updateRSVP(false);
+            }
+          }}
+          cancelAction={() => {
+            if (checkForRSVP()) {
+              updateRSVP(true);
+            }
+            setShowModal(!showModal);
+          }}
+          closeAction={() => {
+            setShowModal(!showModal);
+          }}
+        />
+      )}
     </View>
   );
 };

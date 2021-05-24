@@ -14,7 +14,6 @@ import {
   Modal,
   TextInput,
   Keyboard,
-  DeviceEventEmitter,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -38,6 +37,8 @@ import {
 } from '../../Actions/GalleryActions';
 import {showUser} from '../../component/Common';
 import {_downloadContent} from '../../helper/mediaHelper';
+import {useDispatch, useSelector, shallowEqual} from 'react-redux';
+import {clearUpdateImage} from '../../reducer/NotificationReducer';
 
 const {height, width} = Dimensions.get('window');
 const ITEM_HEIGHT = 340;
@@ -54,16 +55,14 @@ let filterObject = {
 };
 
 let pickedIndex = 0;
-let pickedIndexClone = 0;
 let selectedIndex = 0;
-let galleryId = '';
 let pageTitle = '';
 let selectedItem = null;
 let currentOriantation = '';
 let responseMessage = '';
 let reportText = '';
 let imageArray = [];
-let itemHeights = [];
+let eventData = {};
 
 function GalleryImage({
   index: itemIndex,
@@ -74,13 +73,7 @@ function GalleryImage({
 }) {
   return useMemo(() => {
     return (
-      <View
-        key={itemIndex}
-        style={[g.mt15]}
-        onLayout={(event) => {
-          var {height} = event;
-          itemHeights[itemIndex] = height;
-        }}>
+      <View key={itemIndex} style={[g.mt15]}>
         <View style={[grid.rowrow, grid.flex1, g.ml10, g.mr10]}>
           <View
             style={[grid.flex1, grid.alignItems, grid.justifyContentCenter]}>
@@ -88,7 +81,7 @@ function GalleryImage({
               onPress={showTaggedUser}
               style={[grid.alignSelf, grid.justifyContentCenter]}>
               <Text style={[g.fs14, g.FHNB, g.colordarkGray]}>
-                People in the image
+                People in the Image
               </Text>
             </TouchableOpacity>
           </View>
@@ -120,16 +113,13 @@ function GalleryImage({
             />
           </TouchableOpacity>
         </View>
-
         {about !== undefined && about !== null && about !== '' ? (
           <ReadMore
-            wrapperStyle={style.descriptionWrapper}
             numberOfLines={2}
-            seeMoreText={'See More'}
-            seeLessText={'See Less'}
-            style={[style.description, g.FHNR, g.colorGray1, g.pl2, g.pr2]}
+            animate={false}
             seeLessStyle={style.seeMoreLess}
-            seeMoreStyle={style.seeMoreLess}>
+            seeMoreStyle={style.seeMoreLess}
+            style={style.description}>
             {about}
           </ReadMore>
         ) : (
@@ -162,18 +152,26 @@ const ImageList = ({route, navigation}) => {
   const [isReporting, setIsReporting] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageViewerArray, setImageViewerArray] = useState([]);
+
+  const dispatch = useDispatch();
+
+  const refreshState = useSelector((state) => {
+    if (state.notification && state.notification !== undefined) {
+      let notification = state.notification;
+      if (notification.update && notification.update !== undefined) {
+        eventData = notification.eventData;
+        return true;
+      }
+    }
+    return false;
+  }, shallowEqual);
+
   useEffect(() => {
     clearFields();
     resetFilter();
     if (route !== undefined && route !== null) {
       pageTitle = route.params.title;
-      galleryId = route.params.galleryId;
-      pickedIndex = route.params.index;
-      pickedIndexClone = route.params.index;
-
-      filterObject.size =
-        pickedIndex > 0 ? Math.ceil(pickedIndex / 10) * 10 : 10;
-      filterObject.galleryId = galleryId;
+      filterObject = route.params.filterObject;
       setTitle(pageTitle);
       getGalleryData();
     }
@@ -182,25 +180,34 @@ const ImageList = ({route, navigation}) => {
 
     Orientation.addOrientationListener(_orientationDidChange);
 
-    DeviceEventEmitter.addListener('event.updateEvent', (eventData) => {
-      clearFields();
-      resetFilter();
-      filterObject.size = Math.ceil(eventData.selectedIndex / 10) * 10;
-      filterObject.galleryId = eventData.filterObject.galleryId;
-      pickedIndex = eventData.selectedIndex;
-      getGalleryData();
-    });
-
     return () => {
-      DeviceEventEmitter.removeAllListeners('event.updateEvent');
       Orientation.removeOrientationListener(_orientationDidChange);
     };
   }, [route]);
 
+  useEffect(() => {
+    if (refreshState) {
+      setTimeout(() => {
+        console.log('204');
+        updateImageList();
+      }, 200);
+    }
+    return () => {};
+  }, [refreshState]);
+
+  const updateImageList = () => {
+    dispatch(clearUpdateImage());
+    clearFields();
+    resetFilter();
+    filterObject = eventData.filterObject;
+    pickedIndex = eventData.selectedIndex;
+    eventData = {};
+    getGalleryData();
+  };
+
   const clearFields = () => {
     pickedIndex = 0;
     pageTitle = '';
-    galleryId = '';
     reportText = '';
     imageArray = [];
   };
@@ -238,7 +245,6 @@ const ImageList = ({route, navigation}) => {
               } else {
                 setImageData([...imageData, ...results]);
               }
-
               setPaginationStatus(PaginationStatus.waiting);
             }
           }
@@ -366,7 +372,6 @@ const ImageList = ({route, navigation}) => {
 
   const resetFilter = () => {
     totalCount = 0;
-    filterObject = {};
     filterObject.index = 0;
     filterObject.size = 10;
   };
@@ -659,39 +664,40 @@ const ImageList = ({route, navigation}) => {
                 console.log('onDeviceChange', orientation)
               }
             />
-            {imageData.length > 0 ? (
-              <FlatList
-                ref={flatList}
-                showsVerticalScrollIndicator={false}
-                extraData={imageData}
-                data={imageData}
-                renderItem={renderItem}
-                keyExtractor={keyExtractor}
-                onEndReachedThreshold={0.1}
-                onEndReached={onEndReached}
-                refreshing={isRefreshing}
-                onRefresh={handleRefresh}
-                initialScrollIndex={pickedIndex}
-                initialNumToRender={imageData.length}
-                ListEmptyComponent={renderNoDataComponent}
-                ListFooterComponent={renderFooter}
-                contentContainerStyle={{paddingBottom: scale(130)}}
-                getItemLayout={getItemLayout}
-                onScrollToIndexFailed={(error) => {
-                  console.log('failed', error);
-                  flatList.current.scrollToOffset({
-                    offset: error.averageItemLength * error.index,
+            <FlatList
+              ref={flatList}
+              showsVerticalScrollIndicator={false}
+              extraData={imageData}
+              data={imageData}
+              renderItem={renderItem}
+              keyExtractor={keyExtractor}
+              onEndReachedThreshold={0.1}
+              onEndReached={onEndReached}
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              initialScrollIndex={pickedIndex}
+              initialNumToRender={imageData.length}
+              ListEmptyComponent={renderNoDataComponent}
+              ListFooterComponent={renderFooter}
+              contentContainerStyle={{
+                paddingBottom: imageData.length > 0 ? scale(130) : 0,
+                flexGrow: 1,
+              }}
+              getItemLayout={getItemLayout}
+              onScrollToIndexFailed={(error) => {
+                console.log('failed', error);
+                flatList.current.scrollToOffset({
+                  offset: error.averageItemLength * error.index,
+                  animated: true,
+                });
+                setTimeout(() => {
+                  flatList.current.scrollToIndex({
+                    index: error.index,
                     animated: true,
                   });
-                  setTimeout(() => {
-                    flatList.current.scrollToIndex({
-                      index: error.index,
-                      animated: true,
-                    });
-                  }, 500);
-                }}
-              />
-            ) : null}
+                }, 500);
+              }}
+            />
           </View>
         )}
       </SafeAreaView>
@@ -905,6 +911,10 @@ const style = StyleSheet.create({
     alignSelf: 'flex-start',
     justifyContent: 'center',
     lineHeight: scale(16),
+    marginHorizontal: scale(10),
+    fontFamily: 'Lato-Regular',
+    marginTop: scale(8),
+    padding: scale(2),
   },
   centeredView: {
     flex: 1,

@@ -300,7 +300,7 @@ const SocialEvents = ({navigation}) => {
                 />
               )}
             </View>
-            <View style={[g.p15, g.pl10]}>
+            <View style={[g.pr10, g.pl10, g.pt5, g.pb5]}>
               <Text
                 numberOfLines={1}
                 style={[

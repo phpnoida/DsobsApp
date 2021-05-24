@@ -11,22 +11,15 @@ const showTaggedUsers = (navigation, users) => {
 
   for (let i = 0; i < users.length; i++) {
     let item = users[i];
-    console.log(item);
     const component = (
       <View key={i}>
-        {showUser(
-          item.profileImg,
-          item.name,
-          `Batch ${item.batch}`,
-          item.type,
-          () => {
-            if (item.fromSchool) {
-              navigation.navigate('UserProfile', {
-                userId: item._id,
-              });
-            }
-          },
-        )}
+        {showUser(item.profileImg, item.name, item.batch, item.type, () => {
+          if (item.fromSchool) {
+            navigation.navigate('UserProfile', {
+              userId: item._id,
+            });
+          }
+        })}
       </View>
     );
 

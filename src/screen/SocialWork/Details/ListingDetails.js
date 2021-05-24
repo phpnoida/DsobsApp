@@ -227,7 +227,11 @@ const ListingDetails = ({route, navigation}) => {
                       <ScrollableTabBar style={style.tabBarStyle} />
                     )}>
                     <Description tabLabel={'About'} content={pageContent} />
-                    <TheTeam tabLabel={'The Team'} content={pageContent} />
+                    <TheTeam
+                      tabLabel={'The Team'}
+                      content={pageContent}
+                      navigation={navigation}
+                    />
                     <PitchDocument tabLabel={'Media'} content={pageContent} />
                     <Tags tabLabel={'Tags'} content={pageContent} />
                     <Comments

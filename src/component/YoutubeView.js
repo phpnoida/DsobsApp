@@ -41,7 +41,6 @@ const YoutubeView = (props) => {
           onChangeFullscreen={(e) => {
             setPlayVideo(e.isFullscreen);
           }}
-          style={props.containerStyle ? props.containerStyle : style.container}
         />
       ) : (
         <View>

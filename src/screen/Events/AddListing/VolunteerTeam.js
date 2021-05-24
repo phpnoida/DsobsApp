@@ -53,7 +53,7 @@ const VolunteerTeam = ({
           (uploadResult) => {
             updateIndex('isLoading', false, index);
             if (uploadResult !== null && uploadResult !== undefined) {
-              updateIndex('imageData', uploadResult, index);
+              updateIndex('imageData', uploadResult.thumbnail, index);
             }
           },
         );
@@ -73,7 +73,7 @@ const VolunteerTeam = ({
                 style={{
                   width: scale(75),
                 }}>
-                {generateHeader(`Organizer ${item.role}`, false)}
+                {generateHeader(`Organiser ${item.role}`, false)}
               </View>
               <View
                 style={{
@@ -98,7 +98,7 @@ const VolunteerTeam = ({
               <View style={[grid.alignItems, grid.justifyContentCenter, g.mr5]}>
                 <View>
                   <ProgressImage
-                    source={{uri: item.imageData.thumbnail}}
+                    source={{uri: item.imageData}}
                     containerStyle={{
                       height: scale(50),
                       width: scale(50),

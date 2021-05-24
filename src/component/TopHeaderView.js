@@ -124,7 +124,7 @@ const TopHeaderView = ({
                   </View>
                 </View>
               </View>
-              <View style={[grid.col, grid.justifyContentCenter]}>
+              <View>
                 <TouchableOpacity
                   style={styles.currentTab}
                   onPress={() => {
@@ -199,6 +199,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
+    flex:1,
   },
   triangleShape: {
     width: 0,

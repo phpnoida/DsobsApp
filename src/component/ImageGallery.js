@@ -278,10 +278,10 @@ const ImageGallery = (props) => {
             background={TouchableNativeFeedback.SelectableBackground()}>
             <GlobalInclude.BaseIcon
               containerStyle={{height: scale(30), width: scale(30)}}
-              iconColor={'#000'}
+              iconColor={'#fff'}
               iconName={'close'}
               iconSize={scale(30)}
-              iconType={IconType[8]}
+              iconType={IconType[6]}
             />
           </TouchableOpacity>
           <ImageViewer
@@ -291,7 +291,7 @@ const ImageGallery = (props) => {
             onChange={(index) => {
               setIastIndex(index);
             }}
-            backgroundColor={'rgba(62,62,62,0.5)'}
+            backgroundColor={'#000'}
             renderIndicator={() => {
               <View />;
             }}
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalView: {
-    backgroundColor: 'rgba(62,62,62,0.5)',
+    backgroundColor: g.bgBlack,
     flex: 1,
     width: '100%',
   },

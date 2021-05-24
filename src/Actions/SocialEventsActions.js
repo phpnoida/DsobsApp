@@ -66,6 +66,32 @@ export function doFitlerSocialWork(filterQuery, callback, errCallback) {
   };
 }
 
+export function updateEvent(payload, commentId, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}events?id=${commentId}`;
+  
+  payload.attendees = payload.attendees.map((item) => {
+    delete item.type;
+    return item;
+  });
+
+  const request = axios
+    .patch(requestPath, payload, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
+    })
+    .then((res) => {
+      callback(res);
+    })
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
 export function doSearchSocialWork(filterQuery, callback, errCallback) {
   let requestPath = `${SERVER_PATH}events`;
   const request = axios

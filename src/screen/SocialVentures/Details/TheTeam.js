@@ -12,6 +12,7 @@ import grid from '../../../theme/grid';
 import {scale} from '../../../theme/Scalling';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import ProgresImage from '../../../component/ProgresImage';
+import {showUser} from '../../../component/Common';
 
 const {width} = Dimensions.get('window');
 
@@ -22,78 +23,15 @@ const showTaggedUsers = (navigation, users) => {
     let item = users[i];
     console.log(item);
     const component = (
-      <TouchableOpacity
-        onPress={() => {
+      <View key={i}>
+        {showUser(item.profilePic, item.name, item.batch, () => {
           if (item.fromSchool) {
             navigation.navigate('UserProfile', {
               userId: item._id,
             });
           }
-        }}
-        key={i}
-        style={[
-          g.ml10,
-          g.mb5,
-          styles.imageContainer,
-          users.length > 2 ? styles.viewCenter : {},
-        ]}>
-        <View activeOpacity={0.8} style={styles.viewCenter}>
-          <View style={[g.bglightGray, g.oh, styles.profileBackground]}>
-            <ProgresImage
-              source={
-                item.profilePic !== undefined &&
-                item.profilePic !== null &&
-                item.profilePic !== ''
-                  ? {uri: item.profilePic}
-                  : GlobalInclude.Assets.DefaultProfile
-              }
-              containerStyle={styles.imageStyle}
-              mode={'cover'}
-            />
-          </View>
-          <View style={GlobalInclude.AppStyle.fill}>
-            {/* <Text
-              style={[
-                g.fs12,
-                g.FHNR,
-                g.txtCenter,
-                g.colorBlack,
-                g.mt10,
-                GlobalInclude.AppStyle.transform,
-              ]}>
-              {`Participant ${i + 1}`}
-            </Text> */}
-            <Text
-              style={[
-                g.fs14,
-                g.FHNB,
-                g.txtCenter,
-                g.colorBlue,
-                g.mt5,
-                GlobalInclude.AppStyle.transform,
-                styles.userNameCenter,
-              ]}
-              numberOfLines={2}>
-              {item.name && item.name !== undefined && item.name !== null
-                ? item.name
-                : 'N/A'}
-            </Text>
-            <Text
-              style={[
-                g.fs14,
-                g.FHNR,
-                g.txtCenter,
-                g.colorGray1,
-                grid.alignItems,
-                g.mt5,
-              ]}>
-              {item.batch && item.batch !== undefined && item.batch !== null
-                ? item.batch
-                : 'N/A'}
-            </Text>
-          </View>
-        </View>
-      </TouchableOpacity>
+        })}
+      </View>
     );
 
     componentArray.push(component);

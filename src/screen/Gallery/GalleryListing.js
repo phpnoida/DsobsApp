@@ -261,9 +261,13 @@ const GalleryListing = ({navigation}) => {
         }}
         onImagePress={(imageData, subIndex) => {
           let payload = {
+            filterObject: {
+              size: subIndex > 0 ? Math.ceil(subIndex / 10) * 10 : 10,
+              galleryId: item._id,
+              index: 0,
+            },
             galleryId: item._id,
             index: subIndex,
-            data: item.images,
             title: item.title,
           };
           //navigation.navigate('GalleryDetail', payload);
@@ -356,17 +360,27 @@ const GalleryListing = ({navigation}) => {
             setCheckedType(-1);
             searchVal = '';
 
-            navigation.navigate('FilteredResult', {
-              filterBy: {userId: row._id, index: 0, size: 10},
-              pageTitle: `Search For: ${Helper.concatName(row)}`,
-            });
+            let payload = {
+              filterObject: {
+                size: 10,
+                userId: row._id,
+                index: 0,
+              },
+              title: `Search For: ${Helper.concatName(row)}`,
+            };
+            navigation.navigate('ImageList', payload);
           }}
           onGoPress={() => {
             if (searchType === 4) {
-              navigation.navigate('FilteredResult', {
-                filterBy: {tag: searchVal, index: 0, size: 10},
-                pageTitle: `Search For: ${searchVal}`,
-              });
+              let payload = {
+                filterObject: {
+                  size: 10,
+                  tag: searchVal,
+                  index: 0,
+                },
+                title: `Search For: ${searchVal}`,
+              };
+              navigation.navigate('ImageList', payload);
             } else if (searchType === 1) {
               navigation.navigate('DirectoryDetails', {
                 searchBy: searchType,
@@ -489,10 +503,15 @@ const GalleryListing = ({navigation}) => {
           onSelect={() => {
             refRBFilter.current.close();
 
-            navigation.navigate('FilteredResult', {
-              filterBy: {category: categoryName, index: 0, size: 10},
-              pageTitle: `Search By: ${categoryName}`,
-            });
+            let payload = {
+              filterObject: {
+                size: 10,
+                category: categoryName,
+                index: 0,
+              },
+              title: `Search By: ${categoryName}`,
+            };
+            navigation.navigate('ImageList', payload);
           }}
         />
         {/* filter sheet */}
@@ -527,10 +546,15 @@ const GalleryListing = ({navigation}) => {
             refRBSheet.current.close();
             setCheckedType(-1);
             setTimeout(() => {
-              navigation.navigate('FilteredResult', {
-                filterBy: {year: value.text.toString(), index: 0, size: 10},
-                pageTitle: `Search By: ${value.text.toString()}`,
-              });
+              let payload = {
+                filterObject: {
+                  size: 10,
+                  year: value.text.toString(),
+                  index: 0,
+                },
+                title: `Search By: ${value.text.toString()}`,
+              };
+              navigation.navigate('ImageList', payload);
             }, 100);
           }}
         />

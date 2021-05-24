@@ -96,7 +96,7 @@ const VentureDetails = ({
           <View style={g.mb15}>
             {generateHeader('Event Video', false)}
             <View style={[grid.rowdir]}>
-              {socialPhoto !== null && (
+              {/* {socialPhoto !== null && (
                 <View
                   style={[grid.alignItems, grid.justifyContentCenter, g.mr5]}>
                   <View>
@@ -135,7 +135,7 @@ const VentureDetails = ({
                     </TouchableOpacity>
                   </View>
                 </View>
-              )}
+              )} */}
               <View style={[grid.flex1]}>
                 <TextInput
                   underlineColorAndroid={'transparent'}
@@ -179,7 +179,9 @@ const VentureDetails = ({
                         />
                         <Text
                           style={[grid.col, g.fs14, g.colorLightGray, g.FHNR]}>
-                          Click to Upload Image
+                          {socialPhoto !== null
+                            ? 'Image Uploaded'
+                            : 'Click to Upload Image'}
                         </Text>
                       </View>
                     </TouchableOpacity>
@@ -307,10 +309,21 @@ const VentureDetails = ({
                       selectedIndex = i;
                       setShowRemoveAlert(true);
                     }}
+                    onPress={() => {
+                      selectedIndex = i;
+                      setShowRemoveAlert(true);
+                    }}
                     style={{margin: scale(4)}}
                     activeOpacity={1}>
                     <View style={[g.tagStyle, grid.rowdir]}>
                       <Text style={[g.tagTxtStyle, g.mr10]}>{v}</Text>
+                      <GlobalInclude.BaseIcon
+                        containerStyle={{height: scale(18), width: scale(18)}}
+                        iconColor={'#333333'}
+                        iconName={'remove'}
+                        iconSize={scale(18)}
+                        iconType={IconType[4]}
+                      />
                     </View>
                   </TouchableOpacity>
                 );

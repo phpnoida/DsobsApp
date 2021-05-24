@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   Dimensions,
   Modal,
-  DeviceEventEmitter,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -23,6 +22,8 @@ import {
   getGalleryCategory,
   doUpdateImageInformation,
 } from '../../Actions/GalleryActions';
+import {useDispatch} from 'react-redux';
+import {updateImage} from '../../reducer/NotificationReducer';
 
 const {height, width} = Dimensions.get('window');
 
@@ -43,6 +44,7 @@ const AboutPhoto = ({route, navigation}) => {
   const [filterCategory, setFilterCategory] = useState([]);
   const [showLoader, setShowLoader] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     imageId = '';
@@ -78,13 +80,11 @@ const AboutPhoto = ({route, navigation}) => {
         route.params.year !== null &&
         route.params.year !== ''
       ) {
-        setSelectedYear(parseInt(route.params.year));
+        setSelectedYear(parseInt(route.params.year, 10));
       }
     }
     getFilterCategory();
-    return () => {
-      DeviceEventEmitter.removeAllListeners('event.updateEvent');
-    };
+    return () => {};
   }, []);
   /**
    *
@@ -171,18 +171,19 @@ const AboutPhoto = ({route, navigation}) => {
               }
               setShowModal(true);
 
-              setTimeout(() => {
-                setShowModal(false);
+              // DeviceEventEmitter.emit('event.updateEvent', {
+              //   selectedIndex: selectedIndex,
+              //   filterObject: filterObject,
+              // });
 
-                setTimeout(() => {
-                  setTimeout(() => {
-                    DeviceEventEmitter.emit('event.updateEvent', {
-                      selectedIndex: selectedIndex,
-                      filterObject: filterObject,
-                    });
-                    navigation.goBack();
-                  }, 100);
-                }, 100);
+              setTimeout(() => {
+                let updateData = {
+                  selectedIndex: selectedIndex,
+                  filterObject: filterObject,
+                };
+                dispatch(updateImage(updateData));
+                setShowModal(false);
+                navigation.goBack();
               }, 2000);
             }
           }

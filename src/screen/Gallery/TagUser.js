@@ -7,12 +7,9 @@ import {
   SafeAreaView,
   Modal,
   Text,
-  ActivityIndicator,
   TouchableOpacity,
   Dimensions,
   Alert,
-  FlatList,
-  Linking,
   TouchableNativeFeedback,
   DeviceEventEmitter,
 } from 'react-native';
@@ -27,6 +24,9 @@ import {getDirectory} from '../../Actions/DirectoryActions';
 import {doUpdateImageInformation} from '../../Actions/GalleryActions';
 import CommonButton from '../../component/CommonButton';
 import Helper from '../../helper/Helper';
+import {useDispatch} from 'react-redux';
+import {updateImage} from '../../reducer/NotificationReducer';
+
 const {width} = Dimensions.get('window');
 
 let searchVal = '';
@@ -43,11 +43,9 @@ const TagUser = ({route, navigation}) => {
   const [errorMessage, setErrorMessage] = useState({});
   const [showLoader, setShowLoader] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    console.log('====================================');
-    console.log(route);
-    console.log('====================================');
     if (route.params !== undefined && route.params !== null) {
       imageId = route.params.id;
       imageKey = route.params.imageKey;
@@ -55,9 +53,7 @@ const TagUser = ({route, navigation}) => {
       filterObject = route.params.filterObject;
       setTaggedUsers([...route.params.userTag]);
     }
-    return () => {
-      DeviceEventEmitter.removeAllListeners('event.updateEvent');
-    };
+    return () => {};
   }, []);
 
   /**
@@ -139,15 +135,13 @@ const TagUser = ({route, navigation}) => {
               setShowModal(true);
 
               setTimeout(() => {
+                let updateData = {
+                  selectedIndex: selectedIndex,
+                  filterObject: filterObject,
+                };
+                dispatch(updateImage(updateData));
                 setShowModal(false);
-
-                setTimeout(() => {
-                  DeviceEventEmitter.emit('event.updateEvent', {
-                    selectedIndex: selectedIndex,
-                    filterObject: filterObject,
-                  });
-                  navigation.goBack();
-                }, 100);
+                navigation.goBack();
               }, 2000);
             }
           }

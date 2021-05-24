@@ -115,7 +115,7 @@ const Teachers = ({navigation}) => {
                   lineHeight: 25,
                 },
               ]}>
-              We also have a list of Volunteers,DOSCOS from different
+              We also have a list of Volunteers,Doscos from different
               professional fields that have volunteers to do services - free or
               at cost, for our retired Masters.
             </Text>

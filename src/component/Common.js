@@ -40,8 +40,16 @@ export const drawCheckbox = (title, checked, onClick) => {
 
 export const renderNoDataComponent = () => {
   return (
-    <View style={GlobalInclude.AppStyle.center}>
-      <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
+    <View style={GlobalInclude.AppStyle.fillColCenter}>
+      <Text
+        style={[
+          g.colorBlack,
+          g.FHNM,
+          g.fs12,
+          g.textCenter,
+          grid.alignItems,
+          grid.justifyContentCenter,
+        ]}>
         No Record Found
       </Text>
     </View>
