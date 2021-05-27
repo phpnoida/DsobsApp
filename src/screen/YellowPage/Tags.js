@@ -20,7 +20,7 @@ const Tags = ({content}) => (
                 style={{margin: scale(4)}}
                 activeOpacity={1}>
                 <View style={[g.tagStyle, grid.rowdir]}>
-                  <Text style={[g.tagTxtStyle, g.mr10]}>{v}</Text>
+                  <Text style={[g.tagTxtStyle]}>{v}</Text>
                 </View>
               </TouchableOpacity>
             );

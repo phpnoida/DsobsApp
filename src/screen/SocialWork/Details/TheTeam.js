@@ -23,7 +23,7 @@ const showTaggedUsers = (navigation, users) => {
     let item = users[i];
     const component = (
       <View key={i}>
-        {showUser(item.profilePic, item.name, item.batch, () => {
+        {showUser(item.profilePic, item.name, item.batch, null, () => {
           if (item.fromSchool) {
             navigation.navigate('UserProfile', {
               userId: item._id,

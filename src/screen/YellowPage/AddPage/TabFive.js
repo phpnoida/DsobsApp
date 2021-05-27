@@ -17,6 +17,7 @@ const TabFive = ({
   emailAddress,
   whatsApp,
   whatsappCountryCode,
+  phoneCountryCode,
   address,
   webLink,
   errorMessage,
@@ -87,18 +88,39 @@ const TabFive = ({
           </View>
           <View style={g.mb15}>
             {generateHeader('Contact Number', true)}
-            <TextInput
-              underlineColorAndroid="transparent"
-              style={g.inputWhite}
-              maxLength={12}
-              value={phoneContact}
-              keyboardType={'phone-pad'}
-              returnKeyType={'done'}
-              placeholder={'Enter your text here'}
-              onChangeText={(value) => {
-                handleInput('phoneContact', value);
-              }}
-            />
+            <View
+              style={[grid.rowdir, g.bglightGray, {borderRadius: scale(6)}]}>
+              <TouchableOpacity
+                activeOpacity={1}
+                style={[g.countryCode]}
+                onPress={() => {
+                  openCounryCodePicker(1);
+                }}>
+                <Text style={[g.colordarkGray, g.FHNR, g.txtCenter]}>
+                  {phoneCountryCode}
+                </Text>
+              </TouchableOpacity>
+              <View style={[grid.col]}>
+                <TextInput
+                  underlineColorAndroid="transparent"
+                  style={[
+                    g.inputGrayLogin,
+                    g.mb0,
+                    g.pt5,
+                    g.pb5,
+                    {borderTopLeftRadius: 0, borderBottomLeftRadius: 0},
+                  ]}
+                  maxLength={12}
+                  keyboardType={'phone-pad'}
+                  returnKeyType={'done'}
+                  value={phoneContact}
+                  placeholder="Phone Number"
+                  onChangeText={(value) => handleInput('phoneContact', value)}
+                  placeholderTextColor={'#ddd'}
+                />
+              </View>
+            </View>
+
             {errorMessage.phoneContact &&
               errorMessage.phoneContact.length > 0 && (
                 <Text style={[g.errorMsg, g.pt5]}>
@@ -136,7 +158,7 @@ const TabFive = ({
                 activeOpacity={1}
                 style={[g.countryCode]}
                 onPress={() => {
-                  openCounryCodePicker();
+                  openCounryCodePicker(2);
                 }}>
                 <Text style={[g.colordarkGray, g.FHNR, g.txtCenter]}>
                   {whatsappCountryCode}

@@ -28,30 +28,30 @@ export default class RadioButton extends Component {
         <View style={Globalinclude.AppStyle.fill}>
           {PROP.map((res, index) => {
             return (
-              <View key={index.toString()} style={styles.container}>
-                <TouchableOpacity
-                  onPress={() => {
-                    onRadioSelect(res);
-                    this.setState({
-                      value: res.key,
-                    });
-                  }}>
-                  <View style={Globalinclude.AppStyle.fillRowCenter}>
-                    <View style={Globalinclude.AppStyle.radioCircle}>
-                      {(value === res.key || res.text === defaultSelected) && (
-                        <View style={Globalinclude.AppStyle.selectedRb} />
-                      )}
-                    </View>
-                    <Text
-                      style={[
-                        Globalinclude.AppStyle.radioText,
-                        {textTransform: capitalize ? 'capitalize' : 'none'},
-                      ]}>
-                      {res.text}
-                    </Text>
+              <TouchableOpacity
+                key={index.toString()}
+                style={styles.container}
+                onPress={() => {
+                  onRadioSelect(res);
+                  this.setState({
+                    value: res.key,
+                  });
+                }}>
+                <View style={Globalinclude.AppStyle.fillRowCross}>
+                  <View style={Globalinclude.AppStyle.radioCircle}>
+                    {(value === res.key || res.text === defaultSelected) && (
+                      <View style={Globalinclude.AppStyle.selectedRb} />
+                    )}
                   </View>
-                </TouchableOpacity>
-              </View>
+                  <Text
+                    style={[
+                      Globalinclude.AppStyle.radioText,
+                      {textTransform: capitalize ? 'capitalize' : 'none'},
+                    ]}>
+                    {res.text}
+                  </Text>
+                </View>
+              </TouchableOpacity>
             );
           })}
         </View>

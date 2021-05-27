@@ -229,8 +229,8 @@ const VentureDetails = ({
                 underlineColorAndroid={'transparent'}
                 style={g.inputWhite}
                 value={eventPrice}
-                maxLength={9}
-                keyboardType={'decimal-pad'}
+                maxLength={15}
+                keyboardType={'default'}
                 returnKeyType={'done'}
                 placeholder={'Enter price here'}
                 onChangeText={(value) => {
@@ -241,7 +241,7 @@ const VentureDetails = ({
           </View>
 
           <View style={g.mb15}>
-            {generateHeader('About the Social Venture', true)}
+            {generateHeader('About the Event', true)}
             <TextInput
               underlineColorAndroid="transparent"
               numberOfLines={16}

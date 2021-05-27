@@ -13,6 +13,7 @@ import GlobalInclude from '../../../globalInclude/Globalinclude';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import NextPreviousButton from '../../../component/NextPreviousButton';
 import ModelAlert from '../../../component/ModalAlert';
+import {IconType} from '../../../helper/Constants';
 
 let selectedIndex = -1;
 const TabTwo = ({
@@ -132,10 +133,21 @@ const TabTwo = ({
                       selectedIndex = i;
                       setShowRemoveAlert(true);
                     }}
+                    onPress={() => {
+                      selectedIndex = i;
+                      setShowRemoveAlert(true);
+                    }}
                     style={{margin: scale(4)}}
                     activeOpacity={1}>
                     <View style={[g.tagStyle, grid.rowdir]}>
                       <Text style={[g.tagTxtStyle, g.mr10]}>{v}</Text>
+                      <GlobalInclude.BaseIcon
+                        containerStyle={{height: scale(18), width: scale(18)}}
+                        iconColor={'#333333'}
+                        iconName={'remove'}
+                        iconSize={scale(18)}
+                        iconType={IconType[4]}
+                      />
                     </View>
                   </TouchableOpacity>
                 );

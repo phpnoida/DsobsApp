@@ -22,8 +22,6 @@ import AutoSuggestLocationCompany from '../../component/AutoSuggestLocationCompa
 import {
   getWorkCategory,
   doFitlerSocialWork,
-  doSearchSocialWork,
-  searchWorkCategory,
 } from '../../Actions/SocialWorkActions';
 import {URL_REGX} from '../../helper/Constants';
 import Helper from '../../helper/Helper';
@@ -182,7 +180,9 @@ const SocialListing = ({navigation}) => {
 
   const handleRefresh = () => {
     filterObject.index = 0;
-    setIsRefreshing(true);
+    setIsRefreshing(false);
+    resetCount();
+    getSocialWork();
   };
 
   const resetCount = () => {

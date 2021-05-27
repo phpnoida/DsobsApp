@@ -5,7 +5,6 @@ import {
   SafeAreaView,
   Text,
   ActivityIndicator,
-  FlatList,
   Linking,
   Animated,
   Platform,
@@ -51,7 +50,6 @@ const GalleryListing = ({navigation}) => {
   const refRBFilter = useRef();
 
   const [firstTimeLoad, setFirstTimeLoad] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
   const [pageContent, setPageContent] = useState([]);
   const [filterCategory, setFilterCategory] = useState([]);
   const [filterQuery, setFilterQuery] = useState('');
@@ -134,7 +132,6 @@ const GalleryListing = ({navigation}) => {
             if (data.status) {
               if (filterObject.index === 0) {
                 totalCount = data.totalCount;
-                console.log('totalCount', totalCount);
                 setPageContent([...data.data]);
               } else {
                 setPageContent([...pageContent, ...data.data]);
@@ -143,15 +140,18 @@ const GalleryListing = ({navigation}) => {
             }
           }
         }
+        setIsRefreshing(false);
         setFirstTimeLoad(false);
       },
       (error, message) => {
         setPaginationStatus(PaginationStatus.allLoaded);
-        if (filterObject.index === 0) {
-          setPageContent([]);
+        setFirstTimeLoad(false);
+        setIsRefreshing(false);
+        if (error === 404) {
+          if (filterObject.index === 0) {
+            setPageContent([]);
+          }
         }
-        console.log('message', message);
-        console.log('error', error);
       },
     );
   };
@@ -204,7 +204,6 @@ const GalleryListing = ({navigation}) => {
 
   const onPaginate = () => {
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
-      console.log('onPaginate()');
       setPaginationStatus(PaginationStatus.waiting);
       filterObject.index = filterObject.index + 1;
       getAlbumList();
@@ -212,7 +211,6 @@ const GalleryListing = ({navigation}) => {
   };
 
   const onEndReached = () => {
-    console.log('onEndReached()');
     if (pageContent.length === totalCount) {
       setPaginationStatus(PaginationStatus.allLoaded);
       return;
@@ -266,7 +264,6 @@ const GalleryListing = ({navigation}) => {
               galleryId: item._id,
               index: 0,
             },
-            galleryId: item._id,
             index: subIndex,
             title: item.title,
           };
@@ -367,6 +364,7 @@ const GalleryListing = ({navigation}) => {
                 index: 0,
               },
               title: `Search For: ${Helper.concatName(row)}`,
+              index: 0,
             };
             navigation.navigate('ImageList', payload);
           }}
@@ -379,6 +377,7 @@ const GalleryListing = ({navigation}) => {
                   index: 0,
                 },
                 title: `Search For: ${searchVal}`,
+                index: 0,
               };
               navigation.navigate('ImageList', payload);
             } else if (searchType === 1) {
@@ -396,7 +395,7 @@ const GalleryListing = ({navigation}) => {
 
   const renderNoDataComponent = () => {
     return (
-      <View style={GlobalInclude.AppStyle.center}>
+      <View style={GlobalInclude.AppStyle.fillCenter}>
         <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
           No Record Found
         </Text>
@@ -510,6 +509,7 @@ const GalleryListing = ({navigation}) => {
                 index: 0,
               },
               title: `Search By: ${categoryName}`,
+              index: 0,
             };
             navigation.navigate('ImageList', payload);
           }}
@@ -524,18 +524,6 @@ const GalleryListing = ({navigation}) => {
               setShowShareModal(!showShareModal);
             }}
           />
-        )}
-
-        {/* loader when search or other opertations */}
-        {isLoading && (
-          <View style={{position: 'absolute', botttom: 0, top: 0, zIndex: 2}}>
-            <View style={GlobalInclude.AppStyle.fillCenter}>
-              <ActivityIndicator
-                size={'small'}
-                color={GlobalInclude.Color.ColorPrimary}
-              />
-            </View>
-          </View>
         )}
 
         {/* year select */}
@@ -553,6 +541,7 @@ const GalleryListing = ({navigation}) => {
                   index: 0,
                 },
                 title: `Search By: ${value.text.toString()}`,
+                index: 0,
               };
               navigation.navigate('ImageList', payload);
             }, 100);

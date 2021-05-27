@@ -172,6 +172,7 @@ const ImageList = ({route, navigation}) => {
     if (route !== undefined && route !== null) {
       pageTitle = route.params.title;
       filterObject = route.params.filterObject;
+      pickedIndex = route.params.index;
       setTitle(pageTitle);
       getGalleryData();
     }
@@ -289,6 +290,9 @@ const ImageList = ({route, navigation}) => {
         isReported: true,
       };
 
+      console.log('====================================');
+      console.log('requestData', requestData);
+      console.log('====================================');
       setIsReporting(true);
       doUpdateImageInformation(
         selectedItem._id,
@@ -416,7 +420,16 @@ const ImageList = ({route, navigation}) => {
             item.profileImg,
             Helper.concatName(item),
             `Batch ${item.batch}`,
-            () => {},
+            null,
+            () => {
+              showTagUserRef.current.close();
+
+              setTimeout(() => {
+                navigation.navigate('UserProfile', {
+                  userId: item._id,
+                });
+              }, 350);
+            },
           )}
         </View>
       );
@@ -571,6 +584,7 @@ const ImageList = ({route, navigation}) => {
           {generateMenuOption('Report Photo', 10, 'exclamationcircleo', () => {
             optionRef.current.close();
             setTimeout(() => {
+              reportText = '';
               setShowReportModal(true);
             }, 200);
           })}

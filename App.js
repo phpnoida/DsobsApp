@@ -253,6 +253,7 @@ const App = ({navigation}) => {
           }
         }}
       />
+
       {isConnected ? (
         <NavigationContainer
           ref={navigationRef}
@@ -304,6 +305,8 @@ const App = ({navigation}) => {
         ref={(ref) => (global.logoutAlert = ref)}
         navigation={navigationRef}
       />
+
+      <GlobalInclude.Loader ref={(ref) => (global.loader_ref = ref)} />
     </View>
   );
 };

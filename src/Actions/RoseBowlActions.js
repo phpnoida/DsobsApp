@@ -1,11 +1,13 @@
 import axios from 'axios';
 import {SERVER_PATH} from '../../config';
 
-export function getMagazines(callback, errCallback) {
+export function getMagazines(params, callback, errCallback) {
   let requestPath = `${SERVER_PATH}magazine`;
-  console.log('global.accessToken', global.accessToken);
   const request = axios
-    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
+      params: params,
+    })
     .then((res) => callback(res))
     .catch((err) => {
       handleError(err, errCallback);

@@ -5,6 +5,7 @@ import grid from '../../../theme/grid';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import {showUser} from '../../../component/Common';
 import Helper from '../../../helper/Helper';
+import {scale} from '../../../theme/Scalling';
 
 const showTaggedUsers = (navigation, users) => {
   let componentArray = [];
@@ -13,7 +14,7 @@ const showTaggedUsers = (navigation, users) => {
     let item = users[i];
     const component = (
       <View key={i}>
-        {showUser(item.profileImg, item.name, item.batch, item.type, () => {
+        {showUser(item.profilePic, item.name, item.batch, null, () => {
           if (item.fromSchool) {
             navigation.navigate('UserProfile', {
               userId: item._id,
@@ -37,7 +38,17 @@ const TheTeam = ({content, navigation}) => {
     content.organizer !== null
   ) {
     content.organizer.map((organizer) => {
-      organizer.type = 'Organiser';
+      organizer.type = 'Organising';
+      if (!organizer.batch.startsWith('Role: ')) {
+        //
+        organizer.batch = `Role: ${
+          organizer.batch &&
+          organizer.batch !== undefined &&
+          organizer.batch !== null
+            ? organizer.batch
+            : 'Organizer'
+        }`;
+      }
     });
 
     userData = userData.concat(content.organizer);
@@ -55,10 +66,10 @@ const TheTeam = ({content, navigation}) => {
 
   return (
     <ScrollView
-      style={[g.pl10, g.pr10, grid.flex1]}
+      style={[g.pl10, g.pr10]}
       contentContainerStyle={g.pb30}
       showsVerticalScrollIndicator={false}>
-      <View style={g.p5}>
+      <View style={[g.p5, g.mb35]}>
         {userData &&
         userData !== undefined &&
         userData !== null &&

@@ -187,10 +187,10 @@ const ListingDetails = ({route, navigation}) => {
                     <Text
                       style={[g.fs14, g.FHNR, g.colorGray1]}
                       numberOfLines={2}>
-                      {pageContent.title &&
-                      pageContent.title !== undefined &&
-                      pageContent.title !== null
-                        ? pageContent.title
+                      {pageContent.category &&
+                      pageContent.category !== undefined &&
+                      pageContent.category !== null
+                        ? pageContent.category
                         : 'N/A'}
                     </Text>
                     <View style={[grid.rowdir, g.mt8]}>

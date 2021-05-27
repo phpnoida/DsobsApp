@@ -104,13 +104,7 @@ export const showUser = (image, title, subTitle, extraTitle, onPress) => {
           alignSelf: 'center',
         },
       ]}>
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={onPress}
-        style={{
-          justifyContent: 'center',
-          alignSelf: 'center',
-        }}>
+      <TouchableOpacity activeOpacity={0.8} onPress={onPress}>
         <View
           style={[
             g.bglightGray,
@@ -139,21 +133,20 @@ export const showUser = (image, title, subTitle, extraTitle, onPress) => {
             mode={'cover'}
           />
         </View>
-        <View style={{minHeight: 65, width: 100}}>
+        <View style={{minHeight: 65, flex: 1}}>
           <Text
-            style={[g.fs14, g.FHNM, g.txtCenter, g.colorBlack]}
+            style={[g.fs14, g.FHNM, g.txtLeft, g.colorBlack]}
             numberOfLines={2}>
             {title && title !== undefined && title !== null && title !== ''
               ? title
-              : 'N/A'}
+              : ''}
           </Text>
-
           <View style={{marginVertical: scale(2)}} />
           <Text
             style={[
               g.fs12,
               g.FHNR,
-              g.txtCenter,
+              g.txtLeft,
               g.colorGray1,
               grid.alignItems,
               grid.justifyContentCenter,
@@ -163,9 +156,8 @@ export const showUser = (image, title, subTitle, extraTitle, onPress) => {
             subTitle !== null &&
             subTitle !== ''
               ? subTitle
-              : 'N/A'}
+              : ''}
           </Text>
-
           <View style={{marginVertical: scale(2)}} />
           {extraTitle &&
           extraTitle !== undefined &&
@@ -175,7 +167,7 @@ export const showUser = (image, title, subTitle, extraTitle, onPress) => {
               style={[
                 g.fs12,
                 g.FHNR,
-                g.txtCenter,
+                g.txtLeft,
                 grid.alignItems,
                 grid.justifyContentCenter,
                 g.colorGray1,

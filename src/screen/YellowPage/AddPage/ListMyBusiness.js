@@ -28,7 +28,7 @@ let responseMessage = '';
 let professionListMain = [];
 let inEditMode = false;
 let isSuccess = false;
-
+let pickerType = 1;
 const ListMyBusiness = ({route, navigation}) => {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -69,6 +69,7 @@ const ListMyBusiness = ({route, navigation}) => {
   const [address, setAddress] = useState('');
   const [webLink, setWebLink] = useState('');
   const [whatsappCountryCode, setWhatsappCountryCode] = useState('+91');
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+91');
   const [showCodePicker, setShowCodePicker] = useState(false);
 
   useEffect(() => {
@@ -120,6 +121,7 @@ const ListMyBusiness = ({route, navigation}) => {
       setContactPerson(companyContactPerson.name);
       setDesignation(companyContactPerson.designation);
       setPhoneContact(companyContactPerson.phone);
+      setPhoneCountryCode(companyContactPerson.countryCode);
       setEmailAddress(companyContactPerson.email);
       setWhatsApp(companyContactPerson.whatsapp);
       setAddress(defaultData.companyAddress);
@@ -274,7 +276,7 @@ const ListMyBusiness = ({route, navigation}) => {
         whatsappCountryCode: whatsappCountryCode,
         websiteLink: webLink,
         phone: phoneContact,
-        countryCode: '+91',
+        countryCode: phoneCountryCode,
       },
       status: 1,
       categoryOfBusiness: selectedProfession,
@@ -423,7 +425,12 @@ const ListMyBusiness = ({route, navigation}) => {
   const onSelectCountry = (country) => {
     setShowCodePicker(!showCodePicker);
     let code = '+' + country.callingCode[0];
-    setWhatsappCountryCode(code);
+
+    if (pickerType === 1) {
+      setPhoneCountryCode(code);
+    } else {
+      setWhatsappCountryCode(code);
+    }
   };
 
   const uploadImage = (pickFile, childPath, mediaType) => {
@@ -739,10 +746,14 @@ const ListMyBusiness = ({route, navigation}) => {
             emailAddress={emailAddress}
             whatsApp={whatsApp}
             whatsappCountryCode={whatsappCountryCode}
+            phoneCountryCode={phoneCountryCode}
             address={address}
             webLink={webLink}
             errorMessage={errorMessage}
-            openCounryCodePicker={() => openCounryCodePicker()}
+            openCounryCodePicker={(type) => {
+              pickerType = type;
+              openCounryCodePicker();
+            }}
           />
         );
     }

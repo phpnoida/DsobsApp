@@ -28,16 +28,19 @@ import Tags from './Tags';
 import RbSheet from 'react-native-raw-bottom-sheet';
 import CommonButton from '../../component/CommonButton';
 import FlatListSlider from '../../component/FlatListSlider';
-import Preview from '../../component/Preview';
+import Preview from '../../component/ImageDetail';
 import Helpers from '../../helper/Helper';
 
 let latitude = 0.0,
   longitude = 0.0;
 
+const {height, width} = Dimensions.get('window');
+
 const BusinessDetails = ({route, navigation}) => {
   const refRBSheet = useRef();
   const [isLoading, setIsLoading] = useState(true);
   const [pageContent, setPageContent] = useState(null);
+  const [viewWidth, setViewWidth] = useState(width);
 
   useEffect(() => {
     if (route.params && route.params !== undefined && route.params !== null) {
@@ -141,18 +144,25 @@ const BusinessDetails = ({route, navigation}) => {
                     pageContent.coverImages !== null &&
                     pageContent.coverImages !== undefined &&
                     pageContent.coverImages.length > 0 ? (
-                      <View style={{borderRadius: scale(10)}}>
+                      <View
+                        onLayout={(event) => {
+                          setViewWidth(event.nativeEvent.layout.width);
+                        }}
+                        style={{
+                          borderRadius: scale(10),
+                        }}>
                         {pageContent.coverImages.length > 1 ? (
                           <FlatListSlider
+                            width={viewWidth}
                             data={pageContent.coverImages}
                             component={
                               <Preview
-                                ViewStyle={{borderRadius: 0}}
-                                containerStyle={{borderRadius: 0}}
-                                imageStyle={{borderRadius: 0}}
+                                ViewStyle={{borderRadius: scale(10)}}
+                                containerStyle={{borderRadius: scale(10)}}
+                                imageStyle={{borderRadius: scale(10)}}
                               />
                             }
-                            contentContainerStyle={{}}
+                            contentContainerStyle={{borderRadius: scale(10)}}
                             autoscroll={false}
                           />
                         ) : (
@@ -187,7 +197,7 @@ const BusinessDetails = ({route, navigation}) => {
                   </View>
                   <View style={[g.p15, g.pt10]}>
                     <Text
-                      style={[g.fs14, g.mt5, g.FHNR, g.colorBlack]}
+                      style={[g.fs14, g.FHNR, g.colorBlack]}
                       numberOfLines={2}>
                       {pageContent.categoryOfBusiness &&
                       pageContent.categoryOfBusiness !== undefined &&
@@ -205,7 +215,7 @@ const BusinessDetails = ({route, navigation}) => {
                         <Text
                           style={[
                             g.fs12,
-                            g.mt5,
+                            g.mt8,
                             g.FHNR,
                             g.colorBlack,
                             GlobalInclude.AppStyle.transform,
@@ -215,7 +225,7 @@ const BusinessDetails = ({route, navigation}) => {
                       </ScrollView>
                     ) : (
                       <Text
-                        style={[g.fs12, g.mt5, g.FHNR, g.colorBlack]}
+                        style={[g.fs12, g.mt8, g.FHNR, g.colorBlack]}
                         numberOfLines={2}>
                         N/A
                       </Text>

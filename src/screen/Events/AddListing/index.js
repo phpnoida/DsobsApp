@@ -158,7 +158,7 @@ const ListSocialVenture = ({route, navigation}) => {
     );
   };
 
-  const listMyWork = () => {
+  const listMyWork = (mapLink) => {
     let participants = [];
 
     volunteers.map((item, index) => {
@@ -220,7 +220,7 @@ const ListSocialVenture = ({route, navigation}) => {
   };
 
   const addMyWork = (requestObject) => {
-    setLoader(true);
+    //setLoader(true);
     addSocialWork(
       requestObject,
       (response) => {
@@ -233,6 +233,9 @@ const ListSocialVenture = ({route, navigation}) => {
           ) {
             let data = response.data;
 
+            console.log('====================================');
+            console.log('data', data);
+            console.log('====================================');
             if (data.status) {
               isSuccess = true;
               responseMessage = `Congratulations your Event has been successfully sent to ${APP_NAME} for approval.`;
@@ -362,7 +365,37 @@ const ListSocialVenture = ({route, navigation}) => {
         return;
       }
     } else if (step === 4) {
-      listMyWork();
+      if (global.isConnected) {
+        setLoader(true);
+        
+        // let mapLink = '';
+        // if (
+        //   googleMapLink !== null &&
+        //   googleMapLink !== undefined &&
+        //   googleMapLink !== ''
+        // ) {
+        //   fetch(googleMapLink, {
+        //     followRedirects: false,
+        //   })
+        //     .then((response) => {
+        //       if (response && response !== undefined && response !== null) {
+        //         if (
+        //           response.url &&
+        //           response.url !== undefined &&
+        //           response.url !== null
+        //         ) {
+        //           mapLink = response.url;
+        //         }
+        //       }
+        //     })
+        //     .then(() => {
+        //       listMyWork(mapLink);
+        //     });
+        // }
+
+        listMyWork('');
+      }
+
       return;
     }
     setStep(step + 1);
