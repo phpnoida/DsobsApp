@@ -1,18 +1,14 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback, useMemo} from 'react';
 import {
   Text,
   View,
   TouchableOpacity,
-  Image,
-  TextInput,
-  ScrollView,
   ActivityIndicator,
   Dimensions,
   StyleSheet,
-  PermissionsAndroid,
   SafeAreaView,
-  Platform,
   Modal,
+  FlatList,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
@@ -20,29 +16,26 @@ import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
 import {IconType} from '../../helper/Constants';
 import {getMagazines} from '../../Actions/RoseBowlActions';
-import RNFetchBlob from 'rn-fetch-blob';
 import TopHeaderView from '../../component/TopHeaderView';
 import ProgresImage from '../../component/ProgresImage';
+import {renderNoDataComponent} from '../../component/Common';
+import {_downloadContent} from '../../helper/mediaHelper';
 
-const {config, fs} = RNFetchBlob;
-let PictureDir = fs.dirs.PictureDir;
+let deviceWidth = Dimensions.get('window').width;
 let responseMessage = '';
 let selectedId = '';
 let defaultPosition = 0;
-let downloadOptions = {
-  fileCache: true,
-  addAndroidDownloads: {
-    useDownloadManager: true,
-    notification: true,
-    path:
-      PictureDir +
-      '/me_' +
-      Math.floor(new Date().getTime() + new Date().getSeconds() / 2),
-    description: 'Downloading image.',
-  },
+let totalCount = 0;
+let filterObject = {
+  index: 0,
+  size: 10,
 };
-
-let deviceWidth = Dimensions.get('window').width;
+const ITEM_HEIGHT = 609;
+const PaginationStatus = {
+  firstLoad: 0,
+  waiting: 1,
+  allLoaded: 2,
+};
 
 const monthNames = [
   'Jan',
@@ -58,14 +51,78 @@ const monthNames = [
   'Nov',
   'Dec',
 ];
+
+function MagazineItem({index, item, isDownloading, onSelect, onDownload}) {
+  return useMemo(() => {
+    return (
+      <View key={index} style={grid.alignItems}>
+        <TouchableOpacity activeOpacity={1} onPress={onSelect} style={[g.mb15]}>
+          <View style={[g.br3, g.oh]}>
+            <ProgresImage
+              source={
+                item.contentImage.file != null && item.contentImage.file !== ''
+                  ? {uri: item.contentImage.file}
+                  : GlobalInclude.Assets.DefaultImage
+              }
+              containerStyle={[
+                g.oh,
+                g.bglightGray,
+                {
+                  borderRadius: 8,
+                  aspectRatio: 3 / 4,
+                  width: deviceWidth - 70,
+                },
+              ]}
+            />
+          </View>
+
+          <View
+            style={[
+              grid.rowrow,
+              grid.alignItems,
+              grid.justifyContent,
+              g.mt10,
+              g.mb20,
+            ]}>
+            <Text style={[g.colordarkGray, g.FHNM, g.fs15]}>
+              {`${monthNames[item.publishMonth - 1]} - ${item.publishYear} `}
+            </Text>
+            {isDownloading && item._id === selectedId ? (
+              <ActivityIndicator
+                size={'small'}
+                color={GlobalInclude.Color.ColorPrimary}
+              />
+            ) : (
+              <TouchableOpacity activeOpacity={1} onPress={onDownload}>
+                <GlobalInclude.BaseIcon
+                  containerStyle={style.downloadIcon}
+                  iconColor={GlobalInclude.Color.ColorPrimary}
+                  iconName={'download'}
+                  iconSize={scale(20)}
+                  iconType={IconType[4]}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        </TouchableOpacity>
+      </View>
+    );
+  }, [index, item, isDownloading, onSelect, onDownload]);
+}
+
 const Magazine = ({route, navigation}) => {
-  const scrollViewRef = useRef();
-  const [dataSourceCords, setDataSourceCords] = useState([]);
-  const [pageContent, setPageContent] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const flatList = useRef();
+  const [pageContent, setPageContent] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [paginationStatus, setPaginationStatus] = useState(
+    PaginationStatus.firstLoad,
+  );
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   useEffect(() => {
+    resetFilter();
     getMagazine();
     return () => {};
   }, []);
@@ -77,8 +134,8 @@ const Magazine = ({route, navigation}) => {
    */
 
   const getMagazine = () => {
-    setIsLoading(true);
     getMagazines(
+      filterObject,
       (response) => {
         setIsLoading(false);
         if (response && response !== null) {
@@ -90,22 +147,17 @@ const Magazine = ({route, navigation}) => {
             let data = response.data;
 
             if (data.status) {
-              if (
-                data.data &&
-                data.data !== undefined &&
-                data.data !== null &&
-                data.data.length > 0
-              ) {
-                //console.log('content', JSON.stringify(data.data));
-                let resData = data.data;
+              let results = data.data;
+
+              if (filterObject.index === 0) {
+                filterObject.size = 10;
+                totalCount = data.totalCount;
+
                 let currentYear = new Date().getFullYear();
                 let currentMonth = new Date().getMonth() + 1;
 
-                console.log('currentMonth', currentMonth);
-
-                for (let i = 0; i < resData.length; i++) {
-                  const element = resData[i];
-
+                for (let i = 0; i < results.length; i++) {
+                  const element = results[i];
                   if (
                     element.publishYear.toString() === currentYear.toString() &&
                     element.publishMonth.toString() === currentMonth.toString()
@@ -114,19 +166,18 @@ const Magazine = ({route, navigation}) => {
                     break;
                   }
                 }
+                setPageContent([...results]);
+
                 setTimeout(() => {
-                  if (defaultPosition < dataSourceCords.length) {
-                    scrollViewRef.current.scrollTo({
-                      x: 0,
-                      y: dataSourceCords[defaultPosition],
-                      animated: true,
-                    });
-                  }
-                }, 300);
-                setPageContent(data.data);
+                  flatList.current.scrollToIndex({
+                    index: defaultPosition,
+                    animated: true,
+                  });
+                }, 500);
               } else {
-                setPageContent(null);
+                setPageContent([...pageContent, ...results]);
               }
+              setPaginationStatus(PaginationStatus.waiting);
             } else {
               setPageContent(null);
             }
@@ -135,74 +186,136 @@ const Magazine = ({route, navigation}) => {
       },
       (error) => {
         setIsLoading(false);
+        if (error === 404) {
+          setPaginationStatus(PaginationStatus.allLoaded);
+          if (filterObject.index === 0) {
+            setPageContent([]);
+          }
+        }
+
         console.log('error', error);
       },
     );
   };
 
-  const _downloadContent = async (file) => {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          {
-            title: 'Looking for permission',
-            message:
-              'App needs access to your storage ' +
-              'so you can save awesome magazine.',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          },
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log('You can use the camera');
-          setIsDownloading(true);
-          downloadData(file);
+  const downloadImage = useCallback(
+    async (file) => {
+      if (!isDownloading) {
+        setIsDownloading(true);
+        let result = await _downloadContent(file);
+
+        if (result) {
+          responseMessage = 'Content downloaded successfully!';
         } else {
-          console.log('Camera permission denied');
+          responseMessage = 'Error while downloading content!';
         }
-      } catch (err) {
-        console.warn(err);
+        setIsDownloading(false);
+        setShowModal(true);
+        setTimeout(() => {
+          setShowModal(false);
+        }, 2000);
       }
-    } else {
-      setIsDownloading(true);
-      downloadData(file);
-    }
-  };
-
-  const downloadData = (file) => {
-    config(downloadOptions)
-      .fetch('GET', file.replace(/ /g, '%20'))
-      .then((res) => {
-        // do some magic here
-        console.log('res', res);
-        selectedId = '';
-        responseMessage = 'Content downloaded successfully!';
-        setIsDownloading(false);
-        setShowModal(true);
-
-        setTimeout(() => {
-          setShowModal(false);
-        }, 2000);
-      })
-      .catch((error) => {
-        console.log(error);
-        responseMessage = 'Error while downloading content!';
-        setIsDownloading(false);
-        setShowModal(true);
-
-        setTimeout(() => {
-          setShowModal(false);
-        }, 2000);
-      });
-  };
+    },
+    [isDownloading],
+  );
 
   /*
    * ************************************************
    * API Section End
    * ************************************************
    */
+
+  /**
+   *
+   * Pagination
+   *
+   */
+  const callNextBatch = () => {
+    filterObject.index = filterObject.index + 1;
+    getMagazine();
+  };
+  const onPaginate = () => {
+    if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
+      console.log('onPaginate()');
+      setPaginationStatus(PaginationStatus.waiting);
+      callNextBatch();
+    }
+  };
+
+  const onEndReached = () => {
+    console.log('onEndReached()');
+    if (pageContent.length === totalCount || pageContent.length < 10) {
+      setPaginationStatus(PaginationStatus.allLoaded);
+      return;
+    }
+    if (paginationStatus === PaginationStatus.waiting) {
+      onPaginate();
+    }
+  };
+
+  const handleRefresh = () => {
+    resetFilter();
+    setIsRefreshing(false);
+    getMagazine();
+  };
+
+  const resetFilter = () => {
+    totalCount = 0;
+    filterObject.index = 0;
+    filterObject.size = 10;
+  };
+
+  const renderFooter = () => {
+    return (
+      <View style={style.footerView}>
+        {pageContent.length === totalCount ? (
+          <View />
+        ) : (
+          <View style={{height: scale(30)}}>
+            {paginationStatus === PaginationStatus.waiting ? (
+              <View style={g.p10}>
+                <ActivityIndicator
+                  size={'small'}
+                  color={GlobalInclude.Color.ColorPrimary}
+                />
+              </View>
+            ) : null}
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const keyExtractor = useCallback((item, index) => index, []);
+
+  const getItemLayout = useCallback(
+    (data, index) => ({
+      length: ITEM_HEIGHT,
+      offset: ITEM_HEIGHT * index,
+      index,
+    }),
+    [],
+  );
+
+  const renderItem = useCallback(
+    ({item, index}) => (
+      <MagazineItem
+        index={index}
+        item={item}
+        isDownloading={isDownloading}
+        onSelect={() => {
+          navigation.navigate('Summary', {
+            magazineId: item._id,
+          });
+        }}
+        onDownload={() => {
+          selectedId = item._id;
+          downloadImage(item.pdf.file);
+        }}
+      />
+    ),
+    [isDownloading, navigation, downloadImage],
+  );
 
   return (
     <View style={GlobalInclude.AppStyle.fill}>
@@ -223,130 +336,39 @@ const Magazine = ({route, navigation}) => {
               </View>
             ) : (
               <View style={GlobalInclude.AppStyle.fill}>
-                {pageContent === null || pageContent.length === 0 ? (
-                  <View style={GlobalInclude.AppStyle.fillCenter}>
-                    <Image
-                      style={{height: scale(100), width: scale(100)}}
-                      source={GlobalInclude.Assets.AppLogo}
-                    />
-                    <Text style={[g.colorGray8, g.FHNM, g.fs18]}>
-                      No Content Found
-                    </Text>
-                  </View>
-                ) : (
-                  <View style={GlobalInclude.AppStyle.fill}>
-                    <View style={[g.br3, g.mb15, g.mt5]}>
-                      <View style={[g.inputNew, grid.rowdir]}>
-                        <GlobalInclude.BaseIcon
-                          containerStyle={style.searchIcon}
-                          iconColor={'#dddddd'}
-                          iconName={'search'}
-                          iconSize={scale(20)}
-                          iconType={IconType[4]}
-                        />
-                        <TextInput
-                          blurOnSubmit={true}
-                          maxLength={200}
-                          underlineColorAndroid="transparent"
-                          style={[g.inputNew, g.pl0, g.fs16]}
-                          keyboardType="default"
-                          placeholder={'Search'}
-                        />
-                      </View>
-                    </View>
-                    {/* Magazine */}
-                    <ScrollView
-                      contentInsetAdjustmentBehavior={'automatic'}
-                      showsVerticalScrollIndicator={false}
-                      contentContainerStyle={{paddingBottom: scale(70)}}
-                      ref={scrollViewRef}>
-                      <View style={[grid.alignItems]}>
-                        {pageContent.map((item, index) => {
-                          return (
-                            <View
-                              key={index}
-                              onLayout={(event) => {
-                                const layout = event.nativeEvent.layout;
-                                dataSourceCords[index] = layout.y;
-                                setDataSourceCords(dataSourceCords);
-                              }}>
-                              <TouchableOpacity
-                                activeOpacity={1}
-                                onPress={() => {
-                                  navigation.navigate('Summary', {
-                                    magazineId: item._id,
-                                  });
-                                }}
-                                style={[g.mb15]}>
-                                <View style={[g.br3, g.oh]}>
-                                  <ProgresImage
-                                    source={
-                                      item.contentImage.file != null &&
-                                      item.contentImage.file !== ''
-                                        ? {uri: item.contentImage.file}
-                                        : GlobalInclude.Assets.DefaultImage
-                                    }
-                                    containerStyle={[
-                                      g.oh,
-                                      g.bglightGray,
-                                      {
-                                        borderRadius: 8,
-                                        aspectRatio: 3 / 4,
-                                        width: deviceWidth - 70,
-                                      },
-                                    ]}
-                                  />
-                                </View>
-
-                                <View
-                                  style={[
-                                    grid.rowrow,
-                                    grid.alignItems,
-                                    grid.justifyContent,
-                                    g.mt10,
-                                    g.mb20,
-                                  ]}>
-                                  <Text
-                                    style={[g.colordarkGray, g.FHNM, g.fs15]}>
-                                    {`${monthNames[item.publishMonth - 1]} - ${
-                                      item.publishYear
-                                    } `}
-                                  </Text>
-                                  {isDownloading && item._id === selectedId ? (
-                                    <ActivityIndicator
-                                      size={'small'}
-                                      color={GlobalInclude.Color.ColorPrimary}
-                                    />
-                                  ) : (
-                                    <TouchableOpacity
-                                      activeOpacity={1}
-                                      onPress={() => {
-                                        if (!isDownloading) {
-                                          selectedId = item._id;
-
-                                          _downloadContent(item.pdf.file);
-                                        }
-                                      }}>
-                                      <GlobalInclude.BaseIcon
-                                        containerStyle={style.downloadIcon}
-                                        iconColor={
-                                          GlobalInclude.Color.ColorPrimary
-                                        }
-                                        iconName={'download'}
-                                        iconSize={scale(20)}
-                                        iconType={IconType[4]}
-                                      />
-                                    </TouchableOpacity>
-                                  )}
-                                </View>
-                              </TouchableOpacity>
-                            </View>
-                          );
-                        })}
-                      </View>
-                    </ScrollView>
-                  </View>
-                )}
+                <FlatList
+                  ref={flatList}
+                  showsVerticalScrollIndicator={false}
+                  extraData={pageContent}
+                  data={pageContent}
+                  renderItem={renderItem}
+                  keyExtractor={keyExtractor}
+                  onEndReachedThreshold={0.1}
+                  onEndReached={onEndReached}
+                  refreshing={isRefreshing}
+                  onRefresh={handleRefresh}
+                  initialScrollIndex={defaultPosition}
+                  ListEmptyComponent={renderNoDataComponent}
+                  ListFooterComponent={renderFooter}
+                  contentContainerStyle={{
+                    paddingBottom: pageContent.length > 0 ? scale(130) : 0,
+                    flexGrow: 1,
+                  }}
+                  getItemLayout={getItemLayout}
+                  onScrollToIndexFailed={(error) => {
+                    console.log('failed', error);
+                    flatList.current.scrollToOffset({
+                      offset: error.averageItemLength * error.index,
+                      animated: true,
+                    });
+                    setTimeout(() => {
+                      flatList.current.scrollToIndex({
+                        index: error.index,
+                        animated: true,
+                      });
+                    }, 500);
+                  }}
+                />
               </View>
             )}
           </View>

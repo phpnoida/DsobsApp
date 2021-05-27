@@ -36,7 +36,6 @@ import VolunteerList from '../screen/Teacher/VolunteerList';
 import SocialListing from '../screen/SocialWork/SocialListing';
 import ListMyWork from '../screen/SocialWork/AddListing/ListMyWork';
 import ListingDetails from '../screen/SocialWork/Details/ListingDetails';
-import SamplePage from '../screen/SamplePage';
 import ListSocialVenture from '../screen/SocialVentures/AddListing/ListSocialVenture';
 import SocialVenture from '../screen/SocialVentures/SocialVenture';
 import SocialVentureDetails from '../screen/SocialVentures/Details';
@@ -49,11 +48,6 @@ const Stack = createStackNavigator();
 export const RootNavigators = (baseRoute) => {
   return (
     <Stack.Navigator initialRouteName={baseRoute}>
-      <Stack.Screen
-        name="SamplePage"
-        component={SamplePage}
-        options={{headerShown: false}}
-      />
       <Stack.Screen
         name="AppTour"
         component={AppTour}

@@ -8,6 +8,7 @@ import {
   Animated,
   TouchableOpacity,
   Keyboard,
+  Linking,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -27,6 +28,7 @@ import {
 } from '../../Actions/SocialEventsActions';
 import {URL_REGX, IconType} from '../../helper/Constants';
 import Helper from '../../helper/Helper';
+
 const {urlRegex} = URL_REGX;
 
 const PaginationStatus = {
@@ -181,7 +183,9 @@ const SocialEvents = ({navigation}) => {
 
   const handleRefresh = () => {
     filterObject.index = 0;
-    setIsRefreshing(true);
+    setIsRefreshing(false);
+    resetCount();
+    getSocialWork();
   };
 
   const resetCount = () => {
@@ -233,18 +237,25 @@ const SocialEvents = ({navigation}) => {
   };
 
   const showMapIcon = (link) => {
-    if (link && link !== undefined && link !== null && link !== '') {
-      let response = Helper.getLatLngFromMap(link);
-      if (
-        response &&
-        response !== null &&
-        response.latitude !== 0 &&
-        response.longitude !== 0
-      ) {
-        return true;
-      } else {
-        return false;
-      }
+    if (
+      link &&
+      link !== undefined &&
+      link !== null &&
+      link !== '' &&
+      Helper.validateRegex(urlRegex, link)
+    ) {
+      // let response = Helper.getLatLngFromMap(link);
+      // if (
+      //   response &&
+      //   response !== null &&
+      //   response.latitude !== 0 &&
+      //   response.longitude !== 0
+      // ) {
+      //   return true;
+      // } else {
+      //   return false;
+      // }
+      return true;
     }
     return false;
   };
@@ -330,9 +341,7 @@ const SocialEvents = ({navigation}) => {
               </Text>
               <View style={[grid.row, g.mt5, grid.alignItems]}>
                 <View style={grid.col}>
-                  <Text
-                    style={[g.fs14, g.FHNB, style.grayColorText]}
-                    numberOfLines={1}>
+                  <Text style={[g.fs14, g.FHNB, g.colorBlue]} numberOfLines={1}>
                     {Helper.showFormatedDate(item.eventTime, true)}
                   </Text>
                 </View>
@@ -340,14 +349,26 @@ const SocialEvents = ({navigation}) => {
                   <TouchableOpacity
                     style={[grid.rowrow, grid.alignItems]}
                     onPress={() => {
-                      createOpenLink({
-                        travelType: 'public_transport',
-                        provider: 'google',
-                        latitude: Helper.getLatLngFromMap(item.googleMapLink)
-                          .latitude,
-                        longitude: Helper.getLatLngFromMap(item.googleMapLink)
-                          .longitude,
-                      });
+                      // createOpenLink({
+                      //   travelType: 'public_transport',
+                      //   provider: 'google',
+                      //   latitude: Helper.getLatLngFromMap(item.googleMapLink)
+                      //     .latitude,
+                      //   longitude: Helper.getLatLngFromMap(item.googleMapLink)
+                      //     .longitude,
+                      // });
+                      Linking.canOpenURL(item.googleMapLink).then(
+                        (supported) => {
+                          if (supported) {
+                            Linking.openURL(item.googleMapLink);
+                          } else {
+                            console.log(
+                              "Don't know how to open URI: " +
+                                item.googleMapLink,
+                            );
+                          }
+                        },
+                      );
                     }}>
                     <GlobalInclude.BaseIcon
                       containerStyle={{height: scale(17), width: scale(17)}}
@@ -514,7 +535,7 @@ const SocialEvents = ({navigation}) => {
           setSelectedCategory(Helper.capitalize(value));
           resetCount();
           filterObject.category = value;
-          searchVal = value;
+          //searchVal = value;
           setFirstTimeLoad(true);
           refCategory.current.close();
           setTimeout(() => {

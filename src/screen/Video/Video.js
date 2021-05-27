@@ -264,7 +264,8 @@ const Video = ({navigation}) => {
     videos.map((child, index) => {
       const video = (
         <View key={index.toString()} style={[grid.c2, g.mb10]}>
-          <View style={g.bggray2}>
+          <View
+            style={(g.bggray2, {borderRadius: scale(15), overflow: 'hidden'})}>
             <YoutubeView
               link={child.videoLink}
               containerStyle={style.childVideoContainer}
@@ -548,7 +549,10 @@ const Video = ({navigation}) => {
           </View>
           {isLoading ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
-              <ActivityIndicator size={'small'} color={GlobalInclude.Color.ColorPrimary} />
+              <ActivityIndicator
+                size={'small'}
+                color={GlobalInclude.Color.ColorPrimary}
+              />
             </View>
           ) : (
             <View style={GlobalInclude.AppStyle.fill}>
@@ -817,7 +821,7 @@ const style = StyleSheet.create({
     marginBottom: scale(15),
   },
   videoContainer: {
-    height: scale(200),
+    height: scale(180),
     width: '100%',
     borderRadius: scale(15),
     borderBottomLeftRadius: 0,
@@ -838,7 +842,7 @@ const style = StyleSheet.create({
   },
   thumbStyle: {
     borderRadius: scale(15),
-    height: scale(200),
+    height: scale(180),
     width: '100%',
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
@@ -850,17 +854,15 @@ const style = StyleSheet.create({
     left: 15,
   },
   childVideoContainer: {
-    height: scale(100),
+    height: scale(84),
     width: '100%',
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
+    borderRadius: scale(15),
     justifyContent: 'center',
   },
   childThumb: {
-    height: scale(100),
+    height: scale(84),
     width: '100%',
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
+    borderRadius: scale(15),
   },
   centeredView: {
     flex: 1,

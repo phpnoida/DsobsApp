@@ -62,7 +62,6 @@ const Comments = ({workId, navigation}) => {
     console.log('focus');
     if (global.isConnected) {
       resetCount();
-      filterObject.workId = workId;
       if (global.isConnected) {
         getCommentsList();
       } else {
@@ -100,7 +99,9 @@ const Comments = ({workId, navigation}) => {
 
   const handleRefresh = () => {
     filterObject.index = 0;
-    setIsRefreshing(true);
+    setIsRefreshing(false);
+    resetCount();
+    getCommentsList();
   };
 
   const resetCount = () => {
@@ -108,6 +109,7 @@ const Comments = ({workId, navigation}) => {
     filterObject = {};
     filterObject.index = 0;
     filterObject.size = 10;
+    filterObject.workId = workId;
   };
   /**
    *
@@ -184,25 +186,30 @@ const Comments = ({workId, navigation}) => {
           ) {
             let data = response.data;
             if (data.status) {
-              let commentList = comments;
-              let detail = {};
+              // let commentList = comments;
+              // let detail = {};
 
-              detail._id = global.userDetails._id;
-              detail.profileImg = global.userDetails.profileImg;
-              detail.lastName = global.userDetails.lastName;
-              detail.batch = global.userDetails.batch;
-              detail.firstName = global.userDetails.firstName;
+              // detail._id = global.userDetails._id;
+              // detail.profileImg = global.userDetails.profileImg;
+              // detail.lastName = global.userDetails.lastName;
+              // detail.batch = global.userDetails.batch;
+              // detail.firstName = global.userDetails.firstName;
 
-              let item = data.data;
-              item.authorId = detail;
-              commentList.splice(0, 0, item);
-              setComments([...commentList]);
+              // let item = data.data;
+              // item.authorId = detail;
+              // commentList.splice(0, 0, item);
+              // setComments([...commentList]);
+
               lastIndex = -1;
               commentId = '';
               setCommentError('');
               setCommentText('');
               hideModal();
               Alert.alert('Congratulations', 'Comment added successfully');
+
+              setTimeout(() => {
+                handleRefresh();
+              }, 200);
             } else {
               hideModal();
             }
@@ -372,7 +379,12 @@ const Comments = ({workId, navigation}) => {
             : null
         }>
         <View style={[g.mb5, grid.rowdir]}>
-          <View
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate('UserProfile', {
+                userId: item.authorId._id,
+              });
+            }}
             style={[
               g.mr10,
               g.bggray,
@@ -396,10 +408,16 @@ const Comments = ({workId, navigation}) => {
                 mode={'cover'}
               />
             )}
-          </View>
+          </TouchableOpacity>
           <View style={grid.flex1}>
             <View style={grid.rowrow}>
-              <Text style={[g.fs15, g.FHNM, g.colordarkGray, grid.col, g.mr5]}>
+              <Text
+                style={[g.fs15, g.FHNM, g.colordarkGray, grid.col, g.mr5]}
+                onPress={() => {
+                  navigation.navigate('UserProfile', {
+                    userId: item.authorId._id,
+                  });
+                }}>
                 {item.authorId !== undefined && item.authorId !== null
                   ? `${Helper.concatName(item.authorId)} (${
                       item.authorId.batch

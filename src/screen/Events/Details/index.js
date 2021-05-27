@@ -135,7 +135,7 @@ const EventDetails = ({route, navigation}) => {
           fromSchool: true,
           name:
             global.userDetails.firstName + ' ' + global.userDetails.lastName,
-          batch: '',
+          batch: `Batch: ${global.userDetails.batch}`,
           profilePic: global.userDetails.profileImg,
           _id: global.userDetails._id,
         };
@@ -164,10 +164,6 @@ const EventDetails = ({route, navigation}) => {
           ) {
             let data = response.data;
             if (data.status) {
-              Alert.alert(
-                'Congratulations',
-                'Your request updated successfully.',
-              );
               setTimeout(() => {
                 getSocialWork();
               }, 200);
@@ -198,10 +194,9 @@ const EventDetails = ({route, navigation}) => {
         ? content.title
         : APP_NAME
     }`;
-    shareContent.message = `Hey,\nThought you might find this interesting!Check out this event taking place at ${APP_NAME}.\nDate&Time : ${Helpers.showFormatedDate(
-      content.eventTime,
-      true,
-    )}`;
+    shareContent.message = `Hey,\nthought you might find this interesting Check out this event in the ${APP_NAME}.\n ${
+      shareContent.title
+    }\n${Helpers.showFormatedDate(content.eventTime, true)}`;
 
     let attachment =
       content.eventVideo !== undefined &&
@@ -362,19 +357,9 @@ const EventDetails = ({route, navigation}) => {
                           {'Free'}
                         </Text>
                       ) : (
-                        <NumberFormat
-                          value={pageContent.amount}
-                          displayType={'text'}
-                          thousandSeparator={true}
-                          prefix={'₹'}
-                          decimalScale={2}
-                          fixedDecimalScale
-                          renderText={(formattedValue) => (
-                            <Text style={[g.FHNB, g.fs14, g.colorBlue]}>
-                              {formattedValue}
-                            </Text>
-                          )}
-                        />
+                        <Text style={[g.FHNB, g.fs14, g.colorBlue]}>
+                          {pageContent.amount}
+                        </Text>
                       )}
                     </View>
                     <View style={[grid.rowrow, grid.alignItems, g.mt8]}>
@@ -438,7 +423,7 @@ const EventDetails = ({route, navigation}) => {
                     <Location tabLabel={'Location'} content={pageContent} />
                     <Comments
                       tabLabel={'Comments'}
-                      ventureId={filterObject.id}
+                      eventId={filterObject.id}
                       navigation={navigation}
                     />
                   </ScrollableTabView>
@@ -589,8 +574,7 @@ const EventDetails = ({route, navigation}) => {
       {showModal && (
         <GlobalInclude.ModalAlert
           status={showModal}
-          header={'Attend Event'}
-          subHeader={'Are you sure you want to attend event?'}
+          header={'Would You Like To Attend This Event?'}
           okButton={'Yes'}
           cancelButton={'No'}
           okAction={() => {
@@ -678,7 +662,8 @@ const style = StyleSheet.create({
     alignContent: 'center',
     alignSelf: 'center',
     position: 'absolute',
-    bottom: scale(2),
+    bottom: 0,
+    backgroundColor: 'white',
   },
   button: {
     backgroundColor: '#f8f8f8',

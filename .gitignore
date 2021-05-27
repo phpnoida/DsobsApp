@@ -82,7 +82,6 @@ android/keystores/debug.keystore
 /ios/Pods/
 
 # Visual studio
-.vscode
 .vs
 
 # Watchman
@@ -91,3 +90,4 @@ android/keystores/debug.keystore
 # CocoaPods
 /ios/Pods/
 alumbus.xcworkspace
+config.bat

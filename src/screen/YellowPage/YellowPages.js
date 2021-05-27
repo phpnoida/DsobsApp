@@ -4,22 +4,19 @@ import {
   View,
   TouchableOpacity,
   Image,
-  TextInput,
   ScrollView,
   ActivityIndicator,
   Dimensions,
   StyleSheet,
   Keyboard,
   SafeAreaView,
-  Platform,
-  FlatList,
   Animated,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import g from '../../theme/global';
 import {scale} from '../../theme/Scalling';
 import grid from '../../theme/grid';
-import {IconType, APP_NAME} from '../../helper/Constants';
+import {IconType} from '../../helper/Constants';
 import TopHeaderView from '../../component/TopHeaderView';
 import Helper from '../../helper/Helper';
 import YellowPageSearch from '../../component/YellowPageSearch';
@@ -28,7 +25,6 @@ import ProfessionalSheetFilter from '../../component/ProfessionalSheetFilter';
 import ProgresImage from '../../component/ProgresImage';
 import FlatListSlider from '../../component/FlatListSlider';
 import Preview from '../../component/Preview';
-
 import BottomSheetAbout from 'react-native-raw-bottom-sheet';
 import {
   doSearchCity,
@@ -79,7 +75,6 @@ const YellowPages = ({navigation}) => {
   const [professionList, setProfessionList] = useState([]);
   const [selectedProfession, setSelectedProfession] = useState('');
   const [searchedCityCompany, setSearchedCityCompany] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [sortedBy, setSortedBy] = useState('');
   const [pageContent, setPageContent] = useState([]);
   const [paginationStatus, setPaginationStatus] = useState(
@@ -87,8 +82,8 @@ const YellowPages = ({navigation}) => {
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [myBusinessList, setMyBusinessList] = useState([]);
-
   const [animatedHeight, setAnimatedHeight] = useState(255);
+  const [viewWidth, setViewWidth] = useState(width);
 
   useEffect(() => {
     professionListMain = [];
@@ -174,13 +169,11 @@ const YellowPages = ({navigation}) => {
   };
 
   const searchCityName = (query) => {
-    setIsLoading(true);
     doSearchCity(
       query,
       10,
       0,
       (response) => {
-        setIsLoading(false);
         if (response && response !== null) {
           if (
             response.data &&
@@ -208,7 +201,6 @@ const YellowPages = ({navigation}) => {
         }
       },
       (code, error) => {
-        setIsLoading(false);
         setSearchedCityCompany([]);
         console.log('error', error);
       },
@@ -216,13 +208,11 @@ const YellowPages = ({navigation}) => {
   };
 
   const searchCompanyName = (query) => {
-    setIsLoading(true);
     doSearchBusiness(
       query,
       10,
       0,
       (response) => {
-        setIsLoading(false);
         if (response && response !== null) {
           if (
             response.data &&
@@ -246,20 +236,17 @@ const YellowPages = ({navigation}) => {
         }
       },
       (code, error) => {
-        setIsLoading(false);
         setSearchedCityCompany([]);
         console.log('error->', error);
       },
     );
   };
   const searchProfession = (query) => {
-    setIsLoading(true);
     doSearchProfession(
       query,
       10,
       0,
       (response) => {
-        setIsLoading(false);
         if (response && response !== null) {
           if (
             response.data &&
@@ -283,7 +270,6 @@ const YellowPages = ({navigation}) => {
         }
       },
       (code, error) => {
-        setIsLoading(false);
         setSearchedCityCompany([]);
         console.log('error->', error);
       },
@@ -427,6 +413,9 @@ const YellowPages = ({navigation}) => {
         }}>
         <View style={[g.bgWhite, g.boxShadow, {borderRadius: scale(10)}]}>
           <View
+            onLayout={(event) => {
+              setViewWidth(event.nativeEvent.layout.width);
+            }}
             style={[
               g.bggray3,
               {
@@ -443,6 +432,7 @@ const YellowPages = ({navigation}) => {
               <View>
                 {item.coverImages.length > 1 ? (
                   <FlatListSlider
+                    width={viewWidth}
                     data={item.coverImages}
                     component={<Preview />}
                     contentContainerStyle={{
@@ -483,7 +473,7 @@ const YellowPages = ({navigation}) => {
               />
             )}
           </View>
-          <View style={[g.p15, g.pl10]}>
+          <View style={[g.pr10, g.pl10, g.pt5, g.pb5]}>
             <Text
               style={[
                 g.FHNB,

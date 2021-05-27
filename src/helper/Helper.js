@@ -385,7 +385,7 @@ const Helpers = {
     if (timestamp > 0) {
       var dateVal = new Date(timestamp * 1000);
       if (withTime) {
-        return moment(dateVal, ['HH']).format('MMM DD, YYYY h:mm A');
+        return moment(dateVal, ['HH']).format('MMM DD, YYYY | h:mm A');
       }
       return moment(dateVal).format('MMM DD, YYYY');
     } else {

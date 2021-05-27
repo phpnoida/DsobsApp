@@ -71,7 +71,7 @@ export default class FlatListSlider extends Component {
     const totalItemWidth = itemWidth + separatorWidth;
 
     return (
-      <View style={{borderRadius: 15}}>
+      <View style={{borderRadius: scale(10)}}>
         <FlatList
           ref={this.slider}
           horizontal

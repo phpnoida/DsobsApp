@@ -1,5 +1,5 @@
 import React from 'react';
-import {Text, View, ScrollView, TouchableOpacity} from 'react-native';
+import {Text, View, ScrollView, TouchableOpacity, Linking} from 'react-native';
 import g from '../../../theme/global';
 import grid from '../../../theme/grid';
 import {scale} from '../../../theme/Scalling';
@@ -10,25 +10,26 @@ import {MAP_KEY} from '../../../helper/Constants';
 import Helper from '../../../helper/Helper';
 
 const Location = ({content}) => {
-  let latitude = 0,
-    longitude = 0;
-  if (
-    content.googleMapLink &&
-    content.googleMapLink !== undefined &&
-    content.googleMapLink !== null &&
-    content.googleMapLink !== ''
-  ) {
-    let locationDetail = Helper.getLatLngFromMap(content.googleMapLink);
-    if (
-      locationDetail &&
-      locationDetail !== null &&
-      locationDetail.latitude !== 0 &&
-      locationDetail.longitude !== 0
-    ) {
-      latitude = locationDetail.latitude;
-      longitude = locationDetail.longitude;
-    }
-  }
+  let latitude = 28.5904933,
+    longitude = 77.3001552;
+
+  // if (
+  //   content.googleMapLink &&
+  //   content.googleMapLink !== undefined &&
+  //   content.googleMapLink !== null &&
+  //   content.googleMapLink !== ''
+  // ) {
+  //   let locationDetail = Helper.getLatLngFromMap(content.googleMapLink);
+  //   if (
+  //     locationDetail &&
+  //     locationDetail !== null &&
+  //     locationDetail.latitude !== 0 &&
+  //     locationDetail.longitude !== 0
+  //   ) {
+  //     latitude = locationDetail.latitude;
+  //     longitude = locationDetail.longitude;
+  //   }
+  // }
 
   var url = `http://maps.google.com/maps/api/staticmap?center==${latitude},${longitude},&zoom=18&markers=${latitude},${longitude}%7C${latitude},${longitude}&path=color:0x0000FF80%7Cweight:5%${latitude},${longitude}&&size=640x480&sensor=TRUE_OR_FALSE&key=${MAP_KEY}`;
 
@@ -74,12 +75,25 @@ const Location = ({content}) => {
               <TouchableOpacity
                 activeOpacity={1}
                 onPress={() => {
-                  createOpenLink({
-                    travelType,
-                    provider: 'google',
-                    latitude: latitude,
-                    longitude: longitude,
-                  });
+                  // createOpenLink({
+                  //   travelType,
+                  //   provider: 'google',
+                  //   latitude: latitude,
+                  //   longitude: longitude,
+                  // });
+
+                  Linking.canOpenURL(content.googleMapLink).then(
+                    (supported) => {
+                      if (supported) {
+                        Linking.openURL(content.googleMapLink);
+                      } else {
+                        console.log(
+                          "Don't know how to open URI: " +
+                            content.googleMapLink,
+                        );
+                      }
+                    },
+                  );
                 }}>
                 <ProgresImage
                   source={GlobalInclude.Assets.MapLocation}
@@ -93,7 +107,7 @@ const Location = ({content}) => {
               </TouchableOpacity>
             </View>
           </View>
-          <View style={[g.boxShadow, g.bgWhite, g.br3, g.p5, g.mt20]}>
+          {/* <View style={[g.boxShadow, g.bgWhite, g.br3, g.p5, g.mt20]}>
             <View style={[grid.rowdir, grid.alignItems]}>
               <View style={[grid.col, g.pl15]}>
                 <Text style={[g.colordarkGray, g.fs16, g.FHNB, g.mb5]}>
@@ -114,7 +128,7 @@ const Location = ({content}) => {
                 </Text>
               </View>
             </View>
-          </View>
+          </View> */}
         </View>
       )}
     </ScrollView>

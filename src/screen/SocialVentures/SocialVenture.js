@@ -179,7 +179,9 @@ const SocialVenture = ({navigation}) => {
 
   const handleRefresh = () => {
     filterObject.index = 0;
-    setIsRefreshing(true);
+    setIsRefreshing(false);
+    resetCount();
+    getSocialWork();
   };
 
   const resetCount = () => {

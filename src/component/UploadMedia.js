@@ -1,13 +1,11 @@
 import React, {useRef, useState} from 'react';
 import {
   Text,
-  Dimensions,
   View,
   Alert,
   TouchableOpacity,
   StyleSheet,
   Image,
-  PermissionsAndroid,
   Platform,
   ActivityIndicator,
   TextInput,
@@ -48,12 +46,12 @@ const UploadMedia = ({
    */
 
   const uploadMediaContent = (body, childPath, mediaType) => {
-    setIsLoading(true);
+    global.loader_ref.show_loader(1);
     uploadMedia(
       childPath,
       body,
       (response) => {
-        setIsLoading(false);
+        global.loader_ref.show_loader(0);
         if (response && response !== undefined && response !== null) {
           if (response.status && response.data && response.data !== null) {
             let childData = response.data.data;
@@ -71,7 +69,7 @@ const UploadMedia = ({
         }
       },
       (error, message) => {
-        setIsLoading(false);
+        global.loader_ref.show_loader(1);
         console.log('error', error);
         onPickMedia(null);
         Alert.alert('Uploading Failed');
@@ -95,7 +93,7 @@ const UploadMedia = ({
     })
       .then((images) => {
         if (images !== null) {
-          refRBSheet.current.open();
+          //refRBSheet.current.open();
           console.log('images', images);
           uploadImage(images, 'utils/imageupload', 1);
         }
@@ -192,6 +190,9 @@ const UploadMedia = ({
         );
       }
     } catch (error) {
+      console.log('====================================');
+      console.log('error', error);
+      console.log('====================================');
       onPickMedia(null);
       Alert.alert(
         'Erorr While pick media',
@@ -214,7 +215,7 @@ const UploadMedia = ({
           type: [DocumentPicker.types.pdf],
         });
         if (res !== null) {
-          refRBSheet.current.open();
+          //refRBSheet.current.open();
           uploadDoc(res, 'utils/imageupload?type=1', 3);
         }
       } catch (error) {
@@ -238,7 +239,7 @@ const UploadMedia = ({
           type: [DocumentPicker.types.audio],
         });
         if (res !== null) {
-          refRBSheet.current.open();
+         // refRBSheet.current.open();
           uploadDoc(res, 'utils/imageupload?type=3', 4);
         }
       } catch (error) {
@@ -385,6 +386,7 @@ const UploadMedia = ({
               'Image',
               media.image,
               () => {
+                refRBSheet.current.close();
                 setTimeout(() => {
                   pickImage();
                 }, 350);

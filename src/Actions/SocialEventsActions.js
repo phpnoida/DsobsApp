@@ -68,11 +68,11 @@ export function doFitlerSocialWork(filterQuery, callback, errCallback) {
 
 export function updateEvent(payload, commentId, callback, errCallback) {
   let requestPath = `${SERVER_PATH}events?id=${commentId}`;
-  
-  payload.attendees = payload.attendees.map((item) => {
-    delete item.type;
-    return item;
-  });
+
+  // payload.attendees = payload.attendees.map((item) => {
+  //   delete item.type;
+  //   return item;
+  // });
 
   const request = axios
     .patch(requestPath, payload, {
@@ -109,7 +109,7 @@ export function doSearchSocialWork(filterQuery, callback, errCallback) {
 }
 
 export function getComments(filterObject, callback, errCallback) {
-  let requestPath = `${SERVER_PATH}events/comment/venture`;
+  let requestPath = `${SERVER_PATH}events/comment/events`;
 
   const request = axios
     .get(requestPath, {

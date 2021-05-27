@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useRef, useState, useEffect} from 'react';
 import {
   Text,
   View,
@@ -21,6 +21,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import DatePickerView from '../../../component/DatePickerView';
 import Helper from '../../../helper/Helper';
 import {IconType} from '../../../helper/Constants';
+import {WebView} from 'react-native-webview';
 
 let selectedType = 1;
 const BasicDetails = ({
@@ -46,6 +47,7 @@ const BasicDetails = ({
 }) => {
   const refCategory = useRef();
   const [showDatePicker, setShowDatePicker] = useState(false);
+
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.pl15, g.pr15, g.pt30]}>
       <KeyboardAwareScrollView
@@ -260,10 +262,10 @@ const BasicDetails = ({
               }}
               value={venueAddress}
               multiline={true}
-              blurOnSubmit={true}
-              onSubmitEditing={() => {
-                Keyboard.dismiss();
-              }}
+              // blurOnSubmit={true}
+              // onSubmitEditing={() => {
+              //   Keyboard.dismiss();
+              // }}
               keyboardType={'default'}
               autoCapitalize={'words'}
               returnKeyType={'done'}
