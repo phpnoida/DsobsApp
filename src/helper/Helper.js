@@ -107,7 +107,7 @@ const Helpers = {
     return newUrl;
   },
   loadYoutubeThumb: function (video) {
-    return `https://img.youtube.com/vi/${video}/0.jpg`;
+    return `https://img.youtube.com/vi/${video}/mqdefault.jpg`;
   },
 
   stripParameters: function (str) {

@@ -19,8 +19,7 @@ import ProgressImage from '../../component/ProgresImage';
 import YoutubeView from '../../component/YoutubeView';
 import SocialWorkSearch from '../../component/SocialWorkSearch';
 import {renderNoDataComponent} from '../../component/Common';
-import CategorySheet from './AddListing/CategorySheet';
-import {createOpenLink} from '../../helper/CreateMapLink';
+import FilterCategory from '../../component/FilterCategory';
 import AutoSuggestLocationCompany from '../../component/AutoSuggestLocationCompany';
 import {
   getWorkCategory,
@@ -80,8 +79,13 @@ const SocialEvents = ({navigation}) => {
               if (data.status) {
                 let categoryArray = [];
                 if (data.data !== null) {
+                  categoryArray.push({key: -1, text: 'All Events'});
                   data.data.map((item, index) => {
                     categoryArray.push({key: index, text: item});
+                  });
+                  categoryArray.push({
+                    key: -2,
+                    text: 'Past Events',
                   });
                 }
                 categoryListMain = categoryArray;
@@ -118,6 +122,9 @@ const SocialEvents = ({navigation}) => {
    */
 
   const getSocialWork = () => {
+    console.log('====================================');
+    console.log('filterObject', filterObject);
+    console.log('====================================');
     doFitlerSocialWork(
       filterObject,
       (response) => {
@@ -523,21 +530,23 @@ const SocialEvents = ({navigation}) => {
         </View>
       </SafeAreaView>
 
-      <CategorySheet
+      <FilterCategory
         refRBSheet={refCategory}
         dataList={categoryList}
-        searchProfession={(query) => {
-          searchCategoryName(query);
-        }}
-        selectedProfession={selectedCategory}
-        setSelectedProfession={(value) => {
+        title={'Select Nature'}
+        selectedFilter={selectedCategory}
+        setSelectedFilter={(value, item) => {
           Keyboard.dismiss();
-          setSelectedCategory(Helper.capitalize(value));
           resetCount();
-          filterObject.category = value;
-          //searchVal = value;
-          setFirstTimeLoad(true);
+          if (item.key === -2) {
+            filterObject.past = true;
+          } else if (item.key !== -1) {
+            filterObject.category = value;
+          }
+          setSelectedCategory(Helper.capitalize(value));
+
           refCategory.current.close();
+          setFirstTimeLoad(true);
           setTimeout(() => {
             getSocialWork();
           }, 350);

@@ -14,8 +14,8 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import CommonButton from '../../../component/CommonButton';
 import {generateHeader} from './HeaderTitle';
 import {showSocialIcon} from '../../../component/SocialIcon';
-import CategorySheet from './CategorySheet';
 import YearSelection from '../../../component/YearSelectionSheet';
+import FilterCategory from '../../../component/FilterCategory';
 
 const BasicDetails = ({
   handleInput,
@@ -205,14 +205,12 @@ const BasicDetails = ({
         />
       </View>
 
-      <CategorySheet
+      <FilterCategory
         refRBSheet={refCategory}
         dataList={categoryList}
-        searchProfession={(query) => {
-          searchCategory(query);
-        }}
-        selectedProfession={selectedCategory}
-        setSelectedProfession={(value) => {
+        title={'Select Nature'}
+        selectedFilter={selectedCategory}
+        setSelectedFilter={(value, item) => {
           console.log('value', value);
           onCategorySelect(value);
           refCategory.current.close();

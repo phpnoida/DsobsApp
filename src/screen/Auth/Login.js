@@ -30,12 +30,13 @@ import {URL_REGX, APP_NAME} from '../../helper/Constants';
 import {CommonActions} from '@react-navigation/native';
 import messaging from '@react-native-firebase/messaging';
 import CommonButton from '../../component/CommonButton';
+import SmsRetriever from 'react-native-sms-retriever';
+import parsePhoneNumber, {AsYouType} from 'libphonenumber-js';
 
 const {emailRegex, phoneRegex} = URL_REGX;
 
 const phoneModule = NativeModules.PhoneModule;
 
-let otpInput = '';
 let deviceNumber = '';
 let bottomSheet = null;
 let requestId = '';
@@ -49,6 +50,7 @@ const Login = ({navigation}) => {
 
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [authCode, setAuthCode] = useState('');
   const [editable, setEditable] = useState(true);
   const [showOTPBox, setShowOTPBox] = useState(false);
   const [errorMessage, setErrorMessage] = useState({});
@@ -60,30 +62,53 @@ const Login = ({navigation}) => {
   const [showContactUsModal, setShowContactUsModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
-    const getUserPhoneNumbers = () => {
-      phoneModule.getPhoneNumber((numbers) => {
-        if (numbers) {
-          deviceNumber = numbers;
-          setShowPhoneModal(!showPhoneModal);
-        }
-      });
-    };
-    if (Platform.OS === 'android') {
-      async function checkPermission() {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
-        );
-        if (granted) {
-          getUserPhoneNumbers();
-        }
-      }
-      checkPermission();
-    }
+    // const getUserPhoneNumbers = () => {
+    //   phoneModule.getPhoneNumber((numbers) => {
+    //     if (numbers) {
+    //       deviceNumber = numbers;
+    //       setShowPhoneModal(!showPhoneModal);
+    //     }
+    //   });
+    // };
+    // if (Platform.OS === 'android') {
+    //   async function checkPermission() {
+    //     const granted = await PermissionsAndroid.request(
+    //       PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE,
+    //     );
+    //     if (granted) {
+    //       getUserPhoneNumbers();
+    //     }
+    //   }
+    //   checkPermission();
+    // }
 
+    const _requestForPhoneNumber = async () => {
+      try {
+        const phoneNumber = await SmsRetriever.requestPhoneNumber();
+
+        let match = parsePhoneNumber(phoneNumber);
+        const asYouType = new AsYouType();
+        asYouType.input(match.formatInternational());
+        setCountryCode('+' + asYouType.getNumber().countryCallingCode);
+        setPhone(match.nationalNumber);
+      } catch (error) {}
+    };
+
+    // const unsubscribe = navigation.addListener('focus', () => {
+    //   console.log('focus');
+    //   setTimeout(() => {
+    //     if (Platform.OS === 'android') {
+    //       _requestForPhoneNumber();
+    //     }
+    //   }, 500);
+    // });
+    _requestForPhoneNumber();
     return () => {
       if (timerInterval !== null) {
         clearInterval(timerInterval);
       }
+      //unsubscribe();
+      SmsRetriever.removeSmsListener();
     };
   }, []);
 
@@ -161,7 +186,7 @@ const Login = ({navigation}) => {
     }
   };
 
-  const validatePhoneNumber = () => {
+  const validatePhoneNumber = async () => {
     Keyboard.dismiss();
     setErrorMessage({});
     if (phone.trim().length === 0) {
@@ -177,8 +202,23 @@ const Login = ({navigation}) => {
       };
       if (global.isConnected) {
         getAuthCode(requestData);
+
+        const registered = await SmsRetriever.startSmsRetriever();
+        if (registered) {
+          SmsRetriever.addSmsListener(_onReceiveSms);
+        }
       }
     }
+  };
+
+  const _onReceiveSms = (event) => {
+    let otpCode = event.message.toString().split(' ')[1].replace(/\D/g, '');
+    console.log('====================================');
+    console.log('event.message', otpCode);
+    console.log('====================================');
+
+    setAuthCode(otpCode);
+    SmsRetriever.removeSmsListener();
   };
 
   const getAuthCode = (requestString) => {
@@ -221,14 +261,14 @@ const Login = ({navigation}) => {
   const validateAuthCode = () => {
     Keyboard.dismiss();
     setErrorMessage({});
-    if (otpInput.trim().otpInput === 0) {
+    if (authCode.trim().authCode === 0) {
       setErrorMessage({otp: 'Please enter auth code'});
-    } else if (otpInput.trim().length < 4) {
+    } else if (authCode.trim().length < 4) {
       setErrorMessage({otp: 'Please enter valid auth code'});
     } else {
       let requestData = {
         id: requestId,
-        otpCode: otpInput,
+        otpCode: authCode,
       };
       setIsLoading(true);
       verifyAuthCode(
@@ -561,7 +601,10 @@ const Login = ({navigation}) => {
                   style={g.inputGrayLogin}
                   keyboardType="numeric"
                   maxLength={6}
-                  onChangeText={(otp) => (otpInput = otp)}
+                  value={authCode}
+                  onChangeText={(otp) => {
+                    setAuthCode(otp);
+                  }}
                   placeholder="Enter OTP here"
                   placeholderTextColor={'#ddd'}
                   textContentType={'oneTimeCode'}
@@ -599,6 +642,7 @@ const Login = ({navigation}) => {
                 setIsPhoneLogin(!isPhoneLogin);
                 if (showOTPBox) {
                   otpInput = '';
+                  setAuthCode('');
                   setShowOTPBox(!showOTPBox);
                 }
                 setPhone('');
@@ -634,6 +678,7 @@ const Login = ({navigation}) => {
                 } else if (currentStatus === 2) {
                   if (showOTPBox) {
                     otpInput = '';
+                    setAuthCode('');
                     setShowOTPBox(!showOTPBox);
                   }
                   if (isPhoneLogin) {

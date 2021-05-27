@@ -96,7 +96,6 @@ const YellowPages = ({navigation}) => {
     };
 
     const unsubscribe = navigation.addListener('focus', () => {
-      console.log('focus');
       if (global.isConnected) {
         setFirstTimeLoad(true);
         resetCount();
@@ -127,6 +126,9 @@ const YellowPages = ({navigation}) => {
             response.data !== null
           ) {
             let data = response.data;
+            console.log('====================================');
+            console.log('My Business',data);
+            console.log('====================================');
             if (data.status) {
               setMyBusinessList([...data.data]);
             }
@@ -150,6 +152,10 @@ const YellowPages = ({navigation}) => {
             response.data !== null
           ) {
             let data = response.data;
+
+            console.log('====================================');
+            console.log('profession',data);
+            console.log('====================================');
 
             if (data.status) {
               let professionArray = [];
@@ -288,7 +294,9 @@ const YellowPages = ({navigation}) => {
             response.data !== null
           ) {
             let data = response.data;
-
+            console.log('====================================');
+            console.log('yellowPage', data);
+            console.log('====================================');
             if (data.status) {
               if (filterObject.index === 0) {
                 totalCount = data.totalCount;

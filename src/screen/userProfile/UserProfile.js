@@ -221,9 +221,6 @@ const UserProfile = ({route, navigation}) => {
 
   const onRefresh = () => {
     setStep(1);
-    console.log('====================================');
-    console.log('onRefresh- userId', userId);
-    console.log('====================================');
     if (userId === global.userId) {
       getProfile();
     } else {
@@ -241,12 +238,13 @@ const UserProfile = ({route, navigation}) => {
     if (lastStep > 1) {
       setStep(lastStep - 1);
     } else {
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 1,
-          routes: [{name: 'Dashboard'}],
-        }),
-      );
+      navigation.goBack();
+      // navigation.dispatch(
+      //   CommonActions.reset({
+      //     index: 1,
+      //     routes: [{name: 'Dashboard'}],
+      //   }),
+      // );
     }
   };
 

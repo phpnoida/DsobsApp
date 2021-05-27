@@ -17,7 +17,7 @@ import ProgressImage from '../../component/ProgresImage';
 import YoutubeView from '../../component/YoutubeView';
 import SocialWorkSearch from '../../component/SocialWorkSearch';
 import {renderNoDataComponent} from '../../component/Common';
-import CategorySheet from './AddListing/CategorySheet';
+import FilterCategory from '../../component/FilterCategory';
 import AutoSuggestLocationCompany from '../../component/AutoSuggestLocationCompany';
 import {
   getWorkCategory,
@@ -32,7 +32,6 @@ const PaginationStatus = {
   waiting: 1,
   allLoaded: 2,
 };
-let searchVal = '';
 let totalCount = 0;
 let categoryListMain = [];
 let filterObject = {
@@ -59,7 +58,6 @@ const SocialListing = ({navigation}) => {
   const [searchCategory, setSearchCategory] = useState([]);
 
   useEffect(() => {
-    searchVal = '';
     categoryListMain = [];
 
     const getCategory = () => {
@@ -77,6 +75,7 @@ const SocialListing = ({navigation}) => {
               if (data.status) {
                 let categoryArray = [];
                 if (data.data !== null) {
+                  categoryArray.push({key: -1, text: 'All Social Work'});
                   data.data.map((item, index) => {
                     categoryArray.push({key: index, text: item});
                   });
@@ -380,7 +379,6 @@ const SocialListing = ({navigation}) => {
           ]}>
           <SocialWorkSearch
             changeText={(text) => {
-              searchVal = text;
               setFilterQuery(text);
               if (text.length === 0) {
                 Keyboard.dismiss();
@@ -413,7 +411,7 @@ const SocialListing = ({navigation}) => {
                 setSearchCategory([]);
                 setFilterQuery(Helper.capitalize(row.label));
                 filterObject.category = row.label;
-                searchVal = row.label;
+
                 setFirstTimeLoad(true);
                 getSocialWork();
               }}
@@ -476,21 +474,20 @@ const SocialListing = ({navigation}) => {
         </View>
       </SafeAreaView>
 
-      <CategorySheet
+      <FilterCategory
         refRBSheet={refCategory}
         dataList={categoryList}
-        searchProfession={(query) => {
-          searchCategoryName(query);
-        }}
-        selectedProfession={selectedCategory}
-        setSelectedProfession={(value) => {
+        title={'Select Nature'}
+        selectedFilter={selectedCategory}
+        setSelectedFilter={(value, item) => {
           Keyboard.dismiss();
-          setSelectedCategory(Helper.capitalize(value));
           resetCount();
-          filterObject.category = value;
-          searchVal = value;
-          setFirstTimeLoad(true);
+          if (item.key !== -1) {
+            filterObject.category = value;
+          }
+          setSelectedCategory(Helper.capitalize(value));
           refCategory.current.close();
+          setFirstTimeLoad(true);
           setTimeout(() => {
             getSocialWork();
           }, 350);

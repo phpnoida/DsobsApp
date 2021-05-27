@@ -42,12 +42,18 @@ import SocialVentureDetails from '../screen/SocialVentures/Details';
 import SocialEvents from '../screen/Events/';
 import ListSocialEvent from '../screen/Events/AddListing';
 import EventDetails from '../screen/Events/Details';
+import PhoneNumberDemo from '../PhoneNumberDemo';
 
 const Stack = createStackNavigator();
 
 export const RootNavigators = (baseRoute) => {
   return (
     <Stack.Navigator initialRouteName={baseRoute}>
+      <Stack.Screen
+        name="PhoneNumberDemo"
+        component={PhoneNumberDemo}
+        options={{headerShown: false}}
+      />
       <Stack.Screen
         name="AppTour"
         component={AppTour}

@@ -17,7 +17,7 @@ import ProgressImage from '../../component/ProgresImage';
 import YoutubeView from '../../component/YoutubeView';
 import SocialWorkSearch from '../../component/SocialWorkSearch';
 import {renderNoDataComponent} from '../../component/Common';
-import CategorySheet from './AddListing/CategorySheet';
+import FilterCategory from '../../component//FilterCategory';
 import AutoSuggestLocationCompany from '../../component/AutoSuggestLocationCompany';
 import {
   getWorkCategory,
@@ -76,6 +76,7 @@ const SocialVenture = ({navigation}) => {
               if (data.status) {
                 let categoryArray = [];
                 if (data.data !== null) {
+                  categoryArray.push({key: -1, text: 'All Ventures'});
                   data.data.map((item, index) => {
                     categoryArray.push({key: index, text: item});
                   });
@@ -473,19 +474,18 @@ const SocialVenture = ({navigation}) => {
         </View>
       </SafeAreaView>
 
-      <CategorySheet
+      <FilterCategory
         refRBSheet={refCategory}
         dataList={categoryList}
-        searchProfession={(query) => {
-          searchCategoryName(query);
-        }}
-        selectedProfession={selectedCategory}
-        setSelectedProfession={(value) => {
+        title={'Select Nature'}
+        selectedFilter={selectedCategory}
+        setSelectedFilter={(value, item) => {
           Keyboard.dismiss();
-          setSelectedCategory(Helper.capitalize(value));
           resetCount();
-          filterObject.category = value;
-          searchVal = value;
+          if (item.key !== -1) {
+            filterObject.category = value;
+          }
+          setSelectedCategory(Helper.capitalize(value));
           setFirstTimeLoad(true);
           refCategory.current.close();
           setTimeout(() => {

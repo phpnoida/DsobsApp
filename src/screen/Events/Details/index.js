@@ -35,8 +35,8 @@ import {
 } from '../../../Actions/SocialEventsActions';
 import Share, {ShareSheet, Button} from 'react-native-share';
 import NumberFormat from 'react-number-format';
-import SharingSheet from '../../../component/SharingSheet';
 import RNFetchBlob from 'rn-fetch-blob';
+import moment from 'moment';
 
 const {urlRegex} = URL_REGX;
 let filterObject = {};
@@ -456,7 +456,16 @@ const EventDetails = ({route, navigation}) => {
             <View style={grid.flex1}>
               <TouchableOpacity
                 activeOpacity={1}
-                style={[style.button, g.bgBlue]}
+                disabled={
+                  moment().unix() >= pageContent.eventTime ? true : false
+                }
+                style={[
+                  style.button,
+                  g.bgBlue,
+                  {
+                    opacity: moment().unix() >= pageContent.eventTime ? 0.3 : 1,
+                  },
+                ]}
                 onPress={() => {
                   setShowModal(!showModal);
                 }}>

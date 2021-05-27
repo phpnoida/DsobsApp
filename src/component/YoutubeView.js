@@ -17,11 +17,9 @@ const YoutubeView = (props) => {
 
   useEffect(() => {
     if (props.link !== '') {
-      //console.log('link', props.link);
       let videoId = Helper.GetYoutubeId(props.link);
       setThumbnail(Helper.loadYoutubeThumb(videoId));
       setyoutubeId(videoId);
-
       // console.log('props.link', props.link);
     }
 

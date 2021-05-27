@@ -1,4 +1,4 @@
-import React, {useRef, useState, useEffect} from 'react';
+import React, {useRef, useState} from 'react';
 import {
   Text,
   View,
@@ -6,7 +6,6 @@ import {
   TextInput,
   StyleSheet,
   Platform,
-  Keyboard,
 } from 'react-native';
 import g from '../../../theme/global';
 import grid from '../../../theme/grid';
@@ -16,12 +15,11 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import CommonButton from '../../../component/CommonButton';
 import {generateHeader} from './HeaderTitle';
 import {showSocialIcon} from '../../../component/SocialIcon';
-import CategorySheet from './CategorySheet';
+import FilterCategory from '../../../component/FilterCategory';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DatePickerView from '../../../component/DatePickerView';
 import Helper from '../../../helper/Helper';
 import {IconType} from '../../../helper/Constants';
-import {WebView} from 'react-native-webview';
 
 let selectedType = 1;
 const BasicDetails = ({
@@ -61,7 +59,6 @@ const BasicDetails = ({
               value={new Date()}
               mode={selectedType === 1 ? 'date' : 'time'}
               display={'spinner'}
-              minimumDate={new Date()}
               dateFormat={'day month year'}
               onChange={(event, selected) => {
                 const currentDate = selected || new Date();
@@ -81,7 +78,6 @@ const BasicDetails = ({
 
           {showDatePicker && Platform.OS === 'ios' && (
             <DatePickerView
-              minDate={new Date()}
               mode={selectedType === 1 ? 'date' : 'time'}
               onCloseAction={() => {
                 setShowDatePicker(false);
@@ -367,14 +363,12 @@ const BasicDetails = ({
         />
       </View>
 
-      <CategorySheet
+      <FilterCategory
         refRBSheet={refCategory}
         dataList={categoryList}
-        searchProfession={(query) => {
-          searchCategory(query);
-        }}
-        selectedProfession={selectedCategory}
-        setSelectedProfession={(value) => {
+        title={'Select Nature'}
+        selectedFilter={selectedCategory}
+        setSelectedFilter={(value, item) => {
           console.log('value', value);
           onCategorySelect(value);
           refCategory.current.close();

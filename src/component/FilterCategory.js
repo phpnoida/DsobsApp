@@ -1,18 +1,18 @@
 import React from 'react';
 import {Dimensions} from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import BottomSheetHeader from '../../../component/BottomSheetHeader';
-import RadioButton from '../../../component/RadioButton';
-import {scale} from '../../../theme/Scalling';
+import BottomSheetHeader from './BottomSheetHeader';
+import RadioButton from './RadioButton';
+import {scale} from '../theme/Scalling';
 
 const {height} = Dimensions.get('window');
 
-const CategorySheet = ({
+const FilterCategory = ({
   refRBSheet,
   dataList,
-  searchProfession,
-  selectedProfession,
-  setSelectedProfession,
+  title,
+  selectedFilter,
+  setSelectedFilter,
   onClose,
 }) => (
   <RBSheet
@@ -36,22 +36,16 @@ const CategorySheet = ({
         paddingBottom: scale(20),
       },
     }}>
-    <BottomSheetHeader
-      title={'Select Nature'}
-      showSearch={false}
-      onSeachQuery={(query) => {
-        searchProfession(query);
-      }}
-    />
+    <BottomSheetHeader title={title} showSearch={false} />
 
     <RadioButton
-      defaultSelected={selectedProfession}
+      defaultSelected={selectedFilter}
       PROP={dataList}
-      onRadioSelect={(value) => {
-        setSelectedProfession(value.text.toString());
+      onRadioSelect={(item) => {
+        setSelectedFilter(item.text.toString(), item);
       }}
     />
   </RBSheet>
 );
 
-export default CategorySheet;
+export default FilterCategory;
