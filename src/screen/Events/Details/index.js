@@ -584,20 +584,20 @@ const EventDetails = ({route, navigation}) => {
         <GlobalInclude.ModalAlert
           status={showModal}
           header={'Would You Like To Attend This Event?'}
-          okButton={'Yes'}
-          cancelButton={'No'}
+          okButton={'No'}
+          cancelButton={'Yes'}
           okAction={() => {
+            if (checkForRSVP()) {
+              updateRSVP(true);
+            }
+            setShowModal(!showModal);
+          }}
+          cancelAction={() => {
             setShowModal(!showModal);
 
             if (!checkForRSVP()) {
               updateRSVP(false);
             }
-          }}
-          cancelAction={() => {
-            if (checkForRSVP()) {
-              updateRSVP(true);
-            }
-            setShowModal(!showModal);
           }}
           closeAction={() => {
             setShowModal(!showModal);

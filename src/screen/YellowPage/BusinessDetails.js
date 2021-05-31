@@ -40,7 +40,7 @@ const BusinessDetails = ({route, navigation}) => {
   const refRBSheet = useRef();
   const [isLoading, setIsLoading] = useState(true);
   const [pageContent, setPageContent] = useState(null);
-  const [viewWidth, setViewWidth] = useState(width);
+  const [viewWidth, setViewWidth] = useState(0);
 
   useEffect(() => {
     if (route.params && route.params !== undefined && route.params !== null) {
@@ -151,7 +151,7 @@ const BusinessDetails = ({route, navigation}) => {
                         style={{
                           borderRadius: scale(10),
                         }}>
-                        {pageContent.coverImages.length > 1 ? (
+                        {pageContent.coverImages.length > 1 && viewWidth > 0 ? (
                           <FlatListSlider
                             width={viewWidth}
                             data={pageContent.coverImages}
@@ -212,14 +212,7 @@ const BusinessDetails = ({route, navigation}) => {
                       <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}>
-                        <Text
-                          style={[
-                            g.fs12,
-                            g.mt8,
-                            g.FHNR,
-                            g.colorBlack,
-                            GlobalInclude.AppStyle.transform,
-                          ]}>
+                        <Text style={[g.fs12, g.mt8, g.FHNR, g.colorBlack]}>
                           {loadCities(pageContent.citiesOfOperation)}
                         </Text>
                       </ScrollView>

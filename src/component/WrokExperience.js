@@ -24,11 +24,26 @@ const WorkExperience = (props) => {
             <Text style={styles.menuHeader}>{props.mainTitle}</Text>
           )}
           <View style={{marginTop: scale(2)}} />
-          <Text style={styles.menuTitle}>{props.header}</Text>
+          <Text
+            style={[
+              styles.menuTitle,
+              props.titleStyle ? props.titleStyle : {},
+            ]}>
+            {props.header}
+          </Text>
           <View style={{margin: scale(1)}} />
-          <Text style={styles.menuTitle}>{props.subHeader}</Text>
+          <Text
+            style={[styles.menuTitle, props.subTitle ? props.subTitle : {}]}>
+            {props.subHeader}
+          </Text>
           <View style={{margin: scale(1)}} />
-          <Text style={styles.menuTitle}>{props.description}</Text>
+          <Text
+            style={[
+              styles.menuTitle,
+              props.childTitle ? props.childTitle : {},
+            ]}>
+            {props.description}
+          </Text>
         </View>
         <View
           style={[grid.rowrow, grid.justifyContentRight, grid.alignItemsTop]}>

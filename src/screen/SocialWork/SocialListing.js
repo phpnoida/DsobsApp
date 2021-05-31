@@ -82,6 +82,7 @@ const SocialListing = ({navigation}) => {
                 }
                 categoryListMain = categoryArray;
                 setCategoryList(categoryArray);
+                setSelectedCategory('All Social Work');
               }
             }
           }

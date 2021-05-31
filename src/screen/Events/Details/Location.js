@@ -10,8 +10,8 @@ import {MAP_KEY} from '../../../helper/Constants';
 import Helper from '../../../helper/Helper';
 
 const Location = ({content}) => {
-  let latitude = 28.5904933,
-    longitude = 77.3001552;
+  let latitude = 28.5966433,
+    longitude = 77.322277;
 
   // if (
   //   content.googleMapLink &&
@@ -31,7 +31,7 @@ const Location = ({content}) => {
   //   }
   // }
 
-  var url = `http://maps.google.com/maps/api/staticmap?center==${latitude},${longitude},&zoom=18&markers=${latitude},${longitude}%7C${latitude},${longitude}&path=color:0x0000FF80%7Cweight:5%${latitude},${longitude}&&size=640x480&sensor=TRUE_OR_FALSE&key=${MAP_KEY}`;
+  var url = `http://maps.google.com/maps/api/staticmap?center==${latitude},${longitude},&zoom=13&markers=${latitude},${longitude}%7C${latitude},${longitude}&path=color:0x0000FF80%7Cweight:5%${latitude},${longitude}&&size=640x480&sensor=TRUE_OR_FALSE&key=${MAP_KEY}`;
 
   const travelType = 'public_transport';
 

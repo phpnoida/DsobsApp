@@ -127,7 +127,7 @@ const YellowPages = ({navigation}) => {
           ) {
             let data = response.data;
             console.log('====================================');
-            console.log('My Business',data);
+            console.log('My Business', data);
             console.log('====================================');
             if (data.status) {
               setMyBusinessList([...data.data]);
@@ -154,7 +154,7 @@ const YellowPages = ({navigation}) => {
             let data = response.data;
 
             console.log('====================================');
-            console.log('profession',data);
+            console.log('profession', data);
             console.log('====================================');
 
             if (data.status) {
@@ -294,9 +294,6 @@ const YellowPages = ({navigation}) => {
             response.data !== null
           ) {
             let data = response.data;
-            console.log('====================================');
-            console.log('yellowPage', data);
-            console.log('====================================');
             if (data.status) {
               if (filterObject.index === 0) {
                 totalCount = data.totalCount;
@@ -515,14 +512,7 @@ const YellowPages = ({navigation}) => {
             item.citiesOfOperation !== null &&
             item.citiesOfOperation.length > 0 ? (
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <Text
-                  style={[
-                    g.fs12,
-                    g.mt5,
-                    g.FHNR,
-                    g.colorBlack,
-                    GlobalInclude.AppStyle.transform,
-                  ]}>
+                <Text style={[g.fs12, g.mt5, g.FHNR, g.colorBlack]}>
                   {loadCities(item.citiesOfOperation)}
                 </Text>
               </ScrollView>

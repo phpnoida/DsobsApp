@@ -90,6 +90,7 @@ const SocialEvents = ({navigation}) => {
                 }
                 categoryListMain = categoryArray;
                 setCategoryList(categoryArray);
+                setSelectedCategory('All Events');
               }
             }
           }

@@ -19,20 +19,20 @@ const ImageDetail = ({
     <View
       style={{
         borderRadius: scale(10),
-        height: scale(160),
         width: style.width,
         overflow: 'hidden',
+        aspectRatio: 16 / 9,
       }}>
       <ProgresImage
         source={{uri: item}}
         containerStyle={{
           borderRadius: scale(10),
-          height: scale(160),
+          aspectRatio: 16 / 9,
           width: style.width,
         }}
         imageStyle={{
           borderRadius: scale(10),
-          height: scale(160),
+          aspectRatio: 16 / 9,
           width: style.width,
         }}
         mode={'cover'}

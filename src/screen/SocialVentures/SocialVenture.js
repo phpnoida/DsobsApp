@@ -83,6 +83,7 @@ const SocialVenture = ({navigation}) => {
                 }
                 categoryListMain = categoryArray;
                 setCategoryList(categoryArray);
+                setSelectedCategory('All Ventures');
               }
             }
           }

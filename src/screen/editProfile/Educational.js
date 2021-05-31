@@ -255,7 +255,7 @@ const Educational = (props) => {
 
   if (valueFrom === -1) {
     textColorStyle = [];
-    textColorStyle.push({color: '#ddd'});
+    textColorStyle.push(g.colorGray);
   } else {
     textColorStyle = [];
     textColorStyle.push({color: '#000000'});

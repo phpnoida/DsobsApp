@@ -114,31 +114,19 @@ class GalleryImage extends Component {
             </Text>
           </View>
           <View style={[{width: scale(60)}, grid.alignItems]}>
-            {this.props.images.length < 7 ? null : (
-              <View>
-                {this.props.isExpanded ? (
-                  <TouchableOpacity
-                    onPress={() => {
-                      this.props.expandSelectedPanel();
-                    }}>
-                    <Text style={[g.colorBlue, g.fs13]}>0 More</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    onPress={() => {
-                      this.props.expandSelectedPanel();
-                    }}>
-                    <Text style={[g.colorBlue, g.fs13]}>
-                      +
-                      {this.props.images && this.props.images.length > 5
-                        ? this.props.images.length - 6
-                        : 0}{' '}
-                      More
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            )}
+            <TouchableOpacity
+              onPress={() => {
+                this.props.expandSelectedPanel();
+              }}>
+              <Text style={[g.colorBlue, g.fs13]}>
+                +
+                {this.props.imageCount &&
+                parseInt(this.props.imageCount, 10) > 5
+                  ? this.props.imageCount
+                  : 0}{' '}
+                More
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
         {/* Pictures */}

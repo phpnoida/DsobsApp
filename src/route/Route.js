@@ -43,6 +43,7 @@ import SocialEvents from '../screen/Events/';
 import ListSocialEvent from '../screen/Events/AddListing';
 import EventDetails from '../screen/Events/Details';
 import PhoneNumberDemo from '../PhoneNumberDemo';
+import ImageDemo from '../ImageDemo';
 
 const Stack = createStackNavigator();
 
@@ -50,8 +51,8 @@ export const RootNavigators = (baseRoute) => {
   return (
     <Stack.Navigator initialRouteName={baseRoute}>
       <Stack.Screen
-        name="PhoneNumberDemo"
-        component={PhoneNumberDemo}
+        name="ImageDemo"
+        component={ImageDemo}
         options={{headerShown: false}}
       />
       <Stack.Screen

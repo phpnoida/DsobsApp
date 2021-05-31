@@ -594,7 +594,7 @@ const Comments = ({workId, navigation}) => {
                   setCommentText(comment);
                 }}
               />
-              <Text style={[g.fs12, g.FHNR, g.mb5, g.pt10, g.txtRight]}>
+              <Text style={[g.fs12, g.FHNR, g.mb5, g.mt5, g.txtRight]}>
                 {`Max 1000 characters: ${commentText.length}`}
               </Text>
               {commentError &&
@@ -629,13 +629,13 @@ const Comments = ({workId, navigation}) => {
                   )}
                 </View>
 
-                <Text
+                {/* <Text
                   style={[g.btn, g.bggray, g.fs12]}
                   onPress={() => {
                     setShowCommentModal(false);
                   }}>
                   Cancel
-                </Text>
+                </Text> */}
               </View>
             </View>
           </View>

@@ -242,9 +242,6 @@ class FitImage extends Component<IFitImageProps, IFitImageState> {
   }
 
   private setOriginalSize = (originalWidth: number, originalHeight: number) => {
-    console.log('====================================');
-    console.log('originalWidth originalHeight',originalWidth,originalHeight);
-    console.log('====================================');
     this.setState({
       originalHeight,
       originalWidth,

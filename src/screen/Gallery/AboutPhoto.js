@@ -260,7 +260,7 @@ const AboutPhoto = ({route, navigation}) => {
               }}
               style={[grid.rowdir, grid.alignItems, g.inputWhite]}>
               <Text style={[grid.col, g.FHNR]} numberOfLines={1}>
-                {selectedYear !== -1 ? selectedYear : 'Select Year'}
+                {selectedYear !== -1 ? selectedYear : 'Year of photo'}
               </Text>
               <View style={styles.triangleShape} />
             </TouchableOpacity>

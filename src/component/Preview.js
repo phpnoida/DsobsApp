@@ -22,7 +22,7 @@ const Preview = ({
           borderRadius: scale(10),
           borderBottomLeftRadius: 0,
           borderBottomRightRadius: 0,
-          height: scale(160),
+          aspectRatio: 16 / 9,
           width: style.width,
           overflow: 'hidden',
         },
@@ -34,7 +34,7 @@ const Preview = ({
           borderRadius: scale(10),
           borderBottomLeftRadius: 0,
           borderBottomRightRadius: 0,
-          height: scale(160),
+          aspectRatio: 16 / 9,
           width: style.width,
           ...containerStyle,
         }}
@@ -42,7 +42,7 @@ const Preview = ({
           borderRadius: scale(10),
           borderBottomLeftRadius: 0,
           borderBottomRightRadius: 0,
-          height: scale(160),
+          aspectRatio: 16 / 9,
           width: style.width,
           ...imageStyle,
         }}

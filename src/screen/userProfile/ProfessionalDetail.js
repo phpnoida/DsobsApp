@@ -56,6 +56,7 @@ const ProfessionalDetail = (props) => {
       <WorkExperience
         indexName={index}
         header={item.company}
+        titleStyle={[g.colorBlack, g.FHNB]}
         subHeader={item.designation}
         description={`${item.fromYear}${
           item.toYear ? ' - ' + item.toYear : ''
@@ -86,32 +87,41 @@ const ProfessionalDetail = (props) => {
       ) : (
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={{padding: scale(5)}}>
-            {generateView('My Linkedin Page', profileData.linkedinUrl, () => {
-              if (profileData.linkedinUrl !== '') {
-                Linking.canOpenURL(profileData.linkedinUrl).then((status) => {
-                  if (status) {
-                    Linking.openURL(profileData.linkedinUrl);
-                  } else {
-                    Alert.alert('Invalid link!');
-                  }
-                });
-              }
-            })}
-            {generateView('Designation', profileData.designation, () => {})}
+            {profileData.linkedinUrl !== undefined &&
+              profileData.linkedinUrl !== null &&
+              profileData.linkedinUrl !== '' &&
+              generateView('My Linkedin Page', profileData.linkedinUrl, () => {
+                if (profileData.linkedinUrl !== '') {
+                  Linking.canOpenURL(profileData.linkedinUrl).then((status) => {
+                    if (status) {
+                      Linking.openURL(profileData.linkedinUrl);
+                    } else {
+                      Alert.alert('Invalid link!');
+                    }
+                  });
+                }
+              })}
+            {profileData.designation !== undefined &&
+              profileData.designation !== null &&
+              profileData.designation !== '' &&
+              generateView('Designation', profileData.designation, () => {})}
             {/* {generateView('Profession', profession, () => {})} */}
-            {generateView('Company Name', profileData.company, () => {})}
+            {profileData.company !== undefined &&
+              profileData.company !== null &&
+              profileData.company !== '' &&
+              generateView('Company Name', profileData.company, () => {})}
             {profileData.businessSector !== '' &&
               generateView(
                 'Sector of Business',
                 profileData.businessSector,
                 () => {},
               )}
-            {/* {profileData.secondaryBusinessSector !== '' &&
-            generateView(
-              'Secondary Sector of Business',
-              profileData.secondaryBusinessSector,
-              () => {},
-            )} */}
+            {profileData.secondaryBusinessSector !== '' &&
+              generateView(
+                'Secondary Sector of Business',
+                profileData.secondaryBusinessSector,
+                () => {},
+              )}
 
             {generateView(
               'Open To Mentoring',

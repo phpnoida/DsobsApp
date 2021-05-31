@@ -26,7 +26,7 @@ const CategoryFilterSheet = ({
 }) => (
   <RBSheet
     ref={refRBSheet}
-    height={height / 2 + 70}
+    height={height / 2 + 150}
     minClosingHeight={50}
     onClose={() => {
       if (onClose) {

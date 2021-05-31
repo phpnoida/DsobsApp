@@ -98,6 +98,17 @@ const GalleryListing = ({navigation}) => {
             if (data.status) {
               let records = data.data;
               let pushArray = [];
+              pushArray.push({
+                label: 'Untagged People Photos',
+                value: '-1',
+                isSelected: false,
+              });
+              pushArray.push({
+                label: 'Untagged Information Photos',
+                value: '-2',
+                isSelected: false,
+              });
+
               records.map((child) => {
                 pushArray.push({
                   label: child,
@@ -105,6 +116,7 @@ const GalleryListing = ({navigation}) => {
                   isSelected: false,
                 });
               });
+
               setFilterCategory([...pushArray]);
             }
           }
@@ -254,8 +266,19 @@ const GalleryListing = ({navigation}) => {
         title={item.title}
         images={item.images}
         isExpanded={item.isExpanded}
+        imageCount={item.imageCount}
         expandSelectedPanel={() => {
-          expandSelectedPanel(index);
+          let payload = {
+            filterObject: {
+              size: 10,
+              galleryId: item._id,
+              index: 0,
+            },
+            index: 0,
+            title: item.title,
+          };
+          //navigation.navigate('GalleryDetail', payload);
+          navigation.navigate('ImageList', payload);
         }}
         onImagePress={(imageData, subIndex) => {
           let payload = {
@@ -502,12 +525,30 @@ const GalleryListing = ({navigation}) => {
           onSelect={() => {
             refRBFilter.current.close();
 
-            let payload = {
-              filterObject: {
+            let filter = {};
+
+            if (categoryName === 'Untagged People Photos') {
+              filter = {
+                size: 10,
+                unTagged: true,
+                index: 0,
+              };
+            } else if (categoryName === 'Untagged Information Photos') {
+              filter = {
+                size: 10,
+                emptyAbout: true,
+                index: 0,
+              };
+            } else {
+              filter = {
                 size: 10,
                 category: categoryName,
                 index: 0,
-              },
+              };
+            }
+
+            let payload = {
+              filterObject: filter,
               title: `Search By: ${categoryName}`,
               index: 0,
             };
