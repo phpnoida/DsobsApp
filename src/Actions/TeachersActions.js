@@ -45,6 +45,7 @@ export function handleError(err, errCallback) {
   ) {
     let errorData = err.response.data;
     if (err.response.status === 401) {
+      console.log('TeacherAction-48');
       global.logoutAlert.show_loader(true);
     }
     if (errorData.message) {

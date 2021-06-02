@@ -94,15 +94,10 @@ const Login = ({navigation}) => {
       } catch (error) {}
     };
 
-    // const unsubscribe = navigation.addListener('focus', () => {
-    //   console.log('focus');
-    //   setTimeout(() => {
-    //     if (Platform.OS === 'android') {
-    //       _requestForPhoneNumber();
-    //     }
-    //   }, 500);
-    // });
-    _requestForPhoneNumber();
+    setTimeout(() => {
+      _requestForPhoneNumber();
+    }, 300);
+
     return () => {
       if (timerInterval !== null) {
         clearInterval(timerInterval);
@@ -344,12 +339,7 @@ const Login = ({navigation}) => {
                     tokens.refreshToken,
                   ).then(() => {
                     AsyncStorage.setItem('fcmTopic', fcmTopic).then(() => {
-                      navigation.dispatch(
-                        CommonActions.reset({
-                          index: 0,
-                          routes: [{name: 'Profile'}],
-                        }),
-                      );
+                      openHome();
                     });
                   });
                 },
@@ -358,6 +348,15 @@ const Login = ({navigation}) => {
           });
         });
       });
+  };
+
+  const openHome = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{name: 'Profile'}],
+      }),
+    );
   };
 
   const makeAuthTimer = () => {

@@ -146,6 +146,9 @@ const NotificationListing = ({navigation}) => {
   };
 
   const openNotification = (notification) => {
+    console.log('====================================');
+    console.log(notification);
+    console.log('====================================');
     if (
       notification.linkUrl &&
       notification.linkUrl !== null &&
@@ -172,6 +175,30 @@ const NotificationListing = ({navigation}) => {
         break;
       case 1:
         navigation.navigate('Magazine');
+        break;
+      case 2:
+        navigation.navigate('Video');
+        break;
+      case 3:
+        navigation.navigate('NewsListing');
+        break;
+      case 4:
+        navigation.navigate('Teachers');
+        break;
+      case 5:
+        navigation.navigate('SocialListing');
+        break;
+      case 6:
+        navigation.navigate('SocialVenture');
+        break;
+      case 7:
+        navigation.navigate('SocialEvents');
+        break;
+      case 8:
+        navigation.navigate('GalleryListing');
+        break;
+      case 9:
+        navigation.navigate('YellowPages');
         break;
       default:
         break;

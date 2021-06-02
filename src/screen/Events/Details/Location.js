@@ -40,7 +40,9 @@ const Location = ({content}) => {
       style={[g.pl10, g.pr10, grid.flex1]}
       contentContainerStyle={g.pb30}
       showsVerticalScrollIndicator={false}>
-      {latitude === 0.0 || longitude === 0.0 ? (
+      {content.googleMapLink == null ||
+      content.googleMapLink === undefined ||
+      content.googleMapLink === '' ? (
         <View style={GlobalInclude.AppStyle.fillCenter}>
           <Text style={[g.fs16, g.FHNB, g.colorBlack]}>
             Currently No Data Uploaded!

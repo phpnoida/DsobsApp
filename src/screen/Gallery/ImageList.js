@@ -55,15 +55,15 @@ let filterObject = {
   size: 10,
 };
 
-let selectedIndex = 0;
+let pickedIndex = 0;
 let pageTitle = '';
 let requestType = '';
-let selectedItem = null;
 let currentOriantation = '';
 let responseMessage = '';
 let reportText = '';
 let imageArray = [];
 let imageId = '';
+let selectedImageLink = '';
 
 function GalleryImage({
   index: itemIndex,
@@ -74,8 +74,15 @@ function GalleryImage({
 }) {
   return useMemo(() => {
     return (
-      <View key={itemIndex} style={{marginVertical: scale(15)}}>
-        <View style={[grid.rowrow, grid.flex1, g.ml10, g.mr10, g.mb8]}>
+      <View key={itemIndex} style={{marginVertical: scale(10)}}>
+        <View
+          style={[
+            grid.rowrow,
+            grid.flex1,
+            g.p10,
+            grid.justifyContentCenter,
+            grid.alignItems,
+          ]}>
           <View
             style={[
               grid.flex1,
@@ -86,50 +93,23 @@ function GalleryImage({
             <TouchableOpacity
               style={[grid.rowrow, grid.alignItems, grid.justifyContentLeft]}
               onPress={showTaggedUser}>
-              <View
-                style={{
-                  height: scale(24),
-                  width: scale(24),
-                  borderRadius: scale(25),
-                  backgroundColor: GlobalInclude.Color.ColorPrimary,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginHorizontal: scale(3),
-                }}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={{height: scale(15), width: scale(15)}}
-                  iconColor={'#FFF'}
-                  iconName={'tag'}
-                  iconSize={scale(15)}
-                  iconType={IconType[4]}
-                />
-              </View>
-              <Text style={[g.fs12, g.FHNB, g.colorBlue]}>People Tagged</Text>
+              <Text style={[g.fs14, g.FHNB, g.colorBlue]}>
+                People In This Image
+              </Text>
             </TouchableOpacity>
           </View>
 
-          <View style={[grid.flex1, grid.justifyContentRight, g.ml10, g.mb5]}>
+          <View style={[grid.flex1, grid.justifyContentRight]}>
             <TouchableOpacity
               style={[grid.rowrow, grid.alignItems, grid.justifyContentRight]}
               onPress={showAboutPhoto}>
-              <View
-                style={{
-                  height: scale(24),
-                  width: scale(24),
-                  borderRadius: scale(25),
-
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginHorizontal: scale(3),
-                }}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={{height: scale(15), width: scale(15)}}
-                  iconColor={GlobalInclude.Color.ColorPrimary}
-                  iconName={'dots-three-horizontal'}
-                  iconSize={scale(15)}
-                  iconType={IconType[9]}
-                />
-              </View>
+              <GlobalInclude.BaseIcon
+                containerStyle={{height: scale(15), width: scale(15)}}
+                iconColor={GlobalInclude.Color.ColorPrimary}
+                iconName={'dots-three-horizontal'}
+                iconSize={scale(15)}
+                iconType={IconType[9]}
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -222,6 +202,11 @@ const ImageList = ({route, navigation}) => {
     if (route !== undefined && route !== null) {
       pageTitle = route.params.title;
       filterObject = route.params.filterObject;
+      pickedIndex = route.params.index;
+      // pickedIndex = pickedIndex + 1;
+
+      //      alert(pickedIndex);
+
       setTitle(pageTitle);
       getGalleryData();
     }
@@ -271,6 +256,15 @@ const ImageList = ({route, navigation}) => {
                 filterObject.size = 10;
                 totalCount = responseData.totalCount;
                 setImageData([...results]);
+
+                // setTimeout(() => {
+                //   if (flatList !== null && flatList.current !== null) {
+                //     flatList.current.scrollToIndex({
+                //       index: pickedIndex,
+                //       animated: false,
+                //     });
+                //   }
+                // }, 1000);
               } else {
                 setImageData([...imageData, ...results]);
               }
@@ -292,10 +286,12 @@ const ImageList = ({route, navigation}) => {
     );
   };
 
-  const getImageDetail = (imageId) => {
+  const getImageDetail = (itemId) => {
+    global.loader_ref.show_loader(1);
     getSingleImageFromAlbum(
-      {id: imageId},
+      {id: itemId},
       (response) => {
+        global.loader_ref.show_loader(0);
         if (response && response !== null) {
           if (
             response.data &&
@@ -330,6 +326,8 @@ const ImageList = ({route, navigation}) => {
 
                 setImageDetail(itemObject);
 
+                selectedImageLink = itemObject.imagesLink;
+
                 if (requestType === 'tagging') {
                   if (showTagUserRef.current !== null) {
                     showTagUserRef.current.open();
@@ -338,6 +336,8 @@ const ImageList = ({route, navigation}) => {
                   if (aboutPhotoRef.current !== null) {
                     aboutPhotoRef.current.open();
                   }
+                } else if (requestType === 'reportPhoto') {
+                  setShowReportModal(true);
                 } else if (requestType === 'detail') {
                   imageArray = [];
                   imageArray.push({
@@ -352,6 +352,7 @@ const ImageList = ({route, navigation}) => {
         }
       },
       (error) => {
+        global.loader_ref.show_loader(0);
         setImageDetail(null);
         console.log('error', error);
       },
@@ -473,7 +474,7 @@ const ImageList = ({route, navigation}) => {
   const downloadImage = async () => {
     if (!isDownloading) {
       setIsDownloading(true);
-      let result = await _downloadContent(imageDetail.imagesLink);
+      let result = await _downloadContent(selectedImageLink);
       if (result) {
         responseMessage = 'Image Downloaded Successfully!';
       } else {
@@ -693,21 +694,13 @@ const ImageList = ({route, navigation}) => {
           onPress={onPress}>
           <GlobalInclude.BaseIcon
             containerStyle={{height: scale(20), width: scale(20)}}
-            iconColor={
-              menuTitle === 'Report Photo'
-                ? '#ff0000'
-                : GlobalInclude.Color.ColorPrimary
-            }
+            iconColor={GlobalInclude.Color.ColorPrimary}
             iconName={icon}
             iconSize={scale(20)}
             iconType={IconType[type]}
           />
           <Text
-            style={[
-              {marginLeft: 15, fontSize: 16},
-              g.FHNR,
-              menuTitle === 'Report Photo' ? g.colorRed : g.colordarkGray,
-            ]}>
+            style={[{marginLeft: 15, fontSize: 16}, g.FHNR, g.colordarkGray]}>
             {menuTitle}
           </Text>
         </TouchableOpacity>
@@ -734,6 +727,14 @@ const ImageList = ({route, navigation}) => {
           },
         }}>
         <View stylre={[grid.flex1, g.mb10]}>
+          {generateMenuOption('People In This Image', 4, 'tag', () => {
+            optionRef.current.close();
+            setTimeout(() => {
+              requestType = 'tagging';
+              getImageDetail(imageId);
+            }, 200);
+          })}
+
           {generateMenuOption('About The Photo', 4, 'info-circle', () => {
             optionRef.current.close();
             setTimeout(() => {
@@ -753,7 +754,8 @@ const ImageList = ({route, navigation}) => {
             optionRef.current.close();
             setTimeout(() => {
               reportText = '';
-              setShowReportModal(true);
+              requestType = 'reportPhoto';
+              getImageDetail(imageId);
             }, 200);
           })}
         </View>
@@ -793,6 +795,7 @@ const ImageList = ({route, navigation}) => {
         }}
         showAboutPhoto={() => {
           imageId = item._id;
+          selectedImageLink = item.imagesLink;
           if (optionRef.current !== null) {
             optionRef.current.open();
           }
@@ -861,6 +864,7 @@ const ImageList = ({route, navigation}) => {
             />
             <FlatList
               ref={flatList}
+              removeClippedSubviews={Platform.OS !== 'web'}
               showsVerticalScrollIndicator={false}
               extraData={imageData}
               data={imageData}
@@ -875,6 +879,24 @@ const ImageList = ({route, navigation}) => {
               contentContainerStyle={{
                 paddingBottom: imageData.length > 0 ? scale(130) : 0,
                 flexGrow: 1,
+              }}
+              getItemLayout={getItemLayout}
+              onScrollToIndexFailed={(error) => {
+                console.log('failed', error);
+                if (flatList !== null && flatList.current !== null) {
+                  flatList.current.scrollToOffset({
+                    offset: error.averageItemLength * error.index,
+                    animated: true,
+                  });
+                  setTimeout(() => {
+                    if (flatList !== null && flatList.current !== null) {
+                      flatList.current.scrollToIndex({
+                        index: error.index,
+                        animated: true,
+                      });
+                    }
+                  }, 500);
+                }
               }}
             />
           </View>
@@ -993,8 +1015,7 @@ const ImageList = ({route, navigation}) => {
               <Text style={[g.fs14, g.colorWhite, g.FHNB, grid.col]}>
                 Photo Id:
               </Text>
-              <Text
-                style={[g.fs14, g.colorWhite, g.FHNB, grid.col, g.ml5, g.mt2]}>
+              <Text style={[g.fs14, g.colorWhite, g.FHNB, grid.col, g.mt2]}>
                 {imageDetail !== null ? imageDetail.imageId : ''}
               </Text>
             </View>
@@ -1206,6 +1227,7 @@ const style = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     marginHorizontal: scale(3),
+    justifyContent: 'center',
   },
   portraitButtonContainer: {
     position: 'absolute',

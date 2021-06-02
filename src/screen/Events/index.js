@@ -365,6 +365,7 @@ const SocialEvents = ({navigation}) => {
                       //   longitude: Helper.getLatLngFromMap(item.googleMapLink)
                       //     .longitude,
                       // });
+
                       Linking.canOpenURL(item.googleMapLink).then(
                         (supported) => {
                           if (supported) {

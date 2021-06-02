@@ -97,9 +97,30 @@ const ListingDetails = ({route, navigation}) => {
    */
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
-      <SafeAreaView style={GlobalInclude.AppStyle.fill}>
-        <View style={GlobalInclude.AppStyle.parentStyle}>
+    <View style={GlobalInclude.AppStyle.fill}>
+      <HeaderBar
+        title={
+          pageContent !== null &&
+          pageContent.title &&
+          pageContent.title !== undefined &&
+          pageContent.title !== null
+            ? pageContent.title
+            : APP_NAME
+        }
+        navigation={navigation}
+        customIcon={{
+          containerStyle: {height: scale(30), width: scale(30)},
+          iconColor: GlobalInclude.Color.ColorPrimary,
+          iconName: 'keyboard-backspace',
+          size: scale(30),
+          type: IconType[1],
+        }}
+        customIconPress={() => {
+          navigation.goBack();
+        }}
+      />
+      <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
+        <View style={GlobalInclude.AppStyle.fill}>
           {isLoading ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
               <ActivityIndicator
@@ -109,27 +130,6 @@ const ListingDetails = ({route, navigation}) => {
             </View>
           ) : (
             <View style={GlobalInclude.AppStyle.fill}>
-              <HeaderBar
-                title={
-                  pageContent !== null &&
-                  pageContent.title &&
-                  pageContent.title !== undefined &&
-                  pageContent.title !== null
-                    ? pageContent.title
-                    : APP_NAME
-                }
-                navigation={navigation}
-                customIcon={{
-                  containerStyle: {height: scale(30), width: scale(30)},
-                  iconColor: GlobalInclude.Color.ColorPrimary,
-                  iconName: 'keyboard-backspace',
-                  size: scale(30),
-                  type: IconType[1],
-                }}
-                customIconPress={() => {
-                  navigation.goBack();
-                }}
-              />
               {pageContent !== null ? (
                 <View style={GlobalInclude.AppStyle.fill}>
                   <View

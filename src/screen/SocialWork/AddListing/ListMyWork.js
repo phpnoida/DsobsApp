@@ -556,13 +556,14 @@ const ListMyWork = ({route, navigation}) => {
   };
 
   return (
-    <View style={GlobalInclude.AppStyle.topSpace}>
-      <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
-        <HeaderBar
+    <View style={GlobalInclude.AppStyle.fill}>
+    <HeaderBar
           title={'Post a Social'}
           navigation={navigation}
           showBack={true}
         />
+      <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
+        
         <View style={GlobalInclude.AppStyle.fill}>{loadTab(step)}</View>
       </SafeAreaView>
 

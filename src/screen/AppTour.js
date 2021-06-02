@@ -5,7 +5,6 @@ import GlobalInclude from '../globalInclude/Globalinclude';
 import grid from '../theme/grid';
 import {scale} from '../theme/Scalling';
 import {CommonActions} from '@react-navigation/native';
-import MyStatusBar from '../component/MyStatusBar';
 const slides = [
   {
     key: 'somethun',

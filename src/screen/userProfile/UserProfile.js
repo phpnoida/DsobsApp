@@ -37,7 +37,6 @@ import Awards from './Awards';
 import MyRelatives from './MyRelatives';
 import MyFamily from './MyFamily';
 import Links from './Links';
-import MyStatusBar from '../../component/MyStatusBar';
 
 import {IconType} from '../../helper/Constants';
 

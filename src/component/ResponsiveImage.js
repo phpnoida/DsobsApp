@@ -11,6 +11,8 @@ export default class ResponsiveImage extends Component {
     super(props);
     this.state = {imgHeight: 0, imgWidth: 0};
 
+    height = Dimensions.get('window').height;
+    width = Dimensions.get('window').width;
     height = parseInt(height, 10);
     width = parseInt(width, 10);
   }
@@ -44,18 +46,40 @@ export default class ResponsiveImage extends Component {
     );
   }
 
+  setupDefault() {
+    height = Dimensions.get('window').height;
+    width = Dimensions.get('window').width;
+    height = parseInt(height, 10);
+    width = parseInt(width, 10);
+  }
+
   setOriginalSize(iw, ih) {
+    if (ih > iw) {
+      //portrait
+      width = width - 100;
+      height = height - 100;
+    } else {
+      this.setupDefault();
+    }
+
+    console.log('width', width);
+    console.log('height', height);
+
     let ratio = Math.min(width / iw, height / ih);
+
+    let iWidth = Math.ceil(iw * ratio);
+    let iHeight = Math.ceil(ih * ratio);
+
     this.setState({
-      imgHeight: Math.ceil(ih * ratio),
-      imgWidth: Math.ceil(iw * ratio),
+      imgHeight: iHeight,
+      imgWidth: iWidth,
     });
   }
 
   render() {
     const {imgHeight, imgWidth} = this.state;
     return (
-      <View style={g.bgBlack06}>
+      <View style={{backgroundColor: 'white'}}>
         {imgHeight <= 0 && imgWidth <= 0 ? (
           <View style={{width: width, aspectRatio: 1 / 1}}>
             <ActivityIndicator
@@ -64,15 +88,34 @@ export default class ResponsiveImage extends Component {
             />
           </View>
         ) : (
-          <ProgressImage
-            source={this.props.source}
-            containerStyle={{height: imgHeight, width: imgWidth}}
-            imageStyle={{
-              height: imgHeight,
-              width: imgWidth,
-            }}
-            mode={'cover'}
-          />
+          <View style={{justifyContent: 'center', alignItems: 'center'}}>
+            {imgHeight > imgWidth ? (
+              <View>
+                <ProgressImage
+                  source={this.props.source}
+                  containerStyle={{
+                    height: imgHeight,
+                    width: imgWidth,
+                  }}
+                  imageStyle={{
+                    height: imgHeight,
+                    width: imgWidth,
+                  }}
+                  mode={'cover'}
+                />
+              </View>
+            ) : (
+              <ProgressImage
+                source={this.props.source}
+                containerStyle={{height: imgHeight, width: imgWidth}}
+                imageStyle={{
+                  height: imgHeight,
+                  width: imgWidth,
+                }}
+                mode={'cover'}
+              />
+            )}
+          </View>
         )}
       </View>
     );
