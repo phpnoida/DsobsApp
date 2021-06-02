@@ -110,12 +110,12 @@ const ProfessionalDetail = (props) => {
               profileData.company !== null &&
               profileData.company !== '' &&
               generateView('Company Name', profileData.company, () => {})}
-            {profileData.businessSector !== '' &&
+            {/* {profileData.businessSector !== '' &&
               generateView(
                 'Sector of Business',
                 profileData.businessSector,
                 () => {},
-              )}
+              )} */}
             {profileData.secondaryBusinessSector !== '' &&
               generateView(
                 'Secondary Sector of Business',

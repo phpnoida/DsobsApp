@@ -44,9 +44,6 @@ const Tags = (props) => {
     'School Hockey Team',
     'Magazine Editorial Board',
     'School Debating Team',
-    'MUN Team',
-    'School DanceTeam',
-    'Dramatics Team',
   ]);
   const [selectedTag, setSelectedTag] = useState(-1);
 

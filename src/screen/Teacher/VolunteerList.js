@@ -166,7 +166,9 @@ const VolunteerList = ({navigation}) => {
 
   const handleRefresh = () => {
     filterObject.index = 0;
-    setIsRefreshing(true);
+    setIsRefreshing(false);
+    resetCount();
+    getTeachers();
   };
 
   const resetCount = () => {

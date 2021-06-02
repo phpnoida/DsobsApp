@@ -139,7 +139,14 @@ const BusinessDetails = ({route, navigation}) => {
             <View style={GlobalInclude.AppStyle.fill}>
               {pageContent !== null ? (
                 <View style={GlobalInclude.AppStyle.fill}>
-                  <View style={[g.bggray3, g.mt15, g.ml10, g.mr10]}>
+                  <View
+                    style={[
+                      g.bggray3,
+                      g.mt15,
+                      g.ml10,
+                      g.mr10,
+                      {borderRadius: scale(10)},
+                    ]}>
                     {pageContent.coverImages &&
                     pageContent.coverImages !== null &&
                     pageContent.coverImages !== undefined &&

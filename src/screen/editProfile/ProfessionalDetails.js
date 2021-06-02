@@ -378,7 +378,7 @@ const ProfessionalDetails = (props) => {
                 onChangeText={(value) => inputHandler('company', value)}
               />
             </View>
-            <View style={g.mb15}>
+            {/* <View style={g.mb15}>
               {generateHeader('Sector of Business', false)}
               <View style={{marginbottom: scale(5)}} />
               <TextInput
@@ -388,7 +388,7 @@ const ProfessionalDetails = (props) => {
                 value={businessSector}
                 onChangeText={(value) => inputHandler('businessSector', value)}
               />
-            </View>
+            </View> */}
 
             <View style={g.mb20}>
               {generateHeader('Secondary Sector of Business', false)}

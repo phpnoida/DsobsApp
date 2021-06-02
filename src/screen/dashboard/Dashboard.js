@@ -131,7 +131,9 @@ const Dashboard = ({props, navigation}) => {
   const _handleAppStateChange = (nextState) => {
     console.log('nextState-128', nextState);
     if (nextState === 'active') {
-      getPopNotifications();
+      if (global.isLoggedIn) {
+        getPopNotifications();
+      }
     }
   };
 
@@ -216,13 +218,36 @@ const Dashboard = ({props, navigation}) => {
   const openSpecificPage = (type) => {
     global.notification = null;
     global.isNotificationTap = false;
-
     switch (parseInt(type, 10)) {
       case 0:
         navigation.navigate('SearchDirectory');
         break;
       case 1:
         navigation.navigate('Magazine');
+        break;
+      case 2:
+        navigation.navigate('Video');
+        break;
+      case 3:
+        navigation.navigate('NewsListing');
+        break;
+      case 4:
+        navigation.navigate('Teachers');
+        break;
+      case 5:
+        navigation.navigate('SocialListing');
+        break;
+      case 6:
+        navigation.navigate('SocialVenture');
+        break;
+      case 7:
+        navigation.navigate('SocialEvents');
+        break;
+      case 8:
+        navigation.navigate('GalleryListing');
+        break;
+      case 9:
+        navigation.navigate('YellowPages');
         break;
       default:
         break;
@@ -262,6 +287,9 @@ const Dashboard = ({props, navigation}) => {
                       global.userId = null;
                       global.firstName = null;
                       global.lastName = null;
+                      global.isLoggedIn = false;
+                      global.notification = null;
+                      global.isNotificationTap = false;
                       navigation.dispatch(
                         CommonActions.reset({
                           index: 0,
@@ -277,6 +305,9 @@ const Dashboard = ({props, navigation}) => {
                   global.userId = null;
                   global.firstName = null;
                   global.lastName = null;
+                  global.isLoggedIn = false;
+                  global.notification = null;
+                  global.isNotificationTap = false;
                   navigation.dispatch(
                     CommonActions.reset({
                       index: 0,
@@ -708,7 +739,11 @@ const Dashboard = ({props, navigation}) => {
                     tintColor={GlobalInclude.Color.ColorPrimary}
                     style={[
                       styles.menuIcon,
-                      {...Platform.select({ios: {tintColor: GlobalInclude.Color.ColorPrimary}})},
+                      {
+                        ...Platform.select({
+                          ios: {tintColor: GlobalInclude.Color.ColorPrimary},
+                        }),
+                      },
                     ]}
                   />
                   <View style={styles.menuText}>
@@ -735,7 +770,11 @@ const Dashboard = ({props, navigation}) => {
                     tintColor={GlobalInclude.Color.ColorPrimary}
                     style={[
                       styles.menuIcon,
-                      {...Platform.select({ios: {tintColor: GlobalInclude.Color.ColorPrimary}})},
+                      {
+                        ...Platform.select({
+                          ios: {tintColor: GlobalInclude.Color.ColorPrimary},
+                        }),
+                      },
                     ]}
                   />
                   <View style={styles.menuText}>
@@ -850,7 +889,12 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    Alert.alert('Coming soon...');
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('CommonWebPage', {
+                        link: 'http://store.doonschool.com/',
+                      });
+                    }, 200);
                   }}>
                   <Image
                     source={GlobalInclude.Assets.Store}
@@ -946,7 +990,8 @@ const Dashboard = ({props, navigation}) => {
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: GlobalInclude.Color.ColorPrimary}}>
+    <SafeAreaView
+      style={{flex: 1, backgroundColor: GlobalInclude.Color.ColorPrimary}}>
       <View style={GlobalInclude.AppStyle.fill}>
         <View style={styles.videoContainerAndroid}>
           {showPopNotification &&
