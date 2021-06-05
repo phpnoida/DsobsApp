@@ -136,6 +136,7 @@ const DocViewer = (props) => {
         }}
         visible={showModal}>
         <View style={styles.modalView}>
+          {console.log('media', mediaContent.replace(/ /g, '%20'))}
           <DocView
             source={{uri: mediaContent.replace(/ /g, '%20')}}
             onLoadComplete={(numberOfPages, filePath) => {

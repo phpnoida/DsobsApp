@@ -119,7 +119,7 @@ function GalleryImage({
             {imagesLink !== undefined &&
             imagesLink !== null &&
             imagesLink !== '' ? (
-              <ResponsiveImage source={{uri: imagesLink}} />
+              <ResponsiveImage showEdges={true} edges={100} source={{uri: imagesLink}} />
             ) : (
               <ProgressImage
                 source={GlobalInclude.Assets.DefaultImage}

@@ -135,7 +135,7 @@ class FitImage extends Component<IFitImageProps, IFitImageState> {
     const ImageComponent = this.ImageComponent;
 
     return (
-      <ImageComponent
+      <Image
         {...this.props}
         onLayout={this.onLayout}
         onLoad={this.onLoad}
@@ -149,8 +149,8 @@ class FitImage extends Component<IFitImageProps, IFitImageState> {
           styles.container,
         ]}
       >
-        {this.shouldDisplayIndicator() ? this.renderActivityIndicator() : this.props.children}
-      </ImageComponent>
+        {/* {this.shouldDisplayIndicator() ? this.renderActivityIndicator() : this.props.children} */}
+      </Image>
     );
   }
 

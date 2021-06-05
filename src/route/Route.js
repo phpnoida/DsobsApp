@@ -42,19 +42,17 @@ import SocialVentureDetails from '../screen/SocialVentures/Details';
 import SocialEvents from '../screen/Events/';
 import ListSocialEvent from '../screen/Events/AddListing';
 import EventDetails from '../screen/Events/Details';
-import PhoneNumberDemo from '../PhoneNumberDemo';
-import ImageDemo from '../ImageDemo';
+import CommonRoom from '../screen/Ticker/';
+import PostTicker from '../screen/Ticker/AddPost/';
+import Settings from '../screen/Ticker/Settings/';
+import Etiquette from '../screen/Ticker/Etiquette';
+import MyPreviousPost from '../screen/Ticker/MyPreviousPost';
 
 const Stack = createStackNavigator();
 
 export const RootNavigators = (baseRoute) => {
   return (
     <Stack.Navigator initialRouteName={baseRoute}>
-      <Stack.Screen
-        name="ImageDemo"
-        component={ImageDemo}
-        options={{headerShown: false}}
-      />
       <Stack.Screen
         name="AppTour"
         component={AppTour}
@@ -263,6 +261,31 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="EventDetails"
         component={EventDetails}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="CommonRoom"
+        component={CommonRoom}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="PostTicker"
+        component={PostTicker}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="Settings"
+        component={Settings}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="Etiquette"
+        component={Etiquette}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="MyPreviousPost"
+        component={MyPreviousPost}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

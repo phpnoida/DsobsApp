@@ -372,11 +372,11 @@ const Helpers = {
     return null;
   },
   capitalize: function (str) {
-    const arrOfWords = str.split(' ');
+    const arrOfWords = str.trim().split(' ');
     const arrOfWordsCased = [];
-
     for (let i = 0; i < arrOfWords.length; i++) {
       const word = arrOfWords[i];
+
       arrOfWordsCased.push(word[0].toUpperCase() + word.slice(1).toLowerCase());
     }
     return arrOfWordsCased.join(' ');

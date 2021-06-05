@@ -56,8 +56,10 @@ export default class ResponsiveImage extends Component {
   setOriginalSize(iw, ih) {
     if (ih > iw) {
       //portrait
-      width = width - 100;
-      height = height - 100;
+      if (this.props.showEdges) {
+        width = width - this.props.edges;
+        height = height - this.props.edges;
+      }
     } else {
       this.setupDefault();
     }

@@ -440,7 +440,8 @@ const YellowPages = ({navigation}) => {
                     width={viewWidth}
                     data={item.coverImages}
                     component={<Preview />}
-                    contentContainerStyle={{
+                    contentContainerStyle=
+                    {{
                       borderRadius: scale(10),
                       borderBottomLeftRadius: 0,
                       borderBottomRightRadius: 0,

@@ -265,4 +265,12 @@ export default StyleSheet.create({
     borderTopColor: '#dddddd',
     marginLeft: 8,
   },
+  sheetContainer: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    paddingStart: scale(15),
+    paddingEnd: scale(15),
+    paddingTop: scale(10),
+  },
 });

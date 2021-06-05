@@ -204,7 +204,7 @@ const ListSocialVenture = ({route, navigation}) => {
       twitter: twitter,
       wiki: wikipedia,
       eventVideo: ventureVideoLink,
-      amount: eventPrice.toString() ,
+      amount: eventPrice.toString(),
       eventImage:
         socialPhoto !== null && socialPhoto !== undefined
           ? socialPhoto.thumbnail
@@ -370,7 +370,7 @@ const ListSocialVenture = ({route, navigation}) => {
     } else if (step === 4) {
       if (global.isConnected) {
         setLoader(true);
-        
+
         // let mapLink = '';
         // if (
         //   googleMapLink !== null &&
@@ -650,13 +650,12 @@ const ListSocialVenture = ({route, navigation}) => {
 
   return (
     <View style={GlobalInclude.AppStyle.fill}>
-     <HeaderBar
-          title={'Post an Event'}
-          navigation={navigation}
-          showBack={true}
-        />
+      <HeaderBar
+        title={'Post an Event'}
+        navigation={navigation}
+        showBack={true}
+      />
       <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
-       
         <View style={GlobalInclude.AppStyle.fill}>{loadTab(step)}</View>
       </SafeAreaView>
 

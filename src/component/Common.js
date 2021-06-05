@@ -8,6 +8,7 @@ import CheckBoxIOS from 'react-native-check-box';
 import ProgressImage from './ProgresImage';
 import Radio from './Radio';
 import Helper from '../helper/Helper';
+import {IconType} from '../helper/Constants';
 const {height, width} = Dimensions.get('window');
 
 export const drawCheckbox = (title, checked, onClick) => {
@@ -216,4 +217,39 @@ export const renderRadioButton = (radioObj, onSelect) => {
       </View>
     );
   });
+};
+
+export const generateMenuOption = (menuTitle, icon, type, onPress) => {
+  return (
+    <View
+      style={[
+        g.bb1,
+        {borderBottomColor: '#e5e5e5', padding: 15, paddingLeft: 0},
+      ]}>
+      <TouchableOpacity
+        activeOpacity={1}
+        style={[grid.rowdir, grid.alignItems]}
+        onPress={onPress}>
+        <GlobalInclude.BaseIcon
+          containerStyle={{height: scale(20), width: scale(20)}}
+          iconColor={GlobalInclude.Color.ColorPrimary}
+          iconName={icon}
+          iconSize={scale(20)}
+          iconType={IconType[type]}
+        />
+        <Text style={[{marginLeft: 15, fontSize: 16}, g.FHNR, g.colordarkGray]}>
+          {menuTitle}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+export const generateHeader = (title, required) => {
+  return (
+    <View style={[grid.rowdir, grid.alignItemsTop]}>
+      <Text style={g.labeltext1}>{title}</Text>
+      {required && <Text style={g.colorRed}>*</Text>}
+    </View>
+  );
 };
