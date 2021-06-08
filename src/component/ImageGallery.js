@@ -114,6 +114,7 @@ const ImageGallery = (props) => {
               <View>
                 <YoutubeView
                   link={item.thumbnail}
+                  showFullscreen={true}
                   containerStyle={{
                     justifyContent: 'center',
                     aspectRatio: 1 / 1,

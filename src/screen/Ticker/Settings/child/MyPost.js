@@ -1,22 +1,136 @@
-import React, {useState} from 'react';
-import {View, StyleSheet} from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {View, StyleSheet, Alert} from 'react-native';
 import g from '../../../../theme/global';
 import grid from '../../../../theme/grid';
 import {scale} from '../../../../theme/Scalling';
 import RadioButton from '../../../../component/RadioButton';
 import CommonButton from '../../../../component/CommonButton';
+import {
+  getUserNotificationSettings,
+  doSetUserNotificationSettings,
+} from '../../../../Actions/TickerActions';
 
 let itemArray = [
-  {text: 'Send Notification on All Comments', key: 1},
-  {text: 'Twice a day', key: 2},
-  {text: 'Once a day', key: 3},
-  {text: 'Send no Notification', key: 4},
+  {text: 'Send Notification on All Comments', key: 1, id: 1},
+  {text: 'Twice a day', key: 2, id: 2},
+  {text: 'Once a day', key: 3, id: 3},
+  {text: 'Send No Notification', key: 4, id: 0},
 ];
 
+let selectedSetting = '';
+
 const MyPost = ({params}) => {
-  const [categrories, setCategrories] = useState(itemArray);
   const [selectedFilter, setSelectedFilter] = useState('');
-  const [filterList, setFilterList] = useState(itemArray);
+  const [filterList, setFilterList] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (global.isConnected) {
+      getPostSettings();
+    }
+    return () => {};
+  }, []);
+
+  const getPostSettings = () => {
+    getUserNotificationSettings(
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              if (data.data !== null) {
+                let settings = data.data;
+
+                console.log('====================================');
+                console.log('settings', settings);
+                console.log('====================================');
+
+                if (
+                  settings.myPostsNotifySettings &&
+                  settings.myPostsNotifySettings !== undefined &&
+                  settings.myPostsNotifySettings !== null
+                ) {
+                  //myPostsNotifySettings= 0-no notification 1-send notification on all comments 2-twice a day 3-one a day
+                  let postSettings = settings.myPostsNotifySettings;
+
+                  switch (postSettings) {
+                    case 0:
+                      setSelectedFilter('Send No Notification');
+                      break;
+                    case 1:
+                      setSelectedFilter('Send Notification on All Comments');
+                      break;
+                    case 2:
+                      setSelectedFilter('Twice a day');
+                      break;
+                    case 3:
+                      setSelectedFilter('Once a day');
+                      break;
+                    default:
+                      setSelectedFilter('');
+                      break;
+                  }
+                  setFilterList(itemArray);
+                }
+              }
+            }
+          }
+        }
+      },
+      (error) => {},
+    );
+  };
+
+  const setUserSettings = () => {
+    setIsSubmitting(true);
+
+    let requestObject = {
+      myPostsNotifySettings: selectedSetting,
+    };
+
+    console.log('====================================');
+    console.log('requestObject', requestObject);
+    console.log('====================================');
+    doSetUserNotificationSettings(
+      requestObject,
+      (response) => {
+        setIsSubmitting(false);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            console.log('====================================');
+            console.log('update response', data);
+            console.log('====================================');
+            if (data.status) {
+              selectedSetting = '';
+              setSelectedFilter('');
+              setFilterList([]);
+              Alert.alert('Congratulations', 'Settings updated');
+              setTimeout(() => {
+                getPostSettings();
+              }, 500);
+            }
+          }
+        }
+      },
+      (error) => {
+        console.log('====================================');
+        console.log(error);
+        console.log('====================================');
+        setIsSubmitting(false);
+        getPostSettings();
+      },
+    );
+  };
 
   return (
     <View style={[grid.flex1, g.pl10, g.pr10]}>
@@ -25,12 +139,24 @@ const MyPost = ({params}) => {
           defaultSelected={selectedFilter}
           PROP={filterList}
           onRadioSelect={(item) => {
+            console.log('item', item);
+            selectedSetting = item.id;
             setSelectedFilter(item.text.toString());
           }}
         />
       </View>
       <View style={[styles.filterButton, g.mb10]}>
-        <CommonButton showLoader={false} title={'Done'} onPress={() => {}} />
+        <CommonButton
+          showLoader={isSubmitting}
+          title={'Apply'}
+          onPress={() => {
+            if (selectedSetting === '') {
+              Alert.alert('Required Selection', 'You must select one setting');
+            } else {
+              setUserSettings();
+            }
+          }}
+        />
       </View>
     </View>
   );

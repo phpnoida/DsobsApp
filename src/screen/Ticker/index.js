@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef, useCallback, useMemo} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {
   View,
   StyleSheet,
@@ -11,8 +11,7 @@ import {
   TextInput,
   Keyboard,
   Animated,
-  FlatList,
-  Image,
+  Modal,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -22,27 +21,23 @@ import TopHeaderView from '../../component/TopHeaderView';
 import {IconType} from '../../helper/Constants';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
 import {generateMenuOption} from '../../component/Common';
-import ProgressImage from '../../component/ProgresImage';
-import moment from 'moment';
 import Helpers from '../../helper/Helper';
-import FitImage from '../../component/FitImage';
-import {ScrollView} from 'react-native';
-import {showUser} from '../../component/Common';
-import Comments from './Comments';
 import {renderNoDataComponent} from '../../component/Common';
+import Comments from './Comments';
+import Likes from './Likes';
 import SingleSearchWithFilter from '../../component/SingleSearchWithFilter';
 import {
   doFitlerPost,
   getCategories,
   getUserFollowing,
-  getPostLikes,
-  doLikePost,
-  doDislikePost,
+  doReportPost,
+  doFollowUser,
+  doUnFollowUser,
 } from '../../Actions/TickerActions';
 import FilterCategory from '../../component/FilterCategory';
-import MoreInfo from '../../component/MoreInfo';
-const {height: displayHeight} = Dimensions.get('window');
-import MasonryList from 'react-native-masonry-list';
+import PostFeedCard from '../../component/PostFeedCard';
+
+const {height: displayHeight, width: displayWidth} = Dimensions.get('window');
 
 const PaginationStatus = {
   firstLoad: 0,
@@ -55,215 +50,13 @@ let filterObject = {
   index: 0,
   size: 10,
 };
-let selectedMediaOption = '';
-let selectedPostId = '';
 let postMode = '';
 let curY = new Animated.Value(0);
+let selectedIndex = -1;
+let responseMessage = '';
+let searchVal = '';
 
-function showMediaIcon(iconName, iconType, label, onPress) {
-  return (
-    <TouchableOpacity
-      activeOpacity={1}
-      onPress={onPress}
-      style={[grid.rowrow, grid.alignItems, grid.justifyContentCenter]}>
-      <GlobalInclude.BaseIcon
-        containerStyle={{height: scale(30), width: scale(30)}}
-        iconColor={GlobalInclude.Color.ColorPrimary}
-        iconName={iconName}
-        iconSize={scale(30)}
-        iconType={IconType[iconType]}
-      />
-      <Text
-        style={[
-          g.fs15,
-          g.FHNM,
-          g.colorBlue,
-          grid.alignItems,
-          grid.justifyContentCenter,
-        ]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-}
-
-function PostFeed({
-  index: itemIndex,
-  item: {body, totalComments, author, postedAt, status, imageLinks},
-  onClickPostOptions,
-  onClickMediaOption,
-  onClickUser,
-}) {
-  return useMemo(() => {
-    return (
-      <View
-        style={[itemIndex === 0 ? g.mt0 : g.mt15, g.bgWhite, g.pb7]}
-        key={itemIndex}>
-        <View style={[grid.justifyContentCenter, {borderRadius: scale(10)}]}>
-          {/* User Row */}
-          <View style={[grid.rowdir, g.p10, g.pl5, g.pr5]}>
-            <TouchableOpacity
-              style={grid.row}
-              activeOpacity={0.9}
-              onPress={onClickUser}>
-              <View
-                style={[
-                  g.mr10,
-                  g.bggray,
-                  g.oh,
-                  {
-                    width: scale(40),
-                    height: scale(40),
-                    borderRadius: scale(50),
-                  },
-                ]}>
-                {author.profileImg !== undefined &&
-                author.profileImg !== null &&
-                author.profileImg !== '' ? (
-                  <ProgressImage
-                    source={{uri: author.profileImg}}
-                    containerStyle={styles.imageStyle}
-                    mode={'cover'}
-                  />
-                ) : (
-                  <ProgressImage
-                    source={GlobalInclude.Assets.DefaultProfile}
-                    containerStyle={styles.imageStyle}
-                    mode={'cover'}
-                  />
-                )}
-              </View>
-              {author !== undefined && author !== null && (
-                <View style={[grid.justifyContentCenter, grid.flex1]}>
-                  <View style={grid.rowdir}>
-                    <View style={[grid.col]}>
-                      <Text style={[g.fs15, g.FHNM, g.colorBlue]}>
-                        {`${Helpers.concatName(author)} - ${author.batch}`}
-                      </Text>
-                    </View>
-
-                    {status !== 2 && (
-                      <TouchableOpacity
-                        activeOpacity={1}
-                        onPress={onClickPostOptions}
-                        style={[
-                          g.mr7,
-                          grid.justifyContentCenter,
-                          grid.alignItems,
-                        ]}>
-                        <GlobalInclude.BaseIcon
-                          containerStyle={{height: scale(22), width: scale(22)}}
-                          iconColor={GlobalInclude.Color.ColorPrimary}
-                          iconName={'dots-three-horizontal'}
-                          iconSize={scale(22)}
-                          iconType={IconType[9]}
-                        />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                  <Text
-                    style={[
-                      g.fs14,
-                      g.FHNR,
-                      g.colorBlack,
-                      grid.justifyContentCenter,
-                      grid.alignItems,
-                      g.txtCenterVertical,
-                      g.mt5,
-                    ]}>
-                    {moment(postedAt * 1000).fromNow()}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
-
-          {/* User Row */}
-
-          {/* Post Content */}
-
-          {/* Post message */}
-          {body !== undefined && body !== null && body !== '' ? (
-            <MoreInfo text={body} linesToTruncate={3} />
-          ) : null}
-
-          {/* Post message */}
-
-          {/* Post Image */}
-          {imageLinks.length > 0 ? (
-            <View style={{width: '100%'}}>
-              {imageLinks.length > 1 ? (
-                <MasonryList
-                  images={[
-                    {
-                      uri: 'https://dsobs-new.s3.ap-south-1.amazonaws.com/1622900438_601845_1622900438073.png',
-                    },
-                    {
-                      uri: 'https://dsobs-new.s3.ap-south-1.amazonaws.com/1622900435_398854_1622900435319.png',
-                    },
-                  ]}
-                />
-              ) : (
-                <FitImage source={{uri: imageLinks[0]}} />
-              )}
-            </View>
-          ) : null}
-          {/*  */}
-
-          {/* Post Content */}
-
-          {/* Post operations */}
-          <View style={[grid.rowdir, g.mt8]}>
-            <View
-              style={[grid.row, grid.alignItems, grid.justifyContentCenter]}>
-              {showMediaIcon('like', 8, 'Likes', () => onClickMediaOption(1))}
-            </View>
-            <View
-              style={[grid.row, grid.alignItems, grid.justifyContentCenter]}>
-              {showMediaIcon('comment', 8, 'Comments', () =>
-                onClickMediaOption(2),
-              )}
-              {totalComments > 0 && (
-                <Text
-                  style={[
-                    g.fs12,
-                    g.FHNB,
-                    g.colorWhite,
-                    grid.justifyContentCenter,
-                    g.txtCenter,
-                    g.txtCenterVertical,
-                    g.bgBlue,
-                    styles.totalComments,
-                  ]}>
-                  {totalComments}
-                </Text>
-              )}
-            </View>
-            <View
-              style={[grid.row, grid.alignItems, grid.justifyContentCenter]}>
-              {showMediaIcon('share-google', 8, 'Share', () =>
-                onClickMediaOption(3),
-              )}
-            </View>
-          </View>
-          {/* Post operations */}
-        </View>
-      </View>
-    );
-  }, [
-    itemIndex,
-    body,
-    totalComments,
-    author,
-    postedAt,
-    status,
-    imageLinks,
-    onClickPostOptions,
-    onClickMediaOption,
-    onClickUser,
-  ]);
-}
-
+let dataSourceCords = [];
 const Ticker = ({navigation}) => {
   curY = new Animated.Value(0);
   const refOptions = useRef();
@@ -274,9 +67,7 @@ const Ticker = ({navigation}) => {
   const refCategory = useRef();
 
   const [myFollowing, setMyFollowing] = useState([]);
-
   const [firstTimeLoad, setFirstTimeLoad] = useState(true);
-
   const [postContent, setPostContent] = useState([]);
   const [filterQuery, setFilterQuery] = useState('');
   const [paginationStatus, setPaginationStatus] = useState(
@@ -287,7 +78,11 @@ const Ticker = ({navigation}) => {
   const [selectedFeed, setSelectedFeed] = useState(null);
   const [categoryList, setCategoryList] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [postLikeData, setPostLikeData] = useState([]);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState({});
+  const [reportText, setReportText] = useState('');
 
   useEffect(() => {
     postMode = '';
@@ -331,96 +126,6 @@ const Ticker = ({navigation}) => {
         }
       },
       (error) => {},
-    );
-  };
-
-  const getPostLikeDetail = (postId) => {
-    getPostLikes(
-      postId,
-      (response) => {
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
-            if (data.status) {
-              if (data.data !== null) {
-                setPostLikeData([...data.data]);
-              }
-            } else {
-              setPostLikeData([]);
-            }
-            setTimeout(() => {
-              if (
-                refPostLikes.current !== undefined &&
-                refPostLikes.current !== null
-              ) {
-                refPostLikes.current.open();
-              }
-            }, 200);
-          }
-        }
-      },
-      (error) => {},
-    );
-  };
-
-  const likeUserPost = (postId) => {
-    let requestObject = {
-      postId: postId,
-    };
-    doLikePost(
-      requestObject,
-      (response) => {
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
-            console.log('====================================');
-            console.log('data', data);
-            console.log('====================================');
-            if (data.status) {
-              getPostLikeDetail(postId);
-            }
-          }
-        }
-      },
-      (error) => {},
-    );
-  };
-
-  const disLikeUserPost = (postId) => {
-    let requestObject = {
-      postId: postId,
-    };
-    doDislikePost(
-      requestObject,
-      (response) => {
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
-            console.log('====================================');
-            console.log('data', data);
-            console.log('====================================');
-            if (data.status) {
-              getPostLikeDetail(postId);
-            }
-          }
-        }
-      },
-      (error, statusCode) => {
-        console.log('error', error);
-        console.log('statusCode', statusCode);
-      },
     );
   };
 
@@ -491,29 +196,163 @@ const Ticker = ({navigation}) => {
               navigation.navigate('PostTicker', {
                 data: {inEditMode: true, data: item},
               });
-            } else if (postMode === 'mediaOption') {
-              setSelectedFeed(item);
-              if (selectedMediaOption === 1) {
-              } else if (selectedMediaOption === 2) {
-              } else if (selectedMediaOption === 3) {
-              }
             }
           } else {
             if (filterObject.index === 0) {
               totalCount = data.totalCount;
-              console.log('====================================');
-              console.log('totalCount', data.data);
-              console.log('====================================');
               setPostContent([...data.data]);
             } else {
               setPostContent([...postContent, ...data.data]);
             }
             setPaginationStatus(PaginationStatus.waiting);
+
+            if (selectedIndex !== -1) {
+              if (dataSourceCords.length > selectedIndex) {
+                setTimeout(() => {
+                  refFlatList.current.scrollToOffset({
+                    offset: dataSourceCords[selectedIndex],
+                    animated: false,
+                  });
+                  selectedIndex = -1;
+                }, 0);
+              }
+            }
           }
         }
       }
     }
     setFirstTimeLoad(false);
+  };
+
+  /**
+   *
+   * Follow Unfollow
+   *
+   */
+  const followUser = () => {
+    let requestObject = {
+      userId: selectedFeed.author.id,
+    };
+    doFollowUser(
+      requestObject,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            if (data.status) {
+              responseMessage = `You successfully follow ${Helpers.concatName(
+                selectedFeed.author,
+              )}!`;
+
+              getMyFollowing();
+            } else {
+              responseMessage = 'Error while following!';
+            }
+
+            setShowModal(true);
+            setTimeout(() => {
+              setShowModal(false);
+            }, 2000);
+          }
+        }
+      },
+      (error) => {},
+    );
+  };
+
+  const unFollowUser = () => {
+    let requestObject = {
+      userId: selectedFeed.author.id,
+    };
+    doUnFollowUser(
+      requestObject,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              responseMessage = `You successfully unfollow ${Helpers.concatName(
+                selectedFeed.author,
+              )}!`;
+
+              getMyFollowing();
+            } else {
+              responseMessage = 'Error while following!';
+            }
+
+            setShowModal(true);
+            setTimeout(() => {
+              setShowModal(false);
+            }, 2000);
+          }
+        }
+      },
+      (error, statusCode) => {
+        console.log('error', error);
+        console.log('statusCode', statusCode);
+      },
+    );
+  };
+
+  /**
+   *
+   * Follow Unfollow
+   *
+   */
+
+  const onSubmitReport = () => {
+    if (reportText.trim() === '') {
+      setErrorMessage({reportContent: 'This field is required'});
+    } else {
+      let requestData = {
+        postId: selectedFeed._id,
+        reportTxt: reportText,
+      };
+      setIsReporting(true);
+      doReportPost(
+        requestData,
+        (response) => {
+          setIsReporting(false);
+          if (response && response !== null) {
+            if (
+              response.data &&
+              response.data !== undefined &&
+              response.data !== null
+            ) {
+              let responseData = response.data;
+              if (responseData.status) {
+                responseMessage = 'Post reported successfully!';
+              } else {
+                responseMessage = 'Error while reporting!';
+              }
+              setShowReportModal(false);
+              setShowModal(true);
+
+              setTimeout(() => {
+                setShowModal(false);
+              }, 2000);
+            }
+          }
+        },
+        (error) => {
+          responseMessage = 'Error while reporting!';
+          setShowModal(true);
+          setIsReporting(false);
+          setTimeout(() => {
+            setShowModal(false);
+          }, 2000);
+        },
+      );
+    }
   };
 
   /**
@@ -567,18 +406,6 @@ const Ticker = ({navigation}) => {
       myFollowing.length > 0
     ) {
       return myFollowing.find((o) => o._id === selectedFeed.author.id);
-    } else {
-      return null;
-    }
-  };
-
-  const isLiked = () => {
-    if (
-      postLikeData !== undefined &&
-      postLikeData !== null &&
-      postLikeData.length > 0
-    ) {
-      return postLikeData.find((o) => o.userId._id === global.userId);
     } else {
       return null;
     }
@@ -693,6 +520,13 @@ const Ticker = ({navigation}) => {
               2,
               () => {
                 refPostOptions.current.close();
+                setTimeout(() => {
+                  if (isFollowing() === null) {
+                    followUser();
+                  } else {
+                    unFollowUser();
+                  }
+                }, 220);
               },
             )}
 
@@ -700,38 +534,15 @@ const Ticker = ({navigation}) => {
             global.userId !== selectedFeed.author.id &&
             generateMenuOption('Report Post', 'report', 5, () => {
               refPostOptions.current.close();
+              setErrorMessage({});
+              setReportText('');
+              setTimeout(() => {
+                setShowReportModal(true);
+              }, 220);
             })}
         </View>
       </OptionsSheet>
     );
-  };
-
-  const showTaggedUsers = () => {
-    let componentArray = [];
-    for (let i = 0; i < postLikeData.length; i++) {
-      let item = postLikeData[i].userId;
-      const component = (
-        <View key={i}>
-          {showUser(
-            item.profileImg,
-            Helpers.concatName(item),
-            `Batch ${item.batch}`,
-            null,
-            () => {
-              refPostLikes.current.close();
-              setTimeout(() => {
-                navigation.navigate('UserProfile', {
-                  userId: item._id,
-                });
-              }, 350);
-            },
-          )}
-        </View>
-      );
-
-      componentArray.push(component);
-    }
-    return componentArray;
   };
 
   const postLikes = () => {
@@ -744,76 +555,27 @@ const Ticker = ({navigation}) => {
         }
         duration={200}
         closeOnDragDown={true}
+        onClose={() => {
+          resetCount();
+          getTickers(filterObject);
+        }}
         customStyles={{
           container: GlobalInclude.AppStyle.sheetContainer,
         }}>
-        <View style={grid.flex1}>
-          <TouchableOpacity
-            style={[grid.rowrow, grid.alignItems]}
-            onPress={() => {
-              if (isLiked() !== null) {
-                disLikeUserPost(selectedPostId);
-              } else {
-                likeUserPost(selectedPostId);
-              }
-            }}>
-            <View
-              style={{
-                marginHorizontal: scale(3),
-              }}>
-              <GlobalInclude.BaseIcon
-                containerStyle={{height: scale(30), width: scale(30)}}
-                iconColor={GlobalInclude.Color.ColorPrimary}
-                iconName={isLiked() !== null ? 'dislike2' : 'like2'}
-                iconSize={scale(30)}
-                iconType={IconType[10]}
-              />
-            </View>
-            <View style={[grid.justifyContentCenter, grid.alignItems]}>
-              <Text
-                style={[
-                  g.fs14,
-                  g.FHNM,
-                  g.colorBlue,
-                  grid.justifyContentCenter,
-                  grid.alignItems,
-                ]}>
-                {isLiked() !== null ? 'Unlike' : 'Like This Post'}
-              </Text>
-            </View>
-          </TouchableOpacity>
-          {/*  */}
-          <Text
-            style={[
-              g.fs18,
-              g.FHNR,
-              g.colorBlack,
-              grid.justifyContentCenter,
-              grid.alignItems,
-              g.mt10,
-              g.mb10,
-            ]}>
-            People who like this post
-          </Text>
-          <View style={grid.flex1}>
-            {postLikeData !== undefined &&
-            postLikeData !== null &&
-            postLikeData.length > 0 ? (
-              <ScrollView showsVerticalScrollIndicator={false}>
-                <View style={[grid.row, g.mt10, grid.flexwrap]}>
-                  {showTaggedUsers()}
-                </View>
-              </ScrollView>
-            ) : (
-              <View style={GlobalInclude.AppStyle.fillCenter}>
-                <Text style={[g.colorBlack, g.FHNM, g.fs12, g.txtCenter]}>
-                  Currently No People Liked This Post - Please Click on like
-                  this post to like post
-                </Text>
-              </View>
-            )}
-          </View>
-        </View>
+        {selectedFeed !== null && (
+          <Likes
+            postId={selectedFeed._id}
+            navigation={navigation}
+            onClickUser={(userId) => {
+              refPostLikes.current.close();
+              setTimeout(() => {
+                navigation.navigate('UserProfile', {
+                  userId: userId,
+                });
+              }, 350);
+            }}
+          />
+        )}
       </OptionsSheet>
     );
   };
@@ -823,94 +585,47 @@ const Ticker = ({navigation}) => {
       <OptionsSheet
         ref={refPostComments}
         minClosingHeight={50}
-        height={
-          Platform.OS === 'ios' ? displayHeight - 100 : displayHeight - 64
-        }
+        height={displayHeight / 2 + 100}
         duration={200}
-        closeOnDragDown={true}
+        closeOnDragDown={false}
+        onClose={() => {
+          resetCount();
+          getTickers(filterObject);
+        }}
+        keyboardAvoidingViewEnabled={false}
         customStyles={{
           container: GlobalInclude.AppStyle.sheetContainer,
         }}>
-        <View style={grid.flex1}>
-          <View style={[grid.rowdir, grid.alignItems]}>
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={() => {}}
-              style={{
-                marginHorizontal: scale(3),
-              }}>
-              <GlobalInclude.BaseIcon
-                containerStyle={{height: scale(36), width: scale(36)}}
-                iconColor={GlobalInclude.Color.ColorPrimary}
-                iconName={'comment'}
-                iconSize={scale(36)}
-                iconType={IconType[8]}
-              />
-            </TouchableOpacity>
-            <View style={[grid.justifyContentCenter, grid.alignItems]}>
-              <Text
-                style={[
-                  g.fs14,
-                  g.FHNM,
-                  g.colorBlue,
-                  grid.justifyContentCenter,
-                  grid.alignItems,
-                ]}>
-                Comments
-              </Text>
-            </View>
-          </View>
-          <ScrollView
-            style={{flexGrow: 1}}
-            contentContainerStyle={{
-              paddingBottom: scale(50),
-              paddingTop: scale(10),
-            }}></ScrollView>
-        </View>
-        <View
-          style={[
-            grid.rowrow,
-            grid.justifyContentCenter,
-            grid.alignItems,
-            g.mb10,
-          ]}>
-          <TextInput
-            underlineColorAndroid={'transparent'}
-            style={[g.inputWhite, grid.flex1, g.mr5]}
-            keyboardType={'default'}
-            autoCapitalize={'none'}
-            returnKeyType={'done'}
-            placeholder={'Add/Paste Comment'}
-            onChangeText={(value) => {}}
-          />
-          <View
-            style={{
-              height: scale(40),
-              width: scale(40),
-              borderRadius: scale(45),
-              backgroundColor: GlobalInclude.Color.ColorPrimary,
-              justifyContent: 'center',
-              alignItems: 'center',
-              alignSelf: 'center',
-            }}>
-            <GlobalInclude.BaseIcon
-              containerStyle={{height: scale(20), width: scale(20)}}
-              iconColor={'#FFF'}
-              iconName={'send-o'}
-              iconSize={scale(20)}
-              iconType={IconType[4]}
-            />
-          </View>
-        </View>
+        {selectedFeed !== null && (
+          <Comments navigation={navigation} postId={selectedFeed._id} />
+        )}
       </OptionsSheet>
     );
   };
 
   const renderItem = useCallback(
     ({item, index}) => (
-      <PostFeed
-        index={index}
+      <PostFeedCard
+        itemIndex={index}
+        author={item.author}
+        status={item.status}
+        postedAt={item.postedAt}
+        body={item.body}
+        links={item.links}
+        totalLikes={item.totalLikes}
+        totalComments={item.totalComments}
         item={item}
+        onLayout={(event) => {
+          const layout = event.nativeEvent.layout;
+          dataSourceCords[index] = layout.y;
+        }}
+        onClickUser={() => {
+          if (item.author !== undefined && item.author !== null) {
+            navigation.navigate('UserProfile', {
+              userId: item.author.id,
+            });
+          }
+        }}
         onClickPostOptions={() => {
           setSelectedFeed(item);
           if (
@@ -921,16 +636,32 @@ const Ticker = ({navigation}) => {
           }
         }}
         onClickMediaOption={(type) => {
-          selectedMediaOption = type;
+          selectedIndex = index;
           selectedPostId = item._id;
-          postMode = 'mediaOption';
-          getPostLikeDetail(item._id);
-        }}
-        onClickUser={() => {
-          if (item.author !== undefined && item.author !== null) {
-            navigation.navigate('UserProfile', {
-              userId: item.author.id,
-            });
+
+          if (type === 1) {
+            //getPostLikeDetail(item._id);
+            setSelectedFeed(item);
+
+            setTimeout(() => {
+              if (
+                refPostLikes.current !== undefined &&
+                refPostLikes.current !== null
+              ) {
+                refPostLikes.current.open();
+              }
+            }, 200);
+          } else if (type === 2) {
+            setSelectedFeed(item);
+
+            setTimeout(() => {
+              if (
+                refPostComments.current !== undefined &&
+                refPostComments.current !== null
+              ) {
+                refPostComments.current.open();
+              }
+            }, 200);
           }
         }}
       />
@@ -968,7 +699,12 @@ const Ticker = ({navigation}) => {
           ]}>
           <SingleSearchWithFilter
             changeText={(text) => {
+              searchVal = text;
               setFilterQuery(text);
+              if (searchVal.trim() === '') {
+                resetCount();
+                getTickers(filterObject);
+              }
             }}
             showGoButton={true}
             filterQuery={filterQuery}
@@ -980,7 +716,13 @@ const Ticker = ({navigation}) => {
                 refCategory.current.open();
               }
             }}
-            onGoPress={() => {}}
+            onGoPress={() => {
+              if (filterQuery.trim() !== '' && filterQuery.trim().length > 0) {
+                resetCount();
+                filterObject.s = searchVal;
+                getTickers(filterObject);
+              }
+            }}
           />
         </View>
       </Animated.View>
@@ -998,6 +740,11 @@ const Ticker = ({navigation}) => {
           Keyboard.dismiss();
           setSelectedCategory(Helpers.capitalize(value));
           refCategory.current.close();
+          resetCount();
+          filterObject.categoryId = item.key;
+          setTimeout(() => {
+            getTickers(filterObject);
+          }, 200);
         }}
         onClose={() => {}}
       />
@@ -1022,6 +769,7 @@ const Ticker = ({navigation}) => {
           }
         }}
       />
+
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.fill}>
           {firstTimeLoad ? (
@@ -1032,14 +780,14 @@ const Ticker = ({navigation}) => {
               />
             </View>
           ) : (
-            <View style={GlobalInclude.AppStyle.fill}>
+            <View style={[GlobalInclude.AppStyle.fill, g.bggray3]}>
               <Animated.FlatList
                 ref={refFlatList}
                 removeClippedSubviews={Platform.OS !== 'web'}
                 showsVerticalScrollIndicator={false}
                 extraData={postContent}
                 data={postContent}
-                renderItem={renderItem}
+                CellRendererComponent={renderItem}
                 keyExtractor={keyExtractor}
                 onEndReachedThreshold={0.1}
                 onEndReached={onEndReached}
@@ -1049,7 +797,6 @@ const Ticker = ({navigation}) => {
                 ListFooterComponent={renderFooter}
                 scrollEventThrottle={16}
                 contentContainerStyle={[
-                  g.bggray3,
                   {
                     marginTop: animatedHeight,
                     paddingBottom: scale(130),
@@ -1070,6 +817,101 @@ const Ticker = ({navigation}) => {
       {postLikes()}
       {postComments()}
       {showCategories()}
+
+      {showModal && (
+        <Modal
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => {
+            setShowModal(!showModal);
+          }}
+          hardwareAccelerated={true}
+          visible={showModal}>
+          <View style={styles.centeredView}>
+            <View style={styles.responseMessage}>
+              <Text style={styles.headerText}>{responseMessage}</Text>
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      <Modal
+        transparent={true}
+        animationType="fade"
+        supportedOrientations={['landscape', 'portrait']}
+        onRequestClose={() => {
+          setShowReportModal(false);
+        }}
+        visible={showReportModal}>
+        <View style={[g.bgBlack, grid.flex1, g.p15, {paddingTop: '25%'}]}>
+          <View style={grid.col}>
+            <View style={[g.bgWhite, g.p15, g.br3]}>
+              <View
+                style={[
+                  grid.rowdir,
+                  grid.justifyContentRight,
+                  grid.alignItemsBottom,
+                ]}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    setShowReportModal(false);
+                  }}
+                  hitSlop={{
+                    top: 15,
+                    bottom: 15,
+                    left: 15,
+                    right: 15,
+                  }}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(26), width: scale(26)}}
+                    iconColor={'#808080'}
+                    iconName={'close'}
+                    iconSize={scale(26)}
+                    iconType={IconType[8]}
+                  />
+                </TouchableOpacity>
+              </View>
+              <TextInput
+                maxLength={200}
+                placeholder={'Write Text Here'}
+                underlineColorAndroid="transparent"
+                multiline={true}
+                returnKeyType="done"
+                blurOnSubmit={true}
+                onSubmitEditing={() => {
+                  Keyboard.dismiss();
+                }}
+                style={[
+                  g.mt10,
+                  g.bgWhite,
+                  g.textareaStyle,
+                  {minHeight: 100, maxHeight: 100, height: 100},
+                ]}
+                onChangeText={(comment) => {
+                  setReportText(comment);
+                  setErrorMessage({});
+                }}
+              />
+              {errorMessage.reportContent &&
+                errorMessage.reportContent.length > 0 && (
+                  <Text style={[g.errorMsg, g.pt5]}>
+                    {errorMessage.reportContent}
+                  </Text>
+                )}
+              <View style={[grid.rowdir, g.pt10, grid.justifyContentRight]}>
+                {isReporting ? (
+                  <ActivityIndicator size="large" color="#666666" />
+                ) : (
+                  <Text style={g.btn} onPress={() => onSubmitReport()}>
+                    {'Submit'}
+                  </Text>
+                )}
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -1092,6 +934,58 @@ const styles = StyleSheet.create({
     borderRadius: scale(30),
     height: scale(22),
     width: scale(22),
+  },
+  totalLikes: {
+    position: 'absolute',
+    top: -1,
+    left: -1,
+    borderRadius: scale(30),
+    height: scale(22),
+    width: scale(22),
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalView: {
+    backgroundColor: 'rgba(62,62,62,0.5)',
+    flex: 1,
+    width: '100%',
+  },
+  responseMessage: {
+    width: displayWidth - 50,
+    backgroundColor: 'white',
+    borderRadius: scale(6),
+    padding: scale(7),
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    minHeight: scale(60),
+    alignContent: 'center',
+  },
+  headerText: {
+    justifyContent: 'center',
+    alignContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    fontSize: scale(16),
+    textAlign: 'center',
+    ...g.FHNR,
+    ...g.colorBlue,
+  },
+  emptyArea: {
+    height: scale(120),
+    alignContent: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
   },
 });
 

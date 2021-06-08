@@ -41,7 +41,7 @@ export const drawCheckbox = (title, checked, onClick) => {
 
 export const renderNoDataComponent = () => {
   return (
-    <View style={GlobalInclude.AppStyle.fillColCenter}>
+    <View style={GlobalInclude.AppStyle.fillCenter}>
       <Text
         style={[
           g.colorBlack,

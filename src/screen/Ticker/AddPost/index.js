@@ -166,19 +166,15 @@ const PostTicker = ({route, navigation}) => {
   const savePostData = () => {
     let imageLinks = [],
       pdfLinks = [],
-      gifLinks = [];
+      gifLinks = [],
+      links = [];
+
+    if (youtubeLink !== '') {
+      links.push({file: youtubeLink, type: 2});
+    }
 
     mediaData.map((child) => {
-      switch (child.type) {
-        case 1:
-          imageLinks.push(child.thumbnail);
-          break;
-        case 3:
-          pdfLinks.push(child.thumbnail);
-          break;
-        default:
-          break;
-      }
+      links.push({file: child.thumbnail, type: child.type});
     });
 
     let requestObject = {
@@ -186,11 +182,11 @@ const PostTicker = ({route, navigation}) => {
       body: inputValue,
       comment: myComment,
       tags: selectedTags,
-      links: youtubeLink !== '' ? [youtubeLink] : [],
-      videoLinks: youtubeLink !== '' ? [youtubeLink] : [],
-      imageLinks: imageLinks,
-      pdfLinks: pdfLinks,
-      gifLinks: gifLinks,
+      links: links,
+      videoLinks: [],
+      imageLinks: [],
+      pdfLinks: [],
+      gifLinks: [],
     };
 
     console.log('====================================');

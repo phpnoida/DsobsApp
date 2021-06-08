@@ -4,8 +4,29 @@ import GlobalInclude from '../../globalInclude/Globalinclude';
 import HeaderBar from '../../component/HeaderBar';
 import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
+import {APP_NAME} from '../../helper/Constants';
 
 const Etiquette = ({navigation}) => {
+  const showText = (text) => {
+    return (
+      <Text
+        style={[
+          g.fs15,
+          g.colorBlack,
+          {
+            textAlign: 'justify',
+            justifyContent: 'center',
+            alignContent: 'center',
+            textAlignVertical: 'center',
+            letterSpacing: 1,
+            lineHeight: 25,
+          },
+        ]}>
+        {text}
+      </Text>
+    );
+  };
+
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
       <HeaderBar title={'Etiquette'} navigation={navigation} showBack={true} />
@@ -13,24 +34,25 @@ const Etiquette = ({navigation}) => {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[g.ml10, g.mr10, g.pt15, g.pb15]}>
-          <Text
-            style={[
-              g.fs15,
-              g.colorBlack,
-              {
-                textAlign: 'justify',
-                justifyContent: 'center',
-                alignContent: 'center',
-                textAlignVertical: 'center',
-                letterSpacing: 1,
-                lineHeight: 25,
-              },
-            ]}>
-            In publishing and graphic design, Lorem ipsum is a placeholder text
-            commonly used to demonstrate the visual form of a document or a
-            typeface without relying on meaningful content. Lorem ipsum may be
-            used as a placeholder before final copy is available.
-          </Text>
+          {showText(
+            'The idea of Common room is to create a space for new thought,simulation, conversion and engagement.',
+          )}
+          <View style={{marginVertical: scale(3)}} />
+          {showText(
+            'To create an intellectual space for creative,constructive and thought provoking post, comments, articles, videos and perspectives.',
+          )}
+          <View style={{marginVertical: scale(3)}} />
+          {showText('You can make 10 posts a week.')}
+          <View style={{marginVertical: scale(3)}} />
+          {showText("Please don't post in an anger.")}
+          <View style={{marginVertical: scale(3)}} />
+          {showText(
+            'Please refrain from political post even though these are very critical times for the country. We plan to have those conversions in private like minded groups.',
+          )}
+          <View style={{marginVertical: scale(3)}} />
+          {showText(
+            `The ${APP_NAME} admin retain the right to remove objectionable posts.`,
+          )}
         </ScrollView>
       </SafeAreaView>
     </View>

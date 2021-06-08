@@ -64,9 +64,6 @@ export default class ResponsiveImage extends Component {
       this.setupDefault();
     }
 
-    console.log('width', width);
-    console.log('height', height);
-
     let ratio = Math.min(width / iw, height / ih);
 
     let iWidth = Math.ceil(iw * ratio);

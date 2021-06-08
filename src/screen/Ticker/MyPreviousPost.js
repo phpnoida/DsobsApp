@@ -8,8 +8,6 @@ import {
   Text,
   Platform,
   Dimensions,
-  TextInput,
-  Keyboard,
   Animated,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
@@ -26,13 +24,19 @@ import Helpers from '../../helper/Helper';
 import FitImage from '../../component/FitImage';
 import {ScrollView} from 'react-native';
 import {showUser} from '../../component/Common';
-import Comments from './Comments';
 import {renderNoDataComponent} from '../../component/Common';
-import {doGetMypost} from '../../Actions/TickerActions';
+import Comments from './Comments';
+import {
+  doGetMypost,
+  getPostLikes,
+  doLikePost,
+  doDislikePost,
+} from '../../Actions/TickerActions';
 import MoreInfo from '../../component/MoreInfo';
-import DocView from 'react-native-pdf';
+import FlatListSlider from '../../component/FlatListSlider';
+import SliderImage from '../../component/SliderImage';
 
-const {height: displayHeight} = Dimensions.get('window');
+const {height: displayHeight, width: displayWidth} = Dimensions.get('window');
 
 const PaginationStatus = {
   firstLoad: 0,
@@ -45,46 +49,51 @@ let filterObject = {
   index: 0,
   size: 10,
 };
-let selectedFeedId = '';
-let selectedMediaOption = '';
+let selectedPostId = '';
 let postMode = '';
+let selectedIndex = -1;
+let dataSourceCords = [];
 
-function showMediaIcon(iconName, iconType, label, onPress) {
+function showMediaIcon(status, iconName, iconType, label, onPress) {
   return (
-    <View style={[grid.rowrow, grid.alignItems, grid.justifyContentCenter]}>
-      <TouchableOpacity activeOpacity={1} onPress={onPress}>
-        <GlobalInclude.BaseIcon
-          containerStyle={{height: scale(30), width: scale(30)}}
-          iconColor={GlobalInclude.Color.ColorPrimary}
-          iconName={iconName}
-          iconSize={scale(30)}
-          iconType={IconType[iconType]}
-        />
-      </TouchableOpacity>
+    <TouchableOpacity
+      activeOpacity={1}
+      onPress={onPress}
+      disabled={status === 2}
+      style={[grid.rowrow, grid.alignItems, grid.justifyContentCenter]}>
+      <GlobalInclude.BaseIcon
+        containerStyle={{height: scale(28), width: scale(28)}}
+        iconColor={status === 2 ? '#ebebe4' : GlobalInclude.Color.ColorPrimary}
+        iconName={iconName}
+        iconSize={scale(28)}
+        iconType={IconType[iconType]}
+      />
       <Text
         style={[
-          g.fs15,
+          g.fs13,
           g.FHNM,
-          g.colorBlue,
+          status === 2 ? g.colorDisabled : g.colorBlue,
           grid.alignItems,
           grid.justifyContentCenter,
         ]}>
         {label}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 
 function PostFeed({
   index: itemIndex,
-  item: {body, totalComments, author, postedAt, status},
+  item: {body, totalComments, author, postedAt, status, imageLinks},
   onClickPostOptions,
   onClickMediaOption,
   onClickUser,
+  onLayout,
 }) {
   return useMemo(() => {
     return (
       <View
+        onLayout={onLayout}
         style={[itemIndex === 0 ? g.mt0 : g.mt15, g.bgWhite, g.pb7]}
         key={itemIndex}>
         <View style={[grid.justifyContentCenter, {borderRadius: scale(10)}]}>
@@ -105,11 +114,21 @@ function PostFeed({
                     borderRadius: scale(50),
                   },
                 ]}>
-                <ProgressImage
-                  source={GlobalInclude.Assets.DefaultProfile}
-                  containerStyle={styles.imageStyle}
-                  mode={'cover'}
-                />
+                {author.profileImg !== undefined &&
+                author.profileImg !== null &&
+                author.profileImg !== '' ? (
+                  <ProgressImage
+                    source={{uri: author.profileImg}}
+                    containerStyle={styles.imageStyle}
+                    mode={'cover'}
+                  />
+                ) : (
+                  <ProgressImage
+                    source={GlobalInclude.Assets.DefaultProfile}
+                    containerStyle={styles.imageStyle}
+                    mode={'cover'}
+                  />
+                )}
               </View>
               {author !== undefined && author !== null && (
                 <View style={[grid.justifyContentCenter, grid.flex1]}>
@@ -130,10 +149,7 @@ function PostFeed({
                           grid.alignItems,
                         ]}>
                         <GlobalInclude.BaseIcon
-                          containerStyle={{
-                            height: scale(22),
-                            width: scale(22),
-                          }}
+                          containerStyle={{height: scale(22), width: scale(22)}}
                           iconColor={GlobalInclude.Color.ColorPrimary}
                           iconName={'dots-three-horizontal'}
                           iconSize={scale(22)}
@@ -152,7 +168,7 @@ function PostFeed({
                       g.txtCenterVertical,
                       g.mt5,
                     ]}>
-                    {Helpers.showFormatedDate(postedAt, false)}
+                    {moment(postedAt * 1000).fromNow()}
                   </Text>
                 </View>
               )}
@@ -163,33 +179,46 @@ function PostFeed({
 
           {/* Post Content */}
 
-          <DocView
-            singlePage
-            source={{
-              uri: 'https://dsobs-new.s3.ap-south-1.amazonaws.com/1619262480_777933_1619262475866.pdf',
-            }}
-            onLoadComplete={(numberOfPages, filePath) => {
-              // console.log(`number of pages: ${numberOfPages}`);
-            }}
-            onPageChanged={(page, numberOfPages) => {
-              // console.log(`current page: ${page}`);
-            }}
-            onError={(error) => {}}
-            onPressLink={(uri) => {
-              // console.log(`Link presse: ${uri}`)
-            }}
-            style={{height: scale(94), width: scale(94)}}
-          />
-
           {/* Post message */}
-          {body !== undefined && body !== null && body !== '' ? (
-            <MoreInfo text={body} linesToTruncate={3} />
-          ) : null}
+
+          {status === 2 ? (
+            <View style={styles.emptyArea}>
+              <Text
+                style={[
+                  g.fs18,
+                  g.FHNM,
+                  g.colorBlack,
+                  grid.justifyContentCenter,
+                  grid.alignItems,
+                ]}>
+                {body}
+              </Text>
+            </View>
+          ) : (
+            <View>
+              {body !== undefined && body !== null && body !== '' ? (
+                <MoreInfo text={body} linesToTruncate={3} />
+              ) : null}
+            </View>
+          )}
 
           {/* Post message */}
 
           {/* Post Image */}
-          {/* <FitImage source={{uri: square}} /> */}
+          {imageLinks.length > 0 ? (
+            <View>
+              {imageLinks.length > 1 ? (
+                <FlatListSlider
+                  data={imageLinks}
+                  component={<SliderImage />}
+                  autoscroll={false}
+                />
+              ) : (
+                <FitImage source={{uri: imageLinks[0]}} />
+              )}
+            </View>
+          ) : null}
+          {/*  */}
 
           {/* Post Content */}
 
@@ -197,11 +226,13 @@ function PostFeed({
           <View style={[grid.rowdir, g.mt8]}>
             <View
               style={[grid.row, grid.alignItems, grid.justifyContentCenter]}>
-              {showMediaIcon('like', 8, 'Likes', () => onClickMediaOption(1))}
+              {showMediaIcon(status, 'like', 8, 'Likes', () =>
+                onClickMediaOption(1),
+              )}
             </View>
             <View
               style={[grid.row, grid.alignItems, grid.justifyContentCenter]}>
-              {showMediaIcon('comment', 8, 'Comments', () =>
+              {showMediaIcon(status, 'comment', 8, 'Comments', () =>
                 onClickMediaOption(2),
               )}
               {totalComments > 0 && (
@@ -222,7 +253,7 @@ function PostFeed({
             </View>
             <View
               style={[grid.row, grid.alignItems, grid.justifyContentCenter]}>
-              {showMediaIcon('share-google', 8, 'Share', () =>
+              {showMediaIcon(status, 'share-google', 8, 'Share', () =>
                 onClickMediaOption(3),
               )}
             </View>
@@ -238,14 +269,15 @@ function PostFeed({
     author,
     postedAt,
     status,
+    imageLinks,
     onClickPostOptions,
     onClickMediaOption,
     onClickUser,
+    onLayout,
   ]);
 }
 
 const MyPreviousPost = ({navigation}) => {
-  const refOptions = useRef();
   const refPostOptions = useRef();
   const refPostLikes = useRef();
   const refPostComments = useRef();
@@ -256,19 +288,24 @@ const MyPreviousPost = ({navigation}) => {
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
   );
-
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedFeed, setSelectedFeed] = useState(null);
+  const [postLikeData, setPostLikeData] = useState([]);
 
   useEffect(() => {
     postMode = '';
-    if (global.isConnected) {
-      postMode = '';
-      resetCount();
-      getTickers();
-    }
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (global.isConnected) {
+        postMode = '';
+        resetCount();
 
-    return () => {};
+        getTickers(filterObject);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, [navigation]);
 
   /*****
@@ -277,7 +314,104 @@ const MyPreviousPost = ({navigation}) => {
    *
    */
 
-  const getTickers = () => {
+  /**
+   *
+   * Like Dislike
+   *
+   */
+
+  const getPostLikeDetail = (postId) => {
+    getPostLikes(
+      postId,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            if (data.status) {
+              if (data.data !== null) {
+                setPostLikeData([...data.data]);
+              }
+            } else {
+              setPostLikeData([]);
+            }
+            setTimeout(() => {
+              if (
+                refPostLikes.current !== undefined &&
+                refPostLikes.current !== null
+              ) {
+                refPostLikes.current.open();
+              }
+            }, 200);
+          }
+        }
+      },
+      (error) => {},
+    );
+  };
+
+  const likeUserPost = (postId) => {
+    let requestObject = {
+      postId: postId,
+    };
+    doLikePost(
+      requestObject,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            if (data.status) {
+              getPostLikeDetail(postId);
+            }
+          }
+        }
+      },
+      (error) => {},
+    );
+  };
+
+  const disLikeUserPost = (postId) => {
+    let requestObject = {
+      postId: postId,
+    };
+    doDislikePost(
+      requestObject,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              getPostLikeDetail(postId);
+            }
+          }
+        }
+      },
+      (error, statusCode) => {
+        console.log('error', error);
+        console.log('statusCode', statusCode);
+      },
+    );
+  };
+
+  /**
+   *
+   * Like Dislike
+   *
+   */
+
+  const getTickers = (requestObj) => {
     doGetMypost(
       (response) => {
         manageResponse(response);
@@ -302,10 +436,10 @@ const MyPreviousPost = ({navigation}) => {
         let data = response.data;
 
         if (data.status) {
+          let item = data.data[0];
           if (postMode !== '') {
             if (postMode === 'edit') {
               postMode = '';
-              let item = data.data[0];
               navigation.navigate('PostTicker', {
                 data: {inEditMode: true, data: item},
               });
@@ -318,6 +452,18 @@ const MyPreviousPost = ({navigation}) => {
               setPostContent([...postContent, ...data.data]);
             }
             setPaginationStatus(PaginationStatus.waiting);
+
+            if (selectedIndex !== -1) {
+              if (dataSourceCords.length > selectedIndex) {
+                setTimeout(() => {
+                  refFlatList.current.scrollToOffset({
+                    offset: dataSourceCords[selectedIndex],
+                    animated: false,
+                  });
+                  selectedIndex = -1;
+                }, 0);
+              }
+            }
           }
         }
       }
@@ -335,7 +481,7 @@ const MyPreviousPost = ({navigation}) => {
       console.log('onPaginate()');
       setPaginationStatus(PaginationStatus.waiting);
       filterObject.index = filterObject.index + 1;
-      getTickers();
+      getTickers(filterObject);
     }
   };
 
@@ -354,7 +500,7 @@ const MyPreviousPost = ({navigation}) => {
     filterObject.index = 0;
     setIsRefreshing(false);
     resetCount();
-    getTickers();
+    getTickers(filterObject);
   };
 
   const resetCount = () => {
@@ -368,6 +514,18 @@ const MyPreviousPost = ({navigation}) => {
    * Pagination
    *
    */
+
+  const isLiked = () => {
+    if (
+      postLikeData !== undefined &&
+      postLikeData !== null &&
+      postLikeData.length > 0
+    ) {
+      return postLikeData.find((o) => o.userId._id === global.userId);
+    } else {
+      return null;
+    }
+  };
 
   const renderFooter = () => {
     return (
@@ -390,60 +548,6 @@ const MyPreviousPost = ({navigation}) => {
     );
   };
 
-  const userOptions = () => {
-    return (
-      <OptionsSheet
-        ref={refOptions}
-        minClosingHeight={50}
-        height={300}
-        duration={200}
-        closeOnDragDown={true}
-        customStyles={{
-          container: GlobalInclude.AppStyle.sheetContainer,
-        }}>
-        <View stylre={[grid.flex1, g.mb10]}>
-          {generateMenuOption('Make a New Post', 'add-to-list', 9, () => {
-            refOptions.current.close();
-            setTimeout(() => {
-              navigation.navigate('PostTicker');
-            }, 220);
-          })}
-
-          {generateMenuOption(
-            'View My Previous Post',
-            'infocirlceo',
-            10,
-            () => {
-              refOptions.current.close();
-              setTimeout(() => {
-                navigation.navigate('MyPreviousPost');
-              }, 220);
-            },
-          )}
-
-          {generateMenuOption('My Settings', 'setting', 10, () => {
-            refOptions.current.close();
-            setTimeout(() => {
-              navigation.navigate('Settings');
-            }, 220);
-          })}
-
-          {generateMenuOption(
-            'The Common Room Etiquette ',
-            'exclamationcircleo',
-            10,
-            () => {
-              refOptions.current.close();
-              setTimeout(() => {
-                navigation.navigate('Etiquette');
-              }, 220);
-            },
-          )}
-        </View>
-      </OptionsSheet>
-    );
-  };
-
   const postOptions = () => {
     return (
       <OptionsSheet
@@ -456,15 +560,16 @@ const MyPreviousPost = ({navigation}) => {
           container: GlobalInclude.AppStyle.sheetContainer,
         }}>
         <View stylre={[grid.flex1, g.mb10]}>
-          {generateMenuOption('Edit Post', 'edit', 4, () => {
-            refPostOptions.current.close();
-            postMode = 'edit';
-            setTimeout(() => {
-              resetCount();
-              filterObject.id = selectedFeed._id;
-              getTickers();
-            }, 220);
-          })}
+          {selectedFeed !== null &&
+            generateMenuOption('Edit Post', 'edit', 4, () => {
+              refPostOptions.current.close();
+              postMode = 'edit';
+              setTimeout(() => {
+                resetCount();
+                filterObject.id = selectedFeed._id;
+                getTickers(filterObject);
+              }, 220);
+            })}
         </View>
       </OptionsSheet>
     );
@@ -472,12 +577,24 @@ const MyPreviousPost = ({navigation}) => {
 
   const showTaggedUsers = () => {
     let componentArray = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < postLikeData.length; i++) {
+      let item = postLikeData[i].userId;
       const component = (
         <View key={i}>
-          {showUser('', 'Amit Kumar Singh', 'Batch 1985', null, () => {
-            refPostLikes.current.close();
-          })}
+          {showUser(
+            item.profileImg,
+            Helpers.concatName(item),
+            `Batch ${item.batch}`,
+            null,
+            () => {
+              refPostLikes.current.close();
+              setTimeout(() => {
+                navigation.navigate('UserProfile', {
+                  userId: item._id,
+                });
+              }, 350);
+            },
+          )}
         </View>
       );
 
@@ -499,22 +616,28 @@ const MyPreviousPost = ({navigation}) => {
         customStyles={{
           container: GlobalInclude.AppStyle.sheetContainer,
         }}>
-        <View stylre={[grid.flex1, g.mb10]}>
-          <View style={[grid.rowdir, grid.alignItems]}>
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={() => {}}
+        <View style={grid.flex1}>
+          <TouchableOpacity
+            style={[grid.rowrow, grid.alignItems]}
+            onPress={() => {
+              if (isLiked() !== null) {
+                disLikeUserPost(selectedPostId);
+              } else {
+                likeUserPost(selectedPostId);
+              }
+            }}>
+            <View
               style={{
                 marginHorizontal: scale(3),
               }}>
               <GlobalInclude.BaseIcon
-                containerStyle={{height: scale(36), width: scale(36)}}
+                containerStyle={{height: scale(30), width: scale(30)}}
                 iconColor={GlobalInclude.Color.ColorPrimary}
-                iconName={'like'}
-                iconSize={scale(36)}
-                iconType={IconType[8]}
+                iconName={isLiked() !== null ? 'dislike2' : 'like2'}
+                iconSize={scale(30)}
+                iconType={IconType[10]}
               />
-            </TouchableOpacity>
+            </View>
             <View style={[grid.justifyContentCenter, grid.alignItems]}>
               <Text
                 style={[
@@ -524,10 +647,11 @@ const MyPreviousPost = ({navigation}) => {
                   grid.justifyContentCenter,
                   grid.alignItems,
                 ]}>
-                Like This Post
+                {isLiked() !== null ? 'Unlike' : 'Like This Post'}
               </Text>
             </View>
-          </View>
+          </TouchableOpacity>
+          {/*  */}
           <Text
             style={[
               g.fs18,
@@ -540,19 +664,24 @@ const MyPreviousPost = ({navigation}) => {
             ]}>
             People who like this post
           </Text>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <View style={[grid.row, grid.flexwrap]}>
-              {showUser('', 'Amit Kumar Singh', 'Batch 1985', null, () => {
-                refPostLikes.current.close();
-              })}
-              {showUser('', 'Rahul Bhardwaj', 'Batch 1990', null, () => {
-                refPostLikes.current.close();
-              })}
-              {showUser('', 'John Karter', 'Batch 1994', null, () => {
-                refPostLikes.current.close();
-              })}
-            </View>
-          </ScrollView>
+          <View style={grid.flex1}>
+            {postLikeData !== undefined &&
+            postLikeData !== null &&
+            postLikeData.length > 0 ? (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <View style={[grid.row, g.mt10, grid.flexwrap]}>
+                  {showTaggedUsers()}
+                </View>
+              </ScrollView>
+            ) : (
+              <View style={GlobalInclude.AppStyle.fillCenter}>
+                <Text style={[g.colorBlack, g.FHNM, g.fs12, g.txtCenter]}>
+                  Currently No People Liked This Post - Please Click on like
+                  this post to like post
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
       </OptionsSheet>
     );
@@ -563,85 +692,20 @@ const MyPreviousPost = ({navigation}) => {
       <OptionsSheet
         ref={refPostComments}
         minClosingHeight={50}
-        height={
-          Platform.OS === 'ios' ? displayHeight - 100 : displayHeight - 64
-        }
+        height={displayHeight / 2 + 100}
         duration={200}
-        closeOnDragDown={true}
+        closeOnDragDown={false}
+        onClose={() => {
+          resetCount();
+          getTickers(filterObject);
+        }}
+        keyboardAvoidingViewEnabled={false}
         customStyles={{
           container: GlobalInclude.AppStyle.sheetContainer,
         }}>
-        <View style={grid.flex1}>
-          <View style={[grid.rowdir, grid.alignItems]}>
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={() => {}}
-              style={{
-                marginHorizontal: scale(3),
-              }}>
-              <GlobalInclude.BaseIcon
-                containerStyle={{height: scale(36), width: scale(36)}}
-                iconColor={GlobalInclude.Color.ColorPrimary}
-                iconName={'comment'}
-                iconSize={scale(36)}
-                iconType={IconType[8]}
-              />
-            </TouchableOpacity>
-            <View style={[grid.justifyContentCenter, grid.alignItems]}>
-              <Text
-                style={[
-                  g.fs14,
-                  g.FHNM,
-                  g.colorBlue,
-                  grid.justifyContentCenter,
-                  grid.alignItems,
-                ]}>
-                Comments
-              </Text>
-            </View>
-          </View>
-          <ScrollView
-            style={{flexGrow: 1}}
-            contentContainerStyle={{
-              paddingBottom: scale(50),
-              paddingTop: scale(10),
-            }}></ScrollView>
-        </View>
-        <View
-          style={[
-            grid.rowrow,
-            grid.justifyContentCenter,
-            grid.alignItems,
-            g.mb10,
-          ]}>
-          <TextInput
-            underlineColorAndroid={'transparent'}
-            style={[g.inputWhite, grid.flex1, g.mr5]}
-            keyboardType={'default'}
-            autoCapitalize={'none'}
-            returnKeyType={'done'}
-            placeholder={'Add/Paste Comment'}
-            onChangeText={(value) => {}}
-          />
-          <View
-            style={{
-              height: scale(40),
-              width: scale(40),
-              borderRadius: scale(45),
-              backgroundColor: GlobalInclude.Color.ColorPrimary,
-              justifyContent: 'center',
-              alignItems: 'center',
-              alignSelf: 'center',
-            }}>
-            <GlobalInclude.BaseIcon
-              containerStyle={{height: scale(20), width: scale(20)}}
-              iconColor={'#FFF'}
-              iconName={'send-o'}
-              iconSize={scale(20)}
-              iconType={IconType[4]}
-            />
-          </View>
-        </View>
+        {selectedFeed !== null && (
+          <Comments navigation={navigation} postId={selectedFeed._id} />
+        )}
       </OptionsSheet>
     );
   };
@@ -652,7 +716,6 @@ const MyPreviousPost = ({navigation}) => {
         index={index}
         item={item}
         onClickPostOptions={() => {
-          selectedFeedId = item._id;
           setSelectedFeed(item);
           if (
             refPostOptions.current !== undefined &&
@@ -662,8 +725,23 @@ const MyPreviousPost = ({navigation}) => {
           }
         }}
         onClickMediaOption={(type) => {
-          selectedMediaOption = type;
-          selectedFeedId = item._id;
+          selectedIndex = index;
+          selectedPostId = item._id;
+
+          if (type === 1) {
+            getPostLikeDetail(item._id);
+          } else if (type === 2) {
+            setSelectedFeed(item);
+
+            setTimeout(() => {
+              if (
+                refPostComments.current !== undefined &&
+                refPostComments.current !== null
+              ) {
+                refPostComments.current.open();
+              }
+            }, 200);
+          }
         }}
         onClickUser={() => {
           if (item.author !== undefined && item.author !== null) {
@@ -671,6 +749,10 @@ const MyPreviousPost = ({navigation}) => {
               userId: item.author.id,
             });
           }
+        }}
+        onLayout={(event) => {
+          const layout = event.nativeEvent.layout;
+          dataSourceCords[index] = layout.y;
         }}
       />
     ),
@@ -681,11 +763,7 @@ const MyPreviousPost = ({navigation}) => {
 
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
-      <HeaderBar
-        title={'My Previous Post'}
-        navigation={navigation}
-        showBack={true}
-      />
+      <HeaderBar title={'My Post'} navigation={navigation} showBack={true} />
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.fill}>
           {firstTimeLoad ? (
@@ -703,7 +781,7 @@ const MyPreviousPost = ({navigation}) => {
                 showsVerticalScrollIndicator={false}
                 extraData={postContent}
                 data={postContent}
-                renderItem={renderItem}
+                CellRendererComponent={renderItem}
                 keyExtractor={keyExtractor}
                 onEndReachedThreshold={0.1}
                 onEndReached={onEndReached}
@@ -715,7 +793,6 @@ const MyPreviousPost = ({navigation}) => {
                 contentContainerStyle={[
                   g.bggray3,
                   {
-                    marginTop: scale(5),
                     paddingBottom: scale(130),
                   },
                 ]}
@@ -724,7 +801,6 @@ const MyPreviousPost = ({navigation}) => {
           )}
         </View>
       </SafeAreaView>
-      {userOptions()}
       {postOptions()}
       {postLikes()}
       {postComments()}
@@ -750,6 +826,50 @@ const styles = StyleSheet.create({
     borderRadius: scale(30),
     height: scale(22),
     width: scale(22),
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalView: {
+    backgroundColor: 'rgba(62,62,62,0.5)',
+    flex: 1,
+    width: '100%',
+  },
+  responseMessage: {
+    width: displayWidth - 50,
+    backgroundColor: 'white',
+    borderRadius: scale(6),
+    padding: scale(7),
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    minHeight: scale(60),
+    alignContent: 'center',
+  },
+  headerText: {
+    justifyContent: 'center',
+    alignContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    fontSize: scale(16),
+    textAlign: 'center',
+    ...g.FHNR,
+    ...g.colorBlue,
+  },
+  emptyArea: {
+    height: scale(120),
+    alignContent: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
   },
 });
 

@@ -88,7 +88,6 @@ export function doGetMypost(callback, errCallback) {
 export function getUserFollowing(callback, errCallback) {
   let requestPath = `${SERVER_PATH}posts/following`;
 
-  console.log('global.accessToken', global.accessToken);
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
     .then((res) => callback(res))
@@ -100,10 +99,50 @@ export function getUserFollowing(callback, errCallback) {
   };
 }
 
-export function getPostLikes(postId, callback, errCallback) {
-  let requestPath = `${SERVER_PATH}posts/likes?postId=${postId}`;
+export function doFollowUser(payload, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}posts/follow`;
   const request = axios
-    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .post(requestPath, payload, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function doUnFollowUser(payload, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}posts/follow`;
+  const request = axios
+    .delete(requestPath, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
+      data: payload,
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function getPostLikes(payload, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}posts/likes`;
+  const request = axios
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
+      params: payload,
+    })
     .then((res) => callback(res))
     .catch((err) => {
       handleError(err, errCallback);
@@ -133,10 +172,6 @@ export function doLikePost(payload, callback, errCallback) {
 export function doDislikePost(payload, callback, errCallback) {
   let requestPath = `${SERVER_PATH}posts/likes`;
 
-  console.log('====================================');
-  console.log('payload', payload);
-  console.log('global.accessToken', global.accessToken);
-  console.log('====================================');
   const request = axios
     .delete(requestPath, {
       headers: {
@@ -144,6 +179,166 @@ export function doDislikePost(payload, callback, errCallback) {
         'content-type': 'application/json',
       },
       data: payload,
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function getComments(filterObject, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}posts/comment/post`;
+
+  const request = axios
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
+      params: filterObject,
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function addUserComment(payload, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}posts/comment`;
+
+  const request = axios
+    .post(requestPath, payload, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function updateUserComment(payload, commentId, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}posts/comment?id=${commentId}`;
+
+  const request = axios
+    .patch(requestPath, payload, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function removeUserComment(commentId, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}posts/comment?id=${commentId}`;
+
+  const request = axios
+    .delete(requestPath, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function doReportPost(payload, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}posts/report`;
+  const request = axios
+    .post(requestPath, payload, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function getUserPostSettings(callback, errCallback) {
+  let requestPath = `${SERVER_PATH}posts/settings`;
+
+  const request = axios
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function getUserNotificationSettings(callback, errCallback) {
+  let requestPath = `${SERVER_PATH}posts/notification/settings`;
+
+  const request = axios
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function doSetUserPostSettings(payload, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}posts/settings`;
+  const request = axios
+    .put(requestPath, payload, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function doSetUserNotificationSettings(payload, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}posts/notification/settings`;
+  const request = axios
+    .put(requestPath, payload, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
     })
     .then((res) => callback(res))
     .catch((err) => {

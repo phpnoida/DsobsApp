@@ -53,6 +53,8 @@ const PhotosMedia = (props) => {
     if (global.isConnected) {
       let cloneData = JSON.parse(JSON.stringify(mediaData));
       cloneData = cloneData.reverse();
+
+      console.log('cloneData', cloneData);
       let requestData = {
         photos: cloneData,
       };

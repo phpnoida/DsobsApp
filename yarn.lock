@@ -1535,6 +1535,11 @@
   resolved "https://registry.yarnpkg.com/@react-native-community/eslint-plugin/-/eslint-plugin-1.1.0.tgz#e42b1bef12d2415411519fd528e64b593b1363dc"
   integrity sha512-W/J0fNYVO01tioHjvYWQ9m6RgndVtbElzYozBq1ZPrHO/iCzlqoySHl4gO/fpCl9QEFjvJfjPgtPMTMlsoq5DQ==
 
+"@react-native-community/hooks@^2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@react-native-community/hooks/-/hooks-2.6.0.tgz#dd5f19601eb3684c6bcdd3df3d0c04cf44c24cff"
+  integrity sha512-emBGKvhJ0h++lLJQ5ejsj+od9G67nEaihjvfSx7/JWvNrQGAhP9U0OZqgb9dkKzor9Ufaj9SGt8RNY97cGzttw==
+
 "@react-native-community/masked-view@^0.1.10":
   version "0.1.11"
   resolved "https://registry.yarnpkg.com/@react-native-community/masked-view/-/masked-view-0.1.11.tgz#2f4c6e10bee0786abff4604e39a37ded6f3980ce"
@@ -6916,6 +6921,11 @@ react-native-parallax-header@^1.1.4:
   resolved "https://registry.yarnpkg.com/react-native-parallax-header/-/react-native-parallax-header-1.1.4.tgz#5f4b072f69f3b24cf2035b3930981669cc6d2066"
   integrity sha512-7RnuBaZondC49G85JKEJvYrELjbrb/42MB6z4WbTeiF58HRHi8dq2aNa1HUwVLe2DS9GGp7hyZ7RkeEZG1wuzA==
 
+react-native-pdf-thumbnail@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/react-native-pdf-thumbnail/-/react-native-pdf-thumbnail-1.0.2.tgz#ca5816bc703b6e7892f815d15c98d43d711f8d7b"
+  integrity sha512-cgc0eeFJ8jF7Qd6mmPc+6zggqeWuW1a6nwR1s6ocp/H8EYG40wo/aU3PBPpgma2deuBokh/DJD5NrlbmPN3+lw==
+
 react-native-pdf@^6.3.0:
   version "6.3.0"
   resolved "https://registry.yarnpkg.com/react-native-pdf/-/react-native-pdf-6.3.0.tgz#17bf7381904ae3a45d4800679c744d3e02457c60"
@@ -7035,6 +7045,11 @@ react-native-swipe-gestures@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/react-native-swipe-gestures/-/react-native-swipe-gestures-1.0.5.tgz#a172cb0f3e7478ccd681fd36b8bfbcdd098bde7c"
   integrity sha512-Ns7Bn9H/Tyw278+5SQx9oAblDZ7JixyzeOczcBK8dipQk2pD7Djkcfnf1nB/8RErAmMLL9iXgW0QHqiII8AhKw==
+
+react-native-swipe-list@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/react-native-swipe-list/-/react-native-swipe-list-0.0.2.tgz#fc0c9c5317902d669b9bf768fc4fb1edb1557f3f"
+  integrity sha512-NMa/924vkikVnmE9TgXZLiXqfQaBSwM5vpwOZ+wp7eFGdZhYFuW9rblaesx2y6sbDbJGjwlPPlSNhzBWPUU61A==
 
 react-native-track-player@^1.2.7:
   version "1.2.7"

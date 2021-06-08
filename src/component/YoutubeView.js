@@ -11,7 +11,9 @@ import {IconType} from '../helper/Constants';
 
 let _youTubeRef = React.createRef();
 const YoutubeView = (props) => {
-  const [playVideo, setPlayVideo] = useState(false);
+  const [playVideo, setPlayVideo] = useState(
+    props.autoPlay ? props.autoPlay : false,
+  );
   const [thumbnail, setThumbnail] = useState('');
   const [youtubeId, setyoutubeId] = useState('');
 

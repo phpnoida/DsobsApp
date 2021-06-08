@@ -6,6 +6,10 @@ import {
   TextInput,
   StyleSheet,
   ScrollView,
+  Modal,
+  Alert,
+  Dimensions,
+  Keyboard,
 } from 'react-native';
 import {scale} from '../../../theme/Scalling';
 import g from '../../../theme/global';
@@ -15,33 +19,196 @@ import {IconType} from '../../../helper/Constants';
 import AutoSuggestUser from '../../../component/AutoSuggestUser';
 import ProgressImage from '../../../component/ProgresImage';
 import CommonButton from '../../../component/CommonButton';
+import Helpers from '../../../helper/Helper';
+import {
+  getUserFollowing,
+  doFollowUser,
+  doUnFollowUser,
+} from '../../../Actions/TickerActions';
+import {getDirectory} from '../../../Actions/DirectoryActions';
 
+const {width: displayWidth} = Dimensions.get('window');
 let searchVal = '';
 
-let itemArray = [
-  {title: 'Name-1', key: 1},
-  {title: 'Name-2', key: 1},
-  {title: 'Name-3', key: 1},
-  {title: 'Name-4', key: 1},
-  {title: 'Name-5', key: 1},
-  {title: 'Name-6', key: 1},
-];
+let responseMessage = '';
+let selectedUser = null;
 
 const FollowUser = ({params}) => {
   const [searchedUser, setSearchedUser] = useState([]);
-  const [selectedUsers, setSelectedUsers] = useState(itemArray);
   const [searchUserQuery, setSearchUserQuery] = useState('');
   const [removeFollowing, setRemoveFollowing] = useState(false);
   const [showNoFollowing, setShowNoFollowing] = useState(false);
+  const [myFollowing, setMyFollowing] = useState([]);
+  const [showModal, setShowModal] = useState(false);
 
-  const removeUser = (index) => {
-    let oldData = selectedUsers;
-    oldData.splice(index, 1);
-    setSelectedUsers([...oldData]);
-
-    if (oldData.length === 0) {
-      setShowNoFollowing(true);
+  useEffect(() => {
+    if (global.isConnected) {
+      getMyFollowing();
     }
+    return () => {};
+  }, []);
+
+  /*****
+   *
+   * API Section
+   *
+   */
+
+  const doSearchUser = (query) => {
+    getDirectory(
+      '1',
+      query,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (searchVal.length > 0) {
+              setSearchedUser([...data.data]);
+            } else {
+              setSearchedUser([]);
+            }
+          }
+        }
+      },
+      (error) => {
+        setSearchedUser([]);
+        console.log('error', error);
+      },
+    );
+  };
+
+  const getMyFollowing = () => {
+    getUserFollowing(
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              if (data.data !== null && data.data.following.length > 0) {
+                setMyFollowing([...data.data.following]);
+              } else {
+                setShowNoFollowing(true);
+              }
+            }
+          }
+        }
+      },
+      (error) => {},
+    );
+  };
+
+  const followUser = (userId) => {
+    let requestObject = {
+      userId: userId,
+    };
+    doFollowUser(
+      requestObject,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            if (data.status) {
+              responseMessage = `You successfully follow ${Helpers.concatName(
+                selectedUser,
+              )}!`;
+
+              getMyFollowing();
+            } else {
+              responseMessage = 'Error while following!';
+            }
+
+            setShowModal(true);
+            setTimeout(() => {
+              setShowModal(false);
+            }, 2000);
+          }
+        }
+      },
+      (error) => {
+        console.log('err', error);
+      },
+    );
+  };
+
+  const unFollowUser = (userId) => {
+    let requestObject = {
+      userId: userId,
+    };
+    doUnFollowUser(
+      requestObject,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              responseMessage = `You successfully unfollow ${Helpers.concatName(
+                selectedUser,
+              )}!`;
+
+              getMyFollowing();
+            } else {
+              responseMessage = 'Error while following!';
+            }
+
+            setShowModal(true);
+            setTimeout(() => {
+              setShowModal(false);
+            }, 2000);
+          }
+        }
+      },
+      (error, statusCode) => {
+        console.log('error', error);
+        console.log('statusCode', statusCode);
+      },
+    );
+  };
+
+  const removeIndex = () => {
+    Alert.alert(
+      'Are you sure you want to unfollow?',
+      '',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {
+          text: 'Ok',
+          onPress: () => {
+            removeUser();
+          },
+        },
+      ],
+      {cancelable: false},
+    );
+  };
+
+  const removeUser = () => {
+    console.log('====================================');
+    console.log('selectedUser', selectedUser);
+    console.log('====================================');
+    unFollowUser(selectedUser._id);
   };
 
   const showFollowing = (index, item) => {
@@ -59,15 +226,25 @@ const FollowUser = ({params}) => {
                 borderRadius: scale(50),
               },
             ]}>
-            <ProgressImage
-              source={GlobalInclude.Assets.DefaultProfile}
-              containerStyle={styles.imageStyle}
-              mode={'cover'}
-            />
+            {item.profileImg !== undefined &&
+            item.profileImg !== null &&
+            item.profileImg !== '' ? (
+              <ProgressImage
+                source={{uri: item.profileImg}}
+                containerStyle={styles.imageStyle}
+                mode={'cover'}
+              />
+            ) : (
+              <ProgressImage
+                source={GlobalInclude.Assets.DefaultProfile}
+                containerStyle={styles.imageStyle}
+                mode={'cover'}
+              />
+            )}
           </View>
           <View style={[grid.justifyContentCenter]}>
             <Text style={[g.fs15, g.FHNM, g.colorBlue]}>
-              {item.title} - 1994
+              {Helpers.concatName(item)}
             </Text>
             <Text
               style={[
@@ -79,7 +256,7 @@ const FollowUser = ({params}) => {
                 g.txtCenterVertical,
                 g.mt5,
               ]}>
-              Batch - 1994
+              Batch - {item.batch}
             </Text>
           </View>
         </TouchableOpacity>
@@ -88,7 +265,8 @@ const FollowUser = ({params}) => {
           <TouchableOpacity
             activeOpacity={1}
             onPress={() => {
-              removeUser(index);
+              selectedUser = item;
+              removeIndex(index);
             }}
             style={[g.mr7, grid.justifyContentCenter, grid.alignItems]}>
             <GlobalInclude.BaseIcon
@@ -104,6 +282,38 @@ const FollowUser = ({params}) => {
     );
   };
 
+  const checkFollow = (row) => {
+    let oldData = myFollowing;
+    let found = false,
+      ownUser = false;
+    for (let i = 0; i < oldData.length; i++) {
+      const element = oldData[i];
+      if (element._id === row._id) {
+        found = true;
+        break;
+      } else if (row._id === global.userId) {
+        ownUser = true;
+        break;
+      }
+    }
+    if (found) {
+      Alert.alert(
+        'Already Follow',
+        `You already follow ${Helpers.concatName(row)}`,
+      );
+    } else if (ownUser) {
+      Alert.alert('Error', 'You cannot follow your self!');
+    } else {
+      selectedUser = row;
+      setSearchUserQuery('');
+      setSearchedUser([]);
+      Keyboard.dismiss();
+      setTimeout(() => {
+        followUser(row._id);
+      }, 200);
+    }
+  };
+
   return (
     <View style={[grid.flex1, g.pl10, g.pr10]}>
       {showNoFollowing ? (
@@ -117,7 +327,9 @@ const FollowUser = ({params}) => {
               showLoader={false}
               title={'Follow'}
               onPress={() => {
-                setSelectedUsers(itemArray);
+                setSearchedUser([]);
+                setSearchUserQuery('');
+                setMyFollowing([]);
                 setShowNoFollowing(false);
               }}
             />
@@ -138,11 +350,11 @@ const FollowUser = ({params}) => {
               onChangeText={(value) => {
                 searchVal = value;
                 setSearchUserQuery(value);
-                // if (value.length > 0) {
-                //   doSearchUser(value);
-                // } else {
-                //   setSearchedUser([]);
-                // }
+                if (value.length > 0) {
+                  doSearchUser(value);
+                } else {
+                  setSearchedUser([]);
+                }
               }}
             />
           </View>
@@ -150,14 +362,7 @@ const FollowUser = ({params}) => {
             <AutoSuggestUser
               searchedUser={searchedUser}
               onPress={(row, index) => {
-                let oldData = selectedUsers;
-                if (oldData.length < 3) {
-                  searchVal = '';
-                  oldData.push(row);
-                  setSearchUserQuery('');
-                  setSelectedUsers([...oldData]);
-                  setSearchedUser([]);
-                }
+                checkFollow(row);
               }}
             />
           )}
@@ -165,13 +370,13 @@ const FollowUser = ({params}) => {
           <View style={grid.flex1}>
             <ScrollView>
               <View style={[g.mt10]}>
-                {selectedUsers.map((item, index) => {
+                {myFollowing.map((item, index) => {
                   return <View>{showFollowing(index, item)}</View>;
                 })}
               </View>
             </ScrollView>
           </View>
-          {selectedUsers.length > 0 && (
+          {myFollowing.length > 0 && (
             <View style={[styles.filterButton, g.mb10]}>
               <CommonButton
                 showLoader={false}
@@ -183,6 +388,23 @@ const FollowUser = ({params}) => {
             </View>
           )}
         </View>
+      )}
+
+      {showModal && (
+        <Modal
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => {
+            setShowModal(!showModal);
+          }}
+          hardwareAccelerated={true}
+          visible={showModal}>
+          <View style={styles.centeredView}>
+            <View style={styles.responseMessage}>
+              <Text style={styles.headerText}>{responseMessage}</Text>
+            </View>
+          </View>
+        </Modal>
       )}
     </View>
   );
@@ -206,6 +428,44 @@ const styles = StyleSheet.create({
     width: scale(150),
     alignContent: 'center',
     alignSelf: 'center',
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalView: {
+    backgroundColor: 'rgba(62,62,62,0.5)',
+    flex: 1,
+    width: '100%',
+  },
+  responseMessage: {
+    width: displayWidth - 50,
+    backgroundColor: 'white',
+    borderRadius: scale(6),
+    padding: scale(7),
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    minHeight: scale(60),
+    alignContent: 'center',
+  },
+  headerText: {
+    justifyContent: 'center',
+    alignContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    fontSize: scale(16),
+    textAlign: 'center',
+    ...g.FHNR,
+    ...g.colorBlue,
   },
 });
 
