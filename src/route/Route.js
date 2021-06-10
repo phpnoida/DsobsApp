@@ -47,15 +47,16 @@ import PostTicker from '../screen/Ticker/AddPost/';
 import Settings from '../screen/Ticker/Settings/';
 import Etiquette from '../screen/Ticker/Etiquette';
 import MyPreviousPost from '../screen/Ticker/MyPreviousPost';
-import SwipeDemo from '../screen/SwipeDemo';
+import Comments from '../screen/Ticker/Comments';
+import ImageDemo from '../ImageDemo';
 const Stack = createStackNavigator();
 
 export const RootNavigators = (baseRoute) => {
   return (
-    <Stack.Navigator initialRouteName={'SwipeDemo'}>
+    <Stack.Navigator initialRouteName={baseRoute}>
       <Stack.Screen
-        name="SwipeDemo"
-        component={SwipeDemo}
+        name="ImageDemo"
+        component={ImageDemo}
         options={{headerShown: false}}
       />
       <Stack.Screen
@@ -291,6 +292,11 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="MyPreviousPost"
         component={MyPreviousPost}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="Comments"
+        component={Comments}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

@@ -11,10 +11,10 @@ import {
 } from '../../../../Actions/TickerActions';
 
 let itemArray = [
-  {text: 'Send Notification on All Replies', key: 1, id: 1},
+  {text: 'Send No Notification', key: 4, id: 0},
   {text: 'Twice a day', key: 2, id: 2},
   {text: 'Once a day', key: 3, id: 3},
-  {text: 'Send No Notification', key: 4, id: 0},
+  {text: 'Send Notification on All Replies', key: 1, id: 1},
 ];
 
 let selectedSetting = '';
@@ -47,20 +47,12 @@ const MyComments = ({params}) => {
                 let settings = data.data;
 
                 if (
-                  settings.myCommentNotifySettings &&
                   settings.myCommentNotifySettings !== undefined &&
                   settings.myCommentNotifySettings !== null
                 ) {
                   //myCommentNotifySettings=  0-no notification 1-send notification on all comments 2-twice a day 3-one a day
                   let myCommentNotifySettings =
                     settings.myCommentNotifySettings;
-
-                  console.log('====================================');
-                  console.log(
-                    'myCommentNotifySettings',
-                    settings.myCommentNotifySettings,
-                  );
-                  console.log('====================================');
                   switch (myCommentNotifySettings) {
                     case 0:
                       setSelectedFilter('Send No Notification');
@@ -78,8 +70,8 @@ const MyComments = ({params}) => {
                       setSelectedFilter('');
                       break;
                   }
-                  setFilterList(itemArray);
                 }
+                setFilterList(itemArray);
               }
             }
           }

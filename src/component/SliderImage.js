@@ -69,7 +69,7 @@ const SliderImage = ({
           <Pdf
             singlePage={true}
             source={{
-              uri: 'https://dsobs-new.s3.ap-south-1.amazonaws.com/1619262480_777933_1619262475866.pdf',
+              uri: item.file,
             }}
             style={{
               aspectRatio: 1 / 1,

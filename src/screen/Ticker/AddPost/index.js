@@ -30,12 +30,15 @@ import {
 } from '../../../helper/mediaHelper';
 import ModelAlert from '../../../component/ModalAlert';
 import {getCategories, addPost, editPost} from '../../../Actions/TickerActions';
+import {getScrappedData} from '../../../Actions/CommonActions';
 
 let selectedIndex = -1;
 let responseMessage = '';
 let isSuccess = false;
 let inEditMode = false;
 let postId = '';
+let newsBody = '';
+let newsImage = '';
 const PostTicker = ({route, navigation}) => {
   const categoryRef = useRef();
   const uploadRef = useRef();
@@ -55,6 +58,8 @@ const PostTicker = ({route, navigation}) => {
   const [tag, setTag] = useState('');
   const [showRemoveAlert, setShowRemoveAlert] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [disableImage, setDisableImage] = useState(false);
+  const [disableDoc, setDisableDoc] = useState(false);
 
   useEffect(() => {
     selectedIndex = -1;
@@ -77,51 +82,52 @@ const PostTicker = ({route, navigation}) => {
   const setupDefaultData = (defaultData) => {
     if (defaultData && defaultData !== undefined && defaultData !== null) {
       setCategoryId(defaultData.categoryId);
-      setSelectedCategory(defaultData.categoryMsg);
+      setSelectedCategory(Helper.capitalize(defaultData.categoryMsg));
       setInputValue(defaultData.body);
       setMyComment(defaultData.comment);
+      setSelectedTags(defaultData.tags);
+
+      postId = defaultData._id;
+
+      console.log('====================================');
+      console.log('defaultData', JSON.stringify(defaultData));
+      console.log('====================================');
 
       if (
         defaultData.links !== undefined &&
         defaultData.links !== null &&
         defaultData.links.length > 0
       ) {
-        setYoutubeLink(defaultData.links[0]);
-      } else if (
-        defaultData.videoLinks !== undefined &&
-        defaultData.videoLinks !== null &&
-        defaultData.videoLinks.length > 0
-      ) {
-        setYoutubeLink(defaultData.videoLinks[0]);
-      }
+        let tmpMedia = [];
+        defaultData.links.map((child) => {
+          switch (child.type) {
+            case 1:
+              tmpMedia.push({
+                fileName: child.file,
+                thumbnail: child.file,
+                type: 1,
+              });
+              break;
 
-      setSelectedTags(defaultData.tags);
+            case 2:
+              setYoutubeLink(child.file);
+              break;
 
-      let tmpData = [];
-      if (
-        defaultData.imageLinks !== undefined &&
-        defaultData.imageLinks !== null
-      ) {
-        defaultData.imageLinks.map((child) => {
-          tmpData.push({
-            fileName: child,
-            thumbnail: child,
-            type: 1,
-          });
+            case 3:
+              tmpMedia.push({
+                fileName: child.file,
+                thumbnail: child.file,
+                type: 3,
+              });
+              break;
+
+            default:
+              break;
+          }
         });
-      }
 
-      if (defaultData.pdfLinks !== undefined && defaultData.pdfLinks !== null) {
-        defaultData.pdfLinks.map((child) => {
-          tmpData.push({
-            fileName: child,
-            thumbnail: child,
-            type: 3,
-          });
-        });
+        setMediaData([...tmpMedia]);
       }
-
-      postId = defaultData._id;
     }
   };
 
@@ -163,23 +169,81 @@ const PostTicker = ({route, navigation}) => {
     );
   };
 
+  const doScrapping = (onDone) => {
+    getScrappedData(
+      youtubeLink,
+      (response) => {
+        if (
+          response &&
+          response !== null &&
+          response.data &&
+          response.data !== undefined &&
+          response.data !== null
+        ) {
+          let data = response.data;
+          console.log('====================================');
+          console.log('data', JSON.stringify(data));
+          console.log('====================================');
+          if (data.status) {
+            let child = data.data;
+            newsBody =
+              child.description !== undefined && child.description !== null
+                ? child.description
+                : '';
+
+            if (
+              child.image !== undefined &&
+              child.image !== null &&
+              child.image !== ''
+            ) {
+              newsImage = {
+                file: child.image,
+                type: 1,
+              };
+            }
+            setTimeout(() => {
+              onDone();
+            }, 200);
+          } else {
+            setTimeout(() => {
+              onDone();
+            }, 200);
+          }
+        } else {
+          setTimeout(() => {
+            onDone();
+          }, 200);
+        }
+      },
+      (error, code) => {
+        console.log('error', error, code);
+        setTimeout(() => {
+          onDone();
+        }, 200);
+      },
+    );
+  };
+
   const savePostData = () => {
-    let imageLinks = [],
-      pdfLinks = [],
-      gifLinks = [],
-      links = [];
+    let links = [];
 
     if (youtubeLink !== '') {
-      links.push({file: youtubeLink, type: 2});
+      if (categoryId !== 4) {
+        links.push({file: youtubeLink, type: 2});
+      }
     }
 
-    mediaData.map((child) => {
-      links.push({file: child.thumbnail, type: child.type});
-    });
+    if (categoryId !== 4) {
+      mediaData.map((child) => {
+        links.push({file: child.thumbnail, type: child.type});
+      });
+    } else {
+      links.push(newsImage);
+    }
 
     let requestObject = {
       categoryId: categoryId,
-      body: inputValue,
+      body: categoryId !== 4 ? inputValue : newsBody,
       comment: myComment,
       tags: selectedTags,
       links: links,
@@ -203,7 +267,6 @@ const PostTicker = ({route, navigation}) => {
   };
 
   const uploadPostData = (requestObject) => {
-    setSubmitting(true);
     addPost(
       requestObject,
       (response) => {
@@ -216,14 +279,11 @@ const PostTicker = ({route, navigation}) => {
           ) {
             let data = response.data;
 
-            console.log('====================================');
-            console.log('data', data);
-            console.log('====================================');
             if (data.status) {
               isSuccess = true;
-              responseMessage =
-                'Congratulations your Post has been submitted successfully.';
-              setShowErrorMessage(true);
+              setTimeout(() => {
+                navigation.goBack();
+              }, 250);
             } else {
               responseMessage = 'Error while posting your request!';
               setShowErrorMessage(true);
@@ -254,9 +314,9 @@ const PostTicker = ({route, navigation}) => {
             let data = response.data;
             if (data.status) {
               isSuccess = true;
-              responseMessage =
-                'Congratulations your Post has been updated successfully.';
-              setShowErrorMessage(true);
+              setTimeout(() => {
+                navigation.goBack();
+              }, 250);
             } else {
               responseMessage = 'Error while updating your request!';
               setShowErrorMessage(true);
@@ -269,6 +329,17 @@ const PostTicker = ({route, navigation}) => {
         Alert.alert('Something went wrong', error);
       },
     );
+  };
+
+  const completePosting = () => {
+    setSubmitting(true);
+    if (categoryId === 4) {
+      doScrapping(() => {
+        savePostData();
+      });
+    } else {
+      savePostData();
+    }
   };
 
   /*****
@@ -289,7 +360,7 @@ const PostTicker = ({route, navigation}) => {
         setErrorMessage({inputValue: 'This field is required'});
       } else {
         if (global.isConnected) {
-          savePostData();
+          completePosting();
         }
       }
     } else if (categoryId === 4 || categoryId === 5 || categoryId === 9) {
@@ -297,7 +368,7 @@ const PostTicker = ({route, navigation}) => {
         setErrorMessage({uploadLink: 'This field is required'});
       } else {
         if (global.isConnected) {
-          savePostData();
+          completePosting();
         }
       }
     } else if (categoryId === 8) {
@@ -305,7 +376,7 @@ const PostTicker = ({route, navigation}) => {
         setErrorMessage({uploadImage: 'This field is required'});
       } else {
         if (global.isConnected) {
-          savePostData();
+          completePosting();
         }
       }
     }
@@ -384,6 +455,11 @@ const PostTicker = ({route, navigation}) => {
             let oldData = mediaData;
             oldData.splice(index, 1);
             setMediaData([...oldData]);
+
+            if (oldData.length === 0) {
+              setDisableDoc(false);
+              setDisableImage(false);
+            }
           },
         },
       ],
@@ -454,12 +530,26 @@ const PostTicker = ({route, navigation}) => {
             activeOpacity={1}
             style={styles.addTag}
             onPress={() => {
-              if (categoryId === 8) {
-                if (uploadRef.current !== null) {
-                  uploadRef.current.open();
+              if (mediaData.length < 5) {
+                if (categoryId === 8) {
+                  if (uploadRef.current !== null) {
+                    uploadRef.current.open();
+                  }
+                } else {
+                  pickMedia();
                 }
               } else {
-                pickMedia();
+                if (categoryId === 8) {
+                  Alert.alert(
+                    'Max Upload Reached',
+                    'You can upload max 5 media',
+                  );
+                } else {
+                  Alert.alert(
+                    'Max Image Reached',
+                    'You can upload max 5 images',
+                  );
+                }
               }
             }}>
             {showImageLoading ? (
@@ -839,12 +929,25 @@ const PostTicker = ({route, navigation}) => {
 
       <UploadMedia
         refRBSheet={uploadRef}
-        media={{image: false, video: true, document: false, audio: true}}
+        media={{
+          image: disableImage,
+          video: true,
+          document: disableDoc,
+          audio: true,
+        }}
         onPickMedia={(media) => {
           uploadRef.current.close();
           if (media !== undefined && media !== null) {
             console.log('media', media);
+
             let oldData = mediaData;
+            if (oldData.length === 0) {
+              if (media.type === 1) {
+                setDisableDoc(true);
+              } else if (media.type === 3) {
+                setDisableImage(true);
+              }
+            }
             oldData.splice(0, 0, media);
             setMediaData([...oldData]);
           }

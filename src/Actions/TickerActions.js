@@ -263,6 +263,24 @@ export function removeUserComment(commentId, callback, errCallback) {
   };
 }
 
+export function doReportComment(payload, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}posts/comment/report`;
+  const request = axios
+    .post(requestPath, payload, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
 export function doReportPost(payload, callback, errCallback) {
   let requestPath = `${SERVER_PATH}posts/report`;
   const request = axios

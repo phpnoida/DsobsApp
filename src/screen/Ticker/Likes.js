@@ -41,8 +41,10 @@ const Likes = ({postId, navigation, onClickUser}) => {
   const [postLikeData, setPostLikeData] = useState([]);
 
   useEffect(() => {
-    resetCount();
-    getPostLikeDetail();
+    setTimeout(() => {
+      resetCount();
+      getPostLikeDetail();
+    }, 500);
     return () => {};
   }, []);
 
@@ -184,7 +186,10 @@ const Likes = ({postId, navigation, onClickUser}) => {
       postLikeData !== null &&
       postLikeData.length > 0
     ) {
-      return postLikeData.find((o) => o.userId._id === global.userId);
+      return postLikeData.find((o) => o.userId._id === global.userId) ===
+        undefined
+        ? null
+        : postLikeData.find((o) => o.userId._id === global.userId);
     } else {
       return null;
     }

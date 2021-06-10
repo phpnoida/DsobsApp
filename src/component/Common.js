@@ -136,7 +136,13 @@ export const showUser = (image, title, subTitle, extraTitle, onPress) => {
         </View>
         <View style={{minHeight: 65, flex: 1}}>
           <Text
-            style={[g.fs14, g.FHNM, g.txtLeft, g.colorBlack]}
+            style={[
+              g.fs14,
+              g.FHNM,
+              g.txtLeft,
+              g.colorBlack,
+              GlobalInclude.AppStyle.transform,
+            ]}
             numberOfLines={2}>
             {title && title !== undefined && title !== null && title !== ''
               ? title

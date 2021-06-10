@@ -23,7 +23,6 @@ import OptionsSheet from 'react-native-raw-bottom-sheet';
 import {generateMenuOption} from '../../component/Common';
 import Helpers from '../../helper/Helper';
 import {renderNoDataComponent} from '../../component/Common';
-import Comments from './Comments';
 import Likes from './Likes';
 import SingleSearchWithFilter from '../../component/SingleSearchWithFilter';
 import {
@@ -62,7 +61,6 @@ const Ticker = ({navigation}) => {
   const refOptions = useRef();
   const refPostOptions = useRef();
   const refPostLikes = useRef();
-  const refPostComments = useRef();
   const refFlatList = useRef();
   const refCategory = useRef();
 
@@ -89,6 +87,7 @@ const Ticker = ({navigation}) => {
     const unsubscribe = navigation.addListener('focus', () => {
       if (global.isConnected) {
         postMode = '';
+        setFirstTimeLoad(true);
         resetCount();
         getMyFollowing();
         getCategory();
@@ -144,6 +143,10 @@ const Ticker = ({navigation}) => {
             if (data.status) {
               let categoryArray = [];
               if (data.data !== null) {
+                categoryArray.push({
+                  key: -1,
+                  text: 'All Posts',
+                });
                 data.data.map((item, index) => {
                   categoryArray.push({
                     key: item.id,
@@ -151,7 +154,7 @@ const Ticker = ({navigation}) => {
                   });
                 });
               }
-
+              setSelectedCategory('All Posts');
               setCategoryList(categoryArray);
             }
           }
@@ -171,7 +174,7 @@ const Ticker = ({navigation}) => {
       },
       (code, error) => {
         setIsRefreshing(false);
-        setFirstTimeLoad(false);
+        //setFirstTimeLoad(false);
         setPostContent([]);
         console.log('error->', error);
       },
@@ -200,6 +203,9 @@ const Ticker = ({navigation}) => {
           } else {
             if (filterObject.index === 0) {
               totalCount = data.totalCount;
+              // console.log('====================================');
+              // console.log('data.data', JSON.stringify(data.data));
+              // console.log('====================================');
               setPostContent([...data.data]);
             } else {
               setPostContent([...postContent, ...data.data]);
@@ -221,6 +227,7 @@ const Ticker = ({navigation}) => {
         }
       }
     }
+
     setFirstTimeLoad(false);
   };
 
@@ -405,7 +412,10 @@ const Ticker = ({navigation}) => {
       myFollowing !== null &&
       myFollowing.length > 0
     ) {
-      return myFollowing.find((o) => o._id === selectedFeed.author.id);
+      return myFollowing.find((o) => o._id === selectedFeed.author.id) ===
+        undefined
+        ? null
+        : myFollowing.find((o) => o._id === selectedFeed.author.id);
     } else {
       return null;
     }
@@ -580,33 +590,12 @@ const Ticker = ({navigation}) => {
     );
   };
 
-  const postComments = () => {
+  const renderItem = ({item, index}) => {
     return (
-      <OptionsSheet
-        ref={refPostComments}
-        minClosingHeight={50}
-        height={displayHeight / 2 + 100}
-        duration={200}
-        closeOnDragDown={false}
-        onClose={() => {
-          resetCount();
-          getTickers(filterObject);
-        }}
-        keyboardAvoidingViewEnabled={false}
-        customStyles={{
-          container: GlobalInclude.AppStyle.sheetContainer,
-        }}>
-        {selectedFeed !== null && (
-          <Comments navigation={navigation} postId={selectedFeed._id} />
-        )}
-      </OptionsSheet>
-    );
-  };
-
-  const renderItem = useCallback(
-    ({item, index}) => (
       <PostFeedCard
+        //key={index}
         itemIndex={index}
+        postId={item._id}
         author={item.author}
         status={item.status}
         postedAt={item.postedAt}
@@ -637,8 +626,6 @@ const Ticker = ({navigation}) => {
         }}
         onClickMediaOption={(type) => {
           selectedIndex = index;
-          selectedPostId = item._id;
-
           if (type === 1) {
             //getPostLikeDetail(item._id);
             setSelectedFeed(item);
@@ -652,22 +639,12 @@ const Ticker = ({navigation}) => {
               }
             }, 200);
           } else if (type === 2) {
-            setSelectedFeed(item);
-
-            setTimeout(() => {
-              if (
-                refPostComments.current !== undefined &&
-                refPostComments.current !== null
-              ) {
-                refPostComments.current.open();
-              }
-            }, 200);
+            navigation.navigate('Comments', {data: {postId: item._id}});
           }
         }}
       />
-    ),
-    [navigation],
-  );
+    );
+  };
 
   const keyExtractor = useCallback((item, index) => index, []);
 
@@ -741,7 +718,10 @@ const Ticker = ({navigation}) => {
           setSelectedCategory(Helpers.capitalize(value));
           refCategory.current.close();
           resetCount();
-          filterObject.categoryId = item.key;
+          if (item.key !== -1) {
+            filterObject.categoryId = item.key;
+          }
+
           setTimeout(() => {
             getTickers(filterObject);
           }, 200);
@@ -775,38 +755,41 @@ const Ticker = ({navigation}) => {
           {firstTimeLoad ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
               <ActivityIndicator
-                size={'small'}
+                size={'large'}
                 color={GlobalInclude.Color.ColorPrimary}
               />
             </View>
           ) : (
             <View style={[GlobalInclude.AppStyle.fill, g.bggray3]}>
-              <Animated.FlatList
-                ref={refFlatList}
-                removeClippedSubviews={Platform.OS !== 'web'}
-                showsVerticalScrollIndicator={false}
-                extraData={postContent}
-                data={postContent}
-                CellRendererComponent={renderItem}
-                keyExtractor={keyExtractor}
-                onEndReachedThreshold={0.1}
-                onEndReached={onEndReached}
-                refreshing={isRefreshing}
-                onRefresh={handleRefresh}
-                ListEmptyComponent={renderNoDataComponent}
-                ListFooterComponent={renderFooter}
-                scrollEventThrottle={16}
-                contentContainerStyle={[
-                  {
+              {postContent.length === 0 ? (
+                renderNoDataComponent()
+              ) : (
+                <Animated.FlatList
+                  ref={refFlatList}
+                  removeClippedSubviews={Platform.OS !== 'web'}
+                  showsVerticalScrollIndicator={false}
+                  extraData={postContent}
+                  data={postContent}
+                  CellRendererComponent={renderItem}
+                  keyExtractor={keyExtractor}
+                  onEndReachedThreshold={0.1}
+                  onEndReached={onEndReached}
+                  refreshing={isRefreshing}
+                  onRefresh={handleRefresh}
+                  ListEmptyComponent={renderNoDataComponent}
+                  ListFooterComponent={renderFooter}
+                  scrollEventThrottle={16}
+                  contentContainerStyle={{
                     marginTop: animatedHeight,
-                    paddingBottom: scale(130),
-                  },
-                ]}
-                onScroll={Animated.event(
-                  [{nativeEvent: {contentOffset: {y: curY}}}],
-                  {useNativeDriver: true},
-                )}
-              />
+                    paddingBottom: postContent.length === 0 ? 0 : scale(130),
+                  }}
+                  onScroll={Animated.event(
+                    [{nativeEvent: {contentOffset: {y: curY}}}],
+                    {useNativeDriver: true},
+                  )}
+                />
+              )}
+
               {renderHeader()}
             </View>
           )}
@@ -815,7 +798,6 @@ const Ticker = ({navigation}) => {
       {userOptions()}
       {postOptions()}
       {postLikes()}
-      {postComments()}
       {showCategories()}
 
       {showModal && (

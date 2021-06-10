@@ -6,23 +6,20 @@ import {scale} from '../theme/Scalling';
 import grid from '../theme/grid';
 import g from '../theme/global';
 
-const MoreLessComponent = ({truncatedText, fullText, showMore}) => {
+const MoreLessComponent = ({truncatedText, fullText, showMore, fontSize}) => {
   const [more, setMore] = React.useState(false);
   return (
-    <AutoSizeText
-      fontSizePresets={[26, 22, 18]}
-      numberOfLines={more ? undefined : 3}
-      minFontSize={26}
-      fontSize={26}
+    <Text
       style={[
-        {marginHorizontal: scale(6), marginVertical: scale(6)},
+        {
+          marginHorizontal: scale(6),
+          marginVertical: scale(6),
+          fontSize: fontSize,
+        },
         g.colorBlack,
         g.FHNR,
-      ]}
-      mode={
-        more ? ResizeTextMode.min_font_size : ResizeTextMode.preset_font_sizes
-      }>
-      {!more ? `${truncatedText}...` : fullText}
+      ]}>
+      {!more ? (showMore ? `${truncatedText}...` : truncatedText) : fullText}
       {showMore && (
         <TouchableOpacity
           onPress={() => setMore(!more)}
@@ -44,24 +41,23 @@ const MoreLessComponent = ({truncatedText, fullText, showMore}) => {
           </Text>
         </TouchableOpacity>
       )}
-    </AutoSizeText>
+    </Text>
   );
 };
 
 const MoreInfo = ({text, linesToTruncate}) => {
   const [clippedText, setClippedText] = React.useState(false);
   const [showMore, setShowMore] = React.useState(true);
+  const [fontSize, setFontSize] = React.useState(scale(15));
   return clippedText ? (
     <MoreLessComponent
       truncatedText={clippedText}
       fullText={text}
       showMore={showMore}
+      fontSize={fontSize}
     />
   ) : (
-    <AutoSizeText
-      fontSizePresets={[26, 22, 18]}
-      numberOfLines={linesToTruncate}
-      mode={ResizeTextMode.preset_font_sizes}
+    <Text
       style={[
         {marginHorizontal: scale(6), marginVertical: scale(6)},
         g.colorBlack,
@@ -70,7 +66,14 @@ const MoreInfo = ({text, linesToTruncate}) => {
       onTextLayout={(event) => {
         //get all lines
         const {lines} = event.nativeEvent;
-        //get lines after it truncate
+        console.log('length', lines.length);
+        if (lines.length < 2) {
+          setFontSize(scale(24));
+        } else if (lines.length > 2 && lines.length < 5) {
+          setFontSize(scale(20));
+        } else if (lines.length > 4) {
+          setFontSize(scale(18));
+        }
         let clipped = lines
           .splice(0, linesToTruncate)
           .map((line) => line.text)
@@ -82,7 +85,7 @@ const MoreInfo = ({text, linesToTruncate}) => {
         setClippedText(clipped);
       }}>
       {text}
-    </AutoSizeText>
+    </Text>
   );
 };
 

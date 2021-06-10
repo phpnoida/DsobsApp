@@ -1,5 +1,11 @@
 import React, {PureComponent} from 'react';
-import {View, StyleSheet, TouchableOpacity, Text} from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  Dimensions,
+} from 'react-native';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import {scale} from '../theme/Scalling';
 import g from '../theme/global';
@@ -11,11 +17,16 @@ import Helpers from '../helper/Helper';
 import MoreInfo from './MoreInfo';
 import FlatListSlider from './FlatListSlider';
 import SliderImage from './SliderImage';
+import ResponsiveImage from './ResponsiveImage';
+import Pdf from 'react-native-pdf';
+import FitImage from './FitImage';
+
+const {width: displayWidth} = Dimensions.get('window');
 
 class PostFeedCard extends PureComponent {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {visibility: true};
   }
 
   showMediaIcon(status, iconName, iconType, label, onPress) {
@@ -48,12 +59,320 @@ class PostFeedCard extends PureComponent {
     );
   }
 
-  render() {
+  _renderImage = (url) => {
+    return (
+      <ProgressImage
+        source={{uri: url}}
+        containerStyle={{width: '100%', aspectRatio: 1 / 1}}
+        mode={'contain'}
+      />
+    );
+  };
+
+  _renderDoc = (url) => {
+    return (
+      <View>
+        <View style={{width: '100%', aspectRatio: 1 / 1}}>
+          <Pdf
+            singlePage={true}
+            source={{
+              uri: url,
+            }}
+            style={styles.centerDoc}
+          />
+          <View style={styles.pdfIcon}>
+            <GlobalInclude.BaseIcon
+              containerStyle={{height: scale(36), width: scale(36)}}
+              iconColor={'#E61A2D'}
+              iconName={'file-pdf-o'}
+              iconSize={scale(36)}
+              iconType={IconType[4]}
+            />
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  _showPDFThumb = () => {
     return (
       <View
-        onLayout={this.props.onLayout}
-        style={[g.mb15, g.bgWhite, g.pb7]}
-        key={this.props.itemIndex}>
+        style={[
+          GlobalInclude.AppStyle.fillCenter,
+          g.lightGray,
+          {marginHorizontal: 3, marginVertical: 3},
+        ]}>
+        <View style={[grid.rowrow, grid.justifyContentCenter]}>
+          <GlobalInclude.BaseIcon
+            containerStyle={{height: scale(48), width: scale(48)}}
+            iconColor={'#E61A2D'}
+            iconName={'file-pdf-o'}
+            iconSize={scale(48)}
+            iconType={IconType[4]}
+          />
+        </View>
+      </View>
+    );
+  };
+
+  _renderOne = (item) => {
+    return (
+      <View style={grid.rowdir}>
+        {item[0].type === 1 ? (
+          <View>
+            <ProgressImage
+              source={{uri: item[0].file}}
+              containerStyle={{width: '100%', aspectRatio: 1 / 1}}
+              mode={'contain'}
+            />
+          </View>
+        ) : item[0].type === 3 ? (
+          <View>{this._renderDoc(item[0].file)}</View>
+        ) : (
+          <View />
+        )}
+      </View>
+    );
+  };
+
+  _renderTwo = (item) => {
+    return (
+      <View
+        style={{
+          flex: 1,
+          aspectRatio: 2 / 1,
+          overflow: 'hidden',
+          flexDirection: 'row',
+        }}>
+        <View style={styles.fillView}>
+          {item[0].type === 1 ? (
+            this._renderImage(item[0].file)
+          ) : item[0].type === 3 ? (
+            this._showPDFThumb()
+          ) : (
+            <View />
+          )}
+        </View>
+
+        <View style={styles.fillView}>
+          {item[1].type === 1 ? (
+            this._renderImage(item[1].file)
+          ) : item[1].type === 3 ? (
+            this._showPDFThumb()
+          ) : (
+            <View />
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  _renderThree = (item) => {
+    return (
+      <View
+        style={{
+          flex: 1,
+          aspectRatio: 2 / 1,
+          overflow: 'hidden',
+          flexDirection: 'row',
+        }}>
+        <View style={styles.fillView}>
+          {item[0].type === 1 ? (
+            this._renderImage(item[0].file)
+          ) : item[0].type === 3 ? (
+            this._showPDFThumb()
+          ) : (
+            <View />
+          )}
+        </View>
+        <View style={styles.fillView}>
+          <View style={styles.fillView}>
+            {item[1].type === 1 ? (
+              this._renderImage(item[1].file)
+            ) : item[1].type === 3 ? (
+              this._showPDFThumb()
+            ) : (
+              <View />
+            )}
+          </View>
+          <View style={styles.fillView}>
+            {item[2].type === 1 ? (
+              this._renderImage(item[2].file)
+            ) : item[2].type === 3 ? (
+              this._showPDFThumb()
+            ) : (
+              <View />
+            )}
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  _renderFour = (item) => {
+    return (
+      <View
+        style={{
+          flex: 1,
+          aspectRatio: 2 / 1,
+          overflow: 'hidden',
+          flexDirection: 'row',
+        }}>
+        <View style={styles.fillView}>
+          <View style={styles.fillView}>
+            {item[0].type === 1 ? (
+              this._renderImage(item[0].file)
+            ) : item[0].type === 3 ? (
+              this._showPDFThumb()
+            ) : (
+              <View />
+            )}
+          </View>
+          <View style={styles.fillView}>
+            {item[1].type === 1 ? (
+              this._renderImage(item[1].file)
+            ) : item[1].type === 3 ? (
+              this._showPDFThumb()
+            ) : (
+              <View />
+            )}
+          </View>
+        </View>
+
+        <View style={styles.fillView}>
+          <View style={styles.fillView}>
+            {item[2].type === 1 ? (
+              this._renderImage(item[2].file)
+            ) : item[2].type === 3 ? (
+              this._renderDoc(item[2].file)
+            ) : (
+              <View />
+            )}
+          </View>
+          <View style={styles.fillView}>
+            {item[3].type === 1 ? (
+              this._renderImage(item[3].file)
+            ) : item[3].type === 3 ? (
+              this._renderDoc(item[3].file)
+            ) : (
+              <View />
+            )}
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  _renderFive = (item) => {
+    return (
+      <View
+        style={{
+          flex: 1,
+          aspectRatio: 2 / 1,
+          overflow: 'hidden',
+          flexDirection: 'row',
+          backgroundColor: 'orange',
+        }}>
+        <View style={styles.fillView}>
+          <View style={styles.fillView}>
+            {item[0].type === 1 ? (
+              this._renderImage(item[0].file)
+            ) : item[0].type === 3 ? (
+              this._renderDoc(item[0].file)
+            ) : (
+              <View />
+            )}
+          </View>
+          <View style={styles.fillView}>
+            {item[1].type === 1 ? (
+              this._renderImage(item[1].file)
+            ) : item[1].type === 3 ? (
+              this._renderDoc(item[1].file)
+            ) : (
+              <View />
+            )}
+          </View>
+        </View>
+
+        <View style={styles.fillView}>
+          <View style={styles.fillView}>
+            {item[2].type === 1 ? (
+              this._renderImage(item[2].file)
+            ) : item[2].type === 3 ? (
+              this._renderDoc(item[2].file)
+            ) : (
+              <View />
+            )}
+          </View>
+          <View style={styles.fillView}>
+            {item[3].type === 1 ? (
+              this._renderImage(item[3].file)
+            ) : item[3].type === 3 ? (
+              this._renderDoc(item[3].file)
+            ) : (
+              <View />
+            )}
+            <View
+              style={{
+                position: 'absolute',
+                right: 5,
+                bottom: 5,
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 3,
+                height: scale(40),
+                width: scale(40),
+                backgroundColor: 'rgba(229, 229, 229,0.5)',
+                borderRadius: scale(60),
+              }}>
+              <Text
+                style={[
+                  g.fs18,
+                  g.FHNM,
+                  g.colorBlue,
+                  grid.alignItems,
+                  grid.justifyContentCenter,
+                ]}>
+                +1
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  _showViewByType = (item) => {
+    return item.length === 1 ? (
+      this._renderOne(item)
+    ) : item.length === 2 ? (
+      this._renderTwo(item)
+    ) : item.length === 3 ? (
+      this._renderThree(item)
+    ) : item.length === 4 ? (
+      this._renderFour(item)
+    ) : item.length === 5 ? (
+      this._renderFive(item)
+    ) : (
+      <View />
+    );
+  };
+
+  _getFontSize = (text) => {
+    if (text.trim().length < 100) {
+      return scale(23);
+    } else if (text.trim().length > 100 && text.trim().length < 600) {
+      return scale(20);
+    } else if (text.trim().length > 600 && text.trim().length < 1000) {
+      return scale(17);
+    } else {
+      return scale(15);
+    }
+  };
+
+  render() {
+    return (
+      <View onLayout={this.props.onLayout} style={[g.mb15, g.bgWhite, g.pb7]}>
         <View style={[grid.justifyContentCenter, {borderRadius: scale(10)}]}>
           {/* User Row */}
           <View style={[grid.rowdir, g.p10, g.pl5, g.pr5]}>
@@ -92,7 +411,13 @@ class PostFeedCard extends PureComponent {
                 <View style={[grid.justifyContentCenter, grid.flex1]}>
                   <View style={grid.rowdir}>
                     <View style={[grid.col]}>
-                      <Text style={[g.fs15, g.FHNM, g.colorBlue]}>
+                      <Text
+                        style={[
+                          g.fs15,
+                          g.FHNM,
+                          g.colorBlue,
+                          GlobalInclude.AppStyle.transform,
+                        ]}>
                         {`${Helpers.concatName(this.props.author)} - ${
                           this.props.author.batch
                         }`}
@@ -126,7 +451,6 @@ class PostFeedCard extends PureComponent {
                       grid.justifyContentCenter,
                       grid.alignItems,
                       g.txtCenterVertical,
-                      g.mt5,
                     ]}>
                     {moment(this.props.postedAt * 1000).fromNow()}
                   </Text>
@@ -159,21 +483,38 @@ class PostFeedCard extends PureComponent {
               {this.props.body !== undefined &&
               this.props.body !== null &&
               this.props.body !== '' ? (
-                <MoreInfo text={this.props.body} linesToTruncate={3} />
+                <Text
+                  numberOfLines={4}
+                  ellipsizeMode={'tail'}
+                  style={[
+                    {fontSize: this._getFontSize(this.props.body)},
+                    g.FHNM,
+                    g.colorBlack,
+                    grid.justifyContentCenter,
+                    grid.alignItems,
+                    g.ml10,
+                    g.mr10,
+                    grid.flex1,
+                  ]}>
+                  {this.props.body}
+                </Text>
               ) : null}
             </View>
           )}
+
+          {/* <MoreInfo text={this.props.body} linesToTruncate={4} /> */}
 
           {/* Post message */}
 
           {/* Post Image */}
           {this.props.links.length > 0 ? (
-            <FlatListSlider
-              data={this.props.links}
-              component={<SliderImage />}
-              autoscroll={false}
-              indicator={this.props.links.length > 1 ? true : false}
-            />
+            <View>
+              {this.props.links[0].type === 2 ? (
+                <View />
+              ) : (
+                this._showViewByType(this.props.links)
+              )}
+            </View>
           ) : null}
           {/*  */}
 
@@ -279,5 +620,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignSelf: 'center',
   },
+  pdfIcon: {
+    position: 'absolute',
+    zIndex: 2,
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  centerUI: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    alignContent: 'center',
+  },
+  centerDoc: {
+    aspectRatio: 1 / 1,
+    width: displayWidth,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    alignContent: 'center',
+  },
+  fillView: {flex: 1},
 });
 export default PostFeedCard;

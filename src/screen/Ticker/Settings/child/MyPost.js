@@ -11,10 +11,10 @@ import {
 } from '../../../../Actions/TickerActions';
 
 let itemArray = [
-  {text: 'Send Notification on All Comments', key: 1, id: 1},
+  {text: 'Send No Notification', key: 4, id: 0},
   {text: 'Twice a day', key: 2, id: 2},
   {text: 'Once a day', key: 3, id: 3},
-  {text: 'Send No Notification', key: 4, id: 0},
+  {text: 'Send Notification on All Comments', key: 1, id: 1},
 ];
 
 let selectedSetting = '';
@@ -46,12 +46,7 @@ const MyPost = ({params}) => {
               if (data.data !== null) {
                 let settings = data.data;
 
-                console.log('====================================');
-                console.log('settings', settings);
-                console.log('====================================');
-
                 if (
-                  settings.myPostsNotifySettings &&
                   settings.myPostsNotifySettings !== undefined &&
                   settings.myPostsNotifySettings !== null
                 ) {
@@ -75,8 +70,8 @@ const MyPost = ({params}) => {
                       setSelectedFilter('');
                       break;
                   }
-                  setFilterList(itemArray);
                 }
+                setFilterList(itemArray);
               }
             }
           }

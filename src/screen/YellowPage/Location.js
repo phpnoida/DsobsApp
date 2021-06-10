@@ -7,7 +7,6 @@ import GlobalInclude from '../../globalInclude/Globalinclude';
 import ProgresImage from '../../component/ProgresImage';
 import {createOpenLink} from '../../helper/CreateMapLink';
 import {MAP_KEY} from '../../helper/Constants';
-import Geocoder from 'react-native-geocoding';
 
 const Location = ({latitude, longitude, content}) => {
   var url = `http://maps.google.com/maps/api/staticmap?center==${latitude},${longitude},&zoom=18&markers=${latitude},${longitude}%7C${latitude},${longitude}&path=color:0x0000FF80%7Cweight:5%${latitude},${longitude}&&size=640x480&sensor=TRUE_OR_FALSE&key=${MAP_KEY}`;

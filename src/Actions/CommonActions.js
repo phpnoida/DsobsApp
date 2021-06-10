@@ -168,6 +168,21 @@ export function doSearchBusiness(query, size, index, callback, errCallback) {
   };
 }
 
+export function getScrappedData(link, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}news/scrap?link=${link}`;
+  const request = axios
+    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .then((res) => {
+      callback(res);
+    })
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
 export function handleError(err, errCallback) {
   if (
     err.response &&
