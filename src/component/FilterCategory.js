@@ -1,9 +1,10 @@
 import React from 'react';
-import {Dimensions} from 'react-native';
+import {Dimensions, Text} from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import BottomSheetHeader from './BottomSheetHeader';
 import RadioButton from './RadioButton';
 import {scale} from '../theme/Scalling';
+import g from '../theme/global';
 
 const {height} = Dimensions.get('window');
 
@@ -36,7 +37,9 @@ const FilterCategory = ({
         paddingBottom: scale(20),
       },
     }}>
-    <BottomSheetHeader title={title} showSearch={false} />
+    <Text style={[g.fs18, g.FHNB, g.txtCenter, g.colorBlack, g.mt10, g.mb10]}>
+      {title}
+    </Text>
 
     <RadioButton
       defaultSelected={selectedFilter}

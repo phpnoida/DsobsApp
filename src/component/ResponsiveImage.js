@@ -93,14 +93,10 @@ export default class ResponsiveImage extends Component {
                 <ProgressImage
                   source={this.props.source}
                   containerStyle={{
-                    height: imgHeight,
                     width: imgWidth,
+                    aspectRatio: 1 / 1,
                   }}
-                  imageStyle={{
-                    height: imgHeight,
-                    width: imgWidth,
-                  }}
-                  mode={'cover'}
+                  mode={'contain'}
                 />
               </View>
             ) : (

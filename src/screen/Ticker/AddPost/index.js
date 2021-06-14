@@ -99,9 +99,12 @@ const PostTicker = ({route, navigation}) => {
         defaultData.links.length > 0
       ) {
         let tmpMedia = [];
+        var isImage = false,
+          isDoc = false;
         defaultData.links.map((child) => {
           switch (child.type) {
             case 1:
+              isImage = true;
               tmpMedia.push({
                 fileName: child.file,
                 thumbnail: child.file,
@@ -114,6 +117,7 @@ const PostTicker = ({route, navigation}) => {
               break;
 
             case 3:
+              isDoc = true;
               tmpMedia.push({
                 fileName: child.file,
                 thumbnail: child.file,
@@ -125,6 +129,14 @@ const PostTicker = ({route, navigation}) => {
               break;
           }
         });
+
+        if (isImage) {
+          setDisableImage(false);
+          setDisableDoc(true);
+        } else if (isDoc) {
+          setDisableImage(true);
+          setDisableDoc(false);
+        }
 
         setMediaData([...tmpMedia]);
       }

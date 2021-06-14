@@ -133,7 +133,6 @@ class FitImage extends Component<IFitImageProps, IFitImageState> {
 
   public render() {
     const ImageComponent = this.ImageComponent;
-
     return (
       <Image
         {...this.props}
@@ -149,7 +148,6 @@ class FitImage extends Component<IFitImageProps, IFitImageState> {
           styles.container,
         ]}
       >
-        {/* {this.shouldDisplayIndicator() ? this.renderActivityIndicator() : this.props.children} */}
       </Image>
     );
   }
@@ -189,7 +187,7 @@ class FitImage extends Component<IFitImageProps, IFitImageState> {
     if (this.style && this.style.height) {
       return Number(this.style.height);
     }
-
+    
     return Math.round(this.getOriginalHeight() * this.getRatio());
   }
 
@@ -212,6 +210,7 @@ class FitImage extends Component<IFitImageProps, IFitImageState> {
   private onLayout = (event: LayoutChangeEvent) => {
     const { width: layoutWidth } = event.nativeEvent.layout;
 
+    
     this.setState({ layoutWidth });
   }
 
@@ -224,6 +223,7 @@ class FitImage extends Component<IFitImageProps, IFitImageState> {
       uri = this.props.source.uri;
     }
 
+    
     if (!uri) {
       return;
     }

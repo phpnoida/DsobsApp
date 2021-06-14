@@ -7,6 +7,7 @@ import {
   Platform,
   Dimensions,
   Animated,
+  Alert,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -17,7 +18,11 @@ import OptionsSheet from 'react-native-raw-bottom-sheet';
 import {generateMenuOption} from '../../component/Common';
 import {renderNoDataComponent} from '../../component/Common';
 import Likes from './Likes';
-import {doGetMypost} from '../../Actions/TickerActions';
+import {
+  doGetMypost,
+  doDeletePost,
+  doFitlerPost,
+} from '../../Actions/TickerActions';
 import PostFeedCard from '../../component/PostFeedCard';
 
 const {height: displayHeight} = Dimensions.get('window');
@@ -56,7 +61,7 @@ const MyPreviousPost = ({navigation}) => {
       if (global.isConnected) {
         postMode = '';
         resetCount();
-        getTickers(filterObject);
+        getMyTickers(filterObject);
       }
     });
 
@@ -71,7 +76,7 @@ const MyPreviousPost = ({navigation}) => {
    *
    */
 
-  const getTickers = (requestObj) => {
+  const getMyTickers = (requestObj) => {
     doGetMypost(
       (response) => {
         manageResponse(response);
@@ -131,6 +136,67 @@ const MyPreviousPost = ({navigation}) => {
     setFirstTimeLoad(false);
   };
 
+  const getTickerPost = (requestObj) => {
+    global.loader_ref.show_loader(1);
+    doFitlerPost(
+      requestObj,
+      (response) => {
+        global.loader_ref.show_loader(0);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              let item = data.data[0];
+              if (postMode === 'edit') {
+                postMode = '';
+                navigation.navigate('PostTicker', {
+                  data: {inEditMode: true, data: item},
+                });
+              }
+            }
+          }
+        }
+      },
+      (code, error) => {
+        global.loader_ref.show_loader(0);
+        console.log('error->', error);
+      },
+    );
+  };
+
+  const deletePost = () => {
+    doDeletePost(
+      selectedFeed._id,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            console.log('data', data);
+            if (data.status) {
+              setSelectedFeed(null);
+              setTimeout(() => {
+                handleRefresh();
+              }, 230);
+            }
+          }
+        }
+      },
+      (code, error) => {
+        setSelectedFeed(null);
+        Alert.alert('Something went wrong', error);
+      },
+    );
+  };
+
   /**
    *
    * Pagination
@@ -141,7 +207,7 @@ const MyPreviousPost = ({navigation}) => {
       console.log('onPaginate()');
       setPaginationStatus(PaginationStatus.waiting);
       filterObject.index = filterObject.index + 1;
-      getTickers(filterObject);
+      getMyTickers(filterObject);
     }
   };
 
@@ -160,7 +226,7 @@ const MyPreviousPost = ({navigation}) => {
     filterObject.index = 0;
     setIsRefreshing(false);
     resetCount();
-    getTickers(filterObject);
+    getMyTickers(filterObject);
   };
 
   const resetCount = () => {
@@ -174,6 +240,27 @@ const MyPreviousPost = ({navigation}) => {
    * Pagination
    *
    */
+
+  const removeIndex = () => {
+    Alert.alert(
+      'Are you sure you want to delete it?',
+      '',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {
+          text: 'Ok',
+          onPress: () => {
+            deletePost();
+          },
+        },
+      ],
+      {cancelable: false},
+    );
+  };
 
   const renderFooter = () => {
     return (
@@ -215,7 +302,15 @@ const MyPreviousPost = ({navigation}) => {
               setTimeout(() => {
                 resetCount();
                 filterObject.id = selectedFeed._id;
-                getTickers(filterObject);
+                getTickerPost(filterObject);
+              }, 220);
+            })}
+
+          {selectedFeed !== null &&
+            generateMenuOption('Delete Post', 'delete', 1, () => {
+              refPostOptions.current.close();
+              setTimeout(() => {
+                removeIndex();
               }, 220);
             })}
         </View>
@@ -235,7 +330,7 @@ const MyPreviousPost = ({navigation}) => {
         closeOnDragDown={true}
         onClose={() => {
           resetCount();
-          getTickers(filterObject);
+          getMyTickers(filterObject);
         }}
         customStyles={{
           container: GlobalInclude.AppStyle.sheetContainer,
@@ -258,9 +353,10 @@ const MyPreviousPost = ({navigation}) => {
     );
   };
 
-  const renderItem = useCallback(
-    ({item, index}) => (
+  const renderItem = ({item, index}) => {
+    return (
       <PostFeedCard
+        key={index}
         itemIndex={index}
         author={item.author}
         status={item.status}
@@ -283,12 +379,14 @@ const MyPreviousPost = ({navigation}) => {
         }}
         onClickPostOptions={() => {
           setSelectedFeed(item);
-          if (
-            refPostOptions.current !== undefined &&
-            refPostOptions.current !== null
-          ) {
-            refPostOptions.current.open();
-          }
+          setTimeout(() => {
+            if (
+              refPostOptions.current !== undefined &&
+              refPostOptions.current !== null
+            ) {
+              refPostOptions.current.open();
+            }
+          }, 300);
         }}
         onClickMediaOption={(type) => {
           selectedIndex = index;
@@ -309,9 +407,8 @@ const MyPreviousPost = ({navigation}) => {
           }
         }}
       />
-    ),
-    [navigation],
-  );
+    );
+  };
 
   const keyExtractor = useCallback((item, index) => index, []);
 
@@ -348,7 +445,6 @@ const MyPreviousPost = ({navigation}) => {
                 contentContainerStyle={{
                   paddingBottom: scale(130),
                   paddingTop: scale(5),
-                  flex: 1,
                 }}
               />
             </View>

@@ -4,6 +4,7 @@ import GlobalInclude from '../../globalInclude/Globalinclude';
 import HeaderBar from '../../component/HeaderBar';
 import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
+import grid from '../../theme/grid';
 import {APP_NAME} from '../../helper/Constants';
 
 const Etiquette = ({navigation}) => {
@@ -38,7 +39,10 @@ const Etiquette = ({navigation}) => {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[g.ml10, g.mr10, g.pt15, g.pb15]}>
-          {showText('"Knowledge Our Light".')}
+          <View style={[grid.justifyContentCenter, grid.alignItems]}>
+            {showText('"Knowledge Our Light".')}
+          </View>
+
           {showText(
             'The idea of the Common Room is to create a space for new thought, stimulation, conversation and engagement.',
           )}

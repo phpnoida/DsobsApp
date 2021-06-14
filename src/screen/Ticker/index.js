@@ -174,9 +174,11 @@ const Ticker = ({navigation}) => {
       },
       (code, error) => {
         setIsRefreshing(false);
-        //setFirstTimeLoad(false);
-        setPostContent([]);
-        console.log('error->', error);
+
+        if (filterObject.index === 0) {
+          setFirstTimeLoad(false);
+          setPostContent([]);
+        }
       },
     );
   };
@@ -646,7 +648,8 @@ const Ticker = ({navigation}) => {
     );
   };
 
-  const keyExtractor = useCallback((item, index) => index, []);
+  //const keyExtractor = useCallback((item, index) => index, []);
+  const keyExtractor = (item, index) => index;
 
   const headerDistance = Animated.diffClamp(curY, 0, 119).interpolate({
     inputRange: [0, 1],
@@ -779,6 +782,7 @@ const Ticker = ({navigation}) => {
                   ListEmptyComponent={renderNoDataComponent}
                   ListFooterComponent={renderFooter}
                   scrollEventThrottle={16}
+                  bounces={false}
                   contentContainerStyle={{
                     marginTop: animatedHeight,
                     paddingBottom: postContent.length === 0 ? 0 : scale(130),
@@ -787,6 +791,8 @@ const Ticker = ({navigation}) => {
                     [{nativeEvent: {contentOffset: {y: curY}}}],
                     {useNativeDriver: true},
                   )}
+                  initialNumToRender={4}
+                  maxToRenderPerBatch={2}
                 />
               )}
 

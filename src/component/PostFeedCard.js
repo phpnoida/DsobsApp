@@ -20,6 +20,7 @@ import SliderImage from './SliderImage';
 import ResponsiveImage from './ResponsiveImage';
 import Pdf from 'react-native-pdf';
 import FitImage from './FitImage';
+import SeeMore from './SeeMore/SeeMore';
 
 const {width: displayWidth} = Dimensions.get('window');
 
@@ -117,14 +118,15 @@ class PostFeedCard extends PureComponent {
 
   _renderOne = (item) => {
     return (
-      <View style={grid.rowdir}>
+      <View style={GlobalInclude.AppStyle.fullWidth}>
         {item[0].type === 1 ? (
           <View>
-            <ProgressImage
+            {/* <ProgressImage
               source={{uri: item[0].file}}
               containerStyle={{width: '100%', aspectRatio: 1 / 1}}
               mode={'contain'}
-            />
+            /> */}
+            <ResponsiveImage source={{uri: item[0].file}} />
           </View>
         ) : item[0].type === 3 ? (
           <View>{this._renderDoc(item[0].file)}</View>
@@ -435,7 +437,7 @@ class PostFeedCard extends PureComponent {
                         ]}>
                         <GlobalInclude.BaseIcon
                           containerStyle={{height: scale(22), width: scale(22)}}
-                          iconColor={GlobalInclude.Color.ColorPrimary}
+                          iconColor={GlobalInclude.Color.ColorPrimaryLight}
                           iconName={'dots-three-horizontal'}
                           iconSize={scale(22)}
                           iconType={IconType[9]}
@@ -470,7 +472,7 @@ class PostFeedCard extends PureComponent {
               <Text
                 style={[
                   g.fs18,
-                  g.FHNM,
+                  g.FHNR,
                   g.colorBlack,
                   grid.justifyContentCenter,
                   grid.alignItems,
@@ -479,25 +481,32 @@ class PostFeedCard extends PureComponent {
               </Text>
             </View>
           ) : (
-            <View>
+            <View style={[g.ml10, g.mr10, grid.flex1]}>
               {this.props.body !== undefined &&
               this.props.body !== null &&
               this.props.body !== '' ? (
-                <Text
-                  numberOfLines={4}
-                  ellipsizeMode={'tail'}
-                  style={[
-                    {fontSize: this._getFontSize(this.props.body)},
-                    g.FHNM,
-                    g.colorBlack,
-                    grid.justifyContentCenter,
-                    grid.alignItems,
-                    g.ml10,
-                    g.mr10,
-                    grid.flex1,
-                  ]}>
-                  {this.props.body}
-                </Text>
+                <View>
+                  {this.props.body.length <= 800 ? (
+                    <Text
+                      style={[
+                        g.FHNR,
+                        grid.justifyContentCenter,
+                        grid.alignItems,
+                        {
+                          textAlign: 'justify',
+                          letterSpacing: 0.5,
+                          fontWeight: '400',
+                          fontSize: scale(18),
+                          color: 'rgb(5,5,5)',
+                          fontFamily: 'SegoeUI',
+                        },
+                      ]}>
+                      {this.props.body}
+                    </Text>
+                  ) : (
+                    <SeeMore numberOfLines={7}>{this.props.body}</SeeMore>
+                  )}
+                </View>
               ) : null}
             </View>
           )}

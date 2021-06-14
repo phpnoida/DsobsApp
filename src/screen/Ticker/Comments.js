@@ -667,11 +667,7 @@ const Comments = ({route, navigation}) => {
       <OptionsSheet
         ref={refPostComments}
         minClosingHeight={50}
-        height={
-          selectedPost !== null && selectedPost.authorId._id === global.userId
-            ? 280
-            : 210
-        }
+        height={280}
         duration={200}
         closeOnDragDown={false}
         keyboardAvoidingViewEnabled={false}
@@ -707,7 +703,7 @@ const Comments = ({route, navigation}) => {
                 grid.alignItems,
                 g.txtCenterVertical,
               ]}>
-              Replay
+              Reply
             </Text>
           </TouchableOpacity>
           {selectedPost !== null &&

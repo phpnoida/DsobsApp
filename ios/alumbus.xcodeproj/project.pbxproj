@@ -27,6 +27,7 @@
 		751A11BDDE04BBC835A70C3B /* libPods-alumbus.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 974C1F3766BCFF9CD8819900 /* libPods-alumbus.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		8B52E25EDC85CE787510E768 /* libPods-alumbus-tvOSTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C613A4EC21E3044548DC2696 /* libPods-alumbus-tvOSTests.a */; };
+		A8A18162A32248F3B818B173 /* SegoeUI.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8747D7B097D94EECB0DA997D /* SegoeUI.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -125,6 +126,7 @@
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		ED2971642150620600B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS12.0.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
 		F0CBBF223B8E2446EE0B9131 /* libPods-alumbus-alumbusTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-alumbus-alumbusTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8747D7B097D94EECB0DA997D /* SegoeUI.ttf */ = {isa = PBXFileReference; name = "SegoeUI.ttf"; path = "../Assets/Fonts/SegoeUI.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -245,6 +247,7 @@
 				B6EEACBD84C34558856A1E6D /* rubicon-icon-font.ttf */,
 				21CFC0C609154F72B99D0965 /* SimpleLineIcons.ttf */,
 				02613AB27559455D9D9634B9 /* Zocial.ttf */,
+				8747D7B097D94EECB0DA997D /* SegoeUI.ttf */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -456,6 +459,7 @@
 				1F4A1BE925C2B308000ABB9B /* Lato-Regular.ttf in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				A8A18162A32248F3B818B173 /* SegoeUI.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

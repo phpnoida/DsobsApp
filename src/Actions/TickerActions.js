@@ -85,6 +85,26 @@ export function doGetMypost(callback, errCallback) {
   };
 }
 
+export function doDeletePost(payload, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}posts?id=${payload}`;
+
+  console.log('payload', payload);
+  const request = axios
+    .delete(requestPath, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
+    })
+    .then((res) => callback(res))
+    .catch((err) => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
 export function getUserFollowing(callback, errCallback) {
   let requestPath = `${SERVER_PATH}posts/following`;
 
