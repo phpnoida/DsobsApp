@@ -14,6 +14,7 @@ const Preview = ({
   ViewStyle,
   containerStyle,
   imageStyle,
+  imageMode,
 }) => {
   return (
     <View
@@ -46,7 +47,7 @@ const Preview = ({
           width: style.width,
           ...imageStyle,
         }}
-        mode={'cover'}
+        mode={imageMode ? imageMode : 'cover'}
       />
     </View>
   );

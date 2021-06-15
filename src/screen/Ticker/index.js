@@ -56,7 +56,7 @@ let responseMessage = '';
 let searchVal = '';
 
 let dataSourceCords = [];
-const Ticker = ({navigation}) => {
+const Ticker = ({route, navigation}) => {
   curY = new Animated.Value(0);
   const refOptions = useRef();
   const refPostOptions = useRef();
@@ -84,20 +84,32 @@ const Ticker = ({navigation}) => {
 
   useEffect(() => {
     postMode = '';
-    const unsubscribe = navigation.addListener('focus', () => {
-      if (global.isConnected) {
-        postMode = '';
-        setFirstTimeLoad(true);
-        resetCount();
-        getMyFollowing();
-        getCategory();
-      }
-    });
+    // const unsubscribe = navigation.addListener('focus', () => {
+    //   console.log('focus');
+    //   if (global.isConnected) {
+    //     postMode = '';
+    //     setFirstTimeLoad(true);
+    //     resetCount();
+    //     getMyFollowing();
+    //     getCategory();
+    //   }
+    // });
+    refresh();
 
     return () => {
-      unsubscribe();
+      //unsubscribe();
     };
   }, [navigation]);
+
+  const refresh = () => {
+    if (global.isConnected) {
+      postMode = '';
+      setFirstTimeLoad(true);
+      resetCount();
+      getMyFollowing();
+      getCategory();
+    }
+  };
 
   /*****
    *
@@ -192,7 +204,9 @@ const Ticker = ({navigation}) => {
         response.data !== null
       ) {
         let data = response.data;
-
+        // console.log('====================================');
+        // console.log('data', JSON.stringify(data));
+        // console.log('====================================');
         if (data.status) {
           let item = data.data[0];
           if (postMode !== '') {
@@ -200,6 +214,7 @@ const Ticker = ({navigation}) => {
               postMode = '';
               navigation.navigate('PostTicker', {
                 data: {inEditMode: true, data: item},
+                onGoBack: () => refresh(),
               });
             }
           } else {
@@ -459,7 +474,9 @@ const Ticker = ({navigation}) => {
           {generateMenuOption('Make a New Post', 'add-to-list', 9, () => {
             refOptions.current.close();
             setTimeout(() => {
-              navigation.navigate('PostTicker');
+              navigation.navigate('PostTicker', {
+                onGoBack: () => refresh(),
+              });
             }, 220);
           })}
 
@@ -526,7 +543,7 @@ const Ticker = ({navigation}) => {
             global.userId !== selectedFeed.author.id &&
             generateMenuOption(
               `${
-                isFollowing() === null ? 'Follow' : 'UnFollow'
+                isFollowing() === null ? 'Follow' : 'Following'
               } ${Helpers.concatName(selectedFeed.author)}`,
               isFollowing() !== null ? 'user-follow' : 'user-unfollow',
               2,
@@ -561,15 +578,20 @@ const Ticker = ({navigation}) => {
     return (
       <OptionsSheet
         ref={refPostLikes}
-        minClosingHeight={50}
+        minClosingHeight={0}
         height={
           Platform.OS === 'ios' ? displayHeight - 100 : displayHeight - 64
         }
         duration={200}
         closeOnDragDown={true}
+        // onClose={() => {
+        //   resetCount();
+        //   getTickers(filterObject);
+        // }}
         onClose={() => {
-          resetCount();
-          getTickers(filterObject);
+          let oldData = postContent;
+          oldData[selectedIndex] = selectedFeed;
+          setPostContent([...oldData]);
         }}
         customStyles={{
           container: GlobalInclude.AppStyle.sheetContainer,
@@ -578,6 +600,16 @@ const Ticker = ({navigation}) => {
           <Likes
             postId={selectedFeed._id}
             navigation={navigation}
+            onStatusChange={(status) => {
+              if (
+                selectedFeed.totalLikes !== undefined &&
+                selectedFeed.totalLikes !== null
+              ) {
+                selectedFeed.totalLikes = status
+                  ? selectedFeed.totalLikes + 1
+                  : selectedFeed.totalLikes - 1;
+              }
+            }}
             onClickUser={(userId) => {
               refPostLikes.current.close();
               setTimeout(() => {
@@ -592,61 +624,59 @@ const Ticker = ({navigation}) => {
     );
   };
 
-  const renderItem = ({item, index}) => {
-    return (
-      <PostFeedCard
-        //key={index}
-        itemIndex={index}
-        postId={item._id}
-        author={item.author}
-        status={item.status}
-        postedAt={item.postedAt}
-        body={item.body}
-        links={item.links}
-        totalLikes={item.totalLikes}
-        totalComments={item.totalComments}
-        item={item}
-        onLayout={(event) => {
-          const layout = event.nativeEvent.layout;
-          dataSourceCords[index] = layout.y;
-        }}
-        onClickUser={() => {
-          if (item.author !== undefined && item.author !== null) {
-            navigation.navigate('UserProfile', {
-              userId: item.author.id,
-            });
-          }
-        }}
-        onClickPostOptions={() => {
+  const renderItem = ({item, index}) => (
+    <PostFeedCard
+      //key={index}
+      itemIndex={index}
+      postId={item._id}
+      author={item.author}
+      status={item.status}
+      postedAt={item.postedAt}
+      body={item.body}
+      links={item.links}
+      totalLikes={item.totalLikes}
+      totalComments={item.totalComments}
+      item={item}
+      onLayout={(event) => {
+        const layout = event.nativeEvent.layout;
+        dataSourceCords[index] = layout.y;
+      }}
+      onClickUser={() => {
+        if (item.author !== undefined && item.author !== null) {
+          navigation.navigate('UserProfile', {
+            userId: item.author.id,
+          });
+        }
+      }}
+      onClickPostOptions={() => {
+        setSelectedFeed(item);
+        if (
+          refPostOptions.current !== undefined &&
+          refPostOptions.current !== null
+        ) {
+          refPostOptions.current.open();
+        }
+      }}
+      onClickMediaOption={(type) => {
+        selectedIndex = index;
+        if (type === 1) {
+          //getPostLikeDetail(item._id);
           setSelectedFeed(item);
-          if (
-            refPostOptions.current !== undefined &&
-            refPostOptions.current !== null
-          ) {
-            refPostOptions.current.open();
-          }
-        }}
-        onClickMediaOption={(type) => {
-          selectedIndex = index;
-          if (type === 1) {
-            //getPostLikeDetail(item._id);
-            setSelectedFeed(item);
 
-            setTimeout(() => {
-              if (
-                refPostLikes.current !== undefined &&
-                refPostLikes.current !== null
-              ) {
-                refPostLikes.current.open();
-              }
-            }, 200);
-          } else if (type === 2) {
-            navigation.navigate('Comments', {data: {postId: item._id}});
-          }
-        }}
-      />
-    );
-  };
+          setTimeout(() => {
+            if (
+              refPostLikes.current !== undefined &&
+              refPostLikes.current !== null
+            ) {
+              refPostLikes.current.open();
+            }
+          }, 200);
+        } else if (type === 2) {
+          navigation.navigate('Comments', {data: {postId: item._id}});
+        }
+      }}
+    />
+  );
 
   //const keyExtractor = useCallback((item, index) => index, []);
   const keyExtractor = (item, index) => index;
@@ -773,7 +803,7 @@ const Ticker = ({navigation}) => {
                   showsVerticalScrollIndicator={false}
                   extraData={postContent}
                   data={postContent}
-                  CellRendererComponent={renderItem}
+                  renderItem={renderItem}
                   keyExtractor={keyExtractor}
                   onEndReachedThreshold={0.1}
                   onEndReached={onEndReached}

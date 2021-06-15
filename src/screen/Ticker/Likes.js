@@ -32,7 +32,7 @@ let filterObject = {
 };
 let totalCount = 0;
 
-const Likes = ({postId, navigation, onClickUser}) => {
+const Likes = ({postId, navigation, onClickUser, onStatusChange}) => {
   const [firstTimeLoad, setFirstTimeLoad] = useState(true);
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
@@ -97,6 +97,7 @@ const Likes = ({postId, navigation, onClickUser}) => {
           ) {
             let data = response.data;
             if (data.status) {
+              onStatusChange(true);
               getPostLikeDetail(postId);
             }
           }
@@ -122,6 +123,7 @@ const Likes = ({postId, navigation, onClickUser}) => {
             let data = response.data;
 
             if (data.status) {
+              onStatusChange(false);
               getPostLikeDetail(postId);
             }
           }
@@ -246,13 +248,17 @@ const Likes = ({postId, navigation, onClickUser}) => {
           }
         }}>
         <View
-          style={{
-            marginHorizontal: scale(3),
-          }}>
+          style={[
+            grid.justifyContentCenter,
+            grid.alignItems,
+            {
+              marginHorizontal: scale(3),
+            },
+          ]}>
           <GlobalInclude.BaseIcon
             containerStyle={{height: scale(30), width: scale(30)}}
             iconColor={GlobalInclude.Color.ColorPrimary}
-            iconName={isLiked() !== null ? 'dislike2' : 'like2'}
+            iconName={isLiked() !== null ? 'like1' : 'like2'}
             iconSize={scale(30)}
             iconType={IconType[10]}
           />
@@ -266,7 +272,7 @@ const Likes = ({postId, navigation, onClickUser}) => {
               grid.justifyContentCenter,
               grid.alignItems,
             ]}>
-            {isLiked() !== null ? 'Unlike' : 'Like This Post'}
+            {isLiked() !== null ? 'Liked' : 'Like This Post'}
           </Text>
         </View>
       </TouchableOpacity>

@@ -31,6 +31,7 @@ import {
 import ModelAlert from '../../../component/ModalAlert';
 import {getCategories, addPost, editPost} from '../../../Actions/TickerActions';
 import {getScrappedData} from '../../../Actions/CommonActions';
+import {CommonActions} from '@react-navigation/native';
 
 let selectedIndex = -1;
 let responseMessage = '';
@@ -39,6 +40,7 @@ let inEditMode = false;
 let postId = '';
 let newsBody = '';
 let newsImage = '';
+
 const PostTicker = ({route, navigation}) => {
   const categoryRef = useRef();
   const uploadRef = useRef();
@@ -66,10 +68,11 @@ const PostTicker = ({route, navigation}) => {
     inEditMode = false;
     postId = '';
     if (route.params !== undefined && route.params !== null) {
-      inEditMode = route.params.data.inEditMode;
-
-      if (inEditMode) {
-        setupDefaultData(route.params.data.data);
+      if (route.params.data !== undefined && route.params.data !== null) {
+        inEditMode = route.params.data.inEditMode;
+        if (inEditMode) {
+          setupDefaultData(route.params.data.data);
+        }
       }
     }
 
@@ -294,7 +297,17 @@ const PostTicker = ({route, navigation}) => {
             if (data.status) {
               isSuccess = true;
               setTimeout(() => {
+                route.params.onGoBack();
                 navigation.goBack();
+
+                // navigation.pop();
+                // navigation.navigate('CommonRoom', {refresh: true});
+                // navigation.dispatch(
+                //   CommonActions.reset({
+                //     index: 1,
+                //     routes: [{name: 'CommonRoom'}],
+                //   }),
+                // );
               }, 250);
             } else {
               responseMessage = 'Error while posting your request!';
@@ -327,7 +340,8 @@ const PostTicker = ({route, navigation}) => {
             if (data.status) {
               isSuccess = true;
               setTimeout(() => {
-                navigation.goBack();
+                 route.params.onGoBack();
+                 navigation.goBack();
               }, 250);
             } else {
               responseMessage = 'Error while updating your request!';

@@ -58,6 +58,11 @@ const ViewPost = ({params}) => {
                     selected: isContain(item.id),
                   });
                 });
+                categoryArray.push({
+                  key: 100,
+                  text: Helpers.capitalize('People i Follow'),
+                  selected: isContain(100),
+                });
               }
               setCategrories(categoryArray);
               setLoading(false);

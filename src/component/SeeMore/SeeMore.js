@@ -129,7 +129,7 @@ class SeeMore extends React.Component {
               color: isLinkPressed ? linkPressedColor : linkColor,
             },
           ]}>
-          {isShowingMore ? ` ${seeLessText}` : ` ${seeMoreText}`}
+          {!isShowingMore && ` ${seeMoreText}`}
         </Text>
       </Text>
     );
@@ -184,14 +184,7 @@ SeeMore.defaultProps = {
   linkPressedColor: '#163772',
   seeMoreText: 'see more',
   seeLessText: 'see less',
-  style: {
-    textAlign: 'justify',
-    letterSpacing: 0.5,
-    fontWeight: '400',
-    fontFamily: 'SegoeUI',
-    fontSize: scale(16),
-    color: 'rgb(5,5,5)',
-  },
+  style: {},
   linkStyle: undefined,
 };
 

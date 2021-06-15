@@ -119,6 +119,16 @@ const Register = (props) => {
   const validateFields = () => {
     Keyboard.dismiss();
     setErrorMessage({});
+
+    /**
+     * 
+     * else if (phone.trim().length < 6) {
+      setErrorMessage({phone: 'Please enter the valid Phone Number'});
+    } else if (!Helper.validateRegex(phoneRegex, phone)) {
+      setErrorMessage({phone: 'Please enter the valid Phone Number'});
+    }
+     */
+
     if (firstName.trim().length === 0) {
       setErrorMessage({firstName: 'Please enter the First Name'});
     } else if (lastName.trim().length === 0) {
@@ -129,10 +139,6 @@ const Register = (props) => {
       setErrorMessage({email: 'Please enter a valid email address'});
     } else if (phone.trim().length === 0) {
       setErrorMessage({phone: 'Please enter the Phone Number'});
-    } else if (phone.trim().length < 6) {
-      setErrorMessage({phone: 'Please enter the valid Phone Number'});
-    } else if (!Helper.validateRegex(phoneRegex, phone)) {
-      setErrorMessage({phone: 'Please enter the valid Phone Number'});
     } else if (selectedBatch.trim().length === 0) {
       setErrorMessage({batchNo: 'Please select your Batch'});
     } else if (schoolName.trim().length === 0) {
@@ -550,7 +556,10 @@ const Register = (props) => {
                     keyboardType="phone-pad"
                     value={phone}
                     placeholder="Phone Number"
-                    onChangeText={(value) => setPhone(value)}
+                    onChangeText={(value) => {
+                      let sanitized = value.replace(/\D/g, '');
+                      setPhone(sanitized);
+                    }}
                     placeholderTextColor={'#ddd'}
                   />
                 </View>

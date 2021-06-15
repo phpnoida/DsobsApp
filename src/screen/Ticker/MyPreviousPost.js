@@ -328,9 +328,14 @@ const MyPreviousPost = ({navigation}) => {
         }
         duration={200}
         closeOnDragDown={true}
+        // onClose={() => {
+        //   resetCount();
+        //   getMyTickers(filterObject);
+        // }}
         onClose={() => {
-          resetCount();
-          getMyTickers(filterObject);
+          let oldData = postContent;
+          oldData[selectedIndex] = selectedFeed;
+          setPostContent([...oldData]);
         }}
         customStyles={{
           container: GlobalInclude.AppStyle.sheetContainer,
@@ -339,6 +344,16 @@ const MyPreviousPost = ({navigation}) => {
           <Likes
             postId={selectedFeed._id}
             navigation={navigation}
+            onStatusChange={(status) => {
+              if (
+                selectedFeed.totalLikes !== undefined &&
+                selectedFeed.totalLikes !== null
+              ) {
+                selectedFeed.totalLikes = status
+                  ? selectedFeed.totalLikes + 1
+                  : selectedFeed.totalLikes - 1;
+              }
+            }}
             onClickUser={(userId) => {
               refPostLikes.current.close();
               setTimeout(() => {
@@ -353,64 +368,62 @@ const MyPreviousPost = ({navigation}) => {
     );
   };
 
-  const renderItem = ({item, index}) => {
-    return (
-      <PostFeedCard
-        key={index}
-        itemIndex={index}
-        author={item.author}
-        status={item.status}
-        postedAt={item.postedAt}
-        body={item.body}
-        links={item.links}
-        totalLikes={item.totalLikes}
-        totalComments={item.totalComments}
-        item={item}
-        onLayout={(event) => {
-          const layout = event.nativeEvent.layout;
-          dataSourceCords[index] = layout.y;
-        }}
-        onClickUser={() => {
-          if (item.author !== undefined && item.author !== null) {
-            navigation.navigate('UserProfile', {
-              userId: item.author.id,
-            });
+  const renderItem = ({item, index}) => (
+    <PostFeedCard
+      key={index}
+      itemIndex={index}
+      author={item.author}
+      status={item.status}
+      postedAt={item.postedAt}
+      body={item.body}
+      links={item.links}
+      totalLikes={item.totalLikes}
+      totalComments={item.totalComments}
+      item={item}
+      onLayout={(event) => {
+        const layout = event.nativeEvent.layout;
+        dataSourceCords[index] = layout.y;
+      }}
+      onClickUser={() => {
+        if (item.author !== undefined && item.author !== null) {
+          navigation.navigate('UserProfile', {
+            userId: item.author.id,
+          });
+        }
+      }}
+      onClickPostOptions={() => {
+        setSelectedFeed(item);
+        setTimeout(() => {
+          if (
+            refPostOptions.current !== undefined &&
+            refPostOptions.current !== null
+          ) {
+            refPostOptions.current.open();
           }
-        }}
-        onClickPostOptions={() => {
+        }, 300);
+      }}
+      onClickMediaOption={(type) => {
+        selectedIndex = index;
+        if (type === 1) {
+          //getPostLikeDetail(item._id);
           setSelectedFeed(item);
+
           setTimeout(() => {
             if (
-              refPostOptions.current !== undefined &&
-              refPostOptions.current !== null
+              refPostLikes.current !== undefined &&
+              refPostLikes.current !== null
             ) {
-              refPostOptions.current.open();
+              refPostLikes.current.open();
             }
-          }, 300);
-        }}
-        onClickMediaOption={(type) => {
-          selectedIndex = index;
-          if (type === 1) {
-            //getPostLikeDetail(item._id);
-            setSelectedFeed(item);
+          }, 200);
+        } else if (type === 2) {
+          navigation.navigate('Comments', {data: {postId: item._id}});
+        }
+      }}
+    />
+  );
 
-            setTimeout(() => {
-              if (
-                refPostLikes.current !== undefined &&
-                refPostLikes.current !== null
-              ) {
-                refPostLikes.current.open();
-              }
-            }, 200);
-          } else if (type === 2) {
-            navigation.navigate('Comments', {data: {postId: item._id}});
-          }
-        }}
-      />
-    );
-  };
-
-  const keyExtractor = useCallback((item, index) => index, []);
+  const keyExtractor = (item, index) => index;
 
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
@@ -427,26 +440,30 @@ const MyPreviousPost = ({navigation}) => {
             </View>
           ) : (
             <View style={[GlobalInclude.AppStyle.fill, g.bggray3]}>
-              <Animated.FlatList
-                ref={refFlatList}
-                removeClippedSubviews={Platform.OS !== 'web'}
-                showsVerticalScrollIndicator={false}
-                extraData={postContent}
-                data={postContent}
-                CellRendererComponent={renderItem}
-                keyExtractor={keyExtractor}
-                onEndReachedThreshold={0.1}
-                onEndReached={onEndReached}
-                refreshing={isRefreshing}
-                onRefresh={handleRefresh}
-                ListEmptyComponent={renderNoDataComponent}
-                ListFooterComponent={renderFooter}
-                scrollEventThrottle={16}
-                contentContainerStyle={{
-                  paddingBottom: scale(130),
-                  paddingTop: scale(5),
-                }}
-              />
+              {postContent.length === 0 ? (
+                renderNoDataComponent()
+              ) : (
+                <Animated.FlatList
+                  ref={refFlatList}
+                  removeClippedSubviews={Platform.OS !== 'web'}
+                  showsVerticalScrollIndicator={false}
+                  extraData={postContent}
+                  data={postContent}
+                  renderItem={renderItem}
+                  keyExtractor={keyExtractor}
+                  onEndReachedThreshold={0.1}
+                  onEndReached={onEndReached}
+                  refreshing={isRefreshing}
+                  onRefresh={handleRefresh}
+                  ListEmptyComponent={renderNoDataComponent}
+                  ListFooterComponent={renderFooter}
+                  scrollEventThrottle={16}
+                  contentContainerStyle={{
+                    paddingBottom: scale(130),
+                    paddingTop: scale(5),
+                  }}
+                />
+              )}
             </View>
           )}
         </View>

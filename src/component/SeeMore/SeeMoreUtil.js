@@ -42,14 +42,16 @@ async function getTruncationIndex(
   containerWidth,
   seeMoreText,
 ) {
-  //const scaledFontSize = Math.round(fontSize * PixelRatio.getFontScale());
-  const scaledFontSize = fontSize;
+  const scaledFontSize = Math.round(fontSize * PixelRatio.getFontScale());
+  //const scaledFontSize = fontSize;
 
   const {width: totalTextWidth} = await reactNativeTextSize.measure({
     text,
     fontSize: scaledFontSize,
     fontFamily,
     fontWeight,
+    textBreakStrategy: 'balanced',
+    includeFontPadding: true,
   });
 
   /**

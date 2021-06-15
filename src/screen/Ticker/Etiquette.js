@@ -40,7 +40,22 @@ const Etiquette = ({navigation}) => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[g.ml10, g.mr10, g.pt15, g.pb15]}>
           <View style={[grid.justifyContentCenter, grid.alignItems]}>
-            {showText('"Knowledge Our Light".')}
+            <Text
+              style={[
+                g.fs15,
+                g.FHNB,
+                g.colorBlack,
+                {
+                  textAlign: 'justify',
+                  justifyContent: 'center',
+                  alignContent: 'center',
+                  textAlignVertical: 'center',
+                  letterSpacing: 1,
+                  lineHeight: 25,
+                },
+              ]}>
+              "Knowledge Our Light"
+            </Text>
           </View>
 
           {showText(

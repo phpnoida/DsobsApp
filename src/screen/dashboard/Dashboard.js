@@ -1000,7 +1000,20 @@ const Dashboard = ({props, navigation}) => {
           {showPopNotification &&
             notificationList.length > currentNotificationIndex && (
               <ShowPopNotification
-                imagelink={notificationList[currentNotificationIndex].imagelink}
+                imagelink={[
+                  {
+                    file: 'https://homepages.cae.wisc.edu/~ece533/images/airplane.png',
+                    type: 1,
+                  },
+                  {
+                    file: 'https://homepages.cae.wisc.edu/~ece533/images/arctichare.png',
+                    type: 1,
+                  },
+                  {
+                    file: 'https://homepages.cae.wisc.edu/~ece533/images/baboon.png',
+                    type: 1,
+                  },
+                ]}
                 onClose={() => {
                   if (notificationList.length > 1) {
                     let oldData = notificationList;
@@ -1027,6 +1040,7 @@ const Dashboard = ({props, navigation}) => {
                 }}
               />
             )}
+
           <Video
             source={require('../../../Assets/Video/homeVideo.mp4')}
             resizeMode={'cover'}

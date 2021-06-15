@@ -32,7 +32,7 @@ import {
 import HeaderBar from '../../component/HeaderBar';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
 
-const {height: displayHeight, width: displayWidth} = Dimensions.get('window');
+const {width: displayWidth} = Dimensions.get('window');
 
 const PaginationStatus = {
   firstLoad: 0,
@@ -68,6 +68,7 @@ const Comments = ({route, navigation}) => {
   const [showModal, setShowModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState({});
   const [reportText, setReportText] = useState('');
+  const [nestingLevel, setNestingLevel] = useState('0');
 
   useEffect(() => {
     lastIndex = -1;
@@ -212,34 +213,6 @@ const Comments = ({route, navigation}) => {
         console.log('error->', error);
       },
     );
-  };
-
-  const getOptions = (obj) => {
-    return Object.keys(obj).reduce((acc, cur) => {
-      acc.push({
-        id: cur,
-        label: cur,
-        children: recurseList(obj[cur]),
-      });
-      return acc;
-    }, []);
-  };
-
-  const recurseList = (obj) => {
-    return Object.keys(obj).reduce((acc, cur) => {
-      if (obj[cur] instanceof Object) {
-        let data = {
-          id: cur,
-          label: cur,
-        };
-        const children = recurseList(obj[cur]);
-        if (children.length) {
-          data.children = children;
-        }
-        acc.push(data);
-      }
-      return acc;
-    }, []);
   };
 
   const postUserComment = (requestObject) => {
@@ -456,6 +429,7 @@ const Comments = ({route, navigation}) => {
           activeOpacity={0.9}
           onPress={() => {
             setSelectedPost(item);
+            setNestingLevel('0');
             setTimeout(() => {
               lastIndex = index;
               selectedOption = '';
@@ -561,13 +535,30 @@ const Comments = ({route, navigation}) => {
         {item.children.length > 0 &&
           item.children.map((child) => {
             return (
-              <View
+              <TouchableOpacity
+                onPress={() => {
+                  if (
+                    child.authorId !== undefined &&
+                    child.authorId !== null &&
+                    child.authorId._id === global.userId
+                  ) {
+                    setNestingLevel('1');
+                    setSelectedPost(child);
+                    lastIndex = index;
+                    selectedOption = '';
+                    if (
+                      refPostComments.current !== undefined &&
+                      refPostComments.current !== null
+                    ) {
+                      refPostComments.current.open();
+                    }
+                  }
+                }}
                 style={[
                   g.bggray3,
                   {
                     marginLeft: scale(20),
                     marginBottom: scale(10),
-
                     borderTopLeftRadius: 0,
                     borderBottomLeftRadius: scale(10),
                     borderTopRightRadius: scale(10),
@@ -655,7 +646,7 @@ const Comments = ({route, navigation}) => {
                     </Text>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             );
           })}
       </View>
@@ -667,7 +658,11 @@ const Comments = ({route, navigation}) => {
       <OptionsSheet
         ref={refPostComments}
         minClosingHeight={50}
-        height={280}
+        height={
+          selectedPost !== null && selectedPost.authorId._id === global.userId
+            ? 320
+            : 260
+        }
         duration={200}
         closeOnDragDown={false}
         keyboardAvoidingViewEnabled={false}
@@ -682,30 +677,33 @@ const Comments = ({route, navigation}) => {
             marginHorizontal: scale(10),
             borderRadius: 15,
           }}>
-          <TouchableOpacity
-            onPress={() => {
-              selectedOption = 'Replay';
-              if (
-                refPostComments.current !== undefined &&
-                refPostComments.current !== null
-              ) {
-                refPostComments.current.close();
-              }
-              setIsReplayEditComment(true);
-            }}
-            style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
-            <Text
-              style={[
-                g.fs18,
-                g.FHNM,
-                g.colorBlue,
-                grid.justifyContentCenter,
-                grid.alignItems,
-                g.txtCenterVertical,
-              ]}>
-              Reply
-            </Text>
-          </TouchableOpacity>
+          {nestingLevel === '0' && (
+            <TouchableOpacity
+              onPress={() => {
+                selectedOption = 'Replay';
+                if (
+                  refPostComments.current !== undefined &&
+                  refPostComments.current !== null
+                ) {
+                  refPostComments.current.close();
+                }
+                setIsReplayEditComment(true);
+              }}
+              style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
+              <Text
+                style={[
+                  g.fs18,
+                  g.FHNM,
+                  g.colorBlue,
+                  grid.justifyContentCenter,
+                  grid.alignItems,
+                  g.txtCenterVertical,
+                ]}>
+                Reply
+              </Text>
+            </TouchableOpacity>
+          )}
+
           {selectedPost !== null &&
             selectedPost.authorId._id === global.userId && (
               <TouchableOpacity

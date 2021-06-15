@@ -7,24 +7,30 @@ import {
   TouchableNativeFeedback,
   Platform,
   Animated,
+  Dimensions,
+  Text,
 } from 'react-native';
 
 import {scale} from '../theme/Scalling';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import {IconType} from '../helper/Constants';
 import CommonButton from './CommonButton';
-import FastImage from 'react-native-fast-image';
-import {createImageProgress} from 'react-native-image-progress';
+import ProgressImage from './ProgresImage';
+import FlatListSlider from './FlatListSlider';
+import Preview from './Preview';
+import SliderImage from './SliderImage';
+import g from '../theme/global';
+import grid from '../theme/grid';
 
-const AnimatedFastImage = Animated.createAnimatedComponent(FastImage);
-const ProgressImage = createImageProgress(AnimatedFastImage);
+const {height: displayHeight, width: displayWidth} = Dimensions.get('window');
 
-let opacity = new Animated.Value(0.0);
-
-const ZoomImage = (props) => {
+const ShowPopNotification = (props) => {
   const [showModal, setShowModal] = useState(true);
+  const [layoutWidth, setLayoutWidth] = useState(0);
   const {imagelink} = props;
+  console.log('====================================');
   console.log('imagelink', imagelink);
+  console.log('====================================');
   return (
     <View style={GlobalInclude.AppStyle.fill}>
       <Modal
@@ -38,71 +44,81 @@ const ZoomImage = (props) => {
         presentationStyle={'overFullScreen'}
         visible={showModal}>
         <View style={styles.modalView}>
-          <View style={styles.imageContainer}>
-            {imagelink !== '' ? (
-              <ProgressImage
-                source={{uri: imagelink}}
-                style={styles.imageStyle}
-                imageStyle={{
-                  opacity: opacity,
-                  transform: [
-                    {
-                      scale: opacity.interpolate({
-                        inputRange: [0, 1.0],
-                        outputRange: [0.85, 1.0],
-                      }),
-                    },
-                  ],
-                }}
-                indicatorProps={{
-                  animated: true,
-                  borderColor: 'red',
-                  borderWidth: 2,
-                  color: GlobalInclude.Color.ColorPrimary,
-                  direction: Platform.os === 'android' ? 'clockwise' : 'rtl',
-                  indeterminate: true,
-                  progress: 100,
-                  strokeCap: 'butt',
-                  size: scale(20),
-                }}
-                onLoad={() => {
-                  Animated.timing(opacity, {
-                    toValue: 1.0,
-                    duration: 200,
-                    useNativeDriver: true,
-                  }).start();
-                }}
-                resizeMode={FastImage.resizeMode.cover}
-                threshold={20}
-              />
-            ) : (
-              <View />
-            )}
-            <TouchableOpacity
-              onPress={() => {
-                setShowModal(!showModal);
-                props.onClose();
-              }}
-              style={styles.buttonCircle}
-              background={TouchableNativeFeedback.SelectableBackground()}>
-              <GlobalInclude.BaseIcon
-                containerStyle={{height: scale(30), width: scale(30)}}
-                iconColor={'#000'}
-                iconName={'close'}
-                iconSize={scale(30)}
-                iconType={IconType[8]}
-              />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.buttonContainer}>
-            <CommonButton
-              title={'LEARN MORE'}
-              radius={scale(12)}
-              onPress={() => {
-                setShowModal(!showModal);
-                props.onButtonPress();
-              }}
-            />
+          <View style={styles.containerView}>
+            <View style={GlobalInclude.AppStyle.fill}>
+              <View
+                style={[
+                  grid.rowdir,
+                  grid.alignItems,
+                  grid.justifyContentCenter,
+                ]}>
+                <Text
+                  style={[
+                    g.fs18,
+                    g.FHNB,
+                    g.colorBlue,
+                    grid.col,
+                    grid.justifyContentCenter,
+                    g.txtCenter,
+                  ]}
+                  numberOfLines={2}>
+                  Pop Notifications
+                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowModal(!showModal);
+                    props.onClose();
+                  }}
+                  style={styles.buttonCircle}
+                  background={TouchableNativeFeedback.SelectableBackground()}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(30), width: scale(30)}}
+                    iconColor={'#000'}
+                    iconName={'close'}
+                    iconSize={scale(30)}
+                    iconType={IconType[8]}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              <View
+                onLayout={(event) => {
+                  const {width} = event.nativeEvent.layout;
+                  console.log('width', width);
+                  setLayoutWidth(width);
+                }}>
+                <FlatListSlider
+                  width={layoutWidth}
+                  loop={false}
+                  data={imagelink}
+                  component={<SliderImage itemWidth={layoutWidth} />}
+                  autoscroll={false}
+                  indicator={imagelink.length > 1 ? true : false}
+                />
+              </View>
+            </View>
+            <View style={styles.buttonContainer}>
+              <View style={styles.button}>
+                <CommonButton
+                  title={'Take me Home'}
+                  radius={scale(12)}
+                  onPress={() => {
+                    setShowModal(!showModal);
+                    props.onButtonPress();
+                  }}
+                />
+              </View>
+              <View style={styles.button}>
+                <CommonButton
+                  title={'Check It Out'}
+                  radius={scale(12)}
+                  onPress={() => {
+                    setShowModal(!showModal);
+                    props.onButtonPress();
+                  }}
+                />
+              </View>
+            </View>
           </View>
         </View>
       </Modal>
@@ -122,6 +138,16 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: scale(10),
+  },
+  containerView: {
+    backgroundColor: 'white',
+    width: '100%',
+    alignSelf: 'center',
+    alignItems: 'center',
+    borderRadius: scale(10),
+    height: '65%',
   },
   buttonCircle: {
     width: scale(30),
@@ -130,36 +156,33 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     alignSelf: 'flex-end',
-
-    backgroundColor: 'white',
-    position: 'absolute',
-    right: 10,
-    top: 15,
     alignContent: 'center',
-    zIndex: 99,
+    marginEnd: scale(6),
+    marginTop: scale(10),
+    marginBottom: scale(5),
   },
   imageStyle: {
-    height: '100%',
-    width: '100%',
-    borderRadius: 30,
-    overflow: 'hidden',
-  },
-  imageContainer: {
-    height: '75%',
-    width: '95%',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    marginTop: scale(30),
+    aspectRatio: 1 / 1,
+    borderRadius: 0,
   },
   buttonContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    width: scale(150),
+
     paddingTop: scale(10),
     paddingBottom: scale(10),
     alignContent: 'center',
     alignSelf: 'center',
+    flexDirection: 'row',
+  },
+  button: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+    alignContent: 'center',
+    alignSelf: 'center',
+    marginHorizontal: scale(8),
   },
 });
 
-export default ZoomImage;
+export default ShowPopNotification;

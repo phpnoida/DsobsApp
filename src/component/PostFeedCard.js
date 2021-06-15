@@ -27,7 +27,6 @@ const {width: displayWidth} = Dimensions.get('window');
 class PostFeedCard extends PureComponent {
   constructor(props) {
     super(props);
-    this.state = {visibility: true};
   }
 
   showMediaIcon(status, iconName, iconType, label, onPress) {
@@ -121,12 +120,11 @@ class PostFeedCard extends PureComponent {
       <View style={GlobalInclude.AppStyle.fullWidth}>
         {item[0].type === 1 ? (
           <View>
-            {/* <ProgressImage
+            <ProgressImage
               source={{uri: item[0].file}}
               containerStyle={{width: '100%', aspectRatio: 1 / 1}}
-              mode={'contain'}
-            /> */}
-            <ResponsiveImage source={{uri: item[0].file}} />
+              mode={'cover'}
+            />
           </View>
         ) : item[0].type === 3 ? (
           <View>{this._renderDoc(item[0].file)}</View>
@@ -347,16 +345,14 @@ class PostFeedCard extends PureComponent {
   _showViewByType = (item) => {
     return item.length === 1 ? (
       this._renderOne(item)
-    ) : item.length === 2 ? (
-      this._renderTwo(item)
-    ) : item.length === 3 ? (
-      this._renderThree(item)
-    ) : item.length === 4 ? (
-      this._renderFour(item)
-    ) : item.length === 5 ? (
-      this._renderFive(item)
     ) : (
-      <View />
+      <FlatListSlider
+        loop={false}
+        data={item}
+        component={<SliderImage />}
+        autoscroll={false}
+        indicator={item.length > 1 ? true : false}
+      />
     );
   };
 
@@ -494,17 +490,26 @@ class PostFeedCard extends PureComponent {
                         grid.alignItems,
                         {
                           textAlign: 'justify',
-                          letterSpacing: 0.5,
                           fontWeight: '400',
                           fontSize: scale(18),
-                          color: 'rgb(5,5,5)',
-                          fontFamily: 'SegoeUI',
+                          color: '#262626',
+                          fontFamily: 'Roboto',
                         },
                       ]}>
                       {this.props.body}
                     </Text>
                   ) : (
-                    <SeeMore numberOfLines={7}>{this.props.body}</SeeMore>
+                    <SeeMore
+                      numberOfLines={8}
+                      style={{
+                        fontSize: scale(17),
+                        fontWeight: '400',
+                        fontFamily: 'Roboto',
+                        textAlign: 'justify',
+                        color: '#262626',
+                      }}>
+                      {this.props.body}
+                    </SeeMore>
                   )}
                 </View>
               ) : null}
@@ -517,7 +522,7 @@ class PostFeedCard extends PureComponent {
 
           {/* Post Image */}
           {this.props.links.length > 0 ? (
-            <View>
+            <View style={{width: displayWidth}}>
               {this.props.links[0].type === 2 ? (
                 <View />
               ) : (
@@ -537,7 +542,7 @@ class PostFeedCard extends PureComponent {
                 {this.showMediaIcon(this.props.status, 'like', 8, 'Likes', () =>
                   this.props.onClickMediaOption(1),
                 )}
-                {this.props.totalLikes > 0 && (
+                {/* {this.props.totalLikes > 0 && (
                   <Text
                     style={[
                       g.fs12,
@@ -551,7 +556,7 @@ class PostFeedCard extends PureComponent {
                     ]}>
                     {this.props.totalLikes}
                   </Text>
-                )}
+                )} */}
               </View>
             </View>
 
@@ -565,7 +570,7 @@ class PostFeedCard extends PureComponent {
                   'Comments',
                   () => this.props.onClickMediaOption(2),
                 )}
-                {this.props.totalComments > 0 && (
+                {/* {this.props.totalComments > 0 && (
                   <Text
                     style={[
                       g.fs12,
@@ -579,7 +584,7 @@ class PostFeedCard extends PureComponent {
                     ]}>
                     {this.props.totalComments}
                   </Text>
-                )}
+                )} */}
               </View>
             </View>
             {/* <View
