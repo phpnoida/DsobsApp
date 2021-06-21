@@ -184,7 +184,10 @@ SeeMore.defaultProps = {
   linkPressedColor: '#163772',
   seeMoreText: 'see more',
   seeLessText: 'see less',
-  style: {},
+  style: {
+    fontSize: 14,
+    fontWeight: undefined,
+  },
   linkStyle: undefined,
 };
 

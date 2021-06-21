@@ -68,6 +68,13 @@ const FollowUser = ({params}) => {
             let data = response.data;
 
             if (searchVal.length > 0) {
+              for (var i = data.data.length - 1; i >= 0; i--) {
+                const element = data.data[i];
+                if (element._id === global.userId) {
+                  data.data.splice(i, 1);
+                  break;
+                }
+              }
               setSearchedUser([...data.data]);
             } else {
               setSearchedUser([]);
@@ -122,7 +129,7 @@ const FollowUser = ({params}) => {
           ) {
             let data = response.data;
             if (data.status) {
-              responseMessage = `You successfully follow ${Helpers.concatName(
+              responseMessage = `You're now successfully following ${Helpers.concatName(
                 selectedUser,
               )}!`;
 
@@ -160,7 +167,7 @@ const FollowUser = ({params}) => {
             let data = response.data;
 
             if (data.status) {
-              responseMessage = `You successfully unfollow ${Helpers.concatName(
+              responseMessage = `You have successfully unfollowed ${Helpers.concatName(
                 selectedUser,
               )}!`;
 
@@ -185,7 +192,9 @@ const FollowUser = ({params}) => {
 
   const removeIndex = () => {
     Alert.alert(
-      'Are you sure you want to unfollow?',
+      `Are you sure you would like to unfollow ${Helpers.concatName(
+        selectedUser,
+      )}`,
       '',
       [
         {
@@ -319,8 +328,8 @@ const FollowUser = ({params}) => {
       {showNoFollowing ? (
         <View style={GlobalInclude.AppStyle.fillCenter}>
           <Text style={[g.fs16, g.FHNB, g.colorBlack]}>
-            You Don't have any followed users start following user by click on
-            follow button
+            You are currently not following any users. Click the Follow Button
+            to start.
           </Text>
           <View style={[styles.filterButton, g.mt10]}>
             <CommonButton

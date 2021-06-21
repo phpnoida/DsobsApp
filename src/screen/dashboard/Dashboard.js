@@ -111,7 +111,7 @@ const Dashboard = ({props, navigation}) => {
        */
       validatePushNotification();
 
-      //console.log('global.userDetails.fcmTopic', global.userDetails.fcmTopic);
+      console.log('global.userDetails.fcmTopic', global.userDetails.fcmTopic);
     });
 
     if (refreshState) {
@@ -148,6 +148,10 @@ const Dashboard = ({props, navigation}) => {
               response.response !== null
             ) {
               let data = response.data;
+
+              console.log('====================================');
+              console.log('PopNotifications', data);
+              console.log('====================================');
               if (data.status) {
                 if (data.data.length > 0) {
                   setNotificationList([...data.data]);
@@ -165,7 +169,8 @@ const Dashboard = ({props, navigation}) => {
   };
 
   const validatePushNotification = () => {
-    console.log('isNotificationTap', global.isNotificationTap);
+    console.log('global.isNotificationTap', global.isNotificationTap);
+    console.log('global.notification', global.notification);
     dispatch(clearState());
     if (global.notification !== undefined && global.notification !== null) {
       let data = global.notification.data;
@@ -179,7 +184,7 @@ const Dashboard = ({props, navigation}) => {
             link: linkUrl,
           });
         } else {
-          openSpecificPage(data.eventType);
+          openSpecificPage(data.eventType, data);
         }
       } else {
         //global.notification = null;
@@ -196,26 +201,18 @@ const Dashboard = ({props, navigation}) => {
       notification.linkUrl !== null &&
       notification.linkUrl !== ''
     ) {
-      let oldData = notificationList;
-      oldData.splice(currentNotificationIndex, 1);
-      setNotificationList([...oldData]);
-
       navigation.navigate('CommonWebPage', {
         link: notification.linkUrl,
       });
     } else {
       let eventType = notification.eventType.toString();
       if (eventType && eventType !== null && eventType !== '') {
-        let oldData = notificationList;
-        oldData.splice(currentNotificationIndex, 1);
-        setNotificationList([...oldData]);
-
-        openSpecificPage(eventType);
+        openSpecificPage(eventType, notification);
       }
     }
   };
 
-  const openSpecificPage = (type) => {
+  const openSpecificPage = (type, data) => {
     global.notification = null;
     global.isNotificationTap = false;
     switch (parseInt(type, 10)) {
@@ -248,6 +245,23 @@ const Dashboard = ({props, navigation}) => {
         break;
       case 9:
         navigation.navigate('YellowPages');
+        break;
+      case 201:
+        if (
+          data.commentId !== undefined &&
+          data.commentId !== null &&
+          data.commentId !== ''
+        ) {
+          navigation.navigate('Comments', {
+            data: {postId: data.postId, postIndex: -1},
+          });
+        } else {
+          navigation.navigate('MyPreviousPost', {
+            userId: data.userId,
+            title: data.userName + "'s post",
+          });
+        }
+
         break;
       default:
         break;
@@ -997,49 +1011,22 @@ const Dashboard = ({props, navigation}) => {
       style={{flex: 1, backgroundColor: GlobalInclude.Color.ColorPrimary}}>
       <View style={GlobalInclude.AppStyle.fill}>
         <View style={styles.videoContainerAndroid}>
-          {showPopNotification &&
-            notificationList.length > currentNotificationIndex && (
-              <ShowPopNotification
-                imagelink={[
-                  {
-                    file: 'https://homepages.cae.wisc.edu/~ece533/images/airplane.png',
-                    type: 1,
-                  },
-                  {
-                    file: 'https://homepages.cae.wisc.edu/~ece533/images/arctichare.png',
-                    type: 1,
-                  },
-                  {
-                    file: 'https://homepages.cae.wisc.edu/~ece533/images/baboon.png',
-                    type: 1,
-                  },
-                ]}
-                onClose={() => {
-                  if (notificationList.length > 1) {
-                    let oldData = notificationList;
-                    oldData.splice(currentNotificationIndex, 1);
-                    setNotificationList([...oldData]);
-                    currentNotificationIndex++;
-                    setShowPopNotification(false);
-                    setTimeout(() => {
-                      setShowPopNotification(true);
-                    }, 200);
-                  } else {
-                    setNotificationList([]);
-                    currentNotificationIndex = 0;
-                    setShowPopNotification(false);
-                  }
-                }}
-                onButtonPress={() => {
-                  setShowPopNotification(false);
-                  setTimeout(() => {
-                    openNotification(
-                      notificationList[currentNotificationIndex],
-                    );
-                  }, 200);
-                }}
-              />
-            )}
+          {showPopNotification && (
+            <ShowPopNotification
+              imagelink={notificationList}
+              onClose={() => {
+                setNotificationList([]);
+                currentNotificationIndex = 0;
+                setShowPopNotification(false);
+              }}
+              onButtonPress={(selectedItem) => {
+                setShowPopNotification(false);
+                setTimeout(() => {
+                  openNotification(selectedItem);
+                }, 200);
+              }}
+            />
+          )}
 
           <Video
             source={require('../../../Assets/Video/homeVideo.mp4')}

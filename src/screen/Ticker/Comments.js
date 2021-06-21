@@ -12,6 +12,7 @@ import {
   SafeAreaView,
   Dimensions,
   Modal,
+  BackHandler,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
@@ -31,6 +32,9 @@ import {
 } from '../../Actions/TickerActions';
 import HeaderBar from '../../component/HeaderBar';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
+import {useDispatch} from 'react-redux';
+import {increaseComment} from '../../reducer/NotificationReducer';
+import {StackActions} from '@react-navigation/native';
 
 const {width: displayWidth} = Dimensions.get('window');
 
@@ -46,11 +50,14 @@ let filterObject = {
 let lastIndex = -1;
 let totalCount = 0;
 let postId = '';
+let postIndex = -1;
 let selectedOption = '';
 let responseMessage = '';
+let inputValue = '';
 
 const Comments = ({route, navigation}) => {
   const refPostComments = useRef();
+  const dispatch = useDispatch();
 
   const [commentText, setCommentText] = useState('');
   const [commentError, setCommentError] = useState('');
@@ -73,13 +80,31 @@ const Comments = ({route, navigation}) => {
   useEffect(() => {
     lastIndex = -1;
     totalCount = 0;
+    postId = '';
+    postIndex = -1;
+    selectedOption = '';
+    responseMessage = '';
+    inputValue = '';
+
+    const backButtonHandler = () => {
+      console.log('83');
+      manageCommentDraft();
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backButtonHandler,
+    );
 
     if (route.params !== undefined && route.params !== null) {
       postId = route.params.data.postId;
+      postIndex = route.params.data.postIndex;
     }
 
     console.log('====================================');
     console.log('postId', postId);
+    console.log('postIndex', postIndex);
     console.log('====================================');
 
     if (global.isConnected) {
@@ -91,8 +116,84 @@ const Comments = ({route, navigation}) => {
       }
     }
 
-    return () => {};
+    console.log('global.commentDraft', global.commentDraft);
+
+    checkCommentExist();
+
+    return () => {
+      backHandler.remove();
+    };
   }, [route, navigation]);
+
+  const manageCommentDraft = () => {
+    console.log('commentText', inputValue);
+    if (inputValue !== '') {
+      addCommentIfNotExist(() => {
+        if (postIndex !== -1) {
+          navigation.goBack();
+        } else {
+          navigation.dispatch(StackActions.replace('CommonRoom'));
+        }
+      });
+    } else {
+      if (postIndex !== -1) {
+        navigation.goBack();
+      } else {
+        navigation.dispatch(StackActions.replace('CommonRoom'));
+      }
+    }
+  };
+
+  const checkCommentExist = () => {
+    var isExistComment = -1;
+    if (
+      global.commentDraft &&
+      global.commentDraft !== undefined &&
+      global.commentDraft !== null
+    ) {
+      for (let i = 0; i < global.commentDraft.length; i++) {
+        const child = global.commentDraft[i];
+        if (child.key && child.key !== undefined && child.key !== null) {
+          if (child.key === postId) {
+            setCommentText(child.message);
+            isExistComment = i;
+            break;
+          }
+        }
+      }
+    }
+    return isExistComment;
+  };
+
+  const addCommentIfNotExist = (callback) => {
+    var isExist = checkCommentExist();
+
+    console.log('====================================');
+    console.log('isExist', isExist);
+    console.log('====================================');
+    if (isExist === -1) {
+      if (
+        global.commentDraft &&
+        global.commentDraft !== undefined &&
+        global.commentDraft !== null
+      ) {
+        global.commentDraft.push({key: postId, message: inputValue});
+      } else {
+        global.commentDraft = [];
+        global.commentDraft.push({key: postId, message: inputValue});
+      }
+      callback();
+    } else {
+      if (
+        global.commentDraft &&
+        global.commentDraft !== undefined &&
+        global.commentDraft !== null
+      ) {
+        global.commentDraft[isExist].message = inputValue;
+      }
+      callback();
+    }
+  };
 
   /**
    *
@@ -109,8 +210,8 @@ const Comments = ({route, navigation}) => {
   };
 
   const onEndReached = () => {
-    console.log('onEndReached()');
-    if (comments.length === totalCount || comments.length < 10) {
+    console.log('onEndReached()', paginationStatus);
+    if (getCount() === totalCount || totalCount < 10) {
       setPaginationStatus(PaginationStatus.allLoaded);
       return;
     }
@@ -162,10 +263,6 @@ const Comments = ({route, navigation}) => {
             if (data.status) {
               if (data.data !== undefined && data.data !== null) {
                 let items = data.data;
-
-                // var result = getOptions(items);
-                console.log('result', JSON.stringify(items));
-
                 for (var key in items) {
                   if (items.hasOwnProperty(key)) {
                     let object = items[key];
@@ -197,7 +294,7 @@ const Comments = ({route, navigation}) => {
                 }
               }
               if (filterObject.index === 0) {
-                if (commentList.length < 10) {
+                if (totalCount < 10) {
                   setPaginationStatus(PaginationStatus.allLoaded);
                 } else {
                   setPaginationStatus(PaginationStatus.waiting);
@@ -220,6 +317,8 @@ const Comments = ({route, navigation}) => {
     addUserComment(
       requestObject,
       (response) => {
+        setIsCommenting(false);
+        setIsReplayEditComment(false);
         if (response && response !== null) {
           if (
             response.data &&
@@ -229,13 +328,19 @@ const Comments = ({route, navigation}) => {
             let data = response.data;
             if (data.status) {
               lastIndex = -1;
+              inputValue = '';
               setCommentError('');
               setCommentText('');
-              setIsCommenting(false);
-              setIsReplayEditComment(false);
               selectedOption = '';
-
               setTimeout(() => {
+                if (postIndex !== -1) {
+                  let updateData = {
+                    postIndex: postIndex,
+                    count: getCount() + 1,
+                  };
+                  dispatch(increaseComment(updateData));
+                }
+
                 handleRefresh();
               }, 200);
             } else {
@@ -244,6 +349,7 @@ const Comments = ({route, navigation}) => {
         }
       },
       (code, error) => {
+        setIsCommenting(false);
         lastIndex = -1;
         setCommentError('');
         setCommentText('');
@@ -251,6 +357,21 @@ const Comments = ({route, navigation}) => {
         Alert.alert('Something went wrong', error);
       },
     );
+  };
+
+  const getCount = () => {
+    var count = 0;
+
+    for (let i = 0; i < comments.length; i++) {
+      const element = comments[i];
+      if (element.children.length > 0) {
+        for (let j = 0; j < element.children.length; j++) {
+          count = count + 1;
+        }
+      }
+      count = count + 1;
+    }
+    return count;
   };
 
   const updateUserCommentData = () => {
@@ -271,12 +392,21 @@ const Comments = ({route, navigation}) => {
             let data = response.data;
             if (data.status) {
               selectedOption = '';
+              inputValue = '';
               setIsCommenting(false);
               setCommentError('');
               setCommentText('');
               setIsReplayEditComment(false);
 
               setTimeout(() => {
+                if (postIndex !== -1) {
+                  let updateData = {
+                    postIndex: postIndex,
+                    count: getCount() - 1,
+                  };
+                  dispatch(increaseComment(updateData));
+                }
+
                 handleRefresh();
               }, 200);
             } else {
@@ -306,14 +436,25 @@ const Comments = ({route, navigation}) => {
           ) {
             let data = response.data;
             if (data.status) {
-              let commentList = comments;
-
-              commentList.splice(lastIndex, 1);
-              setComments([...commentList]);
-
+              // let commentList = comments;
+              // commentList.splice(lastIndex, 1);
+              // setComments([...commentList]);
               lastIndex = -1;
+              inputValue = '';
               setCommentError('');
               setCommentText('');
+
+              setTimeout(() => {
+                if (postIndex !== -1) {
+                  let updateData = {
+                    postIndex: postIndex,
+                    count: getCount(),
+                  };
+                  dispatch(increaseComment(updateData));
+                }
+
+                handleRefresh();
+              }, 200);
             }
           }
         }
@@ -404,7 +545,7 @@ const Comments = ({route, navigation}) => {
   const renderFooter = () => {
     return (
       <View style={styles.footerView}>
-        {comments.length === totalCount && comments.length < 10 ? (
+        {comments.length === totalCount && comments.length <= 10 ? (
           <View />
         ) : (
           <View style={{height: scale(30)}}>
@@ -424,7 +565,7 @@ const Comments = ({route, navigation}) => {
 
   const renderItem = ({item, index}) => {
     return (
-      <View>
+      <View key={index}>
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={() => {
@@ -515,7 +656,6 @@ const Comments = ({route, navigation}) => {
               </Text>
             </View>
             <Text
-              numberOfLines={3}
               style={[
                 g.fs12,
                 g.FHNR,
@@ -533,9 +673,10 @@ const Comments = ({route, navigation}) => {
           </View>
         </TouchableOpacity>
         {item.children.length > 0 &&
-          item.children.map((child) => {
+          item.children.map((child, index) => {
             return (
               <TouchableOpacity
+                key={index}
                 onPress={() => {
                   if (
                     child.authorId !== undefined &&
@@ -716,6 +857,7 @@ const Comments = ({route, navigation}) => {
                     refPostComments.current.close();
                   }
                   setIsReplayEditComment(true);
+                  setCommentText(selectedPost.commentText);
                 }}
                 style={[
                   grid.justifyContentCenter,
@@ -844,7 +986,11 @@ const Comments = ({route, navigation}) => {
 
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
-      <HeaderBar navigation={navigation} showBack={true} />
+      <HeaderBar
+        navigation={navigation}
+        showBack={true}
+        onGoBack={() => manageCommentDraft()}
+      />
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={grid.flex1}>
           {firstTimeLoad ? (
@@ -952,15 +1098,32 @@ const Comments = ({route, navigation}) => {
               style={[grid.rowrow, grid.justifyContentCenter, grid.alignItems]}>
               <TextInput
                 underlineColorAndroid={'transparent'}
-                style={[g.inputWhite, grid.flex1, g.mr5]}
+                style={[
+                  grid.flex1,
+                  g.mr5,
+                  {
+                    backgroundColor: '#f8f8f8',
+                    padding: scale(10),
+                    margin: 0,
+                    minHeight: scale(38),
+                    width: '100%',
+                    fontSize: scale(12),
+                    borderRadius: scale(8),
+                    fontFamily: 'Lato-Regular',
+                    justifyContent: 'center',
+                    textAlignVertical: 'center',
+                  },
+                ]}
                 keyboardType={'default'}
-                autoCapitalize={'none'}
+                autoCapitalize={'sentences'}
                 returnKeyType={'done'}
                 value={commentText}
+                multiline={true}
                 placeholder={'Add/Paste Comment'}
                 onChangeText={(value) => {
                   setCommentText(value);
                   setCommentError('');
+                  inputValue = value;
                 }}
               />
 

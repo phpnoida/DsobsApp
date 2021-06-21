@@ -197,9 +197,8 @@ android {
                         versionCodes.get(abi) * 1048576 + defaultConfig.versionCode
             }
 
-//            def formattedDate = new Date().format('dd_MM_yyyy')
-//            def fileName = applicationName + "_V" + defaultConfig.versionCode+"_"+versionCodes.get(abi) + "_" + formattedDate
-//            outputFileName = "${fileName}.apk"
+           def formattedDate = new Date().format('dd_MM_yyyy_hh_mm_ss')
+           outputFileName = "Ticker ${formattedDate}.apk"
         }
     }
 

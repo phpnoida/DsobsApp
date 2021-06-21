@@ -321,7 +321,6 @@ export function doReportPost(payload, callback, errCallback) {
 
 export function getUserPostSettings(callback, errCallback) {
   let requestPath = `${SERVER_PATH}posts/settings`;
-
   const request = axios
     .get(requestPath, {
       headers: {Authorization: global.accessToken},

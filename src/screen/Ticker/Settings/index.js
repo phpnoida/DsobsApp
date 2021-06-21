@@ -1,12 +1,5 @@
-import React, {useState, useEffect, useRef} from 'react';
-import {
-  View,
-  StyleSheet,
-  SafeAreaView,
-  Text,
-  ActivityIndicator,
-  Dimensions,
-} from 'react-native';
+import React from 'react';
+import {View, StyleSheet, SafeAreaView} from 'react-native';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import HeaderBar from '../../../component/HeaderBar';
 import {scale} from '../../../theme/Scalling';
@@ -15,7 +8,6 @@ import grid from '../../../theme/grid';
 import ScrollableTabView, {
   ScrollableTabBar,
 } from 'react-native-scrollable-tab-view';
-import {IconType} from '../../../helper/Constants';
 import ViewPost from './ViewPost';
 import FollowUser from './FollowUser';
 import Notifications from './Notifications';

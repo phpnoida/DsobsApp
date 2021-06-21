@@ -18,6 +18,7 @@ let itemArray = [
 ];
 
 let selectedSetting = '';
+let defaultSelected = '';
 
 const MyPost = ({params}) => {
   const [selectedFilter, setSelectedFilter] = useState('');
@@ -46,13 +47,18 @@ const MyPost = ({params}) => {
               if (data.data !== null) {
                 let settings = data.data;
 
+                console.log('====================================');
+                console.log('settings', settings);
+                console.log('====================================');
+
                 if (
                   settings.myPostsNotifySettings !== undefined &&
                   settings.myPostsNotifySettings !== null
                 ) {
                   //myPostsNotifySettings= 0-no notification 1-send notification on all comments 2-twice a day 3-one a day
                   let postSettings = settings.myPostsNotifySettings;
-
+                  selectedSetting = postSettings;
+                  defaultSelected = postSettings;
                   switch (postSettings) {
                     case 0:
                       setSelectedFilter('Send No Notification');
@@ -102,9 +108,6 @@ const MyPost = ({params}) => {
             response.data !== null
           ) {
             let data = response.data;
-            console.log('====================================');
-            console.log('update response', data);
-            console.log('====================================');
             if (data.status) {
               selectedSetting = '';
               setSelectedFilter('');
@@ -118,9 +121,6 @@ const MyPost = ({params}) => {
         }
       },
       (error) => {
-        console.log('====================================');
-        console.log(error);
-        console.log('====================================');
         setIsSubmitting(false);
         getPostSettings();
       },
@@ -136,6 +136,7 @@ const MyPost = ({params}) => {
           onRadioSelect={(item) => {
             console.log('item', item);
             selectedSetting = item.id;
+            defaultSelected = '';
             setSelectedFilter(item.text.toString());
           }}
         />
@@ -147,6 +148,8 @@ const MyPost = ({params}) => {
           onPress={() => {
             if (selectedSetting === '') {
               Alert.alert('Required Selection', 'You must select one setting');
+            } else if (defaultSelected === selectedSetting) {
+              Alert.alert('Already Selected', 'Settings already selected');
             } else {
               setUserSettings();
             }

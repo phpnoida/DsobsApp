@@ -42,7 +42,8 @@ const Etiquette = ({navigation}) => {
           <View style={[grid.justifyContentCenter, grid.alignItems]}>
             <Text
               style={[
-                g.fs15,
+                g.mb10,
+                g.fs18,
                 g.FHNB,
                 g.colorBlack,
                 {
@@ -61,19 +62,19 @@ const Etiquette = ({navigation}) => {
           {showText(
             'The idea of the Common Room is to create a space for new thought, stimulation, conversation and engagement.',
           )}
-          <View style={{marginVertical: scale(3)}} />
+          <View style={{marginVertical: scale(12)}} />
           {showText(
             'To create an intellectual space for creative, constructive and thought provoking  posts, comments, articles, videos and perspectives. ',
           )}
-          <View style={{marginVertical: scale(3)}} />
+          <View style={{marginVertical: scale(12)}} />
           {showText('You can make 10 posts a week.')}
-          <View style={{marginVertical: scale(3)}} />
+          <View style={{marginVertical: scale(12)}} />
           {showText("Please don't post in anger.")}
-          <View style={{marginVertical: scale(3)}} />
+          <View style={{marginVertical: scale(12)}} />
           {showText(
             'Please refrain from political posts even though these are very critical times for the country. We plan to have those conversations in private like minded groups. ',
           )}
-          <View style={{marginVertical: scale(3)}} />
+          <View style={{marginVertical: scale(12)}} />
           {showText(
             `The ${APP_NAME} admins retain the right to remove objectionable posts.`,
           )}

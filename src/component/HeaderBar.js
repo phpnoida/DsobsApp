@@ -22,6 +22,7 @@ const HeaderBar = ({
   onLabelPress,
   customIcon,
   customIconPress,
+  onGoBack,
 }) => {
   return (
     <View
@@ -60,7 +61,11 @@ const HeaderBar = ({
           {showBack && (
             <TouchableOpacity
               onPress={() => {
-                navigation.goBack();
+                if (onGoBack) {
+                  onGoBack();
+                } else {
+                  navigation.goBack();
+                }
               }}>
               <Image
                 source={GlobalInclude.Assets.Back}

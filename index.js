@@ -15,7 +15,7 @@ LogBox.ignoreAllLogs();
 messaging().setBackgroundMessageHandler(async (remoteMessage) => {
   if (remoteMessage) {
     global.notification = remoteMessage;
-   // global.isNotificationTap = true;
+    global.isNotificationTap = true;
     Helper.presentNotification('background-16', remoteMessage);
   }
 });

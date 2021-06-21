@@ -44,7 +44,11 @@ const YoutubeView = (props) => {
           style={props.containerStyle ? props.containerStyle : style.container}
         />
       ) : (
-        <View>
+        <TouchableOpacity
+          onPress={() => {
+            setPlayVideo(true);
+          }}
+          activeOpacity={1}>
           {thumbnail !== undefined && thumbnail !== null && thumbnail !== '' ? (
             <View
               style={
@@ -93,7 +97,7 @@ const YoutubeView = (props) => {
               <WebView source={{uri: props.link}} />
             </View>
           )}
-        </View>
+        </TouchableOpacity>
       )}
     </View>
   );

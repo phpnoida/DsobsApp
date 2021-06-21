@@ -9,6 +9,7 @@ import {
   StyleSheet,
   TextInput,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import HeaderBar from '../../../component/HeaderBar';
@@ -31,7 +32,6 @@ import {
 import ModelAlert from '../../../component/ModalAlert';
 import {getCategories, addPost, editPost} from '../../../Actions/TickerActions';
 import {getScrappedData} from '../../../Actions/CommonActions';
-import {CommonActions} from '@react-navigation/native';
 
 let selectedIndex = -1;
 let responseMessage = '';
@@ -40,6 +40,8 @@ let inEditMode = false;
 let postId = '';
 let newsBody = '';
 let newsImage = '';
+let title = '';
+let newsLink = '';
 
 const PostTicker = ({route, navigation}) => {
   const categoryRef = useRef();
@@ -62,11 +64,19 @@ const PostTicker = ({route, navigation}) => {
   const [submitting, setSubmitting] = useState(false);
   const [disableImage, setDisableImage] = useState(false);
   const [disableDoc, setDisableDoc] = useState(false);
+  const [backgroundColor, setBackgroundColor] = useState('');
 
   useEffect(() => {
     selectedIndex = -1;
+    responseMessage = '';
+    isSuccess = false;
     inEditMode = false;
     postId = '';
+    newsBody = '';
+    newsImage = '';
+    title = '';
+    newsLink = '';
+
     if (route.params !== undefined && route.params !== null) {
       if (route.params.data !== undefined && route.params.data !== null) {
         inEditMode = route.params.data.inEditMode;
@@ -89,6 +99,7 @@ const PostTicker = ({route, navigation}) => {
       setInputValue(defaultData.body);
       setMyComment(defaultData.comment);
       setSelectedTags(defaultData.tags);
+      setBackgroundColor(defaultData.colorCode);
 
       postId = defaultData._id;
 
@@ -169,7 +180,7 @@ const PostTicker = ({route, navigation}) => {
                 data.data.map((item, index) => {
                   categoryArray.push({
                     key: item.id,
-                    text: Helper.capitalize(item.name),
+                    text: item.name,
                   });
                 });
               }
@@ -196,14 +207,22 @@ const PostTicker = ({route, navigation}) => {
           response.data !== null
         ) {
           let data = response.data;
-          console.log('====================================');
-          console.log('data', JSON.stringify(data));
-          console.log('====================================');
+
+          console.log('data', data);
+
           if (data.status) {
             let child = data.data;
             newsBody =
               child.description !== undefined && child.description !== null
                 ? child.description
+                : '';
+            title =
+              child.title !== undefined && child.title !== null
+                ? child.title
+                : '';
+            newsLink =
+              child.site_url !== undefined && child.site_url !== null
+                ? child.site_url
                 : '';
 
             if (
@@ -256,12 +275,38 @@ const PostTicker = ({route, navigation}) => {
       links.push(newsImage);
     }
 
+    let bodyContent = '';
+    let newsTitle = '';
+    let linkHost = '';
+    let redirectURL = '';
+
+    if (categoryId === 4 || categoryId === 5) {
+      if (myComment !== undefined && myComment !== null && myComment !== '') {
+        bodyContent = myComment;
+      } else {
+        if (categoryId === 4) {
+          bodyContent = newsBody;
+        }
+      }
+      newsTitle = title;
+      linkHost = newsLink;
+      redirectURL = youtubeLink;
+    } else if (categoryId === 8) {
+      bodyContent = myComment;
+    } else {
+      bodyContent = inputValue;
+    }
+
     let requestObject = {
       categoryId: categoryId,
-      body: categoryId !== 4 ? inputValue : newsBody,
+      body: bodyContent,
+      title: newsTitle,
+      linkHost: linkHost,
       comment: myComment,
       tags: selectedTags,
+      colorCode: backgroundColor,
       links: links,
+      fullUrl: redirectURL,
       videoLinks: [],
       imageLinks: [],
       pdfLinks: [],
@@ -340,8 +385,8 @@ const PostTicker = ({route, navigation}) => {
             if (data.status) {
               isSuccess = true;
               setTimeout(() => {
-                 route.params.onGoBack();
-                 navigation.goBack();
+                route.params.onGoBack();
+                navigation.goBack();
               }, 250);
             } else {
               responseMessage = 'Error while updating your request!';
@@ -359,7 +404,7 @@ const PostTicker = ({route, navigation}) => {
 
   const completePosting = () => {
     setSubmitting(true);
-    if (categoryId === 4) {
+    if (categoryId === 4 || categoryId === 5) {
       doScrapping(() => {
         savePostData();
       });
@@ -435,6 +480,59 @@ const PostTicker = ({route, navigation}) => {
     }
   };
 
+  const showColourButton = (code) => {
+    return (
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={() => setBackgroundColor(code)}
+        style={{
+          height: scale(20),
+          width: scale(20),
+          backgroundColor: code,
+          borderRadius: scale(5),
+          marginHorizontal: scale(2),
+        }}
+      />
+    );
+  };
+
+  const showColorSelection = () => {
+    return (
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={grid.justifyContentRight}>
+        <View style={[grid.rowdir, grid.alignItems, grid.justifyContentRight]}>
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => setBackgroundColor('')}
+            style={{
+              height: scale(20),
+              width: scale(20),
+              backgroundColor: '#f8f8f8',
+              borderRadius: scale(5),
+              marginHorizontal: scale(2),
+            }}
+          />
+          <View
+            style={[{height: scale(30), width: 3}, g.bggray5, g.ml2, g.mr2]}
+          />
+          {showColourButton('#4AAA68')}
+          {showColourButton('#F76323')}
+          {showColourButton('#F35269')}
+          {showColourButton('#000')}
+          {showColourButton('#E9F1FF')}
+          {showColourButton('#F3EEAA')}
+          {showColourButton('#FBBFC0')}
+          {showColourButton('#008080')}
+          {showColourButton('#FAD583')}
+          {showColourButton('#27336B')}
+          {showColourButton('#4F5265')}
+        </View>
+      </ScrollView>
+    );
+  };
+
   const showInput = () => {
     return (
       <View>
@@ -442,7 +540,22 @@ const PostTicker = ({route, navigation}) => {
         <TextInput
           underlineColorAndroid="transparent"
           numberOfLines={16}
-          style={[g.inputWhite, {height: scale(160), textAlignVertical: 'top'}]}
+          style={[
+            g.inputWhite,
+            {
+              height: scale(160),
+              textAlignVertical: 'top',
+              backgroundColor:
+                backgroundColor !== '' ? backgroundColor : '#f8f8f8',
+              color:
+                backgroundColor !== ''
+                  ? Helper.getContrastYIQ(backgroundColor)
+                  : 'black',
+            },
+          ]}
+          placeholderTextColor={
+            backgroundColor !== '' && Helper.getContrastYIQ(backgroundColor)
+          }
           value={inputValue}
           keyboardType={'default'}
           autoCapitalize={'sentences'}
@@ -526,7 +639,7 @@ const PostTicker = ({route, navigation}) => {
                 if (categoryId === 8) {
                   Alert.alert(
                     'Max Upload Reached',
-                    'You can upload max 5 media',
+                    'You can only upload 5 images or PDFs',
                   );
                 } else {
                   Alert.alert(
@@ -568,7 +681,7 @@ const PostTicker = ({route, navigation}) => {
                 if (categoryId === 8) {
                   Alert.alert(
                     'Max Upload Reached',
-                    'You can upload max 5 media',
+                    'You can only upload 5 images or PDFs',
                   );
                 } else {
                   Alert.alert(
@@ -765,12 +878,31 @@ const PostTicker = ({route, navigation}) => {
   const loadTab = () => {
     switch (categoryId) {
       case 1:
-        return <View style={g.mt15}>{showInput()}</View>;
+        return (
+          <View style={g.mt15}>
+            {showInput()}
+            <View style={[g.mt5, g.mb5]} />
+            {showColorSelection()}
+          </View>
+        );
       case 2:
+        return (
+          <View style={g.mt15}>
+            {showInput()}
+            <View style={[g.mt5, g.mb5]} />
+            {showColorSelection()}
+            <View style={[g.mt5, g.mb5]} />
+            {showUploadPhoto(false, 'Upload Photo')}
+            <View style={[g.mt5, g.mb5]} />
+            {showUploadedMedia()}
+          </View>
+        );
       case 3:
         return (
           <View style={g.mt15}>
             {showInput()}
+            <View style={[g.mt5, g.mb5]} />
+            {showColorSelection()}
             <View style={[g.mt5, g.mb5]} />
             {showUploadPhoto(false, 'Upload Photo')}
             <View style={[g.mt5, g.mb5]} />
@@ -802,6 +934,8 @@ const PostTicker = ({route, navigation}) => {
           <View style={g.mt15}>
             {showInput()}
             <View style={[g.mt5, g.mb5]} />
+            {showColorSelection()}
+            <View style={[g.mt5, g.mb5]} />
             {showMyCommentInput()}
           </View>
         );
@@ -810,11 +944,11 @@ const PostTicker = ({route, navigation}) => {
           <View style={g.mt15}>
             {showInput()}
             <View style={[g.mt5, g.mb5]} />
+            {showColorSelection()}
+            <View style={[g.mt5, g.mb5]} />
             {showUploadPhoto(false, 'Upload Photo')}
             <View style={[g.mt5, g.mb5]} />
             {showUploadedMedia()}
-            <View style={[g.mt5, g.mb5]} />
-            {showMyCommentInput()}
           </View>
         );
       case 8:
@@ -849,6 +983,7 @@ const PostTicker = ({route, navigation}) => {
     setMediaData([]);
     setSelectedTags([]);
     setShowImageLoading(false);
+    setBackgroundColor('');
   };
 
   const showCategories = () => {

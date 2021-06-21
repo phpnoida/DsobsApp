@@ -40,6 +40,7 @@ const App = ({navigation}) => {
   const dispatch = useDispatch();
   useEffect(() => {
     SplashScreen.hide();
+    global.commentDraft = [];
     global.isLoggedIn = false;
     const unsubscribe = NetInfo.addEventListener((state) => {
       global.isConnected = state.isConnected;
@@ -88,9 +89,9 @@ const App = ({navigation}) => {
     }
 
     const onMessage = messaging().onMessage(async (remoteMessage) => {
-      //global.isNotificationTap = true;
+      global.isNotificationTap = true;
       console.log('83');
-      handleNotification('onMessage', remoteMessage);
+      handleNotification('messaging().onMessage', remoteMessage);
     });
 
     messaging().onNotificationOpenedApp((remoteMessage) => {
@@ -239,8 +240,11 @@ const App = ({navigation}) => {
   }
 
   const handleNotification = (from, data) => {
-    console.log('currentState', currentState);
+    //console.log('currentState', currentState);
     global.notification = data;
+    console.log('====================================');
+    console.log('Notifciation', data);
+    console.log('====================================');
     Helper.presentNotification(from, data);
   };
 

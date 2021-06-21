@@ -85,7 +85,6 @@ const Login = ({navigation}) => {
     const _requestForPhoneNumber = async () => {
       try {
         const phoneNumber = await SmsRetriever.requestPhoneNumber();
-
         let match = parsePhoneNumber(phoneNumber);
         const asYouType = new AsYouType();
         asYouType.input(match.formatInternational());
@@ -94,16 +93,20 @@ const Login = ({navigation}) => {
       } catch (error) {}
     };
 
-    setTimeout(() => {
-      _requestForPhoneNumber();
-    }, 300);
+    if (Platform.OS === 'android') {
+      setTimeout(() => {
+        _requestForPhoneNumber();
+      }, 300);
+    }
 
     return () => {
       if (timerInterval !== null) {
         clearInterval(timerInterval);
       }
       //unsubscribe();
-      SmsRetriever.removeSmsListener();
+      if (Platform.OS === 'android') {
+        SmsRetriever.removeSmsListener();
+      }
     };
   }, []);
 
@@ -198,9 +201,11 @@ const Login = ({navigation}) => {
       if (global.isConnected) {
         getAuthCode(requestData);
 
-        const registered = await SmsRetriever.startSmsRetriever();
-        if (registered) {
-          SmsRetriever.addSmsListener(_onReceiveSms);
+        if (Platform.OS === 'android') {
+          const registered = await SmsRetriever.startSmsRetriever();
+          if (registered) {
+            SmsRetriever.addSmsListener(_onReceiveSms);
+          }
         }
       }
     }

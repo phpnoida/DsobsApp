@@ -8,6 +8,8 @@ import {
   Dimensions,
   Animated,
   Alert,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -24,9 +26,17 @@ import {
   doFitlerPost,
 } from '../../Actions/TickerActions';
 import PostFeedCard from '../../component/PostFeedCard';
+import ImageViewer from 'react-native-image-zoom-viewer';
+import DocViewer from '../../component/DocViewer';
+import {IconType} from '../../helper/Constants';
+import {useDispatch, useSelector, shallowEqual} from 'react-redux';
+import {
+  clearIncreaseComment,
+  refreshPreviousScreen,
+} from '../../reducer/NotificationReducer';
+import {StackActions} from '@react-navigation/native';
 
 const {height: displayHeight} = Dimensions.get('window');
-
 const PaginationStatus = {
   firstLoad: 0,
   waiting: 1,
@@ -40,9 +50,15 @@ let filterObject = {
 };
 let postMode = '';
 let selectedIndex = -1;
-
+let responseMessage = '';
+let searchVal = '';
+let imageArray = [];
 let dataSourceCords = [];
-const MyPreviousPost = ({navigation}) => {
+let documentItem = '';
+let commentUpddate = null;
+let selectedUserId = '';
+
+const MyPreviousPost = ({route, navigation}) => {
   const refPostOptions = useRef();
   const refPostLikes = useRef();
   const refFlatList = useRef();
@@ -54,14 +70,69 @@ const MyPreviousPost = ({navigation}) => {
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedFeed, setSelectedFeed] = useState(null);
+  const [showImageViewer, setshowImageViewer] = useState(false);
+  const [showDocViewer, setShowDocViewer] = useState(false);
+  const [postTitle, setPostTitle] = useState('My Post');
+  const dispatch = useDispatch();
+
+  const refreshState = useSelector((state) => {
+    if (state.notification && state.notification !== undefined) {
+      let notification = state.notification;
+      if (
+        notification.commentUpdate &&
+        notification.commentUpdate !== undefined
+      ) {
+        //{"commentData": {"count": 4, "postIndex": 0}, "commentUpdate": true, "refresh": false}
+        if (
+          notification.commentData &&
+          notification.commentData !== null &&
+          notification.commentData !== undefined
+        ) {
+          commentUpddate = notification.commentData;
+        }
+        return true;
+      }
+    }
+    return false;
+  }, shallowEqual);
 
   useEffect(() => {
+    if (refreshState) {
+      let oldData = postContent;
+      if (commentUpddate !== undefined && commentUpddate !== null) {
+        let postIndex = commentUpddate.postIndex;
+        let count = commentUpddate.count;
+        oldData[postIndex].totalComments = count;
+      }
+
+      setTimeout(() => {
+        dispatch(clearIncreaseComment());
+        setTimeout(() => {
+          setPostContent([...oldData]);
+        }, 100);
+      }, 200);
+    }
+    return () => {};
+  }, [refreshState]);
+
+  useEffect(() => {
+    selectedUserId = '';
+    if (route.params !== undefined && route.params !== null) {
+      selectedUserId = route.params.userId;
+      setPostTitle(route.params.title);
+    }
     postMode = '';
     const unsubscribe = navigation.addListener('focus', () => {
       if (global.isConnected) {
         postMode = '';
         resetCount();
-        getMyTickers(filterObject);
+        if (selectedUserId === global.userId) {
+          getMyTickers(filterObject);
+        } else {
+          postMode = '';
+          filterObject.authorId = selectedUserId;
+          getTickerPost(filterObject);
+        }
       }
     });
 
@@ -157,6 +228,8 @@ const MyPreviousPost = ({navigation}) => {
                 navigation.navigate('PostTicker', {
                   data: {inEditMode: true, data: item},
                 });
+              } else {
+                manageResponse(response);
               }
             }
           }
@@ -207,7 +280,15 @@ const MyPreviousPost = ({navigation}) => {
       console.log('onPaginate()');
       setPaginationStatus(PaginationStatus.waiting);
       filterObject.index = filterObject.index + 1;
-      getMyTickers(filterObject);
+      if (
+        filterObject.authorId &&
+        filterObject.authorId !== undefined &&
+        filterObject.authorId !== null
+      ) {
+        getTickerPost(filterObject);
+      } else {
+        getMyTickers(filterObject);
+      }
     }
   };
 
@@ -370,11 +451,18 @@ const MyPreviousPost = ({navigation}) => {
 
   const renderItem = ({item, index}) => (
     <PostFeedCard
-      key={index}
+      navigation={navigation}
       itemIndex={index}
+      postId={item._id}
       author={item.author}
       status={item.status}
       postedAt={item.postedAt}
+      categoryId={item.categoryId}
+      categoryMsg={item.categoryMsg}
+      title={item.title}
+      linkHost={item.linkHost}
+      fullUrl={item.fullUrl}
+      colorCode={item.colorCode}
       body={item.body}
       links={item.links}
       totalLikes={item.totalLikes}
@@ -391,16 +479,31 @@ const MyPreviousPost = ({navigation}) => {
           });
         }
       }}
+      onItemCallback={(post, clickIndex) => {
+        imageArray = [];
+        console.log('post[clickIndex].type', post[clickIndex]);
+        if (post[clickIndex].type === 3) {
+          documentItem = post[clickIndex].file;
+          setShowDocViewer(true);
+        } else {
+          post.map((child, indx) => {
+            if (child.type === 1) {
+              imageArray.push({url: child.file, key: indx});
+            }
+          });
+          if (imageArray.length > 0) {
+            setshowImageViewer(true);
+          }
+        }
+      }}
       onClickPostOptions={() => {
         setSelectedFeed(item);
-        setTimeout(() => {
-          if (
-            refPostOptions.current !== undefined &&
-            refPostOptions.current !== null
-          ) {
-            refPostOptions.current.open();
-          }
-        }, 300);
+        if (
+          refPostOptions.current !== undefined &&
+          refPostOptions.current !== null
+        ) {
+          refPostOptions.current.open();
+        }
       }}
       onClickMediaOption={(type) => {
         selectedIndex = index;
@@ -417,7 +520,9 @@ const MyPreviousPost = ({navigation}) => {
             }
           }, 200);
         } else if (type === 2) {
-          navigation.navigate('Comments', {data: {postId: item._id}});
+          navigation.navigate('Comments', {
+            data: {postId: item._id, postIndex: index},
+          });
         }
       }}
     />
@@ -427,7 +532,17 @@ const MyPreviousPost = ({navigation}) => {
 
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
-      <HeaderBar title={'My Post'} navigation={navigation} showBack={true} />
+      <HeaderBar
+        title={postTitle}
+        navigation={navigation}
+        showBack={true}
+        onGoBack={() => {
+          //dispatch(refreshPreviousScreen());
+          setTimeout(() => {
+            navigation.dispatch(StackActions.replace('CommonRoom'));
+          }, 100);
+        }}
+      />
 
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.fill}>
@@ -470,6 +585,57 @@ const MyPreviousPost = ({navigation}) => {
       </SafeAreaView>
       {postOptions()}
       {postLikes()}
+
+      <Modal
+        transparent={true}
+        animationType="fade"
+        supportedOrientations={['landscape', 'portrait']}
+        onRequestClose={() => {
+          setshowImageViewer(false);
+        }}
+        visible={showImageViewer}>
+        <View style={[styles.modalView, g.bgBlack]}>
+          <View
+            style={{
+              justifyContent: 'flex-end',
+              alignItems: 'flex-end',
+              alignSelf: 'flex-end',
+              flexDirection: 'row',
+            }}>
+            <TouchableOpacity
+              onPress={() => {
+                setshowImageViewer(false);
+              }}
+              style={[styles.buttonCircle, {marginHorizontal: scale(8)}]}>
+              <GlobalInclude.BaseIcon
+                containerStyle={{height: scale(22), width: scale(22)}}
+                iconColor={'#FFF'}
+                iconName={'closecircleo'}
+                iconSize={scale(22)}
+                iconType={IconType[10]}
+              />
+            </TouchableOpacity>
+          </View>
+
+          <ImageViewer
+            imageUrls={imageArray}
+            enablePreload={true}
+            backgroundColor={'#000'}
+            renderIndicator={() => {
+              <View />;
+            }}
+          />
+        </View>
+      </Modal>
+      {/* doc viewer */}
+      {showDocViewer && (
+        <DocViewer
+          mediaContent={documentItem}
+          onClose={() => {
+            setShowDocViewer(false);
+          }}
+        />
+      )}
     </View>
   );
 };

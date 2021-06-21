@@ -102,10 +102,16 @@ const ViewPost = ({params}) => {
           ) {
             let data = response.data;
 
+            console.log('====================================');
+            console.log('data', data);
+            console.log('====================================');
+
             if (data.status) {
               if (data.data !== null) {
                 let settings = data.data.postSettings;
                 userPostSettings = settings;
+
+                console.log('settings', settings);
 
                 setTimeout(() => {
                   getCategory();
@@ -150,7 +156,7 @@ const ViewPost = ({params}) => {
           ) {
             let data = response.data;
             if (data.status) {
-              Alert.alert('Congratulations', 'Settings updated');
+              Alert.alert('Settings updated', '');
               setTimeout(() => {
                 getPostSettings();
               }, 500);
@@ -249,7 +255,7 @@ const ViewPost = ({params}) => {
             } else {
               Alert.alert(
                 'Required Selection',
-                'You must select at least one category',
+                'You must select at least one option from View Post',
               );
             }
           }}

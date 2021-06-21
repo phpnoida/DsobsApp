@@ -1,5 +1,5 @@
 import React, {useRef} from 'react';
-import {View, Dimensions, StyleSheet} from 'react-native';
+import {View, Dimensions, StyleSheet, TouchableOpacity} from 'react-native';
 import ResponsiveImage from './ResponsiveImage';
 import ProgressImage from './ProgresImage';
 import g from '../theme/global';
@@ -10,9 +10,11 @@ import {IconType} from '../helper/Constants';
 
 const {width: displayWidth} = Dimensions.get('window');
 
-const SliderImage = ({item, itemWidth}) => {
+const SliderImage = ({item, index, itemWidth, onItemCallBack}) => {
   return (
-    <View
+    <TouchableOpacity
+      onPress={() => onItemCallBack(item, index)}
+      activeOpacity={1}
       style={{
         flexGrow: 0,
         minHeight: 70,
@@ -67,7 +69,7 @@ const SliderImage = ({item, itemWidth}) => {
       ) : (
         <View />
       )}
-    </View>
+    </TouchableOpacity>
   );
 };
 

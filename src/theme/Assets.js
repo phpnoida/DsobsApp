@@ -60,6 +60,8 @@ import YellowPage from '../../Assets/Icon/yellow_page.png';
 import AboutYellowPage from '../../Assets/Icon/about_yellow_page.png';
 import ListYellowPage from '../../Assets/Icon/list_business.png';
 import MyYellowPages from '../../Assets/Icon/my_business.png';
+import TickerComment from '../../Assets/Icon/ticker_comment.png';
+import TickerLike from '../../Assets/Icon/ticker_like.png';
 export default {
   AppLogo: AppLogo,
   Alumbus: Alumbus,
@@ -123,4 +125,6 @@ export default {
   AboutYellowPage: AboutYellowPage,
   ListYellowPage: ListYellowPage,
   MyYellowPages: MyYellowPages,
+  TickerComment: TickerComment,
+  TickerLike: TickerLike,
 };

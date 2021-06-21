@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   Text,
   Dimensions,
+  Image,
+  Platform,
 } from 'react-native';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import {scale} from '../theme/Scalling';
@@ -14,13 +16,11 @@ import {IconType} from '../helper/Constants';
 import ProgressImage from '../component/ProgresImage';
 import moment from 'moment';
 import Helpers from '../helper/Helper';
-import MoreInfo from './MoreInfo';
 import FlatListSlider from './FlatListSlider';
 import SliderImage from './SliderImage';
-import ResponsiveImage from './ResponsiveImage';
 import Pdf from 'react-native-pdf';
-import FitImage from './FitImage';
 import SeeMore from './SeeMore/SeeMore';
+import YoutubeView from './YoutubeView';
 
 const {width: displayWidth} = Dimensions.get('window');
 
@@ -59,20 +59,10 @@ class PostFeedCard extends PureComponent {
     );
   }
 
-  _renderImage = (url) => {
-    return (
-      <ProgressImage
-        source={{uri: url}}
-        containerStyle={{width: '100%', aspectRatio: 1 / 1}}
-        mode={'contain'}
-      />
-    );
-  };
-
   _renderDoc = (url) => {
     return (
       <View>
-        <View style={{width: '100%', aspectRatio: 1 / 1}}>
+        <View style={{width: '100%', aspectRatio: 16 / 9}}>
           <Pdf
             singlePage={true}
             source={{
@@ -94,30 +84,14 @@ class PostFeedCard extends PureComponent {
     );
   };
 
-  _showPDFThumb = () => {
-    return (
-      <View
-        style={[
-          GlobalInclude.AppStyle.fillCenter,
-          g.lightGray,
-          {marginHorizontal: 3, marginVertical: 3},
-        ]}>
-        <View style={[grid.rowrow, grid.justifyContentCenter]}>
-          <GlobalInclude.BaseIcon
-            containerStyle={{height: scale(48), width: scale(48)}}
-            iconColor={'#E61A2D'}
-            iconName={'file-pdf-o'}
-            iconSize={scale(48)}
-            iconType={IconType[4]}
-          />
-        </View>
-      </View>
-    );
-  };
-
   _renderOne = (item) => {
     return (
-      <View style={GlobalInclude.AppStyle.fullWidth}>
+      <TouchableOpacity
+        onPress={() => {
+          this.props.onItemCallback(item, 0);
+        }}
+        activeOpacity={1}
+        style={GlobalInclude.AppStyle.fullWidth}>
         {item[0].type === 1 ? (
           <View>
             <ProgressImage
@@ -131,214 +105,7 @@ class PostFeedCard extends PureComponent {
         ) : (
           <View />
         )}
-      </View>
-    );
-  };
-
-  _renderTwo = (item) => {
-    return (
-      <View
-        style={{
-          flex: 1,
-          aspectRatio: 2 / 1,
-          overflow: 'hidden',
-          flexDirection: 'row',
-        }}>
-        <View style={styles.fillView}>
-          {item[0].type === 1 ? (
-            this._renderImage(item[0].file)
-          ) : item[0].type === 3 ? (
-            this._showPDFThumb()
-          ) : (
-            <View />
-          )}
-        </View>
-
-        <View style={styles.fillView}>
-          {item[1].type === 1 ? (
-            this._renderImage(item[1].file)
-          ) : item[1].type === 3 ? (
-            this._showPDFThumb()
-          ) : (
-            <View />
-          )}
-        </View>
-      </View>
-    );
-  };
-
-  _renderThree = (item) => {
-    return (
-      <View
-        style={{
-          flex: 1,
-          aspectRatio: 2 / 1,
-          overflow: 'hidden',
-          flexDirection: 'row',
-        }}>
-        <View style={styles.fillView}>
-          {item[0].type === 1 ? (
-            this._renderImage(item[0].file)
-          ) : item[0].type === 3 ? (
-            this._showPDFThumb()
-          ) : (
-            <View />
-          )}
-        </View>
-        <View style={styles.fillView}>
-          <View style={styles.fillView}>
-            {item[1].type === 1 ? (
-              this._renderImage(item[1].file)
-            ) : item[1].type === 3 ? (
-              this._showPDFThumb()
-            ) : (
-              <View />
-            )}
-          </View>
-          <View style={styles.fillView}>
-            {item[2].type === 1 ? (
-              this._renderImage(item[2].file)
-            ) : item[2].type === 3 ? (
-              this._showPDFThumb()
-            ) : (
-              <View />
-            )}
-          </View>
-        </View>
-      </View>
-    );
-  };
-
-  _renderFour = (item) => {
-    return (
-      <View
-        style={{
-          flex: 1,
-          aspectRatio: 2 / 1,
-          overflow: 'hidden',
-          flexDirection: 'row',
-        }}>
-        <View style={styles.fillView}>
-          <View style={styles.fillView}>
-            {item[0].type === 1 ? (
-              this._renderImage(item[0].file)
-            ) : item[0].type === 3 ? (
-              this._showPDFThumb()
-            ) : (
-              <View />
-            )}
-          </View>
-          <View style={styles.fillView}>
-            {item[1].type === 1 ? (
-              this._renderImage(item[1].file)
-            ) : item[1].type === 3 ? (
-              this._showPDFThumb()
-            ) : (
-              <View />
-            )}
-          </View>
-        </View>
-
-        <View style={styles.fillView}>
-          <View style={styles.fillView}>
-            {item[2].type === 1 ? (
-              this._renderImage(item[2].file)
-            ) : item[2].type === 3 ? (
-              this._renderDoc(item[2].file)
-            ) : (
-              <View />
-            )}
-          </View>
-          <View style={styles.fillView}>
-            {item[3].type === 1 ? (
-              this._renderImage(item[3].file)
-            ) : item[3].type === 3 ? (
-              this._renderDoc(item[3].file)
-            ) : (
-              <View />
-            )}
-          </View>
-        </View>
-      </View>
-    );
-  };
-
-  _renderFive = (item) => {
-    return (
-      <View
-        style={{
-          flex: 1,
-          aspectRatio: 2 / 1,
-          overflow: 'hidden',
-          flexDirection: 'row',
-          backgroundColor: 'orange',
-        }}>
-        <View style={styles.fillView}>
-          <View style={styles.fillView}>
-            {item[0].type === 1 ? (
-              this._renderImage(item[0].file)
-            ) : item[0].type === 3 ? (
-              this._renderDoc(item[0].file)
-            ) : (
-              <View />
-            )}
-          </View>
-          <View style={styles.fillView}>
-            {item[1].type === 1 ? (
-              this._renderImage(item[1].file)
-            ) : item[1].type === 3 ? (
-              this._renderDoc(item[1].file)
-            ) : (
-              <View />
-            )}
-          </View>
-        </View>
-
-        <View style={styles.fillView}>
-          <View style={styles.fillView}>
-            {item[2].type === 1 ? (
-              this._renderImage(item[2].file)
-            ) : item[2].type === 3 ? (
-              this._renderDoc(item[2].file)
-            ) : (
-              <View />
-            )}
-          </View>
-          <View style={styles.fillView}>
-            {item[3].type === 1 ? (
-              this._renderImage(item[3].file)
-            ) : item[3].type === 3 ? (
-              this._renderDoc(item[3].file)
-            ) : (
-              <View />
-            )}
-            <View
-              style={{
-                position: 'absolute',
-                right: 5,
-                bottom: 5,
-                justifyContent: 'center',
-                alignItems: 'center',
-                zIndex: 3,
-                height: scale(40),
-                width: scale(40),
-                backgroundColor: 'rgba(229, 229, 229,0.5)',
-                borderRadius: scale(60),
-              }}>
-              <Text
-                style={[
-                  g.fs18,
-                  g.FHNM,
-                  g.colorBlue,
-                  grid.alignItems,
-                  grid.justifyContentCenter,
-                ]}>
-                +1
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -348,32 +115,76 @@ class PostFeedCard extends PureComponent {
     ) : (
       <FlatListSlider
         loop={false}
-        data={item}
-        component={<SliderImage />}
+        data={item.reverse()}
+        component={
+          <SliderImage
+            onItemCallBack={(post, index) =>
+              this.props.onItemCallback(item, index)
+            }
+          />
+        }
         autoscroll={false}
         indicator={item.length > 1 ? true : false}
       />
     );
   };
 
-  _getFontSize = (text) => {
-    if (text.trim().length < 100) {
-      return scale(23);
-    } else if (text.trim().length > 100 && text.trim().length < 600) {
-      return scale(20);
-    } else if (text.trim().length > 600 && text.trim().length < 1000) {
-      return scale(17);
-    } else {
-      return scale(15);
-    }
+  _showMedia = () => {
+    return (
+      <View>
+        {this.props.links.length > 0 ? (
+          <View style={{width: displayWidth}}>
+            {this.props.links[0].type === 2 ? (
+              <View style={g.bggray3}>
+                <YoutubeView
+                  link={this.props.links[0].file}
+                  containerStyle={styles.youtubeView}
+                  overlayStyle={styles.overlayStyle}
+                  thumbStyle={styles.thumbStyle}
+                  playIconstyle={styles.playIconstyle}
+                  playIconContainer={{
+                    height: scale(20),
+                    width: scale(20),
+                  }}
+                  iconSize={scale(20)}
+                  showPlay={true}
+                />
+              </View>
+            ) : (
+              this._showViewByType(this.props.links)
+            )}
+          </View>
+        ) : null}
+      </View>
+    );
   };
 
   render() {
     return (
       <View onLayout={this.props.onLayout} style={[g.mb15, g.bgWhite, g.pb7]}>
         <View style={[grid.justifyContentCenter, {borderRadius: scale(10)}]}>
+          <View style={grid.rowdir}>
+            <View
+              style={[
+                grid.col,
+                grid.justifyContentCenter,
+                {height: scale(30)},
+              ]}>
+              <Text
+                style={[
+                  g.ml10,
+                  g.fs15,
+                  g.FHNM,
+                  g.colorBlue,
+                  GlobalInclude.AppStyle.transform,
+                ]}>
+                {this.props.categoryMsg}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.shadowLine} />
           {/* User Row */}
-          <View style={[grid.rowdir, g.p10, g.pl5, g.pr5]}>
+          <View style={[grid.rowdir, g.p10, g.pt5, g.pl5, g.pr5]}>
             <TouchableOpacity
               style={grid.row}
               activeOpacity={0.9}
@@ -421,7 +232,6 @@ class PostFeedCard extends PureComponent {
                         }`}
                       </Text>
                     </View>
-
                     {this.props.status !== 2 && (
                       <TouchableOpacity
                         activeOpacity={1}
@@ -477,126 +287,277 @@ class PostFeedCard extends PureComponent {
               </Text>
             </View>
           ) : (
-            <View style={[g.ml10, g.mr10, grid.flex1]}>
-              {this.props.body !== undefined &&
-              this.props.body !== null &&
-              this.props.body !== '' ? (
+            <View>
+              {this.props.categoryId === 4 || this.props.categoryId === 5 ? (
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPress={() => {
+                    this.props.navigation.navigate('CommonWebPage', {
+                      link: this.props.fullUrl,
+                    });
+                  }}>
+                  <View style={[g.ml10, g.mr10, grid.flex1, g.mb5]}>
+                    <SeeMore numberOfLines={4} style={styles.txtStyle}>
+                      {this.props.body}
+                    </SeeMore>
+                  </View>
+                  {this.props.categoryId === 5 ? (
+                    this._showMedia()
+                  ) : (
+                    <ProgressImage
+                      source={{uri: this.props.links[0].file}}
+                      containerStyle={styles.newsImage}
+                      mode={'cover'}
+                    />
+                  )}
+
+                  <View style={[g.ml10, g.mr10, grid.flex1, g.mt8]}>
+                    {this.props.linkHost !== undefined &&
+                      this.props.linkHost !== null &&
+                      this.props.linkHost !== '' && (
+                        <Text
+                          style={
+                            ([
+                              styles.txtSmallText,
+                              g.fs15,
+                              g.colorGray2,
+                              grid.justifyContentCenter,
+                              grid.alignItemsTop,
+                            ],
+                            {textTransform: 'uppercase'})
+                          }>
+                          {this.props.linkHost.replace('www.', '')}
+                        </Text>
+                      )}
+                    <View
+                      style={{
+                        borderBottomWidth: 1,
+                        borderBottomColor: '#ebebe4',
+                        shadowColor: '#000',
+                        shadowOffset: {
+                          width: 0,
+                          height: 2,
+                        },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 3.84,
+                        elevation: 1,
+                        flex: 1,
+                        marginTop: scale(2),
+                        marginBottom: scale(2),
+                      }}
+                    />
+                    {this.props.title !== undefined &&
+                      this.props.title !== null &&
+                      this.props.title !== '' && (
+                        <Text
+                          style={[
+                            styles.txtSmallText,
+                            g.fs14,
+                            grid.justifyContentCenter,
+                            grid.alignItemsTop,
+                          ]}>
+                          {this.props.title}
+                        </Text>
+                      )}
+                  </View>
+                </TouchableOpacity>
+              ) : this.props.categoryId === 1 ||
+                this.props.categoryId === 2 ||
+                this.props.categoryId === 6 ||
+                this.props.categoryId === 7 ? (
                 <View>
-                  {this.props.body.length <= 800 ? (
+                  {this.props.links.length > 0 ? (
+                    <View>
+                      <View style={[g.ml10, g.mr10, grid.flex1, g.mb5]}>
+                        <Text
+                          style={[
+                            grid.justifyContentCenter,
+                            grid.alignItems,
+                            styles.txtSmallText,
+                            g.fs15,
+                            g.FHNM,
+                          ]}>
+                          {this.props.body}
+                        </Text>
+                      </View>
+                      {this._showMedia()}
+                    </View>
+                  ) : this.props.colorCode !== undefined &&
+                    this.props.colorCode !== '' ? (
+                    <View
+                      style={[
+                        styles.contentArea,
+                        {
+                          backgroundColor: this.props.colorCode,
+                          padding: scale(8),
+                        },
+                      ]}>
+                      <Text
+                        style={[
+                          styles.txtSmallText,
+                          {
+                            color: Helpers.getContrastYIQ(this.props.colorCode),
+                          },
+                          grid.justifyContentCenter,
+                          grid.alignItems,
+                          g.txtCenter,
+                          g.fs15,
+                          g.FHNM,
+                        ]}>
+                        {this.props.body}
+                      </Text>
+                    </View>
+                  ) : (
                     <Text
                       style={[
-                        g.FHNR,
-                        grid.justifyContentCenter,
-                        grid.alignItems,
-                        {
-                          textAlign: 'justify',
-                          fontWeight: '400',
-                          fontSize: scale(18),
-                          color: '#262626',
-                          fontFamily: 'Roboto',
-                        },
+                        styles.txtSmallText,
+                        g.fs15,
+                        g.FHNM,
+                        g.ml10,
+                        g.mr10,
+                        grid.flex1,
+                        g.mb5,
                       ]}>
                       {this.props.body}
                     </Text>
-                  ) : (
-                    <SeeMore
-                      numberOfLines={8}
-                      style={{
-                        fontSize: scale(17),
-                        fontWeight: '400',
-                        fontFamily: 'Roboto',
-                        textAlign: 'justify',
-                        color: '#262626',
-                      }}>
-                      {this.props.body}
-                    </SeeMore>
                   )}
                 </View>
-              ) : null}
-            </View>
-          )}
-
-          {/* <MoreInfo text={this.props.body} linesToTruncate={4} /> */}
-
-          {/* Post message */}
-
-          {/* Post Image */}
-          {this.props.links.length > 0 ? (
-            <View style={{width: displayWidth}}>
-              {this.props.links[0].type === 2 ? (
-                <View />
               ) : (
-                this._showViewByType(this.props.links)
+                <View>
+                  <View style={[g.ml10, g.mr10, grid.flex1]}>
+                    {this.props.body !== undefined &&
+                    this.props.body !== null &&
+                    this.props.body !== '' ? (
+                      <View>
+                        {this.props.body.length <= 800 ? (
+                          <Text
+                            style={[
+                              grid.justifyContentCenter,
+                              grid.alignItems,
+                              styles.txtSmallText,
+                              g.fs15,
+                              g.FHNM,
+                            ]}>
+                            {this.props.body}
+                          </Text>
+                        ) : (
+                          <SeeMore numberOfLines={6} style={styles.txtStyle}>
+                            {this.props.body}
+                          </SeeMore>
+                        )}
+                      </View>
+                    ) : null}
+                  </View>
+                  {this._showMedia()}
+                </View>
               )}
             </View>
-          ) : null}
-          {/*  */}
+          )}
 
           {/* Post Content */}
 
           {/* Post operations */}
           <View style={[grid.rowdir, g.mt8]}>
-            <View
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={() => {
+                this.props.onClickMediaOption(1);
+              }}
+              disabled={this.props.status === 2}
               style={[grid.row, grid.alignItems, grid.justifyContentCenter]}>
-              <View>
-                {this.showMediaIcon(this.props.status, 'like', 8, 'Likes', () =>
-                  this.props.onClickMediaOption(1),
-                )}
-                {/* {this.props.totalLikes > 0 && (
-                  <Text
-                    style={[
-                      g.fs12,
-                      g.FHNB,
-                      g.colorWhite,
-                      grid.justifyContentCenter,
-                      g.txtCenter,
-                      g.txtCenterVertical,
-                      g.bgBlue,
-                      styles.totalLikes,
-                    ]}>
-                    {this.props.totalLikes}
-                  </Text>
-                )} */}
-              </View>
-            </View>
+              <Image
+                source={GlobalInclude.Assets.TickerLike}
+                resizeMode={'contain'}
+                resizeMethod={'auto'}
+                tintColor={
+                  this.props.status === 2
+                    ? '#ebebe4'
+                    : GlobalInclude.Color.ColorPrimary
+                }
+                style={[
+                  {
+                    height: scale(18),
+                    width: scale(18),
+                    ...Platform.select({
+                      ios: {
+                        tintColor:
+                          this.props.status === 2
+                            ? '#ebebe4'
+                            : GlobalInclude.Color.ColorPrimary,
+                      },
+                    }),
+                  },
+                ]}
+              />
+              <Text
+                style={[
+                  g.ml5,
+                  g.fs13,
+                  g.FHNM,
+                  this.props.status === 2 ? g.colorDisabled : g.colorBlue,
+                  grid.alignItems,
+                  grid.justifyContentCenter,
+                ]}>
+                {`${
+                  this.props.totalLikes > 0 ? this.props.totalLikes : ''
+                }   Likes`}
+              </Text>
+            </TouchableOpacity>
 
             <View
               style={[grid.row, grid.alignItems, grid.justifyContentCenter]}>
-              <View>
-                {this.showMediaIcon(
-                  this.props.status,
-                  'comment',
-                  8,
-                  'Comments',
-                  () => this.props.onClickMediaOption(2),
-                )}
-                {/* {this.props.totalComments > 0 && (
-                  <Text
-                    style={[
-                      g.fs12,
-                      g.FHNB,
-                      g.colorWhite,
-                      grid.justifyContentCenter,
-                      g.txtCenter,
-                      g.txtCenterVertical,
-                      g.bgBlue,
-                      styles.totalComments,
-                    ]}>
-                    {this.props.totalComments}
-                  </Text>
-                )} */}
-              </View>
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() => {
+                  this.props.onClickMediaOption(2);
+                }}
+                disabled={this.props.status === 2}
+                style={[
+                  grid.rowrow,
+                  grid.alignItems,
+                  grid.justifyContentCenter,
+                ]}>
+                <Image
+                  source={GlobalInclude.Assets.TickerComment}
+                  resizeMode={'contain'}
+                  resizeMethod={'auto'}
+                  tintColor={
+                    this.props.status === 2
+                      ? '#ebebe4'
+                      : GlobalInclude.Color.ColorPrimary
+                  }
+                  style={[
+                    styles.menuIcon,
+                    {
+                      height: scale(18),
+                      width: scale(18),
+                      ...Platform.select({
+                        ios: {
+                          tintColor:
+                            this.props.status === 2
+                              ? '#ebebe4'
+                              : GlobalInclude.Color.ColorPrimary,
+                        },
+                      }),
+                    },
+                  ]}
+                />
+
+                <Text
+                  style={[
+                    g.ml5,
+                    g.fs13,
+                    g.FHNM,
+                    this.props.status === 2 ? g.colorDisabled : g.colorBlue,
+                    grid.alignItems,
+                    grid.justifyContentCenter,
+                  ]}>
+                  {`${
+                    this.props.totalComments > 0 ? this.props.totalComments : ''
+                  }   Comments`}
+                </Text>
+              </TouchableOpacity>
             </View>
-            {/* <View
-              style={[grid.row, grid.alignItems, grid.justifyContentCenter]}>
-              {this.showMediaIcon(
-                this.props.status,
-                'share-google',
-                8,
-                'Share',
-                () => this.props.onClickMediaOption(3),
-              )}
-            </View> */}
           </View>
           {/* Post operations */}
         </View>
@@ -620,44 +581,82 @@ const styles = StyleSheet.create({
     height: scale(22),
     width: scale(22),
   },
-  totalLikes: {
-    position: 'absolute',
-    top: -5,
-    left: -13,
-    borderRadius: scale(30),
-    height: scale(22),
-    width: scale(22),
-  },
+
   emptyArea: {
     height: scale(120),
     alignContent: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
   },
+  contentArea: {
+    alignContent: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    width: '100%',
+    //aspectRatio: 1 / 1,
+    minHeight: scale(130),
+  },
   pdfIcon: {
     position: 'absolute',
     zIndex: 2,
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  centerUI: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'center',
-    alignContent: 'center',
+    bottom: 15,
+    left: 15,
   },
   centerDoc: {
-    aspectRatio: 1 / 1,
+    aspectRatio: 16 / 9,
     width: displayWidth,
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'center',
-    alignContent: 'center',
   },
   fillView: {flex: 1},
+  youtubeView: {
+    height: scale(200),
+    width: '100%',
+    justifyContent: 'center',
+  },
+  overlayStyle: {
+    backgroundColor: '#00000066',
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    top: 0,
+    left: 0,
+    zIndex: 1,
+  },
+  thumbStyle: {
+    height: scale(200),
+    width: '100%',
+  },
+  playIconstyle: {
+    position: 'absolute',
+    zIndex: 9,
+    bottom: 15,
+    left: 15,
+  },
+  shadowLine: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#ebebe4',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 1,
+    flex: 1,
+    marginHorizontal: scale(5),
+  },
+  txtStyle: {
+    fontWeight: '400',
+    color: '#262626',
+    ...g.fs15,
+    ...g.FHNM,
+  },
+  txtSmallText: {
+    ...g.fs15,
+    ...g.FHNM,
+    color: '#262626',
+    textAlign: 'auto',
+  },
+  newsImage: {width: '100%', aspectRatio: 16 / 9},
 });
 export default PostFeedCard;

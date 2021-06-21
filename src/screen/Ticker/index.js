@@ -12,6 +12,7 @@ import {
   Keyboard,
   Animated,
   Modal,
+  Alert,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -32,9 +33,17 @@ import {
   doReportPost,
   doFollowUser,
   doUnFollowUser,
+  doDeletePost,
 } from '../../Actions/TickerActions';
 import FilterCategory from '../../component/FilterCategory';
 import PostFeedCard from '../../component/PostFeedCard';
+import ImageViewer from 'react-native-image-zoom-viewer';
+import DocViewer from '../../component/DocViewer';
+import {useDispatch, useSelector, shallowEqual} from 'react-redux';
+import {
+  clearIncreaseComment,
+  clearRefreshPrevious,
+} from '../../reducer/NotificationReducer';
 
 const {height: displayHeight, width: displayWidth} = Dimensions.get('window');
 
@@ -54,8 +63,11 @@ let curY = new Animated.Value(0);
 let selectedIndex = -1;
 let responseMessage = '';
 let searchVal = '';
-
+let imageArray = [];
 let dataSourceCords = [];
+let documentItem = '';
+let commentUpddate = null;
+let refreshPage = false;
 const Ticker = ({route, navigation}) => {
   curY = new Animated.Value(0);
   const refOptions = useRef();
@@ -81,25 +93,75 @@ const Ticker = ({route, navigation}) => {
   const [showModal, setShowModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState({});
   const [reportText, setReportText] = useState('');
+  const [showImageViewer, setshowImageViewer] = useState(false);
+  const [showDocViewer, setShowDocViewer] = useState(false);
+
+  const dispatch = useDispatch();
+
+  const refreshState = useSelector((state) => {
+    if (state.notification && state.notification !== undefined) {
+      let notification = state.notification;
+
+      if (
+        notification.commentUpdate &&
+        notification.commentUpdate !== undefined
+      ) {
+        //{"commentData": {"count": 4, "postIndex": 0}, "commentUpdate": true, "refresh": false}
+        if (
+          notification.commentData &&
+          notification.commentData !== null &&
+          notification.commentData !== undefined
+        ) {
+          commentUpddate = notification.commentData;
+        }
+        return true;
+      } else if (notification.refreshPrevious) {
+        refreshPage = true;
+        return true;
+      }
+    }
+    return false;
+  }, shallowEqual);
 
   useEffect(() => {
-    postMode = '';
-    // const unsubscribe = navigation.addListener('focus', () => {
-    //   console.log('focus');
-    //   if (global.isConnected) {
-    //     postMode = '';
-    //     setFirstTimeLoad(true);
-    //     resetCount();
-    //     getMyFollowing();
-    //     getCategory();
-    //   }
-    // });
-    refresh();
+    if (refreshState) {
+      let oldData = postContent;
+      if (commentUpddate !== undefined && commentUpddate !== null) {
+        let postIndex = commentUpddate.postIndex;
+        let count = commentUpddate.count;
+        oldData[postIndex].totalComments = count;
+        setTimeout(() => {
+          console.log('78');
+          dispatch(clearIncreaseComment());
+          setTimeout(() => {
+            setPostContent([...oldData]);
+          }, 100);
+        }, 200);
+      } else if (refresh) {
+        setTimeout(() => {
+          console.log('144');
+          dispatch(clearRefreshPrevious());
+          setTimeout(() => {
+            refresh();
+          }, 100);
+        }, 200);
+      }
+    }
+    return () => {};
+  }, [refreshState]);
 
-    return () => {
-      //unsubscribe();
-    };
-  }, [navigation]);
+  useEffect(() => {
+    if (route.params !== undefined && route.params !== null) {
+      let data = route.params.notificationData;
+      navigation.navigate('MyPreviousPost', {
+        userId: data.userId,
+        title: 'Post Of ' + data.userName,
+      });
+    } else {
+      refresh();
+    }
+    return () => {};
+  }, [route.params, navigation]);
 
   const refresh = () => {
     if (global.isConnected) {
@@ -268,7 +330,7 @@ const Ticker = ({route, navigation}) => {
           ) {
             let data = response.data;
             if (data.status) {
-              responseMessage = `You successfully follow ${Helpers.concatName(
+              responseMessage = `You're now successfully following ${Helpers.concatName(
                 selectedFeed.author,
               )}!`;
 
@@ -304,7 +366,7 @@ const Ticker = ({route, navigation}) => {
             let data = response.data;
 
             if (data.status) {
-              responseMessage = `You successfully unfollow ${Helpers.concatName(
+              responseMessage = `You have successfully unfollowed ${Helpers.concatName(
                 selectedFeed.author,
               )}!`;
 
@@ -378,6 +440,64 @@ const Ticker = ({route, navigation}) => {
       );
     }
   };
+
+  /**
+   *
+   * Remove product
+   */
+  const removeIndex = () => {
+    Alert.alert(
+      'Are you sure you want to delete it?',
+      '',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {
+          text: 'Ok',
+          onPress: () => {
+            deletePost();
+          },
+        },
+      ],
+      {cancelable: false},
+    );
+  };
+
+  const deletePost = () => {
+    doDeletePost(
+      selectedFeed._id,
+      (response) => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            console.log('data', data);
+            if (data.status) {
+              setSelectedFeed(null);
+              setTimeout(() => {
+                handleRefresh();
+              }, 230);
+            }
+          }
+        }
+      },
+      (code, error) => {
+        setSelectedFeed(null);
+        Alert.alert('Something went wrong', error);
+      },
+    );
+  };
+
+  /**
+   *
+   * Remove product
+   */
 
   /**
    *
@@ -487,7 +607,10 @@ const Ticker = ({route, navigation}) => {
             () => {
               refOptions.current.close();
               setTimeout(() => {
-                navigation.navigate('MyPreviousPost');
+                navigation.navigate('MyPreviousPost', {
+                  userId: global.userId,
+                  title: 'My Post',
+                });
               }, 220);
             },
           )}
@@ -536,6 +659,15 @@ const Ticker = ({route, navigation}) => {
                 resetCount();
                 filterObject.id = selectedFeed._id;
                 getTickers(filterObject);
+              }, 220);
+            })}
+
+          {selectedFeed !== null &&
+            global.userId === selectedFeed.author.id &&
+            generateMenuOption('Delete Post', 'delete', 1, () => {
+              refPostOptions.current.close();
+              setTimeout(() => {
+                removeIndex();
               }, 220);
             })}
 
@@ -627,11 +759,18 @@ const Ticker = ({route, navigation}) => {
   const renderItem = ({item, index}) => (
     <PostFeedCard
       //key={index}
+      navigation={navigation}
       itemIndex={index}
       postId={item._id}
       author={item.author}
       status={item.status}
       postedAt={item.postedAt}
+      categoryId={item.categoryId}
+      categoryMsg={item.categoryMsg}
+      title={item.title}
+      linkHost={item.linkHost}
+      fullUrl={item.fullUrl}
+      colorCode={item.colorCode}
       body={item.body}
       links={item.links}
       totalLikes={item.totalLikes}
@@ -646,6 +785,23 @@ const Ticker = ({route, navigation}) => {
           navigation.navigate('UserProfile', {
             userId: item.author.id,
           });
+        }
+      }}
+      onItemCallback={(post, clickIndex) => {
+        imageArray = [];
+        console.log('post[clickIndex].type', post[clickIndex]);
+        if (post[clickIndex].type === 3) {
+          documentItem = post[clickIndex].file;
+          setShowDocViewer(true);
+        } else {
+          post.map((child, indx) => {
+            if (child.type === 1) {
+              imageArray.push({url: child.file, key: indx});
+            }
+          });
+          if (imageArray.length > 0) {
+            setshowImageViewer(true);
+          }
         }
       }}
       onClickPostOptions={() => {
@@ -672,7 +828,9 @@ const Ticker = ({route, navigation}) => {
             }
           }, 200);
         } else if (type === 2) {
-          navigation.navigate('Comments', {data: {postId: item._id}});
+          navigation.navigate('Comments', {
+            data: {postId: item._id, postIndex: index},
+          });
         }
       }}
     />
@@ -708,6 +866,7 @@ const Ticker = ({route, navigation}) => {
             {marginBottom: scale(10)},
           ]}>
           <SingleSearchWithFilter
+            placeholder={'Search for Users or Content'}
             changeText={(text) => {
               searchVal = text;
               setFilterQuery(text);
@@ -930,6 +1089,59 @@ const Ticker = ({route, navigation}) => {
           </View>
         </View>
       </Modal>
+
+      <Modal
+        transparent={true}
+        animationType="fade"
+        supportedOrientations={['landscape', 'portrait']}
+        onRequestClose={() => {
+          setshowImageViewer(false);
+        }}
+        visible={showImageViewer}>
+        <View style={[styles.modalView, g.bgBlack]}>
+          <View style={[GlobalInclude.AppStyle.space, styles.photoIdContainer]}>
+            <View
+              style={{
+                justifyContent: 'flex-end',
+                alignItems: 'flex-end',
+                alignSelf: 'flex-end',
+                flexDirection: 'row',
+              }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setshowImageViewer(false);
+                }}
+                style={[styles.buttonCircle, {marginHorizontal: scale(8)}]}>
+                <GlobalInclude.BaseIcon
+                  containerStyle={{height: scale(22), width: scale(22)}}
+                  iconColor={'#FFF'}
+                  iconName={'closecircleo'}
+                  iconSize={scale(22)}
+                  iconType={IconType[10]}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <ImageViewer
+            imageUrls={imageArray}
+            enablePreload={true}
+            backgroundColor={'#000'}
+            renderIndicator={() => {
+              <View />;
+            }}
+          />
+        </View>
+      </Modal>
+      {/* doc viewer */}
+      {showDocViewer && (
+        <DocViewer
+          mediaContent={documentItem}
+          onClose={() => {
+            setShowDocViewer(false);
+          }}
+        />
+      )}
     </View>
   );
 };
@@ -1004,6 +1216,18 @@ const styles = StyleSheet.create({
     alignContent: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
+  },
+  buttonCircle: {
+    width: scale(26),
+    height: scale(26),
+  },
+  photoIdContainer: {
+    position: 'absolute',
+    zIndex: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    right: 0,
   },
 });
 

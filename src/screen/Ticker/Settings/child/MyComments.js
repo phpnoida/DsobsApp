@@ -18,6 +18,7 @@ let itemArray = [
 ];
 
 let selectedSetting = '';
+let defaultSelected = '';
 
 const MyComments = ({params}) => {
   const [selectedFilter, setSelectedFilter] = useState('');
@@ -53,6 +54,8 @@ const MyComments = ({params}) => {
                   //myCommentNotifySettings=  0-no notification 1-send notification on all comments 2-twice a day 3-one a day
                   let myCommentNotifySettings =
                     settings.myCommentNotifySettings;
+                  selectedSetting = myCommentNotifySettings;
+                  defaultSelected = myCommentNotifySettings;
                   switch (myCommentNotifySettings) {
                     case 0:
                       setSelectedFilter('Send No Notification');
@@ -129,6 +132,7 @@ const MyComments = ({params}) => {
           onRadioSelect={(item) => {
             console.log('item', item);
             selectedSetting = item.id;
+            defaultSelected = '';
             setSelectedFilter(item.text.toString());
           }}
         />
@@ -140,6 +144,8 @@ const MyComments = ({params}) => {
           onPress={() => {
             if (selectedSetting === '') {
               Alert.alert('Required Selection', 'You must select one setting');
+            } else if (defaultSelected === selectedSetting) {
+              Alert.alert('Already Selected', 'Settings already selected');
             } else {
               setUserSettings();
             }

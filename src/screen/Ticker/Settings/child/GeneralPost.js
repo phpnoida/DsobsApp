@@ -20,7 +20,7 @@ let itemArray = [
 ];
 
 let selectedSetting = '';
-
+let defaultSelected = '';
 const GeneralPost = ({params}) => {
   const [selectedFilter, setSelectedFilter] = useState('');
   const [filterList, setFilterList] = useState([]);
@@ -54,10 +54,8 @@ const GeneralPost = ({params}) => {
                 ) {
                   //generalPostsNotifySettings= 0-no notification 1-send notification on all new post 2-twice a day 3-one a day 4-every hour 5-every two hour
                   let generalPost = settings.generalPostsNotifySettings;
-
-                  console.log('====================================');
-                  console.log('generalPost', generalPost);
-                  console.log('====================================');
+                  selectedSetting = generalPost;
+                  defaultSelected = generalPost;
                   switch (generalPost) {
                     case 0:
                       setSelectedFilter('Send No Notification');
@@ -142,6 +140,7 @@ const GeneralPost = ({params}) => {
           PROP={filterList}
           onRadioSelect={(item) => {
             console.log('item', item);
+            defaultSelected = '';
             selectedSetting = item.id;
             setSelectedFilter(item.text.toString());
           }}
@@ -154,6 +153,8 @@ const GeneralPost = ({params}) => {
           onPress={() => {
             if (selectedSetting === '') {
               Alert.alert('Required Selection', 'You must select one setting');
+            } else if (defaultSelected === selectedSetting) {
+              Alert.alert('Already Selected', 'Settings already selected');
             } else {
               setUserSettings();
             }

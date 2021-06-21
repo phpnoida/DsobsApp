@@ -14,6 +14,7 @@ import grid from '../theme/grid';
 import {IconType} from '../helper/Constants';
 
 const SingleSearchWithFilter = ({
+  placeholder,
   changeText,
   filterQuery,
   showGoButton,
@@ -59,7 +60,9 @@ const SingleSearchWithFilter = ({
                 grid.justifyContentCenter,
               ]}
               autoCapitalize={'words'}
-              placeholder={'Type more than 2 characters'}
+              placeholder={
+                placeholder ? placeholder : 'Type more than 2 characters'
+              }
               onChangeText={(text) => {
                 changeText(text);
               }}
