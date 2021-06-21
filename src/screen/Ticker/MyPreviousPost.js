@@ -451,6 +451,7 @@ const MyPreviousPost = ({route, navigation}) => {
 
   const renderItem = ({item, index}) => (
     <PostFeedCard
+      feedType={item.author.id === global.userId ? 'Main' : 'Other'}
       navigation={navigation}
       itemIndex={index}
       postId={item._id}

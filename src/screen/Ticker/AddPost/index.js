@@ -115,7 +115,11 @@ const PostTicker = ({route, navigation}) => {
         let tmpMedia = [];
         var isImage = false,
           isDoc = false;
-        defaultData.links.map((child) => {
+
+        let altArray = defaultData.links;
+        altArray.reverse();
+
+        altArray.map((child) => {
           switch (child.type) {
             case 1:
               isImage = true;
@@ -275,6 +279,8 @@ const PostTicker = ({route, navigation}) => {
       links.push(newsImage);
     }
 
+    links.reverse();
+
     let bodyContent = '';
     let newsTitle = '';
     let linkHost = '';
@@ -319,7 +325,6 @@ const PostTicker = ({route, navigation}) => {
 
     Keyboard.dismiss();
     if (inEditMode) {
-      //requestObject.status = 2;
       editPostData(requestObject);
     } else {
       uploadPostData(requestObject);
@@ -935,8 +940,6 @@ const PostTicker = ({route, navigation}) => {
             {showInput()}
             <View style={[g.mt5, g.mb5]} />
             {showColorSelection()}
-            <View style={[g.mt5, g.mb5]} />
-            {showMyCommentInput()}
           </View>
         );
       case 7:

@@ -149,7 +149,6 @@ const Likes = ({postId, navigation, onClickUser, onStatusChange}) => {
    */
   const onPaginate = () => {
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
-      console.log('onPaginate()');
       setPaginationStatus(PaginationStatus.waiting);
       filterObject.index = filterObject.index + 1;
       getPostLikeDetail();
@@ -157,7 +156,6 @@ const Likes = ({postId, navigation, onClickUser, onStatusChange}) => {
   };
 
   const onEndReached = () => {
-    console.log('onEndReached()');
     if (postLikeData.length === totalCount || postLikeData.length < 10) {
       setPaginationStatus(PaginationStatus.allLoaded);
       return;
@@ -198,7 +196,6 @@ const Likes = ({postId, navigation, onClickUser, onStatusChange}) => {
   };
 
   const renderItem = ({item, index}) => {
-    console.log('item', item);
     let object = item.userId;
     return (
       <View key={index}>

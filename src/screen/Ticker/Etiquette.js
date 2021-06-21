@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, StyleSheet, SafeAreaView, Text, ScrollView} from 'react-native';
+import {View, SafeAreaView, Text, ScrollView} from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import HeaderBar from '../../component/HeaderBar';
 import {scale} from '../../theme/Scalling';
@@ -83,18 +83,5 @@ const Etiquette = ({navigation}) => {
     </View>
   );
 };
-
-const style = StyleSheet.create({
-  tabBarStyle: {borderBottomWidth: 0, margin: 0},
-  tabBarUnderlineStyle: {
-    borderBottomColor: 'transparent',
-    backgroundColor: 'white',
-  },
-  tabTextStyle: {
-    fontSize: scale(15),
-    fontFamily: 'Lato-Regular',
-    margin: -5,
-  },
-});
 
 export default Etiquette;

@@ -115,7 +115,7 @@ class PostFeedCard extends PureComponent {
     ) : (
       <FlatListSlider
         loop={false}
-        data={item.reverse()}
+        data={item}
         component={
           <SliderImage
             onItemCallBack={(post, index) =>
@@ -232,7 +232,7 @@ class PostFeedCard extends PureComponent {
                         }`}
                       </Text>
                     </View>
-                    {this.props.status !== 2 && (
+                    {this.props.status !== 2 && this.props.feedType === 'Main' && (
                       <TouchableOpacity
                         activeOpacity={1}
                         onPress={this.props.onClickPostOptions}

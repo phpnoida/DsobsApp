@@ -194,7 +194,7 @@ const FollowUser = ({params}) => {
     Alert.alert(
       `Are you sure you would like to unfollow ${Helpers.concatName(
         selectedUser,
-      )}`,
+      )}?`,
       '',
       [
         {
@@ -214,9 +214,6 @@ const FollowUser = ({params}) => {
   };
 
   const removeUser = () => {
-    console.log('====================================');
-    console.log('selectedUser', selectedUser);
-    console.log('====================================');
     unFollowUser(selectedUser._id);
   };
 

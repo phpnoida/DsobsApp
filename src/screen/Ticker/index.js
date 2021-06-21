@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef, useCallback} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   StyleSheet,
@@ -95,7 +95,7 @@ const Ticker = ({route, navigation}) => {
   const [reportText, setReportText] = useState('');
   const [showImageViewer, setshowImageViewer] = useState(false);
   const [showDocViewer, setShowDocViewer] = useState(false);
-
+  const [pickedIndex, setPickedIndex] = useState(0);
   const dispatch = useDispatch();
 
   const refreshState = useSelector((state) => {
@@ -131,7 +131,6 @@ const Ticker = ({route, navigation}) => {
         let count = commentUpddate.count;
         oldData[postIndex].totalComments = count;
         setTimeout(() => {
-          console.log('78');
           dispatch(clearIncreaseComment());
           setTimeout(() => {
             setPostContent([...oldData]);
@@ -139,7 +138,6 @@ const Ticker = ({route, navigation}) => {
         }, 200);
       } else if (refresh) {
         setTimeout(() => {
-          console.log('144');
           dispatch(clearRefreshPrevious());
           setTimeout(() => {
             refresh();
@@ -266,9 +264,6 @@ const Ticker = ({route, navigation}) => {
         response.data !== null
       ) {
         let data = response.data;
-        // console.log('====================================');
-        // console.log('data', JSON.stringify(data));
-        // console.log('====================================');
         if (data.status) {
           let item = data.data[0];
           if (postMode !== '') {
@@ -282,9 +277,6 @@ const Ticker = ({route, navigation}) => {
           } else {
             if (filterObject.index === 0) {
               totalCount = data.totalCount;
-              // console.log('====================================');
-              // console.log('data.data', JSON.stringify(data.data));
-              // console.log('====================================');
               setPostContent([...data.data]);
             } else {
               setPostContent([...postContent, ...data.data]);
@@ -506,7 +498,6 @@ const Ticker = ({route, navigation}) => {
    */
   const onPaginate = () => {
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
-      console.log('onPaginate()');
       setPaginationStatus(PaginationStatus.waiting);
       filterObject.index = filterObject.index + 1;
       getTickers(filterObject);
@@ -514,7 +505,6 @@ const Ticker = ({route, navigation}) => {
   };
 
   const onEndReached = () => {
-    console.log('onEndReached()');
     if (postContent.length === totalCount || postContent.length < 10) {
       setPaginationStatus(PaginationStatus.allLoaded);
       return;
@@ -701,6 +691,25 @@ const Ticker = ({route, navigation}) => {
                 setShowReportModal(true);
               }, 220);
             })}
+
+          {selectedFeed !== null &&
+            global.userId !== selectedFeed.author.id &&
+            generateMenuOption(
+              `View All Posts from ${Helpers.capitalize(
+                selectedFeed.author.firstName,
+              )}`,
+              'view-grid-outline',
+              1,
+              () => {
+                refPostOptions.current.close();
+                setTimeout(() => {
+                  navigation.navigate('MyPreviousPost', {
+                    userId: selectedFeed.author.id,
+                    title: Helpers.concatName(selectedFeed.author) + "'s post",
+                  });
+                }, 220);
+              },
+            )}
         </View>
       </OptionsSheet>
     );
@@ -716,10 +725,6 @@ const Ticker = ({route, navigation}) => {
         }
         duration={200}
         closeOnDragDown={true}
-        // onClose={() => {
-        //   resetCount();
-        //   getTickers(filterObject);
-        // }}
         onClose={() => {
           let oldData = postContent;
           oldData[selectedIndex] = selectedFeed;
@@ -759,6 +764,7 @@ const Ticker = ({route, navigation}) => {
   const renderItem = ({item, index}) => (
     <PostFeedCard
       //key={index}
+      feedType={'Main'}
       navigation={navigation}
       itemIndex={index}
       postId={item._id}
@@ -789,7 +795,6 @@ const Ticker = ({route, navigation}) => {
       }}
       onItemCallback={(post, clickIndex) => {
         imageArray = [];
-        console.log('post[clickIndex].type', post[clickIndex]);
         if (post[clickIndex].type === 3) {
           documentItem = post[clickIndex].file;
           setShowDocViewer(true);
@@ -800,6 +805,7 @@ const Ticker = ({route, navigation}) => {
             }
           });
           if (imageArray.length > 0) {
+            setPickedIndex(clickIndex);
             setshowImageViewer(true);
           }
         }
@@ -816,7 +822,6 @@ const Ticker = ({route, navigation}) => {
       onClickMediaOption={(type) => {
         selectedIndex = index;
         if (type === 1) {
-          //getPostLikeDetail(item._id);
           setSelectedFeed(item);
 
           setTimeout(() => {
@@ -836,7 +841,6 @@ const Ticker = ({route, navigation}) => {
     />
   );
 
-  //const keyExtractor = useCallback((item, index) => index, []);
   const keyExtractor = (item, index) => index;
 
   const headerDistance = Animated.diffClamp(curY, 0, 119).interpolate({
@@ -1126,6 +1130,8 @@ const Ticker = ({route, navigation}) => {
           <ImageViewer
             imageUrls={imageArray}
             enablePreload={true}
+            useNativeDriver={true}
+            index={pickedIndex}
             backgroundColor={'#000'}
             renderIndicator={() => {
               <View />;

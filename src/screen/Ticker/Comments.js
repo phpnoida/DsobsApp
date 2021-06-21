@@ -436,9 +436,6 @@ const Comments = ({route, navigation}) => {
           ) {
             let data = response.data;
             if (data.status) {
-              // let commentList = comments;
-              // commentList.splice(lastIndex, 1);
-              // setComments([...commentList]);
               lastIndex = -1;
               inputValue = '';
               setCommentError('');

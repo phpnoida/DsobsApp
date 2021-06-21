@@ -1,6 +1,6 @@
 apply plugin: "com.android.application"
 apply plugin: 'com.google.gms.google-services'
-apply plugin: 'com.google.firebase.crashlytics'
+//apply plugin: 'com.google.firebase.crashlytics'
 
 import com.android.build.OutputFile
 
@@ -131,15 +131,16 @@ android {
     }
 
     dexOptions {
-       javaMaxHeapSize "3g"
+        incremental true
+        javaMaxHeapSize "4g"
     }
 
     defaultConfig {
         applicationId "com.dsobs"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 38
-        versionName "3.7.4"
+        versionCode 39
+        versionName "3.7.5"
         multiDexEnabled true
         externalNativeBuild {
             cmake {
@@ -170,7 +171,7 @@ android {
             signingConfig signingConfigs.debug
            ndk {
                //, "x86","armeabi-v7a"
-               abiFilters "armeabi-v7a"
+               abiFilters "x86"
            }
         }
         release {
