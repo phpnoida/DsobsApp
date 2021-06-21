@@ -13,9 +13,6 @@ PODS:
     - ReactCommon/turbomodule/core (= 0.64.2)
   - Firebase/CoreOnly (8.0.0):
     - FirebaseCore (= 8.0.0)
-  - Firebase/Crashlytics (8.0.0):
-    - Firebase/CoreOnly
-    - FirebaseCrashlytics (~> 8.0.0)
   - Firebase/Messaging (8.0.0):
     - Firebase/CoreOnly
     - FirebaseMessaging (~> 8.0.0)
@@ -28,12 +25,6 @@ PODS:
     - GoogleUtilities/Environment (~> 7.4)
     - GoogleUtilities/Logger (~> 7.4)
     - nanopb (~> 2.30908.0)
-  - FirebaseCrashlytics (8.0.0):
-    - FirebaseCore (~> 8.0)
-    - FirebaseInstallations (~> 8.0)
-    - GoogleDataTransport (~> 9.0)
-    - nanopb (~> 2.30908.0)
-    - PromisesObjC (~> 1.2)
   - FirebaseInstallations (8.1.0):
     - FirebaseCore (~> 8.0)
     - GoogleUtilities/Environment (~> 7.4)
@@ -397,10 +388,6 @@ PODS:
   - RNFBApp (12.0.0):
     - Firebase/CoreOnly (= 8.0.0)
     - React-Core
-  - RNFBCrashlytics (12.0.0):
-    - Firebase/Crashlytics (= 8.0.0)
-    - React-Core
-    - RNFBApp
   - RNFBMessaging (12.0.0):
     - Firebase/Messaging (= 8.0.0)
     - React-Core
@@ -525,7 +512,6 @@ DEPENDENCIES:
   - RNDeviceInfo (from `../node_modules/react-native-device-info`)
   - RNFastImage (from `../node_modules/react-native-fast-image`)
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
-  - "RNFBCrashlytics (from `../node_modules/@react-native-firebase/crashlytics`)"
   - "RNFBMessaging (from `../node_modules/@react-native-firebase/messaging`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNImageCropPicker (from `../node_modules/react-native-image-crop-picker`)
@@ -543,7 +529,6 @@ SPEC REPOS:
     - Firebase
     - FirebaseCore
     - FirebaseCoreDiagnostics
-    - FirebaseCrashlytics
     - FirebaseInstallations
     - FirebaseMessaging
     - GoogleDataTransport
@@ -663,8 +648,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-fast-image"
   RNFBApp:
     :path: "../node_modules/@react-native-firebase/app"
-  RNFBCrashlytics:
-    :path: "../node_modules/@react-native-firebase/crashlytics"
   RNFBMessaging:
     :path: "../node_modules/@react-native-firebase/messaging"
   RNGestureHandler:
@@ -695,7 +678,6 @@ SPEC CHECKSUMS:
   Firebase: 73c3e3b216ec1ecbc54d2ffdd4670c65c749edb1
   FirebaseCore: 3f09591d51292843e2a46f18358d60bf4e996255
   FirebaseCoreDiagnostics: 3e249cee3de5c5f9cfd6cc2a19997231286fec11
-  FirebaseCrashlytics: 69cddb6bfa7656c5346e603bc85b029392252ee6
   FirebaseInstallations: 7f31798a8198c354eadcb87176d2090b62edc187
   FirebaseMessaging: 1a33b4af3c8042ed6ddacb6c031894af2064bfab
   glog: 73c2498ac6884b13ede40eda8228cb1eee9d9d62
@@ -707,7 +689,7 @@ SPEC CHECKSUMS:
   RCT-Folly: ec7a233ccc97cc556cf7237f0db1ff65b986f27c
   RCTRequired: 6d3e854f0e7260a648badd0d44fc364bc9da9728
   RCTTypeSafety: c1f31d19349c6b53085766359caac425926fafaa
-  RCTYouTube: 4509d59a7de050dd0c7c6cb1f427d37678d63b5c
+  RCTYouTube: 7ff7d42f5ed42d185198681e967fd2c2b661375d
   React: bda6b6d7ae912de97d7a61aa5c160db24aa2ad69
   React-callinvoker: 9840ea7e8e88ed73d438edb725574820b29b5baa
   React-Core: b5e385da7ce5f16a220fc60fd0749eae2c6120f0
@@ -718,19 +700,19 @@ SPEC CHECKSUMS:
   React-jsinspector: cc614ec18a9ca96fd275100c16d74d62ee11f0ae
   react-native-blur: cad4d93b364f91e7b7931b3fa935455487e5c33c
   react-native-date-picker: 2dfef0fcb6c36d078bc62f5de3ca79eff7f42486
-  react-native-document-picker: f2f73db94328c84e22144e369fb4a3ede47bc1f5
-  react-native-image-picker: 474cf2c33c2b6671da53d293a16c97995f0aec15
-  react-native-netinfo: e849fc21ca2f4128a5726c801a82fc6f4a6db50d
+  react-native-document-picker: 0e3602a4064da040321bafad6848d8b0edcb1d55
+  react-native-image-picker: 4089335b89b625d4e34d53fb249c48a7a791b3ea
+  react-native-netinfo: 34f4d7a42f49157f3b45c14217d256bce7dc9682
   react-native-orientation-locker: 998c0744e26624407dac068c04c605b4af7304a2
   react-native-pdf: ef641e79a6d550cfabe5d7ec1916799726514c43
-  react-native-progress-bar-android: be43138ab7da30d51fc038bafa98e9ed594d0c40
-  react-native-progress-view: 9e6b6a5305a9115c2157ae3b8852081aba0aab7c
-  react-native-safe-area-context: f0906bf8bc9835ac9a9d3f97e8bde2a997d8da79
+  react-native-progress-bar-android: ce95a69f11ac580799021633071368d08aaf9ad8
+  react-native-progress-view: 11298da10e13c29bd28042bc0f284d9868f5da18
+  react-native-safe-area-context: e471852c5ed67eea4b10c5d9d43c1cebae3b231d
   react-native-splash-screen: 200d11d188e2e78cea3ad319964f6142b6384865
-  react-native-track-player: 6ec965317dbf9d49f2f4f87d050b53b3f994a5b7
-  react-native-video: 0bb76b6d6b77da3009611586c7dbf817b947f30e
-  react-native-viewpager: 32259f9d01874abdf42b25cf81a1d78d1aa55582
-  react-native-webview: 193d233c29eacce1f42ca2637dab7ba79c25a6de
+  react-native-track-player: 878d6c66e4ae3a69f6a534c57c6c34a42e9b033f
+  react-native-video: 1574074179ecaf6a9dd067116c8f31bf9fec15c8
+  react-native-viewpager: 2bd854c85a76bfe6f75dc232f3889301bcb3a720
+  react-native-webview: 1f56115845c98f0a59dfbbac685797c014a821be
   React-perflogger: 25373e382fed75ce768a443822f07098a15ab737
   React-RCTActionSheet: af7796ba49ffe4ca92e7277a5d992d37203f7da5
   React-RCTAnimation: 6a2e76ab50c6f25b428d81b76a5a45351c4d77aa
@@ -744,23 +726,22 @@ SPEC CHECKSUMS:
   React-runtimeexecutor: a9904c6d0218fb9f8b19d6dd88607225927668f9
   ReactCommon: 149906e01aa51142707a10665185db879898e966
   rn-fetch-blob: f065bb7ab7fb48dd002629f8bdcb0336602d3cba
-  RNCAsyncStorage: 56a3355a10b5d660c48c6e37325ac85ebfd09885
-  RNCClipboard: 4935717a8e86273de4a45f113d01dad949b5374b
-  RNCMaskedView: 0e1bc4bfa8365eba5fbbb71e07fbdc0555249489
-  RNCPushNotificationIOS: 61a7c72bd1ebad3568025957d001e0f0e7b32191
-  RNDateTimePicker: 7658208086d86d09e1627b5c34ba0cf237c60140
-  RNDeviceInfo: 8d3a29207835f972bce883723882980143270d55
+  RNCAsyncStorage: 8324611026e8dc3706f829953aa6e3899f581589
+  RNCClipboard: e8e7226caf9f6e78c88a5aa55ace9ab0a1052bd9
+  RNCMaskedView: f127cd9652acfa31b91dcff613e07ba18b774db6
+  RNCPushNotificationIOS: 5b1cf9ad2aaa107ecb92d5d2d7005ba521b2b97a
+  RNDateTimePicker: c9911be59b1f8670b9f244b85af3a7c295e175ed
+  RNDeviceInfo: 49f6d50f861c7810fac2dd9b71cfb56cc1940e14
   RNFastImage: d4870d58f5936111c56218dbd7fcfc18e65b58ff
   RNFBApp: cc2ff3f925840c53f0117d92e0f5e269b356d0f7
-  RNFBCrashlytics: e99a7bedc194c6ab325197f6d5b06e42ca583efc
   RNFBMessaging: ba11538f4d76a5ef89dc8c97dad04fbf2fa6ebef
   RNGestureHandler: a479ebd5ed4221a810967000735517df0d2db211
   RNImageCropPicker: 35a3ceb837446fa11547704709bb22b5fac6d584
   RNReanimated: 9c13c86454bfd54dab7505c1a054470bfecd2563
   RNScreens: bf59f17fbf001f1025243eeed5f19419d3c11ef2
   RNShare: 5ac8f6532ca4cd80fc71caef1cfbba1854a6a045
-  RNSound: da030221e6ac7e8290c6b43f2b5f2133a8e225b0
-  RNTextSize: 7efa06531c6bb7ab6ed070b4ce0d1248cf06fcdf
+  RNSound: c980916b596cc15c8dcd2f6ecd3b13c4881dbe20
+  RNTextSize: 91955a6ea2adda9dc7802ce472b7a4dc717686f6
   RNVectorIcons: 31cebfcf94e8cf8686eb5303ae0357da64d7a5a4
   SDWebImage: a7f831e1a65eb5e285e3fb046a23fcfbf08e696d
   SDWebImageWebPCoder: d0dac55073088d24b2ac1b191a71a8f8d0adac21
