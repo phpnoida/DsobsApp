@@ -105,13 +105,13 @@
 		802F4577BC2489C5D63D7DD4 /* Pods-alumbus-tvOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-alumbus-tvOS.debug.xcconfig"; path = "Target Support Files/Pods-alumbus-tvOS/Pods-alumbus-tvOS.debug.xcconfig"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = alumbus/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		81F31A5E1F184AB78A3E2324 /* Lato-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Lato-Bold.ttf"; path = "../Assets/Fonts/Lato-Bold.ttf"; sourceTree = "<group>"; };
-		8747D7B097D94EECB0DA997D /* SegoeUI.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = SegoeUI.ttf; path = ../Assets/Fonts/SegoeUI.ttf; sourceTree = "<group>"; };
+		8747D7B097D94EECB0DA997D /* SegoeUI.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = SegoeUI.ttf; path = ../Assets/Fonts/SegoeUI.ttf; sourceTree = "<group>"; };
 		8D34568652B34D36B034245D /* HelveticaNeueBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = HelveticaNeueBold.ttf; path = ../Assets/Fonts/HelveticaNeueBold.ttf; sourceTree = "<group>"; };
 		8EF9BF81372241BCA4577CA5 /* Lato-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Lato-Light.ttf"; path = "../Assets/Fonts/Lato-Light.ttf"; sourceTree = "<group>"; };
 		90F8C640305640CCA06E2F73 /* Ionicons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Ionicons.ttf; path = "../node_modules/native-base/Fonts/Ionicons.ttf"; sourceTree = "<group>"; };
 		93F0D884B05840878A37DDF0 /* Lato-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Lato-Regular.ttf"; path = "../Assets/Fonts/Lato-Regular.ttf"; sourceTree = "<group>"; };
 		974C1F3766BCFF9CD8819900 /* libPods-alumbus.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-alumbus.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		A83376AC76BD42FE81A7F714 /* Roboto-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto-Regular.ttf"; path = "../Assets/Fonts/Roboto-Regular.ttf"; sourceTree = "<group>"; };
+		A83376AC76BD42FE81A7F714 /* Roboto-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto-Regular.ttf"; path = "../Assets/Fonts/Roboto-Regular.ttf"; sourceTree = "<group>"; };
 		AB56652086FE4A639C180ACF /* EvilIcons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = EvilIcons.ttf; path = "../node_modules/native-base/Fonts/EvilIcons.ttf"; sourceTree = "<group>"; };
 		B6EEACBD84C34558856A1E6D /* rubicon-icon-font.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "rubicon-icon-font.ttf"; path = "../node_modules/native-base/Fonts/rubicon-icon-font.ttf"; sourceTree = "<group>"; };
 		B75428C5B21444838A96E772 /* Lato-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Lato-Medium.ttf"; path = "../Assets/Fonts/Lato-Medium.ttf"; sourceTree = "<group>"; };
@@ -872,13 +872,13 @@
 				CODE_SIGN_ENTITLEMENTS = alumbus/DSOBS.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 1.7;
+				CURRENT_PROJECT_VERSION = 1.9;
 				DEVELOPMENT_TEAM = H9Q3F2C9AA;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = alumbus/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 3.5;
+				MARKETING_VERSION = 3.7;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -905,12 +905,12 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 1.7;
+				CURRENT_PROJECT_VERSION = 1.9;
 				DEVELOPMENT_TEAM = H9Q3F2C9AA;
 				INFOPLIST_FILE = alumbus/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 3.5;
+				MARKETING_VERSION = 3.7;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

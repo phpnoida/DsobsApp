@@ -131,15 +131,25 @@ const TabThree = (props) => {
       {props.showDatePicker && Platform.OS === 'android' && (
         <DateTimePicker
           testID={'dateTimePicker'}
-          value={new Date()}
+          value={new Date(props.birthDate)}
           mode={'date'}
           display={'spinner'}
           maximumDate={new Date()}
           dateFormat={'day month year'}
           onChange={(event, selected) => {
-            const currentDate = selected || new Date();
-            let obj = Helper.formateDate(currentDate);
-            props.setSelectedDate(obj.displayDate, obj.serverDate);
+            // const currentDate = selected || new Date();
+            // let obj = Helper.formateDate(currentDate);
+            // props.setSelectedDate(obj.displayDate, obj.serverDate);
+
+            if (event && event !== null && event !== undefined) {
+              if (event.type === 'set') {
+                const currentDate = selected || new Date();
+                let obj = Helper.formateDate(currentDate);
+                props.setSelectedDate(obj.displayDate, obj.serverDate);
+              }
+            } else {
+              props.openDatePicker();
+            }
           }}
           onTouchCancel={(event) => {
             props.openDatePicker();
@@ -149,6 +159,7 @@ const TabThree = (props) => {
 
       {props.showDatePicker && Platform.OS === 'ios' && (
         <DatePickerView
+          defaultDate={props.birthDate}
           onCloseAction={() => {
             props.openDatePicker();
           }}

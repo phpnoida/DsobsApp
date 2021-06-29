@@ -69,7 +69,13 @@ const Relatives = (props) => {
             response.data !== null
           ) {
             let data = response.data;
-
+            for (var i = data.data.length - 1; i >= 0; i--) {
+              const element = data.data[i];
+              if (element._id === global.userId) {
+                data.data.splice(i, 1);
+                break;
+              }
+            }
             setSearchedUser([...data.data]);
           }
         }
@@ -96,6 +102,7 @@ const Relatives = (props) => {
           });
         }}
         onEditPress={() => {
+          selectedUser = item;
           setIsEdit(true);
           setErrorMessage({});
           setRelativeName(item.relativeName);
@@ -197,9 +204,6 @@ const Relatives = (props) => {
 
   const renderAutoSuggest = () => {
     var data = searchedUser.map((row, index) => {
-      console.log('====================================');
-      console.log(row);
-      console.log('====================================');
       return (
         <TouchableOpacity
           key={index}

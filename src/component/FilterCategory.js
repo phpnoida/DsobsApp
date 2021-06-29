@@ -1,7 +1,6 @@
 import React from 'react';
 import {Dimensions, Text} from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import BottomSheetHeader from './BottomSheetHeader';
 import RadioButton from './RadioButton';
 import {scale} from '../theme/Scalling';
 import g from '../theme/global';
