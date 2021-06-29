@@ -27,7 +27,13 @@ const launchImagePicker = (props) => {
         if (res.didCancel) {
           Alert.alert('Cancel Image Selection!');
         } else {
-          props.onSelectImage(res);
+          if (
+            res.assets !== undefined &&
+            res.assets !== null &&
+            res.assets.length > 0
+          ) {
+            props.onSelectImage(res.assets[0]);
+          }
         }
       }
     }

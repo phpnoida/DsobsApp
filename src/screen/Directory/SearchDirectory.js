@@ -464,15 +464,11 @@ const SearchDirectory = ({route, navigation}) => {
     );
   };
   const searchProfession = (searchText) => {
-    let oldContent = professions;
-    var list = [];
     if (searchText.length > 0) {
-      oldContent.forEach((element) => {
-        if (element.text.toLowerCase().includes(searchText.toLowerCase())) {
-          list.push(element);
-        }
-      });
-      setProfessions([...list]);
+      var filtered = professionListMain.filter((element) =>
+        element.text.toLowerCase().includes(searchText.toLowerCase()),
+      );
+      setProfessions([...filtered]);
     } else {
       setProfessions([...professionListMain]);
     }

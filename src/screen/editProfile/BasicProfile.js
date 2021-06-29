@@ -651,9 +651,15 @@ const BasicProfile = (props) => {
           if (res.didCancel) {
             Alert.alert('Cancel Image Selection!');
           } else {
-            profileUri = res;
-            if (global.isConnected) {
-              uploadProfile();
+            if (
+              res.assets !== undefined &&
+              res.assets !== null &&
+              res.assets.length > 0
+            ) {
+              profileUri = res.assets[0];
+              if (global.isConnected) {
+                uploadProfile();
+              }
             }
           }
         }
@@ -722,60 +728,44 @@ const BasicProfile = (props) => {
    * search section
    */
   const searchProfession = (searchText) => {
-    let oldContent = professionList;
-    var list = [];
     if (searchText.length > 0) {
-      oldContent.forEach((element) => {
-        if (element.text.toLowerCase().includes(searchText.toLowerCase())) {
-          list.push(element);
-        }
-      });
-      setProfessionList([...list]);
+      var filtered = countryListMain.filter((element) =>
+        element.text.toLowerCase().includes(searchText.toLowerCase()),
+      );
+      setProfessionList([...filtered]);
     } else {
       setProfessionList([...professionListMain]);
     }
   };
 
   const searchCountry = (searchText) => {
-    let oldContent = countryList;
-    var list = [];
     if (searchText.length > 0) {
-      oldContent.forEach((element) => {
-        if (element.text.toLowerCase().includes(searchText.toLowerCase())) {
-          list.push(element);
-        }
-      });
-      setCountryList([...list]);
+      var filtered = countryListMain.filter((element) =>
+        element.text.toLowerCase().includes(searchText.toLowerCase()),
+      );
+      setCountryList([...filtered]);
     } else {
       setCountryList([...countryListMain]);
     }
   };
 
   const searchState = (searchText) => {
-    let oldContent = stateList;
-    var list = [];
     if (searchText.length > 0) {
-      oldContent.forEach((element) => {
-        if (element.text.toLowerCase().includes(searchText.toLowerCase())) {
-          list.push(element);
-        }
-      });
-      setStateList([...list]);
+      var filtered = stateListMain.filter((element) =>
+        element.text.toLowerCase().includes(searchText.toLowerCase()),
+      );
+      setStateList([...filtered]);
     } else {
       setStateList([...stateListMain]);
     }
   };
 
   const searchCity = (searchText) => {
-    let oldContent = cityList;
-    var list = [];
     if (searchText.length > 0) {
-      oldContent.forEach((element) => {
-        if (element.text.toLowerCase().includes(searchText.toLowerCase())) {
-          list.push(element);
-        }
-      });
-      setCityList([...list]);
+      var filtered = cityListMain.filter((element) =>
+        element.text.toLowerCase().includes(searchText.toLowerCase()),
+      );
+      setCityList([...filtered]);
     } else {
       setCityList([...cityListMain]);
     }
@@ -840,19 +830,26 @@ const BasicProfile = (props) => {
             {showDatePicker && Platform.OS === 'android' && (
               <DateTimePicker
                 testID={'dateTimePicker'}
-                value={new Date()}
+                value={new Date(birthDate)}
                 mode={'date'}
                 display={'spinner'}
                 maximumDate={new Date()}
                 dateFormat={'day month year'}
                 onChange={(event, selected) => {
-                  const currentDate = selected || new Date();
-                  let obj = Helper.formateDate(currentDate);
-                  birthDate = obj.serverDate;
-                  setShowDatePicker(Platform.OS === 'ios');
-                  setSelectedDate(obj.displayDate);
+                  if (event && event !== null && event !== undefined) {
+                    if (event.type === 'set') {
+                      const currentDate = selected || new Date();
+                      let obj = Helper.formateDate(currentDate);
+                      birthDate = obj.serverDate;
+                      setShowDatePicker(Platform.OS === 'ios');
+                      setSelectedDate(obj.displayDate);
+                    }
+                  } else {
+                    setShowDatePicker(Platform.OS === 'ios');
+                  }
                 }}
                 onTouchCancel={(event) => {
+                  console.log('847');
                   setShowDatePicker(false);
                 }}
               />
@@ -860,6 +857,7 @@ const BasicProfile = (props) => {
 
             {showDatePicker && Platform.OS === 'ios' && (
               <DatePickerView
+                defaultDate={birthDate}
                 maxDate={new Date()}
                 onCloseAction={() => {
                   setShowDatePicker(false);

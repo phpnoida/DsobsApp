@@ -691,15 +691,11 @@ const Profile = ({navigation}) => {
    */
 
   const searchProfession = (searchText) => {
-    let oldContent = professionList;
-    var list = [];
     if (searchText.length > 0) {
-      oldContent.forEach((element) => {
-        if (element.text.toLowerCase().includes(searchText.toLowerCase())) {
-          list.push(element);
-        }
-      });
-      setProfessionList([...list]);
+      var filtered = professionListMain.filter((element) =>
+        element.text.toLowerCase().includes(searchText.toLowerCase()),
+      );
+      setProfessionList([...filtered]);
     } else {
       //console.log('professionListMain', professionListMain.length);
       setProfessionList([...professionListMain]);
@@ -707,15 +703,11 @@ const Profile = ({navigation}) => {
   };
 
   const searchCountry = (searchText) => {
-    let oldContent = countryList;
-    var list = [];
     if (searchText.length > 0) {
-      oldContent.forEach((element) => {
-        if (element.text.toLowerCase().includes(searchText.toLowerCase())) {
-          list.push(element);
-        }
-      });
-      setCountryList([...list]);
+      var filtered = countryListMain.filter((element) =>
+        element.text.toLowerCase().includes(searchText.toLowerCase()),
+      );
+      setCountryList([...filtered]);
     } else {
       //console.log('professionListMain', professionListMain.length);
       setCountryList([...countryListMain]);
@@ -723,15 +715,11 @@ const Profile = ({navigation}) => {
   };
 
   const searchState = (searchText) => {
-    let oldContent = stateList;
-    var list = [];
     if (searchText.length > 0) {
-      oldContent.forEach((element) => {
-        if (element.text.toLowerCase().includes(searchText.toLowerCase())) {
-          list.push(element);
-        }
-      });
-      setStateList([...list]);
+      var filtered = stateListMain.filter((element) =>
+        element.text.toLowerCase().includes(searchText.toLowerCase()),
+      );
+      setStateList([...filtered]);
     } else {
       //console.log('professionListMain', professionListMain.length);
       setStateList([...stateListMain]);
@@ -739,15 +727,11 @@ const Profile = ({navigation}) => {
   };
 
   const searchCity = (searchText) => {
-    let oldContent = cityList;
-    var list = [];
     if (searchText.length > 0) {
-      oldContent.forEach((element) => {
-        if (element.text.toLowerCase().includes(searchText.toLowerCase())) {
-          list.push(element);
-        }
-      });
-      setCityList([...list]);
+      var filtered = cityListMain.filter((element) =>
+        element.text.toLowerCase().includes(searchText.toLowerCase()),
+      );
+      setCityList([...filtered]);
     } else {
       //console.log('professionListMain', professionListMain.length);
       setCityList([...cityListMain]);
@@ -791,6 +775,7 @@ const Profile = ({navigation}) => {
             lgbtqia={lgbtqia}
             showDatePicker={showDatePicker}
             selectedDate={selectedDate}
+            birthDate={birthDate}
             bloodGroup={bloodGroup}
             contactToSchool={contactToSchool}
             errorMessage={errorMessage}
@@ -800,8 +785,8 @@ const Profile = ({navigation}) => {
             }}
             setSelectedDate={(date, serverDate) => {
               birthDate = serverDate;
-              setSelectedDate(date);
               setShowDatePicker(!showDatePicker);
+              setSelectedDate(date);
             }}
             onGenderChange={(gender) => {
               setSelectedGender(gender);
@@ -893,7 +878,10 @@ const Profile = ({navigation}) => {
       }}>
       {isLoading ? (
         <View style={GlobalInclude.AppStyle.fillCenter}>
-          <ActivityIndicator size={'small'} color={GlobalInclude.Color.ColorPrimary} />
+          <ActivityIndicator
+            size={'small'}
+            color={GlobalInclude.Color.ColorPrimary}
+          />
         </View>
       ) : (
         <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>

@@ -284,8 +284,16 @@ const MyFamily = (props) => {
           if (res.didCancel) {
             Alert.alert('Cancel Image Selection!');
           } else {
-            profileUri = res;
-            uploadProfile();
+            if (
+              res.assets !== undefined &&
+              res.assets !== null &&
+              res.assets.length > 0
+            ) {
+              profileUri = res.assets[0];
+              if (global.isConnected) {
+                uploadProfile();
+              }
+            }
           }
         }
       }

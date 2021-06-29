@@ -669,9 +669,13 @@ const Dashboard = ({props, navigation}) => {
                     source={GlobalInclude.Assets.Magazine}
                     resizeMode={'contain'}
                     resizeMethod={'auto'}
-                    style={[styles.menuIcon, {marginStart: scale(5)}]}
+                    style={[styles.menuIcon, {marginStart: scale(15)}]}
                   />
-                  <View style={GlobalInclude.AppStyle.fillCenter}>
+                  <View
+                    style={[
+                      GlobalInclude.AppStyle.fillCenter,
+                      {marginStart: -20},
+                    ]}>
                     <Text style={styles.menuStyle}>The Rose Bowl</Text>
                   </View>
                 </TouchableOpacity>
@@ -689,9 +693,13 @@ const Dashboard = ({props, navigation}) => {
                     source={GlobalInclude.Assets.Alumini}
                     resizeMode={'contain'}
                     resizeMethod={'auto'}
-                    style={[styles.menuIcon, {marginStart: scale(5)}]}
+                    style={[styles.menuIcon, {marginStart: scale(15)}]}
                   />
-                  <View style={GlobalInclude.AppStyle.fillCenter}>
+                  <View
+                    style={[
+                      GlobalInclude.AppStyle.fillCenter,
+                      {marginStart: -20},
+                    ]}>
                     <Text style={styles.menuStyle}>Directory</Text>
                   </View>
                 </TouchableOpacity>
@@ -1102,9 +1110,13 @@ const Dashboard = ({props, navigation}) => {
                   source={GlobalInclude.Assets.Magazine}
                   resizeMode={'contain'}
                   resizeMethod={'auto'}
-                  style={[styles.menuIcon, {marginStart: scale(5)}]}
-                />
-                <View style={GlobalInclude.AppStyle.fillCenter}>
+                  style={[styles.menuIcon, {marginStart: scale(15)}]}
+                  />
+                  <View
+                    style={[
+                      GlobalInclude.AppStyle.fillCenter,
+                      {marginStart: -20},
+                    ]}>
                   <Text style={styles.menuStyle}>The Rose Bowl</Text>
                 </View>
               </TouchableOpacity>
@@ -1119,9 +1131,13 @@ const Dashboard = ({props, navigation}) => {
                   source={GlobalInclude.Assets.Alumini}
                   resizeMode={'contain'}
                   resizeMethod={'auto'}
-                  style={[styles.menuIcon, {marginStart: scale(5)}]}
-                />
-                <View style={GlobalInclude.AppStyle.fillCenter}>
+                  style={[styles.menuIcon, {marginStart: scale(15)}]}
+                  />
+                  <View
+                    style={[
+                      GlobalInclude.AppStyle.fillCenter,
+                      {marginStart: -20},
+                    ]}>
                   <Text style={styles.menuStyle}>Directory</Text>
                 </View>
               </TouchableOpacity>

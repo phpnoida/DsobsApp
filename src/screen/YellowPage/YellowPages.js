@@ -370,15 +370,12 @@ const YellowPages = ({navigation}) => {
   };
 
   const filterProfession = (searchText) => {
-    let oldContent = professionList;
-    var list = [];
     if (searchText.length > 0) {
-      oldContent.forEach((element) => {
-        if (element.text.toLowerCase().includes(searchText.toLowerCase())) {
-          list.push(element);
-        }
-      });
-      setProfessionList([...list]);
+      var filtered = professionListMain.filter((element) =>
+        element.text.toLowerCase().includes(searchText.toLowerCase()),
+      );
+
+      setProfessionList([...filtered]);
     } else {
       setProfessionList([...professionListMain]);
     }
@@ -440,8 +437,7 @@ const YellowPages = ({navigation}) => {
                     width={viewWidth}
                     data={item.coverImages}
                     component={<Preview />}
-                    contentContainerStyle=
-                    {{
+                    contentContainerStyle={{
                       borderRadius: scale(10),
                       borderBottomLeftRadius: 0,
                       borderBottomRightRadius: 0,

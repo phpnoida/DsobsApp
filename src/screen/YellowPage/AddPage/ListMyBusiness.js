@@ -555,15 +555,11 @@ const ListMyBusiness = ({route, navigation}) => {
   };
 
   const searchProfession = (searchText) => {
-    let oldContent = professionList;
-    var list = [];
     if (searchText.length > 0) {
-      oldContent.forEach((element) => {
-        if (element.text.toLowerCase().includes(searchText.toLowerCase())) {
-          list.push(element);
-        }
-      });
-      setProfessionList([...list]);
+      var filtered = professionListMain.filter((element) =>
+        element.text.toLowerCase().includes(searchText.toLowerCase()),
+      );
+      setProfessionList([...filtered]);
     } else {
       //console.log('professionListMain', professionListMain.length);
       setProfessionList([...professionListMain]);
