@@ -49,6 +49,7 @@ import Etiquette from '../screen/Ticker/Etiquette';
 import MyPreviousPost from '../screen/Ticker/MyPreviousPost';
 import Comments from '../screen/Ticker/Comments';
 import ImageDemo from '../ImageDemo';
+import ChatUserList from '../screen/chat/';
 const Stack = createStackNavigator();
 
 export const RootNavigators = (baseRoute) => {
@@ -297,6 +298,11 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="Comments"
         component={Comments}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ChatUserList"
+        component={ChatUserList}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

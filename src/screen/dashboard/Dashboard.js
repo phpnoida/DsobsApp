@@ -430,7 +430,7 @@ const Dashboard = ({props, navigation}) => {
             <TouchableOpacity
               style={styles.headIconContainer}
               onPress={() => {
-                Alert.alert('Coming soon...');
+                navigation.navigate('ChatUserList');
               }}>
               <Image
                 source={GlobalInclude.Assets.Chat}
@@ -1111,12 +1111,12 @@ const Dashboard = ({props, navigation}) => {
                   resizeMode={'contain'}
                   resizeMethod={'auto'}
                   style={[styles.menuIcon, {marginStart: scale(15)}]}
-                  />
-                  <View
-                    style={[
-                      GlobalInclude.AppStyle.fillCenter,
-                      {marginStart: -20},
-                    ]}>
+                />
+                <View
+                  style={[
+                    GlobalInclude.AppStyle.fillCenter,
+                    {marginStart: -20},
+                  ]}>
                   <Text style={styles.menuStyle}>The Rose Bowl</Text>
                 </View>
               </TouchableOpacity>
@@ -1132,12 +1132,12 @@ const Dashboard = ({props, navigation}) => {
                   resizeMode={'contain'}
                   resizeMethod={'auto'}
                   style={[styles.menuIcon, {marginStart: scale(15)}]}
-                  />
-                  <View
-                    style={[
-                      GlobalInclude.AppStyle.fillCenter,
-                      {marginStart: -20},
-                    ]}>
+                />
+                <View
+                  style={[
+                    GlobalInclude.AppStyle.fillCenter,
+                    {marginStart: -20},
+                  ]}>
                   <Text style={styles.menuStyle}>Directory</Text>
                 </View>
               </TouchableOpacity>
