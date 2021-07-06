@@ -48,17 +48,15 @@ import Settings from '../screen/Ticker/Settings/';
 import Etiquette from '../screen/Ticker/Etiquette';
 import MyPreviousPost from '../screen/Ticker/MyPreviousPost';
 import Comments from '../screen/Ticker/Comments';
-import ImageDemo from '../ImageDemo';
+import JobListing from '../screen/jobs/';
+import AddJobPost from '../screen/jobs/PostJob';
+import JobDetails from '../screen/jobs/JobDetails/';
+
 const Stack = createStackNavigator();
 
 export const RootNavigators = (baseRoute) => {
   return (
     <Stack.Navigator initialRouteName={baseRoute}>
-      <Stack.Screen
-        name="ImageDemo"
-        component={ImageDemo}
-        options={{headerShown: false}}
-      />
       <Stack.Screen
         name="AppTour"
         component={AppTour}
@@ -297,6 +295,21 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="Comments"
         component={Comments}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="JobListing"
+        component={JobListing}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="AddJobPost"
+        component={AddJobPost}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="JobDetails"
+        component={JobDetails}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

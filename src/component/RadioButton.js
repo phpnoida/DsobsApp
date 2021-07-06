@@ -12,7 +12,7 @@ import Globalinclude from '../globalInclude/Globalinclude';
 /**
  * this is used when we have complete array and we just show by signle view only
  **/
-export default class RadioButton extends Component {
+class RadioButton extends Component {
   state = {
     value: null,
   };
@@ -68,3 +68,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
 });
+
+export default RadioButton;

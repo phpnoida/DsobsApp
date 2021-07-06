@@ -288,6 +288,15 @@ const Helpers = {
     }
     return yearList;
   },
+  generateJobNature: function () {
+    let yearList = [];
+    yearList.push({
+      key: 'permanent',
+      text: 'Permanent',
+      selected: false,
+    });
+    return yearList;
+  },
   formateDate: function (date) {
     let month = '',
       dateVal = '';

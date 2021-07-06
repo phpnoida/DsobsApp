@@ -111,7 +111,7 @@ const Dashboard = ({props, navigation}) => {
        */
       validatePushNotification();
 
-      console.log('global.userDetails.fcmTopic', global.userDetails.fcmTopic);
+      //console.log('global.userDetails.fcmTopic', global.userDetails.fcmTopic);
     });
 
     if (refreshState) {
@@ -897,7 +897,10 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    Alert.alert('Coming soon...');
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('JobListing');
+                    }, 200);
                   }}>
                   <Image
                     source={GlobalInclude.Assets.Jobs}
@@ -1111,12 +1114,12 @@ const Dashboard = ({props, navigation}) => {
                   resizeMode={'contain'}
                   resizeMethod={'auto'}
                   style={[styles.menuIcon, {marginStart: scale(15)}]}
-                  />
-                  <View
-                    style={[
-                      GlobalInclude.AppStyle.fillCenter,
-                      {marginStart: -20},
-                    ]}>
+                />
+                <View
+                  style={[
+                    GlobalInclude.AppStyle.fillCenter,
+                    {marginStart: -20},
+                  ]}>
                   <Text style={styles.menuStyle}>The Rose Bowl</Text>
                 </View>
               </TouchableOpacity>
@@ -1132,12 +1135,12 @@ const Dashboard = ({props, navigation}) => {
                   resizeMode={'contain'}
                   resizeMethod={'auto'}
                   style={[styles.menuIcon, {marginStart: scale(15)}]}
-                  />
-                  <View
-                    style={[
-                      GlobalInclude.AppStyle.fillCenter,
-                      {marginStart: -20},
-                    ]}>
+                />
+                <View
+                  style={[
+                    GlobalInclude.AppStyle.fillCenter,
+                    {marginStart: -20},
+                  ]}>
                   <Text style={styles.menuStyle}>Directory</Text>
                 </View>
               </TouchableOpacity>

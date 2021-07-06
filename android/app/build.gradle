@@ -170,7 +170,7 @@ android {
         debug {
             signingConfig signingConfigs.debug
            ndk {
-               //, "x86","armeabi-v7a"
+               //, "x86","armeabi-v7a","x86_64"
                abiFilters "armeabi-v7a"
            }
         }

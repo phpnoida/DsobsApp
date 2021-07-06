@@ -65,7 +65,6 @@ export default class RadioButton extends Component {
             </Text>
             <ScrollView style={[grid.flex1, {width: '100%'}]}>
               {PROP.map((res, index) => {
-                console.log('res.section', index);
                 return (
                   <View key={res.key} style={styles.container}>
                     <View

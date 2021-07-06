@@ -26,6 +26,7 @@ const menuOptions = [
   {screen: 'SocialVenture', visible: true, value: 8, label: 'Ventures'},
   {screen: 'SocialEvents', visible: true, value: 9, label: 'Events'},
   {screen: 'CommonRoom', visible: true, value: 10, label: 'The Common Room'},
+  {screen: 'JobListing', visible: true, value: 11, label: 'Jobs'},
 ];
 
 const TopHeaderView = ({
