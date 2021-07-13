@@ -152,6 +152,9 @@ const JobListing = ({navigation}) => {
   };
 
   const getFilteredData = () => {
+    console.log('====================================');
+    console.log('filterObject', filterObject);
+    console.log('====================================');
     doFilterJobs(
       filterObject,
       (response) => {
@@ -399,7 +402,7 @@ const JobListing = ({navigation}) => {
         }}>
         <ScrollView showsVerticalScrollIndicator={false}>
           <View>
-            {createMenu(1, 'Post Job', () => {
+            {createMenu(1, 'Post a Job', () => {
               refPostJobOptions.current.close();
               navigation.navigate('AddJobPost', {
                 data: {inEditMode: false},
@@ -412,21 +415,25 @@ const JobListing = ({navigation}) => {
                 <View style={[g.mt5, g.mb5]}>
                   {userJobs.map((item, index) => {
                     return (
-                      <View key={index}>
-                        {createMenu(
-                          2,
-                          item.title &&
-                            item.title !== undefined &&
-                            item.title !== null
-                            ? `Edit ${item.title}`
-                            : 'N/A',
-                          () => {
-                            refPostJobOptions.current.close();
-                            navigation.navigate('AddJobPost', {
-                              data: {inEditMode: true, data: item},
-                            });
-                          },
-                        )}
+                      <View>
+                        {item.status === 1 ? (
+                          <View key={index}>
+                            {createMenu(
+                              2,
+                              item.title &&
+                                item.title !== undefined &&
+                                item.title !== null
+                                ? `Edit ${item.title}`
+                                : 'N/A',
+                              () => {
+                                refPostJobOptions.current.close();
+                                navigation.navigate('AddJobPost', {
+                                  data: {inEditMode: true, data: item},
+                                });
+                              },
+                            )}
+                          </View>
+                        ) : null}
                       </View>
                     );
                   })}
@@ -499,147 +506,76 @@ const JobListing = ({navigation}) => {
                     : GlobalInclude.Assets.MainLogo
                 }
                 containerStyle={{
-                  height: scale(58),
-                  width: scale(58),
-                  borderRadius: scale(58),
+                  height: scale(65),
+                  width: scale(65),
+                  borderRadius: scale(10),
                 }}
                 imageStyle={{
-                  height: scale(58),
-                  width: scale(58),
-                  borderRadius: scale(58),
+                  height: scale(65),
+                  width: scale(65),
+                  borderRadius: scale(10),
                 }}
                 mode={'contain'}
               />
-              <View style={[grid.col, grid.justifyContentCenter, g.ml5]}>
+              <View style={[grid.col, g.ml5]}>
                 <Text
                   numberOfLines={1}
                   style={[
-                    g.FHNM,
-                    g.fs15,
-                    g.colorBlack,
-                    GlobalInclude.AppStyle.transform,
-                  ]}>
-                  {item.title !== undefined &&
-                  item.title !== null &&
-                  item.title !== ''
-                    ? item.title
-                    : 'N/A'}
-                </Text>
-                <Text
-                  numberOfLines={1}
-                  style={[
-                    g.FHNM,
+                    g.txtRight,
+                    item.status === 1 ? g.FHNB : g.FHNM,
                     g.fs13,
-                    g.colorBlue,
                     GlobalInclude.AppStyle.transform,
+                    item.status === 1
+                      ? g.colorBlue
+                      : item.status === 2
+                      ? g.colorGray
+                      : g.colordarkGray,
                   ]}>
-                  {item.forCompany !== undefined &&
-                  item.forCompany !== null &&
-                  item.forCompany !== ''
-                    ? item.forCompany
-                    : 'N/A'}
+                  {item.status === 1 ? 'Open' : 'Closed'}
                 </Text>
               </View>
             </View>
             <View style={g.mt5}>
-              <View
+              <Text
+                numberOfLines={2}
                 style={[
-                  grid.rowdir,
-                  grid.justifyContentCenter,
-                  grid.alignItems,
+                  g.FHNM,
+                  g.fs14,
+                  g.colorBlack,
+                  GlobalInclude.AppStyle.transform,
                 ]}>
-                <Text
-                  style={[
-                    g.FHNM,
-                    g.fs12,
-                    g.colordarkGray,
-                    GlobalInclude.AppStyle.transform,
-                  ]}>
-                  {'Designation'}
-                </Text>
-                <Text
-                  style={[
-                    g.FHNM,
-                    g.fs12,
-                    g.ml2,
-                    g.mr2,
-                    g.colordarkGray,
-                    GlobalInclude.AppStyle.transform,
-                  ]}>
-                  {':'}
-                </Text>
-                <Text
-                  numberOfLines={1}
-                  style={[
-                    g.FHNM,
-                    grid.col,
-                    g.fs13,
-                    g.colorBlue,
-                    GlobalInclude.AppStyle.transform,
-                  ]}>
-                  {item.designation !== undefined &&
-                  item.designation !== null &&
-                  item.designation !== ''
-                    ? item.designation
-                    : 'N/A'}
-                </Text>
-              </View>
-            </View>
-            <View style={g.mt5}>
-              <View
+                {item.title !== undefined &&
+                item.title !== null &&
+                item.title !== ''
+                  ? item.title
+                  : 'N/A'}
+              </Text>
+
+              <Text
+                numberOfLines={1}
                 style={[
-                  grid.rowdir,
-                  grid.justifyContentCenter,
-                  grid.alignItems,
+                  g.FHNM,
+                  g.fs14,
+                  g.colorGray,
+                  GlobalInclude.AppStyle.transform,
                 ]}>
-                <Text
-                  style={[
-                    g.FHNM,
-                    g.fs12,
-                    g.colordarkGray,
-                    GlobalInclude.AppStyle.transform,
-                  ]}>
-                  {'Location'}
-                </Text>
-                <Text
-                  style={[
-                    g.FHNM,
-                    g.fs12,
-                    g.ml2,
-                    g.mr2,
-                    g.colordarkGray,
-                    GlobalInclude.AppStyle.transform,
-                  ]}>
-                  {':'}
-                </Text>
-                <Text
-                  numberOfLines={1}
-                  style={[
-                    g.FHNM,
-                    grid.col,
-                    g.fs13,
-                    g.colorBlue,
-                    GlobalInclude.AppStyle.transform,
-                  ]}>
-                  {concateLocation(item)}
-                </Text>
-              </View>
+                {item.forCompany !== undefined &&
+                item.forCompany !== null &&
+                item.forCompany !== ''
+                  ? item.forCompany
+                  : 'N/A'}
+              </Text>
+              <Text
+                numberOfLines={1}
+                style={[
+                  g.FHNM,
+                  g.fs14,
+                  g.colorGray,
+                  GlobalInclude.AppStyle.transform,
+                ]}>
+                {concateLocation(item)}
+              </Text>
             </View>
-            <Text
-              numberOfLines={1}
-              style={[
-                g.txtRight,
-                item.status === 1 ? g.FHNB : g.FHNM,
-                g.fs13,
-                GlobalInclude.AppStyle.transform,
-                item.status === 1
-                  ? g.colorBlue
-                  : item.status === 2
-                  ? g.colorGray
-                  : g.colordarkGray,
-              ]}>
-              {item.status === 1 ? 'Open' : 'Closed'}
-            </Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -676,13 +612,12 @@ const JobListing = ({navigation}) => {
             placeholder={'Search By Keyword'}
             changeText={(text) => {
               setFilterQuery(text);
-              if (text.length === 0) {
-                Keyboard.dismiss();
-                resetCount();
-                getFilteredData();
-              } else if (text.length >= 2) {
+              if (text.length > 2) {
                 resetCount();
                 filterObject.s = text;
+                getFilteredData();
+              } else {
+                resetCount();
                 getFilteredData();
               }
             }}
@@ -796,18 +731,11 @@ const JobListing = ({navigation}) => {
           if (value !== 'All') {
             setSelectedProfession(value);
             setProfessionList([...professionListMain]);
-            if (
-              filterObject.profession &&
-              filterObject.profession !== null &&
-              filterObject.profession !== undefined &&
-              filterObject.profession !== value
-            ) {
-              resetCount();
-              filterObject.profession = value;
-              setTimeout(() => {
-                getFilteredData();
-              }, 230);
-            }
+            resetCount();
+            filterObject.profession = value;
+            setTimeout(() => {
+              getFilteredData();
+            }, 230);
           } else {
             resetCount();
             setTimeout(() => {

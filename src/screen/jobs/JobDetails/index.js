@@ -71,6 +71,7 @@ const JobDetails = ({route, navigation}) => {
         getFilteredData(filterObject);
       }
     }
+
     return () => {};
   }, [route]);
 
@@ -199,13 +200,21 @@ const JobDetails = ({route, navigation}) => {
     setErrorMessage({});
   };
 
-  const isExist = (key) => {
-    if (pageContent !== undefined && pageContent !== null) {
-      if (pageContent[key] !== undefined && pageContent[key] !== null) {
-        return pageContent[key];
-      }
+  const concateLocation = (item) => {
+    let locationString = '';
+
+    if (item.city !== undefined && item.city !== null && item.city !== '') {
+      locationString += item.city + ', ';
     }
-    return null;
+
+    if (
+      item.country !== undefined &&
+      item.country !== null &&
+      item.country !== ''
+    ) {
+      locationString += item.country;
+    }
+    return locationString;
   };
 
   return (
@@ -235,289 +244,216 @@ const JobDetails = ({route, navigation}) => {
             </View>
           ) : (
             <View style={[GlobalInclude.AppStyle.fill, g.mt15]}>
-              <View style={GlobalInclude.AppStyle.fill}>
-                {/* <View
-                  style={{
-                    marginBottom: scale(15),
-                    marginHorizontal: scale(15),
-                  }}>
-                  <Text
-                    numberOfLines={1}
-                    style={[
-                      g.FHNM,
-                      g.fs18,
-                      g.colorBlack,
-                      GlobalInclude.AppStyle.transform,
-                      g.mb10,
-                      {textAlign: 'center'},
-                    ]}>
-                    {'React Native Developer Needed'}
-                  </Text>
-                  <View
-                    style={[
-                      grid.rowdir,
-                      grid.justifyContentCenter,
-                      grid.alignItems,
-                    ]}>
-                    <ProgressImage
-                      source={GlobalInclude.Assets.DefaultImage}
-                      containerStyle={{
-                        height: scale(80),
-                        width: scale(80),
-                        borderRadius: scale(80),
-                        elevation: 3,
-                      }}
-                      imageStyle={{
-                        height: scale(80),
-                        width: scale(80),
-                        borderRadius: scale(80),
-                        elevation: 3,
-                      }}
-                      mode={'cover'}
-                    />
-                    <View style={[grid.col, g.ml5]}>
-                      <Text
-                        numberOfLines={1}
-                        style={[
-                          g.FHNM,
-                          g.fs16,
-                          g.colorBlue,
-                          GlobalInclude.AppStyle.transform,
-                        ]}>
-                        {'Incred Applications Pvt. Ltd.'}
-                      </Text>
-                      <View style={g.mt5}>
-                        <View
-                          style={[
-                            grid.rowdir,
-                            grid.justifyContentCenter,
-                            grid.alignItems,
-                          ]}>
-                          <Text
-                            style={[
-                              g.FHNM,
-                              g.fs12,
-                              g.colordarkGray,
-                              GlobalInclude.AppStyle.transform,
-                            ]}>
-                            {'Designation'}
-                          </Text>
-                          <Text
-                            style={[
-                              g.FHNM,
-                              g.fs12,
-                              g.ml2,
-                              g.mr2,
-                              g.colordarkGray,
-                              GlobalInclude.AppStyle.transform,
-                            ]}>
-                            {':'}
-                          </Text>
-                          <Text
-                            numberOfLines={1}
-                            style={[
-                              g.FHNM,
-                              grid.col,
-                              g.fs13,
-                              g.colorBlue,
-                              GlobalInclude.AppStyle.transform,
-                            ]}>
-                            {'Sr. React Native Developer'}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                </View> */}
-                {/* Design two */}
-                <View
-                  style={{
-                    marginBottom: scale(15),
-                    marginHorizontal: scale(15),
-                  }}>
-                  <View
-                    style={[g.bgWhite, g.boxShadow, {borderRadius: scale(10)}]}>
+              {pageContent !== null && (
+                <View style={GlobalInclude.AppStyle.fill}>
+                  <View style={GlobalInclude.AppStyle.fill}>
                     <View
                       style={{
-                        aspectRatio: 24 / 9,
-                        width: '100%',
-                        borderTopLeftRadius: scale(10),
-                        borderTopRightRadius: scale(10),
-                        backgroundColor:
-                          isExist('logo') && isExist('logo') !== ''
-                            ? '#fff'
-                            : '#f2f2f2',
+                        marginBottom: scale(15),
+                        marginHorizontal: scale(15),
                       }}>
-                      <ProgressImage
-                        source={
-                          isExist('logo') && isExist('logo') !== ''
-                            ? {uri: isExist('logo')}
-                            : GlobalInclude.Assets.MainLogo
-                        }
-                        containerStyle={{
-                          height: '100%',
-                          width: '100%',
-                          borderTopLeftRadius: scale(10),
-                          borderTopRightRadius: scale(10),
-                        }}
-                        imageStyle={{
-                          height: '100%',
-                          width: '100%',
-                          borderTopLeftRadius: scale(10),
-                          borderTopRightRadius: scale(10),
-                        }}
-                        mode={'contain'}
-                      />
-                    </View>
-
-                    <View style={g.m10}>
-                      <Text
-                        numberOfLines={1}
+                      <View
                         style={[
-                          g.FHNM,
-                          g.fs16,
-                          g.colorBlack,
-                          GlobalInclude.AppStyle.transform,
+                          g.bgWhite,
+                          g.boxShadow,
+                          {borderRadius: scale(10)},
+                          g.p10,
                         ]}>
-                        {isExist('title') && isExist('title') !== ''
-                          ? isExist('title')
-                          : 'N/A'}
-                      </Text>
-                      <Text
-                        numberOfLines={1}
-                        style={[
-                          g.FHNM,
-                          g.fs13,
-                          g.colorBlue,
-                          GlobalInclude.AppStyle.transform,
-                        ]}>
-                        {isExist('forCompany') && isExist('forCompany') !== ''
-                          ? isExist('forCompany')
-                          : 'N/A'}
-                      </Text>
-                      <View style={g.mt2}>
-                        <View
-                          style={[
-                            grid.rowdir,
-                            grid.justifyContentCenter,
-                            grid.alignItems,
-                          ]}>
+                        <View style={grid.rowdir}>
+                          <ProgressImage
+                            source={
+                              pageContent.logo !== undefined &&
+                              pageContent.logo !== null &&
+                              pageContent.logo !== ''
+                                ? {uri: pageContent.logo}
+                                : GlobalInclude.Assets.MainLogo
+                            }
+                            containerStyle={{
+                              height: scale(65),
+                              width: scale(65),
+                              borderRadius: scale(10),
+                            }}
+                            imageStyle={{
+                              height: scale(65),
+                              width: scale(65),
+                              borderRadius: scale(10),
+                            }}
+                            mode={'contain'}
+                          />
+                          <View style={[grid.col, g.ml5]}>
+                            <Text
+                              numberOfLines={1}
+                              style={[
+                                g.txtRight,
+                                pageContent.status === 1 ? g.FHNB : g.FHNM,
+                                g.fs13,
+                                GlobalInclude.AppStyle.transform,
+                                pageContent.status === 1
+                                  ? g.colorBlue
+                                  : pageContent.status === 2
+                                  ? g.colorGray
+                                  : g.colordarkGray,
+                              ]}>
+                              {pageContent.status === 1 ? 'Open' : 'Closed'}
+                            </Text>
+                          </View>
+                        </View>
+                        <View style={g.mt5}>
                           <Text
+                            numberOfLines={2}
                             style={[
                               g.FHNM,
-                              g.fs12,
-                              g.colordarkGray,
+                              g.fs14,
+                              g.colorBlack,
                               GlobalInclude.AppStyle.transform,
                             ]}>
-                            {'Designation'}
+                            {pageContent.title !== undefined &&
+                            pageContent.title !== null &&
+                            pageContent.title !== ''
+                              ? pageContent.title
+                              : 'N/A'}
                           </Text>
+
                           <Text
+                            numberOfLines={1}
                             style={[
                               g.FHNM,
-                              g.fs12,
-                              g.ml2,
-                              g.mr2,
-                              g.colordarkGray,
+                              g.fs14,
+                              g.colorGray,
                               GlobalInclude.AppStyle.transform,
                             ]}>
-                            {':'}
+                            {pageContent.forCompany !== undefined &&
+                            pageContent.forCompany !== null &&
+                            pageContent.forCompany !== ''
+                              ? pageContent.forCompany
+                              : 'N/A'}
                           </Text>
                           <Text
                             numberOfLines={1}
                             style={[
                               g.FHNM,
-                              grid.col,
-                              g.fs13,
-                              g.colorBlue,
+                              g.fs14,
+                              g.colorGray,
                               GlobalInclude.AppStyle.transform,
                             ]}>
-                            {isExist('designation') &&
-                            isExist('designation') !== ''
-                              ? isExist('designation')
-                              : 'N/A'}
+                            {concateLocation(pageContent)}
                           </Text>
                         </View>
                       </View>
                     </View>
+                    {/* Design two */}
+
+                    <ScrollableTabView
+                      underlineColor={'#ffffff'}
+                      initialPage={0}
+                      tabBarActiveTextColor={GlobalInclude.Color.ColorPrimary}
+                      tabBarInactiveTextColor={'#bababa'}
+                      tabBarTextStyle={{
+                        fontSize: scale(15),
+                        fontFamily: 'Lato-Regular',
+                        margin: -5,
+                      }}
+                      tabBarUnderlineStyle={style.tabBarUnderlineStyle}
+                      renderTabBar={() => (
+                        <ScrollableTabBar style={style.tabBarStyle} />
+                      )}>
+                      <JobDescription
+                        tabLabel={'Job Description'}
+                        content={pageContent}
+                      />
+                      <OtherDetails
+                        tabLabel={'More Details'}
+                        content={pageContent}
+                      />
+                      <PostedBy
+                        tabLabel={'PostedBy'}
+                        content={pageContent}
+                        navigation={navigation}
+                      />
+                    </ScrollableTabView>
+                  </View>
+
+                  <View style={style.buttonContainer}>
+                    <View style={grid.flex1}>
+                      <TouchableOpacity
+                        activeOpacity={1}
+                        disabled={
+                          pageContent !== null && pageContent.status !== 1
+                        }
+                        style={[
+                          style.button,
+                          {
+                            backgroundColor:
+                              pageContent !== null && pageContent.status !== 1
+                                ? '#ebebe4'
+                                : GlobalInclude.Color.ColorPrimary,
+                          },
+                        ]}
+                        onPress={() => {
+                          updateData(2);
+                          if (
+                            refApply.current !== null &&
+                            refApply.current !== undefined
+                          ) {
+                            refApply.current.open();
+                          }
+                        }}>
+                        <Text
+                          style={[
+                            g.fs16,
+                            g.FHNB,
+                            pageContent !== null && pageContent.status !== 1
+                              ? g.colorGray8
+                              : g.colorWhite,
+                            grid.textCenter,
+                            g.mr5,
+                          ]}>
+                          Recommend
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                    <View style={{marginHorizontal: scale(10)}} />
+                    <View style={grid.flex1}>
+                      <TouchableOpacity
+                        activeOpacity={1}
+                        disabled={
+                          pageContent !== null && pageContent.status !== 1
+                        }
+                        style={[
+                          style.button,
+                          {
+                            backgroundColor:
+                              pageContent !== null && pageContent.status !== 1
+                                ? '#ebebe4'
+                                : GlobalInclude.Color.ColorPrimary,
+                          },
+                        ]}
+                        onPress={() => {
+                          updateData(1);
+                          if (
+                            refApply.current !== null &&
+                            refApply.current !== undefined
+                          ) {
+                            refApply.current.open();
+                          }
+                        }}>
+                        <Text
+                          style={[
+                            g.fs16,
+                            g.FHNB,
+                            pageContent !== null && pageContent.status !== 1
+                              ? g.colorGray8
+                              : g.colorWhite,
+                            grid.textCenter,
+                            g.mr5,
+                          ]}>
+                          Apply
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
-                {/* Design two */}
-
-                <ScrollableTabView
-                  underlineColor={'#ffffff'}
-                  initialPage={0}
-                  tabBarActiveTextColor={GlobalInclude.Color.ColorPrimary}
-                  tabBarInactiveTextColor={'#bababa'}
-                  tabBarTextStyle={style.tabTextStyle}
-                  tabBarUnderlineStyle={style.tabBarUnderlineStyle}
-                  renderTabBar={() => (
-                    <ScrollableTabBar style={style.tabBarStyle} />
-                  )}>
-                  <JobDescription
-                    tabLabel={'Job Description'}
-                    content={pageContent}
-                  />
-                  <OtherDetails
-                    tabLabel={'More Details'}
-                    content={pageContent}
-                  />
-                  <PostedBy
-                    tabLabel={'PostedBy'}
-                    content={pageContent}
-                    navigation={navigation}
-                  />
-                </ScrollableTabView>
-              </View>
-              {console.log('pageContent.status', pageContent.status)}
-              <View style={style.buttonContainer}>
-                <View style={grid.flex1}>
-                  <TouchableOpacity
-                    activeOpacity={1}
-                    disabled={pageContent !== null && pageContent.status !== 1}
-                    style={style.button}
-                    onPress={() => {
-                      updateData(2);
-                      if (
-                        refApply.current !== null &&
-                        refApply.current !== undefined
-                      ) {
-                        refApply.current.open();
-                      }
-                    }}>
-                    <Text
-                      style={[g.fs16, g.FHNB, g.colorBlack, grid.textCenter]}>
-                      Recommend
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-                <View style={{marginHorizontal: scale(10)}} />
-                <View style={grid.flex1}>
-                  <TouchableOpacity
-                    activeOpacity={1}
-                    disabled={pageContent !== null && pageContent.status !== 1}
-                    style={[style.button, g.bgBlue]}
-                    onPress={() => {
-                      updateData(1);
-                      if (
-                        refApply.current !== null &&
-                        refApply.current !== undefined
-                      ) {
-                        refApply.current.open();
-                      }
-                    }}>
-                    <Text
-                      style={[
-                        g.fs16,
-                        g.FHNB,
-                        g.colorWhite,
-                        grid.textCenter,
-                        g.mr5,
-                      ]}>
-                      Apply
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+              )}
             </View>
           )}
         </View>
@@ -527,7 +463,7 @@ const JobDetails = ({route, navigation}) => {
       <OptionsSheet
         ref={refApply}
         minClosingHeight={50}
-        height={height - 120}
+        height={height / 2 + 225}
         duration={200}
         closeOnDragDown={true}
         customStyles={{
@@ -577,7 +513,7 @@ const JobDetails = ({route, navigation}) => {
                 />
               </View>
               <View style={g.mb15}>
-                {generateHeader('Email', true)}
+                {generateHeader('Email', false)}
                 <TextInput
                   underlineColorAndroid="transparent"
                   style={g.inputWhite}
@@ -651,7 +587,7 @@ const JobDetails = ({route, navigation}) => {
               </View>
             </View>
             <CommonButton
-              title={'Save'}
+              title={'Send'}
               showLoader={loader}
               onPress={() => {
                 setErrorMessage({});
@@ -664,12 +600,6 @@ const JobDetails = ({route, navigation}) => {
                     phoneNumber.trim().length === 0
                   ) {
                     setErrorMessage({phoneNumber: 'This field is required'});
-                    return;
-                  } else if (
-                    emailAddress.trim() === '' ||
-                    emailAddress.trim().length === 0
-                  ) {
-                    setErrorMessage({emailAddress: 'This field is required'});
                     return;
                   }
                 } else if (openMode === 2) {

@@ -12,7 +12,9 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import CountryPicker from 'react-native-country-picker-modal';
+import CountryPicker, {
+  getAllCountries,
+} from 'react-native-country-picker-modal';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import GlobalInclude from '../../globalInclude/Globalinclude';
@@ -40,6 +42,7 @@ import {addJobData, getJobNature, editJobs} from '../../Actions/JobsActions';
 import moment from 'moment';
 
 let professionListMain = [];
+let countryListMain = [];
 let responseMessage = '';
 let isSuccess = false;
 let isInEditMode = false;
@@ -48,12 +51,15 @@ let postId = '';
 const AddJobPost = ({route, navigation}) => {
   const deviceWidth = useWindowDimensions().width;
   const professionRef = useRef();
+  const countryRef = useRef();
   const jobNatureRef = useRef();
+
   const [loading, setLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [loader, setLoader] = useState(false);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [professionList, setProfessionList] = useState([]);
+  const [countryCodeList, setCountryCodeList] = useState([]);
   const [jobNatureList, setJobNatureList] = useState([]);
   const [selectedProfession, setSelectedProfession] = useState('');
   const [errorMessage, setErrorMessage] = useState({});
@@ -67,7 +73,7 @@ const AddJobPost = ({route, navigation}) => {
   const [company, setCompany] = useState('');
   const [designation, setDesignation] = useState('');
   const [salary, setSalary] = useState('');
-  const [totalPositions, setTotalPositions] = useState('0');
+  const [totalPositions, setTotalPositions] = useState('');
   const [jobNature, setJobNature] = useState('');
   const [jobTitle, setJobTitle] = useState('');
   const [jobDetail, setJobDetail] = useState('');
@@ -80,6 +86,17 @@ const AddJobPost = ({route, navigation}) => {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
+    let countryNames = [];
+    getAllCountries().then((data) => {
+      if (data && data !== undefined && data !== null) {
+        data.map((item, index) => {
+          countryNames.push({key: index, text: item.name, value: item.name});
+        });
+        setCountryCodeList(countryNames);
+        countryListMain = countryNames;
+      }
+    });
+
     professionListMain = [];
     responseMessage = '';
     postId = '';
@@ -371,6 +388,17 @@ const AddJobPost = ({route, navigation}) => {
     }
   };
 
+  const searchCountry = (searchText) => {
+    if (searchText.length > 0) {
+      var filtered = countryListMain.filter((element) =>
+        element.text.toLowerCase().includes(searchText.toLowerCase()),
+      );
+      setCountryCodeList([...filtered]);
+    } else {
+      setCountryCodeList([...countryListMain]);
+    }
+  };
+
   const sliderValueChange = (value) => {
     setAgeCriteria({
       ...ageCriteria,
@@ -495,7 +523,7 @@ const AddJobPost = ({route, navigation}) => {
                   <View style={grid.flex1}>
                     <View style={g.mb15}>
                       {generateHeader(
-                        'My E-mail ID for receiving Application(s)',
+                        'My E-Mail Id for Receiving Application(s)',
                         true,
                       )}
                       <TextInput
@@ -579,7 +607,7 @@ const AddJobPost = ({route, navigation}) => {
                             borderColor: '#001fa3',
                           }}
                           selectedStyle={{backgroundColor: '#001fa3'}}
-                          sliderLength={deviceWidth - 60}
+                          sliderLength={deviceWidth - 80}
                           onValuesChange={sliderValueChange}
                           min={1}
                           max={70}
@@ -623,7 +651,13 @@ const AddJobPost = ({route, navigation}) => {
                         activeOpacity={0.8}
                         style={g.inputWhite}
                         onPress={() => {
-                          setShowCountryPicker(true);
+                          if (
+                            countryRef &&
+                            countryRef.current !== undefined &&
+                            countryRef.current !== null
+                          ) {
+                            countryRef.current.open();
+                          }
                         }}>
                         <View style={grid.rowdir}>
                           <Text
@@ -657,7 +691,7 @@ const AddJobPost = ({route, navigation}) => {
                         keyboardType={'default'}
                         autoCapitalize={'words'}
                         returnKeyType={'done'}
-                        placeholder={'eg.'}
+                        placeholder={'eg. Incred Applications Pvt. Ltd.'}
                         onChangeText={(value) => {
                           handleInput('company', value);
                         }}
@@ -679,7 +713,7 @@ const AddJobPost = ({route, navigation}) => {
                         keyboardType={'default'}
                         autoCapitalize={'words'}
                         returnKeyType={'done'}
-                        placeholder={'eg.'}
+                        placeholder={'eg. Marketing Executive'}
                         onChangeText={(value) => {
                           handleInput('designation', value);
                         }}
@@ -701,7 +735,7 @@ const AddJobPost = ({route, navigation}) => {
                         keyboardType={'default'}
                         autoCapitalize={'characters'}
                         returnKeyType={'done'}
-                        placeholder={'INR 10,00,000.00'}
+                        placeholder={'Enter Salary'}
                         onChangeText={(value) => {
                           handleInput('salary', value);
                         }}
@@ -716,7 +750,7 @@ const AddJobPost = ({route, navigation}) => {
 
                     <View style={[grid.row, g.mb15]}>
                       <View style={grid.col}>
-                        {generateHeader('Number of positions', true)}
+                        {generateHeader('Number of Position(s)', true)}
                         <TextInput
                           underlineColorAndroid="transparent"
                           style={g.inputWhite}
@@ -724,7 +758,7 @@ const AddJobPost = ({route, navigation}) => {
                           maxLength={5}
                           keyboardType={'number-pad'}
                           returnKeyType={'done'}
-                          placeholder={'Positions'}
+                          placeholder={'Position(s)'}
                           onChangeText={(value) => {
                             handleInput('totalPositions', value);
                           }}
@@ -738,7 +772,7 @@ const AddJobPost = ({route, navigation}) => {
                       </View>
                       <View style={g.p10} />
                       <View style={grid.col}>
-                        {generateHeader('Nature of Job', true)}
+                        {generateHeader('Nature of Hire', true)}
                         <TouchableOpacity
                           activeOpacity={0.8}
                           style={g.inputWhite}
@@ -809,7 +843,7 @@ const AddJobPost = ({route, navigation}) => {
                         }}
                         multiline={true}
                         value={jobDetail}
-                        maxLength={1000}
+                        maxLength={3000}
                         keyboardType={'default'}
                         autoCapitalize={'sentences'}
                         returnKeyType="done"
@@ -971,7 +1005,7 @@ const AddJobPost = ({route, navigation}) => {
                 {isInEditMode ? (
                   <NextPreviousButton
                     isLoading={loader}
-                    nextTitle={'Edit Job'}
+                    nextTitle={'Save/Update'}
                     prviousTitle={'Position Filled'}
                     onPreviuosTab={() => {
                       setShowModal(!showModal);
@@ -1014,6 +1048,21 @@ const AddJobPost = ({route, navigation}) => {
         onClose={() => {}}
       />
 
+      <ProfessionalSheet
+        refRBSheet={countryRef}
+        dataList={countryCodeList}
+        searchProfession={(query) => {
+          searchCountry(query);
+        }}
+        selectedProfession={jobCountry}
+        setSelectedProfession={(value) => {
+          setJobCountry(value);
+          setCountryCodeList([...countryListMain]);
+          countryRef.current.close();
+        }}
+        onClose={() => {}}
+      />
+
       <RBSheet
         ref={jobNatureRef}
         height={300}
@@ -1030,7 +1079,7 @@ const AddJobPost = ({route, navigation}) => {
         }}>
         <Text
           style={[g.fs18, g.FHNB, g.txtCenter, g.colorBlack, g.mt5, g.mb15]}>
-          Select Job Nature
+          Select Hire Nature
         </Text>
         <RadioButton
           PROP={jobNatureList}
