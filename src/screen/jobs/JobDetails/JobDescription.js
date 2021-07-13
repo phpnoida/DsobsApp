@@ -11,11 +11,24 @@ const JobDescription = ({content}) => (
     content.description !== undefined &&
     content.description !== null ? (
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={{padding: scale(10), paddingBottom: scale(70)}}>
+        <View
+          style={{
+            paddingTop: scale(10),
+            paddingLeft: scale(10),
+            paddingRight: scale(10),
+            paddingBottom: scale(70),
+          }}>
           <View style={[g.boxShadow, g.bgWhite, g.br3, g.p5]}>
             <View style={[grid.rowdir, grid.alignItems]}>
               <View style={[grid.col, g.p10]}>
-                <Text style={[g.colorLightGray, g.fs16, g.FHNR]}>
+                <Text style={[g.colorBlack, g.fs16, g.FHNR]}>Job Title</Text>
+                <Text style={[g.colorLightGray, g.fs14, g.FHNR, g.mt5]}>
+                  {content.title}
+                </Text>
+                <Text style={[g.colorBlack, g.fs16, g.FHNR, g.mt10]}>
+                  Job Description
+                </Text>
+                <Text style={[g.colorLightGray, g.fs14, g.FHNR, g.mt5]}>
                   {content.description}
                 </Text>
               </View>
