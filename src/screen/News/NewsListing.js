@@ -189,6 +189,7 @@ const NewsListing = ({navigation}) => {
 
   const saveData = (data) => {
     let records = data.data;
+    console.log('records', JSON.stringify(records));
     if (newsIndex === 0) {
       setPageContent([...records]);
     } else {
@@ -455,18 +456,19 @@ const NewsListing = ({navigation}) => {
       return (
         <View key={index} style={style.selectedUserContainer}>
           <View style={[g.bggray2, g.br3, {height: scale(65)}]}>
-            {row.profileImg != null && row.profileImg !== '' && (
-              <ProgresImage
-                source={
-                  row.profileImg != null && row.profileImg !== ''
-                    ? {uri: row.profileImg}
-                    : GlobalInclude.Assets.DefaultImage
-                }
-                containerStyle={style.userProfileContainer}
-                imageStyle={style.userProfiileView}
-                mode={'cover'}
-              />
-            )}
+            <ProgresImage
+              source={
+                row.profileImg &&
+                row.profileImg !== undefined &&
+                row.profileImg != null &&
+                row.profileImg !== ''
+                  ? {uri: row.profileImg}
+                  : GlobalInclude.Assets.DefaultImage
+              }
+              containerStyle={style.userProfileContainer}
+              imageStyle={style.userProfiileView}
+              mode={'cover'}
+            />
             <TouchableOpacity
               style={style.removeUserContainer}
               activeOpacity={0.8}
@@ -602,7 +604,10 @@ const NewsListing = ({navigation}) => {
           }}>
           <ProgresImage
             source={
-              item.image != null && item.image !== ''
+              item.image &&
+              item.image !== undefined &&
+              item.image != null &&
+              item.image !== ''
                 ? {uri: item.image}
                 : GlobalInclude.Assets.DefaultImage
             }

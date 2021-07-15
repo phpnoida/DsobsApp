@@ -24,11 +24,6 @@ import FilterCategory from '../../../component/FilterCategory';
 import {generateHeader} from '../../../component/Common';
 import {loadMedia} from '../../../component/MediaComponent';
 import UploadMedia from '../../../component/UploadMedia';
-import {
-  pickImage,
-  uploadImage,
-  uploadMediaContent,
-} from '../../../helper/mediaHelper';
 import ModelAlert from '../../../component/ModalAlert';
 import {getCategories, addPost, editPost} from '../../../Actions/TickerActions';
 import {getScrappedData} from '../../../Actions/CommonActions';
@@ -76,6 +71,7 @@ const PostTicker = ({route, navigation}) => {
     newsImage = '';
     title = '';
     newsLink = '';
+    pickMultiple = false;
 
     if (route.params !== undefined && route.params !== null) {
       if (route.params.data !== undefined && route.params.data !== null) {
@@ -102,11 +98,6 @@ const PostTicker = ({route, navigation}) => {
       setBackgroundColor(defaultData.colorCode);
 
       postId = defaultData._id;
-
-      console.log('====================================');
-      console.log('defaultData', JSON.stringify(defaultData));
-      console.log('====================================');
-
       if (
         defaultData.links !== undefined &&
         defaultData.links !== null &&
@@ -349,15 +340,6 @@ const PostTicker = ({route, navigation}) => {
               setTimeout(() => {
                 route.params.onGoBack();
                 navigation.goBack();
-
-                // navigation.pop();
-                // navigation.navigate('CommonRoom', {refresh: true});
-                // navigation.dispatch(
-                //   CommonActions.reset({
-                //     index: 1,
-                //     routes: [{name: 'CommonRoom'}],
-                //   }),
-                // );
               }, 250);
             } else {
               responseMessage = 'Error while posting your request!';
@@ -454,33 +436,6 @@ const PostTicker = ({route, navigation}) => {
         if (global.isConnected) {
           completePosting();
         }
-      }
-    }
-  };
-
-  const pickMedia = async () => {
-    let result = await pickImage();
-
-    if (result !== undefined && result !== null) {
-      setShowImageLoading(true);
-      let itemObject = uploadImage(result, 'utils/imageupload', 1);
-
-      if (itemObject !== undefined && itemObject !== null) {
-        uploadMediaContent(
-          itemObject.body,
-          itemObject.childPath,
-          itemObject.mediaType,
-          (uploadResult) => {
-            setShowImageLoading(false);
-            if (uploadResult !== null && uploadResult !== undefined) {
-              let oldData = mediaData;
-              oldData.splice(0, 0, uploadResult);
-              setMediaData([...oldData]);
-            }
-          },
-        );
-      } else {
-        setShowImageLoading(false);
       }
     }
   };
@@ -638,7 +593,11 @@ const PostTicker = ({route, navigation}) => {
                     uploadRef.current.open();
                   }
                 } else {
-                  pickMedia();
+                  // pickMedia();
+                  setDisableDoc(true);
+                  if (uploadRef.current !== null) {
+                    uploadRef.current.open();
+                  }
                 }
               } else {
                 if (categoryId === 8) {
@@ -680,7 +639,11 @@ const PostTicker = ({route, navigation}) => {
                     uploadRef.current.open();
                   }
                 } else {
-                  pickMedia();
+                  // pickMedia();
+                  setDisableDoc(true);
+                  if (uploadRef.current !== null) {
+                    uploadRef.current.open();
+                  }
                 }
               } else {
                 if (categoryId === 8) {
@@ -998,6 +961,15 @@ const PostTicker = ({route, navigation}) => {
         selectedFilter={selectedCategory}
         setSelectedFilter={(value, item) => {
           Keyboard.dismiss();
+          if (inEditMode) {
+            if (categoryId !== item.key) {
+              console.log('gethere');
+              setTimeout(() => {
+                setDisableDoc(false);
+                setDisableImage(false);
+              }, 200);
+            }
+          }
           setSelectedCategory(Helper.capitalize(value));
           setCategoryId(item.key);
           resetOptions();
@@ -1099,6 +1071,7 @@ const PostTicker = ({route, navigation}) => {
           document: disableDoc,
           audio: true,
         }}
+        supportMultiple={true}
         onPickMedia={(media) => {
           uploadRef.current.close();
           if (media !== undefined && media !== null) {
@@ -1112,7 +1085,8 @@ const PostTicker = ({route, navigation}) => {
                 setDisableImage(true);
               }
             }
-            oldData.splice(0, 0, media);
+
+            Array.prototype.push.apply(oldData, media);
             setMediaData([...oldData]);
           }
         }}

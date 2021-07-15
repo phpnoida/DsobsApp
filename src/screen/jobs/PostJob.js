@@ -32,13 +32,9 @@ import Radio from '../../component/Radio';
 import DatePickerView from '../../component/DatePickerView';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import NextPreviousButton from '../../component/NextPreviousButton';
-import {
-  pickImage,
-  uploadImage,
-  uploadMediaContent,
-} from '../../helper/mediaHelper';
 import {getProfessionList} from '../../Actions/UserActions';
 import {addJobData, getJobNature, editJobs} from '../../Actions/JobsActions';
+import UploadMedia from '../../component/UploadMedia';
 import moment from 'moment';
 
 let professionListMain = [];
@@ -53,9 +49,9 @@ const AddJobPost = ({route, navigation}) => {
   const professionRef = useRef();
   const countryRef = useRef();
   const jobNatureRef = useRef();
+  const uploadRef = useRef();
 
   const [loading, setLoading] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
   const [loader, setLoader] = useState(false);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [professionList, setProfessionList] = useState([]);
@@ -349,30 +345,6 @@ const AddJobPost = ({route, navigation}) => {
         } else {
           saveJob(requestObject);
         }
-      }
-    }
-  };
-
-  const pickMedia = async () => {
-    let result = await pickImage();
-
-    if (result !== undefined && result !== null) {
-      setIsLoading(true);
-      let itemObject = uploadImage(result, 'utils/imageupload', 1);
-      if (itemObject !== undefined && itemObject !== null) {
-        uploadMediaContent(
-          itemObject.body,
-          itemObject.childPath,
-          itemObject.mediaType,
-          (uploadResult) => {
-            setIsLoading(false);
-            if (uploadResult !== null && uploadResult !== undefined) {
-              setLogoData(uploadResult);
-            }
-          },
-        );
-      } else {
-        setIsLoading(false);
       }
     }
   };
@@ -918,7 +890,12 @@ const AddJobPost = ({route, navigation}) => {
                           style={[grid.col, g.mr10]}
                           activeOpacity={1}
                           onPress={() => {
-                            pickMedia();
+                            if (
+                              uploadRef.current !== null &&
+                              uploadRef.current !== undefined
+                            ) {
+                              uploadRef.current.open();
+                            }
                           }}>
                           <View
                             style={[
@@ -955,7 +932,12 @@ const AddJobPost = ({route, navigation}) => {
                         <TouchableOpacity
                           activeOpacity={1}
                           onPress={() => {
-                            pickMedia();
+                            if (
+                              uploadRef.current !== null &&
+                              uploadRef.current !== undefined
+                            ) {
+                              uploadRef.current.open();
+                            }
                           }}
                           style={[
                             g.p15,
@@ -969,34 +951,16 @@ const AddJobPost = ({route, navigation}) => {
                               justifyContent: 'center',
                             },
                           ]}>
-                          {isLoading ? (
-                            <View
-                              style={[
-                                grid.alignItems,
-                                grid.justifyContentCenter,
-                                grid.flex1,
-                              ]}>
-                              <ActivityIndicator
-                                size={'small'}
-                                color={GlobalInclude.Color.ColorPrimary}
-                                style={[
-                                  grid.alignItems,
-                                  grid.justifyContentCenter,
-                                ]}
-                              />
-                            </View>
-                          ) : (
-                            <Image
-                              source={GlobalInclude.Assets.UploadIcon}
-                              resizeMode="contain"
-                              style={[
-                                g.w20,
-                                {height: 23},
-                                grid.justifyContent,
-                                grid.alignItems,
-                              ]}
-                            />
-                          )}
+                          <Image
+                            source={GlobalInclude.Assets.UploadIcon}
+                            resizeMode="contain"
+                            style={[
+                              g.w20,
+                              {height: 23},
+                              grid.justifyContent,
+                              grid.alignItems,
+                            ]}
+                          />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -1028,7 +992,6 @@ const AddJobPost = ({route, navigation}) => {
           )}
         </View>
       </SafeAreaView>
-
       <ProfessionalSheet
         refRBSheet={professionRef}
         dataList={professionList}
@@ -1047,7 +1010,6 @@ const AddJobPost = ({route, navigation}) => {
         }}
         onClose={() => {}}
       />
-
       <ProfessionalSheet
         refRBSheet={countryRef}
         dataList={countryCodeList}
@@ -1062,7 +1024,6 @@ const AddJobPost = ({route, navigation}) => {
         }}
         onClose={() => {}}
       />
-
       <RBSheet
         ref={jobNatureRef}
         height={300}
@@ -1090,7 +1051,6 @@ const AddJobPost = ({route, navigation}) => {
           }}
         />
       </RBSheet>
-
       {showDatePicker && Platform.OS === 'android' && (
         <DateTimePicker
           testID={'dateTimePicker'}
@@ -1119,7 +1079,6 @@ const AddJobPost = ({route, navigation}) => {
           }}
         />
       )}
-
       {showDatePicker && Platform.OS === 'ios' && (
         <DatePickerView
           onCloseAction={() => {
@@ -1130,7 +1089,6 @@ const AddJobPost = ({route, navigation}) => {
           }}
         />
       )}
-
       {showErrorMessage && (
         <GlobalInclude.ModalAlert
           status={showErrorMessage}
@@ -1147,7 +1105,6 @@ const AddJobPost = ({route, navigation}) => {
           }}
         />
       )}
-
       {/* country code picker */}
       {showCountryPicker && (
         <CountryPicker
@@ -1163,7 +1120,6 @@ const AddJobPost = ({route, navigation}) => {
           }}
         />
       )}
-
       {showModal && (
         <GlobalInclude.ModalAlert
           status={showModal}
@@ -1186,6 +1142,23 @@ const AddJobPost = ({route, navigation}) => {
           }}
         />
       )}
+      <UploadMedia
+        refRBSheet={uploadRef}
+        media={{
+          image: false,
+          video: true,
+          document: true,
+          audio: true,
+        }}
+        supportMultiple={false}
+        onPickMedia={(media) => {
+          uploadRef.current.close();
+          if (media !== undefined && media !== null) {
+            console.log('media', media);
+            setLogoData(media[0]);
+          }
+        }}
+      />
     </View>
   );
 };

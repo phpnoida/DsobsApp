@@ -38,8 +38,6 @@ import {
 } from '../../Actions/GalleryActions';
 import {showUser} from '../../component/Common';
 import {_downloadContent} from '../../helper/mediaHelper';
-import {useDispatch, useSelector, shallowEqual} from 'react-redux';
-import {clearUpdateImage} from '../../reducer/NotificationReducer';
 
 const {height, width} = Dimensions.get('window');
 const ITEM_HEIGHT = 340;

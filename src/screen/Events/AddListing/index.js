@@ -640,7 +640,7 @@ const ListSocialVenture = ({route, navigation}) => {
             removeMedia={(index) => removeIndex(index)}
             onMediaPick={(media) => {
               let oldData = mediaData;
-              oldData.splice(0, 0, media);
+              Array.prototype.push.apply(oldData, media);
               setMediaData([...oldData]);
             }}
           />

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Dimensions, Platform} from 'react-native'
+import {Dimensions, Platform} from 'react-native';
 import {scale} from '../theme/Scalling';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import Color from '../theme/Colors';
@@ -787,5 +787,33 @@ export default {
     shadowOpacity: 0.2,
     shadowRadius: 7,
     elevation: 5,
+  },
+  title1: {
+    backgroundColor: '#333333',
+    color: Color.ColorPrimary,
+    fontSize: 12,
+    textAlign: 'center',
+    letterSpacing: 2,
+    height: 27,
+    lineHeight: 27,
+  },
+  title2: {
+    backgroundColor: '#f8f8f8',
+    height: 33,
+  },
+  title2txt: {
+    color: Color.ColorPrimary,
+    fontSize: 16,
+    textAlign: 'center',
+    fontFamily: 'Lato-Bold',
+  },
+  gphotoupload: {
+    borderWidth: 1,
+    borderColor: '#202020',
+  },
+
+  gphotouploadactive: {
+    borderWidth: 1,
+    borderColor: Color.ColorPrimary,
   },
 };

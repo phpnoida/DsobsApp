@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   Text,
   View,
@@ -26,6 +26,7 @@ import {uploadProfilePic, updateUserProfile} from '../../Actions/UserActions';
 import RNFetchBlob from 'rn-fetch-blob';
 import ZoomImage from '../../component/ZoomImage';
 import DatePickerView from '../../component/DatePickerView';
+import UploadMedia from '../../component/UploadMedia';
 import Helper from '../../helper/Helper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -108,6 +109,8 @@ let responseMessage = '';
 
 const MyFamily = (props) => {
   const {profileData} = props;
+
+  const uploadRef = useRef();
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState({});
@@ -517,7 +520,15 @@ const MyFamily = (props) => {
               <TouchableOpacity
                 onPress={() => {
                   requestImagePicker = 1;
-                  launchImagePicker();
+                  if (
+                    uploadRef &&
+                    uploadRef !== null &&
+                    uploadRef !== undefined &&
+                    uploadRef.current !== undefined &&
+                    uploadRef.current !== null
+                  ) {
+                    uploadRef.current.open();
+                  }
                 }}
                 style={[grid.row, g.shareStyle, grid.alignItems, g.pr10]}>
                 <TextInput
@@ -627,7 +638,15 @@ const MyFamily = (props) => {
               <TouchableOpacity
                 onPress={() => {
                   requestImagePicker = 2;
-                  launchImagePicker();
+                  if (
+                    uploadRef &&
+                    uploadRef !== null &&
+                    uploadRef !== undefined &&
+                    uploadRef.current !== undefined &&
+                    uploadRef.current !== null
+                  ) {
+                    uploadRef.current.open();
+                  }
                 }}
                 style={[grid.row, g.shareStyle, grid.alignItems, g.pr10]}>
                 <TextInput
@@ -734,6 +753,28 @@ const MyFamily = (props) => {
             }}
           />
         )}
+
+        <UploadMedia
+          refRBSheet={uploadRef}
+          media={{
+            image: false,
+            video: true,
+            document: true,
+            audio: true,
+          }}
+          supportMultiple={false}
+          onPickMedia={(media) => {
+            uploadRef.current.close();
+            if (media !== undefined && media !== null) {
+              console.log('media', media);
+              if (requestImagePicker === 1) {
+                setSpousePhoto(media[0].thumbnail);
+              } else if (requestImagePicker === 2) {
+                setChildPhoto(media[0].thumbnail);
+              }
+            }
+          }}
+        />
       </View>
     </TouchableWithoutFeedback>
   );

@@ -84,7 +84,13 @@ const BasicDetails = ({
               }}
               onDateSelect={(obj) => {
                 setShowDatePicker(false);
-                setDate(obj);
+                const currentDate = obj || new Date();
+                if (selectedType === 1) {
+                  let tmpData = Helper.formateDate(currentDate);
+                  setDate(tmpData);
+                } else {
+                  setTime(currentDate);
+                }
               }}
             />
           )}

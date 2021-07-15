@@ -860,8 +860,7 @@ const Profile = ({navigation}) => {
             errorMessage={errorMessage}
             onSelectImage={(res) => {
               profileUri = res;
-              //setProfileImg(res.uri);
-              uploadProfile();
+              setProfileImg(res.thumbnail);
             }}
           />
         );

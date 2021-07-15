@@ -363,6 +363,7 @@ class PostFeedCard extends PureComponent {
                 </TouchableOpacity>
               ) : this.props.categoryId === 1 ||
                 this.props.categoryId === 2 ||
+                this.props.categoryId === 3 ||
                 this.props.categoryId === 6 ||
                 this.props.categoryId === 7 ? (
                 <View>

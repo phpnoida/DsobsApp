@@ -71,10 +71,10 @@ const TabFour = ({
       <UploadMedia
         refRBSheet={uploadRef}
         media={{image: false, video: false, document: false, audio: true}}
+        supportMultiple={true}
         onPickMedia={(media) => {
           uploadRef.current.close();
           if (media !== undefined && media !== null) {
-            console.log('media', media);
             onMediaPick(media);
           }
         }}

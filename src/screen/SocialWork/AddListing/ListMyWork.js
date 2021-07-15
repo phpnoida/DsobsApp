@@ -546,8 +546,11 @@ const ListMyWork = ({route, navigation}) => {
             mediaData={mediaData}
             removeMedia={(index) => removeIndex(index)}
             onMediaPick={(media) => {
+              // let oldData = mediaData;
+              // oldData.splice(0, 0, media);
+              // setMediaData([...oldData]);
               let oldData = mediaData;
-              oldData.splice(0, 0, media);
+              Array.prototype.push.apply(oldData, media);
               setMediaData([...oldData]);
             }}
           />

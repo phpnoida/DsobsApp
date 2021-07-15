@@ -9,6 +9,8 @@ import {
   Platform,
   ActivityIndicator,
   TextInput,
+  useWindowDimensions,
+  ScrollView,
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import g from '../theme/global';
@@ -22,22 +24,34 @@ import {uploadMedia} from '../Actions/CommonActions';
 import CommonButton from './CommonButton';
 import getPath from '@flyerhq/react-native-android-uri-path';
 import {hasPermission} from '../helper/mediaHelper';
+import ProgressImage from './ProgresImage';
+import {IconType} from '../helper/Constants';
 
 var re = /(?:\.([^.]+))?$/;
 
+let uploadTmpImages = [];
+let uploadFinalImages = [];
+let imageIndex = 0;
 const UploadMedia = ({
   refRBSheet,
   media,
   videoData,
   onPickMedia,
   showLoader,
+  supportMultiple,
 }) => {
   const videoRef = useRef();
+  const cropRef = useRef();
+  const scrollRef = useRef();
+
+  const height = useWindowDimensions().height;
 
   const [isLoading, setIsLoading] = useState(false);
   const [selectedLink, setSelectedLink] = useState('');
   const [selectedLinkTags, setSelectedLinkTags] = useState('');
   const [errorMessage, setErrorMessage] = useState({});
+  const [tempImages, setTempImages] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   /**
    *
@@ -46,35 +60,33 @@ const UploadMedia = ({
    */
 
   const uploadMediaContent = (body, childPath, mediaType) => {
-    global.loader_ref.show_loader(1);
-    uploadMedia(
-      childPath,
-      body,
-      (response) => {
-        global.loader_ref.show_loader(0);
-        if (response && response !== undefined && response !== null) {
-          if (response.status && response.data && response.data !== null) {
-            let childData = response.data.data;
-            let object = {
-              thumbnail: childData,
-              fileName: childData,
-              type: mediaType,
-            };
-            onPickMedia(object);
+    return new Promise(function (resolve, reject) {
+      uploadMedia(
+        childPath,
+        body,
+        (response) => {
+          global.loader_ref.show_loader(0);
+          if (response && response !== undefined && response !== null) {
+            if (response.status && response.data && response.data !== null) {
+              let childData = response.data.data;
+              let object = {
+                thumbnail: childData,
+                fileName: childData,
+                type: mediaType,
+              };
+              resolve(object);
+            } else {
+              reject(null);
+            }
           } else {
-            onPickMedia(null);
+            reject(null);
           }
-        } else {
-          onPickMedia(null);
-        }
-      },
-      (error, message) => {
-        global.loader_ref.show_loader(1);
-        console.log('error', error);
-        onPickMedia(null);
-        Alert.alert('Uploading Failed');
-      },
-    );
+        },
+        (error, message) => {
+          reject(null);
+        },
+      );
+    });
   };
 
   /**
@@ -86,16 +98,22 @@ const UploadMedia = ({
   const pickImage = () => {
     ImagePicker.openPicker({
       includeBase64: false,
-      cropping: false,
       includeExif: false,
       mediaType: 'photo',
-      multiple: false,
+      multiple: supportMultiple ? supportMultiple : false,
     })
       .then((images) => {
         if (images !== null) {
-          //refRBSheet.current.open();
           console.log('images', images);
-          uploadImage(images, 'utils/imageupload', 1);
+          uploadTmpImages = [];
+          uploadFinalImages = [];
+          imageIndex = 0;
+          if (Array.isArray(images)) {
+            uploadTmpImages = images;
+          } else {
+            uploadTmpImages.push(images);
+          }
+          cropSingleImage();
         }
       })
       .catch((err) => {
@@ -104,6 +122,78 @@ const UploadMedia = ({
           onPickMedia(null);
           Alert.alert('Cancel Selection', 'User Cancelled Selection!');
         }
+      });
+  };
+
+  const cropSingleImage = () => {
+    if (imageIndex > uploadTmpImages.length - 1) {
+      completeCropping();
+      return;
+    }
+    let singleItem = uploadTmpImages[imageIndex];
+
+    ImagePicker.openCropper({
+      cropping: true,
+      path: singleItem.path,
+      enableRotationGesture: false,
+      cropperChooseText: 'Done',
+    })
+      .then((image) => {
+        console.log('after cropping', image);
+        uploadFinalImages.push(image);
+        //processSelectedImage(image);
+      })
+      .finally(() => {
+        imageIndex = imageIndex + 1;
+        cropSingleImage();
+      });
+  };
+
+  const completeCropping = () => {
+    console.log('====================================');
+    console.log('Cropping done');
+    console.log('====================================');
+
+    if (uploadFinalImages.length > 0) {
+      if (supportMultiple) {
+        setTempImages(uploadFinalImages);
+        setSelectedImage(uploadFinalImages[0]);
+        if (
+          cropRef !== undefined &&
+          cropRef !== null &&
+          cropRef.current !== undefined &&
+          cropRef.current !== null
+        ) {
+          cropRef.current.open();
+        }
+      } else {
+        uploadMultipleImages(uploadFinalImages);
+      }
+    } else {
+      onPickMedia(null);
+    }
+  };
+
+  const uploadMultipleImages = (tmpData) => {
+    //let tmpData = tempImages;
+    var promises = [];
+    //cropRef.current.close();
+    global.loader_ref.show_loader(1);
+
+    tmpData.forEach((element) => {
+      promises.push(uploadImage(element, 'utils/imageupload', 1));
+    });
+
+    Promise.all(promises)
+      .then((arrList) => {
+        console.log('====================================');
+        console.log('Task completed');
+        console.log('====================================');
+
+        onPickMedia(arrList);
+      })
+      .finally(() => {
+        global.loader_ref.show_loader(0);
       });
   };
 
@@ -116,7 +206,7 @@ const UploadMedia = ({
         if (Platform.OS === 'android') {
           path = pickFile.path;
         } else if (Platform.OS === 'ios') {
-          path = pickFile.sourceURL;
+          path = pickFile.path;
         }
 
         var ext = re.exec(path)[1];
@@ -136,7 +226,19 @@ const UploadMedia = ({
         };
         body.push(imageData);
 
-        uploadMediaContent(body, childPath, mediaType);
+        return new Promise(function (resolve, reject) {
+          uploadMediaContent(body, childPath, mediaType)
+            .then((data) => {
+              if (data !== undefined && data !== null) {
+                resolve(data);
+              } else {
+                reject(null);
+              }
+            })
+            .catch((error) => {
+              reject(null);
+            });
+        });
       } else {
         onPickMedia(null);
         Alert.alert(
@@ -174,7 +276,25 @@ const UploadMedia = ({
             data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
           };
           body.push(imageData);
-          uploadMediaContent(body, childPath, mediaType);
+
+          global.loader_ref.show_loader(1);
+          uploadMediaContent(body, childPath, mediaType)
+            .then((data) => {
+              if (data !== undefined && data !== null) {
+                let tmpArray = [];
+                tmpArray.push(data);
+                onPickMedia(tmpArray);
+              } else {
+                onPickMedia(null);
+              }
+            })
+            .catch((error) => {
+              onPickMedia(null);
+              Alert.alert('Uploading Failed');
+            })
+            .finally(() => {
+              global.loader_ref.show_loader(0);
+            });
         } else {
           onPickMedia(null);
           Alert.alert(
@@ -239,7 +359,7 @@ const UploadMedia = ({
           type: [DocumentPicker.types.audio],
         });
         if (res !== null) {
-         // refRBSheet.current.open();
+          // refRBSheet.current.open();
           uploadDoc(res, 'utils/imageupload?type=3', 4);
         }
       } catch (error) {
@@ -249,36 +369,17 @@ const UploadMedia = ({
     }
   };
 
-  // const hasPermission = async () => {
-  //   if (Platform.OS !== 'android') {
-  //     return true;
-  //   }
-
-  //   const pm1 = await PermissionsAndroid.check(
-  //     PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-  //   );
-  //   const pm2 = await PermissionsAndroid.check(
-  //     PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-  //   );
-
-  //   if (pm1 && pm2) {
-  //     return true;
-  //   }
-
-  //   const userResponse = await PermissionsAndroid.requestMultiple([
-  //     PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-  //     PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-  //   ]);
-
-  //   if (
-  //     userResponse['android.permission.READ_EXTERNAL_STORAGE'] === 'granted' &&
-  //     userResponse['android.permission.WRITE_EXTERNAL_STORAGE'] === 'granted'
-  //   ) {
-  //     return true;
-  //   } else {
-  //     return false;
-  //   }
-  // };
+  const setImage = (index) => {
+    let tmpData = tempImages;
+    tmpData.splice(index, 1);
+    if (tmpData.length > 0) {
+      setTempImages([...tmpData]);
+      setSelectedImage(tmpData[0]);
+    } else {
+      setTempImages([]);
+      setSelectedImage(null);
+    }
+  };
 
   const addToVideo = () => {
     if (selectedLink.trim() === '') {
@@ -303,7 +404,10 @@ const UploadMedia = ({
         type: 2,
         tags: selectedLinkTags,
       };
-      onPickMedia(obj);
+
+      let tmpArray = [];
+      tmpArray.push(obj);
+      onPickMedia(tmpArray);
     }
   };
 
@@ -496,6 +600,155 @@ const UploadMedia = ({
           />
         </View>
       </RBSheet>
+      <RBSheet
+        ref={cropRef}
+        height={height - 100}
+        onClose={() => {}}
+        duration={350}
+        closeOnDragDown={false}
+        closeOnPressBack={false}
+        dragFromTopOnly={false}
+        closeOnPressMask={false}
+        customStyles={{
+          container: {
+            backgroundColor: '#fff',
+            borderTopLeftRadius: 30,
+            borderTopRightRadius: 30,
+            paddingLeft: 15,
+            paddingRight: 15,
+            paddingTop: 20,
+          },
+        }}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={grid.flex1}>
+            <View
+              style={[
+                g.title2,
+                grid.rowdir,
+                grid.justifyContent,
+                grid.alignItems,
+              ]}>
+              <Text style={[g.title2txt]}>{'Selected Images'}</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  cropRef.current.close();
+                }}
+                hitSlop={{top: 10, bottom: 10, left: 20, right: 20}}
+                activeOpacity={0.8}>
+                <Text style={[g.title2txt]}>{'Back'}</Text>
+              </TouchableOpacity>
+            </View>
+            <View>
+              <ScrollView
+                ref={scrollRef}
+                showsHorizontalScrollIndicator={false}
+                horizontal
+                keyboardShouldPersistTaps="handled">
+                {tempImages.map((item, index) => {
+                  return (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSelectedImage(item);
+                      }}
+                      style={[
+                        {
+                          height: scale(100),
+                          aspectRatio: 16 / 9,
+                          borderRadius: scale(6),
+                          marginHorizontal: scale(2),
+                        },
+                        g.bggray3,
+                        g.gphotoupload,
+                      ]}>
+                      <ProgressImage
+                        source={{
+                          uri: item.path,
+                        }}
+                        containerStyle={{
+                          aspectRatio: 16 / 9,
+                          borderRadius: scale(6),
+                        }}
+                        imageStyle={{
+                          aspectRatio: 16 / 9,
+                          borderRadius: scale(6),
+                        }}
+                        mode={'cover'}
+                      />
+                      <TouchableOpacity
+                        onPress={() => {
+                          setImage(index);
+                        }}
+                        style={[
+                          g.boxShadow,
+                          g.bgWhite,
+                          {
+                            position: 'absolute',
+                            bottom: 2,
+                            right: 2,
+                            height: 30,
+                            width: 30,
+                            borderRadius: 26,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                          },
+                        ]}>
+                        <GlobalInclude.BaseIcon
+                          containerStyle={{
+                            height: 20,
+                            width: 20,
+                            justifyContent: 'center',
+                          }}
+                          iconColor={GlobalInclude.Color.ColorPrimary}
+                          iconName={'close'}
+                          iconSize={20}
+                          iconType={IconType[10]}
+                        />
+                      </TouchableOpacity>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+
+            <View style={g.mb10}>
+              {selectedImage !== null && selectedImage !== undefined ? (
+                <View>
+                  <Text style={[g.colorBlack, g.fs12, g.FHNR, g.mb5]}>
+                    {'Image Size'} : {selectedImage.width}X
+                    {selectedImage.height}
+                  </Text>
+                  <ProgressImage
+                    source={{
+                      uri: selectedImage.path,
+                    }}
+                    containerStyle={{
+                      aspectRatio: 1 / 1,
+                      borderRadius: scale(5),
+                    }}
+                    imageStyle={{
+                      aspectRatio: 1 / 1,
+                      borderRadius: scale(5),
+                    }}
+                    mode={'cover'}
+                  />
+                </View>
+              ) : null}
+            </View>
+            <View style={styles.buttonContainer}>
+              <CommonButton
+                showLoader={false}
+                title={'Upload Now'}
+                onPress={() => {
+                  //uploadMultipleImages();
+                  let tmpData = tempImages;
+                  cropRef.current.close();
+                  uploadMultipleImages(tmpData);
+                }}
+              />
+            </View>
+          </View>
+        </ScrollView>
+      </RBSheet>
     </View>
   );
 };
@@ -508,6 +761,15 @@ const styles = StyleSheet.create({
   mainBox: {
     borderRadius: 10,
     flex: 1 / 2,
+  },
+  buttonContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: scale(150),
+    paddingTop: scale(10),
+    paddingBottom: scale(10),
+    alignContent: 'center',
+    alignSelf: 'center',
   },
 });
 

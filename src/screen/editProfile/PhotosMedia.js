@@ -138,11 +138,12 @@ const PhotosMedia = (props) => {
       <UploadMedia
         refRBSheet={uploadRef}
         media={{image: false, video: false, document: false, audio: true}}
+        supportMultiple={false}
         onPickMedia={(media) => {
           uploadRef.current.close();
           if (media !== undefined && media !== null) {
             let oldData = mediaData;
-            oldData.splice(0, 0, media);
+            Array.prototype.push.apply(oldData, media);
             setMediaData([...oldData]);
           }
         }}
