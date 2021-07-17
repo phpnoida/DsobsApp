@@ -132,17 +132,25 @@ const UploadMedia = ({
     }
     let singleItem = uploadTmpImages[imageIndex];
 
+    console.log('====================================');
+    console.log(singleItem);
+    console.log('====================================');
+
     ImagePicker.openCropper({
       cropping: true,
       path: singleItem.path,
       enableRotationGesture: false,
+      avoidEmptySpaceAroundImage: false,
       cropperChooseText: 'Done',
+      width: singleItem.width,
+      height: singleItem.height,
     })
       .then((image) => {
         console.log('after cropping', image);
         uploadFinalImages.push(image);
         //processSelectedImage(image);
       })
+      .catch((err) => {})
       .finally(() => {
         imageIndex = imageIndex + 1;
         cropSingleImage();
