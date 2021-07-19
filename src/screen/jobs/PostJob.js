@@ -1143,6 +1143,7 @@ const AddJobPost = ({route, navigation}) => {
         />
       )}
       <UploadMedia
+        navigation={navigation}
         refRBSheet={uploadRef}
         media={{
           image: false,

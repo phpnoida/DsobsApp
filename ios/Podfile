@@ -14,8 +14,6 @@ target 'alumbus' do
 
   pod 'RNShare', :path => '../node_modules/react-native-share'
 
-  pod 'RNSound', :path => '../node_modules/react-native-sound'
-
   target 'alumbusTests' do
     inherit! :complete
     # Pods for testing

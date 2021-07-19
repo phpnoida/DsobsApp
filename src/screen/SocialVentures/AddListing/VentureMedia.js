@@ -8,6 +8,7 @@ import UploadMedia from '../../../component/UploadMedia';
 import {loadMedia} from '../../../component/MediaComponent';
 import {uploadMediaButton} from '../../../component/Common';
 const VentureMedia = ({
+  navigation,
   onSaveTab,
   onPreviousTab,
   mediaData,
@@ -68,6 +69,7 @@ const VentureMedia = ({
         }}
       />
       <UploadMedia
+        navigation={navigation}
         refRBSheet={uploadRef}
         media={{image: false, video: false, document: false, audio: false}}
         supportMultiple={true}

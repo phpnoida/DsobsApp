@@ -83,7 +83,7 @@ const Ticker = ({route, navigation}) => {
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
   );
-  const [animatedHeight, setAnimatedHeight] = useState(119);
+  const [animatedHeight, setAnimatedHeight] = useState(101);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedFeed, setSelectedFeed] = useState(null);
   const [categoryList, setCategoryList] = useState([]);
@@ -843,7 +843,7 @@ const Ticker = ({route, navigation}) => {
 
   const keyExtractor = (item, index) => index;
 
-  const headerDistance = Animated.diffClamp(curY, 0, 119).interpolate({
+  const headerDistance = Animated.diffClamp(curY, 0, 101).interpolate({
     inputRange: [0, 1],
     outputRange: [0, -1],
   });

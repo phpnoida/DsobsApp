@@ -82,7 +82,7 @@ const YellowPages = ({navigation}) => {
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [myBusinessList, setMyBusinessList] = useState([]);
-  const [animatedHeight, setAnimatedHeight] = useState(255);
+  const [animatedHeight, setAnimatedHeight] = useState(223);
   const [viewWidth, setViewWidth] = useState(width);
 
   useEffect(() => {
@@ -432,7 +432,7 @@ const YellowPages = ({navigation}) => {
             item.coverImages !== undefined &&
             item.coverImages.length > 0 ? (
               <View>
-                {item.coverImages.length > 1 ? (
+                {/* {item.coverImages.length > 1 ? (
                   <FlatListSlider
                     width={viewWidth}
                     data={item.coverImages}
@@ -443,6 +443,7 @@ const YellowPages = ({navigation}) => {
                       borderBottomRightRadius: 0,
                     }}
                     autoscroll={false}
+                    indicator={false}
                   />
                 ) : (
                   <ProgresImage
@@ -459,7 +460,21 @@ const YellowPages = ({navigation}) => {
                     }}
                     mode={'cover'}
                   />
-                )}
+                )} */}
+                <ProgresImage
+                  source={{uri: item.coverImages[0]}}
+                  containerStyle={{
+                    aspectRatio: 16 / 9,
+                    borderRadius: scale(10),
+                  }}
+                  imageStyle={{
+                    aspectRatio: 16 / 9,
+                    borderRadius: scale(10),
+                    borderBottomLeftRadius: 0,
+                    borderBottomRightRadius: 0,
+                  }}
+                  mode={'cover'}
+                />
               </View>
             ) : (
               <ProgresImage
@@ -550,7 +565,7 @@ const YellowPages = ({navigation}) => {
   const headerDistance = Animated.diffClamp(
     curY,
     0,
-    searchedCityCompany.length > 0 ? 510 : 255,
+    searchedCityCompany.length > 0 ? 510 : 223,
   ).interpolate({
     inputRange: [0, 1],
     outputRange: [0, -1],

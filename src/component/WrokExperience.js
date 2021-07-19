@@ -5,6 +5,7 @@ import grid from '../theme/grid';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import {scale} from '../theme/Scalling';
 import {IconType} from '../helper/Constants';
+import ProgressImage from '../component/ProgresImage';
 
 /**
  * Here this component is use for work experience in Professional, Training tab and in relation tab.
@@ -78,16 +79,33 @@ const WorkExperience = (props) => {
           {props.image ? (
             <TouchableOpacity
               activeOpacity={1}
-              style={[g.iconstyle1, {aspectRatio: 1 / 1}]}
+              style={{
+                height: scale(50),
+                width: scale(50),
+                borderRadius: scale(100),
+              }}
               onPress={() => {
                 props.onImagePress();
               }}>
-              <GlobalInclude.BaseIcon
-                containerStyle={{height: scale(20), width: scale(20)}}
-                iconColor={'#fff'}
-                iconName={'file-image-o'}
-                iconSize={scale(20)}
-                iconType={IconType[4]}
+              <ProgressImage
+                source={
+                  props.image &&
+                  props.image !== undefined &&
+                  props.image !== null
+                    ? {uri: props.image}
+                    : GlobalInclude.Assets.DefaultImage
+                }
+                containerStyle={{
+                  height: scale(50),
+                  width: scale(50),
+                  borderRadius: scale(100),
+                }}
+                imageStyle={{
+                  height: scale(50),
+                  width: scale(50),
+                  borderRadius: scale(100),
+                }}
+                mode={'cover'}
               />
             </TouchableOpacity>
           ) : null}

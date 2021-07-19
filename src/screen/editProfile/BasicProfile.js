@@ -108,7 +108,7 @@ const createPrimaryVisibilityRadio = (value) => {
 };
 
 const BasicProfile = (props) => {
-  const {profileData} = props;
+  const {profileData, navigation} = props;
 
   const uploadRef = useRef();
 
@@ -738,15 +738,18 @@ const BasicProfile = (props) => {
                 dateFormat={'day month year'}
                 onChange={(event, selected) => {
                   if (event && event !== null && event !== undefined) {
+                    console.log('event.type', event.type);
                     if (event.type === 'set') {
                       const currentDate = selected || new Date();
                       let obj = Helper.formateDate(currentDate);
                       birthDate = obj.serverDate;
-                      setShowDatePicker(Platform.OS === 'ios');
+                      setShowDatePicker(false);
                       setSelectedDate(obj.displayDate);
+                    } else {
+                      setShowDatePicker(false);
                     }
                   } else {
-                    setShowDatePicker(Platform.OS === 'ios');
+                    setShowDatePicker(false);
                   }
                 }}
                 onTouchCancel={(event) => {
@@ -1423,7 +1426,7 @@ const BasicProfile = (props) => {
           ref={(ref) => {
             bloodGroupSheet = ref;
           }}
-          height={375}
+          height={430}
           minClosingHeight={50}
           duration={350}
           closeOnDragDown={true}
@@ -1650,6 +1653,7 @@ const BasicProfile = (props) => {
         </CityListSheet>
 
         <UploadMedia
+          navigation={navigation}
           refRBSheet={uploadRef}
           media={{
             image: false,

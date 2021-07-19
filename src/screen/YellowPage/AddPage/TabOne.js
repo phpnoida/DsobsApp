@@ -53,6 +53,7 @@ const generateHeader = (title, required) => {
 };
 
 const TabOne = ({
+  navigation,
   onSaveTab,
   handleInput,
   businessName,
@@ -212,11 +213,7 @@ const TabOne = ({
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                ref={scrollRef}
-                onScroll={({nativeEvent}) => {
-                  isEndReached = isCloseToRight(nativeEvent);
-                  isHomeReached = isAtHome(nativeEvent);
-                }}>
+                ref={scrollRef}>
                 {coverImages.map((item, index) => {
                   return (
                     <View style={{margin: scale(5)}} key={index}>
@@ -428,6 +425,7 @@ const TabOne = ({
       )}
 
       <UploadMedia
+        navigation={navigation}
         refRBSheet={uploadRef}
         media={{image: false, video: true, document: true, audio: true}}
         supportMultiple={true}

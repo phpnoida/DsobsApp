@@ -7,10 +7,7 @@ import {
   StyleSheet,
   Image,
   Platform,
-  ActivityIndicator,
   TextInput,
-  useWindowDimensions,
-  ScrollView,
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import g from '../theme/global';
@@ -24,8 +21,7 @@ import {uploadMedia} from '../Actions/CommonActions';
 import CommonButton from './CommonButton';
 import getPath from '@flyerhq/react-native-android-uri-path';
 import {hasPermission} from '../helper/mediaHelper';
-import ProgressImage from './ProgresImage';
-import {IconType} from '../helper/Constants';
+import ShowPickedImages from '../component/ShowPickedImages';
 
 var re = /(?:\.([^.]+))?$/;
 
@@ -37,22 +33,15 @@ const UploadMedia = ({
   media,
   videoData,
   onPickMedia,
-  showLoader,
   supportMultiple,
 }) => {
   const videoRef = useRef();
-  const cropRef = useRef();
-  const scrollRef = useRef();
 
-  const height = useWindowDimensions().height;
-
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedLink, setSelectedLink] = useState('');
   const [selectedLinkTags, setSelectedLinkTags] = useState('');
   const [errorMessage, setErrorMessage] = useState({});
   const [tempImages, setTempImages] = useState([]);
-  const [selectedImage, setSelectedImage] = useState(null);
-
+  const [showPickedImages, setShowPickedImages] = useState(false);
   /**
    *
    * API SECTION
@@ -117,7 +106,6 @@ const UploadMedia = ({
         }
       })
       .catch((err) => {
-        console.log('err', err.code);
         if (err.code === 'E_PICKER_CANCELLED') {
           onPickMedia(null);
           Alert.alert('Cancel Selection', 'User Cancelled Selection!');
@@ -130,25 +118,26 @@ const UploadMedia = ({
       completeCropping();
       return;
     }
+
     let singleItem = uploadTmpImages[imageIndex];
 
-    console.log('====================================');
-    console.log(singleItem);
-    console.log('====================================');
-
-    ImagePicker.openCropper({
+    let options = {
       cropping: true,
       path: singleItem.path,
-      enableRotationGesture: false,
-      avoidEmptySpaceAroundImage: false,
-      cropperChooseText: 'Done',
-      width: singleItem.width,
-      height: singleItem.height,
-    })
+    };
+
+    if (Platform.OS === 'ios') {
+      options.freeStyleCropEnabled = true;
+      options.cropperChooseText = 'Done';
+      options.width = singleItem.width;
+      options.height = singleItem.height;
+    } else if (Platform.OS === 'android') {
+      options.enableRotationGesture = true;
+    }
+
+    ImagePicker.openCropper(options)
       .then((image) => {
-        console.log('after cropping', image);
         uploadFinalImages.push(image);
-        //processSelectedImage(image);
       })
       .catch((err) => {})
       .finally(() => {
@@ -165,15 +154,7 @@ const UploadMedia = ({
     if (uploadFinalImages.length > 0) {
       if (supportMultiple) {
         setTempImages(uploadFinalImages);
-        setSelectedImage(uploadFinalImages[0]);
-        if (
-          cropRef !== undefined &&
-          cropRef !== null &&
-          cropRef.current !== undefined &&
-          cropRef.current !== null
-        ) {
-          cropRef.current.open();
-        }
+        setShowPickedImages(true);
       } else {
         uploadMultipleImages(uploadFinalImages);
       }
@@ -183,9 +164,7 @@ const UploadMedia = ({
   };
 
   const uploadMultipleImages = (tmpData) => {
-    //let tmpData = tempImages;
     var promises = [];
-    //cropRef.current.close();
     global.loader_ref.show_loader(1);
 
     tmpData.forEach((element) => {
@@ -194,10 +173,6 @@ const UploadMedia = ({
 
     Promise.all(promises)
       .then((arrList) => {
-        console.log('====================================');
-        console.log('Task completed');
-        console.log('====================================');
-
         onPickMedia(arrList);
       })
       .finally(() => {
@@ -209,13 +184,13 @@ const UploadMedia = ({
     try {
       let body = [];
       if (pickFile !== null) {
-        var path = '';
+        var path = pickFile.path;
 
-        if (Platform.OS === 'android') {
-          path = pickFile.path;
-        } else if (Platform.OS === 'ios') {
-          path = pickFile.path;
-        }
+        // if (Platform.OS === 'android') {
+        //   path = pickFile.path;
+        // } else if (Platform.OS === 'ios') {
+        //   path = pickFile.path;
+        // }
 
         var ext = re.exec(path)[1];
         var timestamp = new Date().getTime().toString();
@@ -377,18 +352,6 @@ const UploadMedia = ({
     }
   };
 
-  const setImage = (index) => {
-    let tmpData = tempImages;
-    tmpData.splice(index, 1);
-    if (tmpData.length > 0) {
-      setTempImages([...tmpData]);
-      setSelectedImage(tmpData[0]);
-    } else {
-      setTempImages([]);
-      setSelectedImage(null);
-    }
-  };
-
   const addToVideo = () => {
     if (selectedLink.trim() === '') {
       setErrorMessage({link: 'This field is required!'});
@@ -476,22 +439,6 @@ const UploadMedia = ({
         }}>
         <View
           style={{flex: 1, justifyContent: 'center', alignContent: 'center'}}>
-          {isLoading && (
-            <View
-              style={{
-                position: 'absolute',
-                top: 0,
-                bottom: 0,
-                left: 0,
-                right: 0,
-                justifyContent: 'center',
-              }}>
-              <ActivityIndicator
-                size={'small'}
-                color={GlobalInclude.Color.ColorPrimary}
-              />
-            </View>
-          )}
           <View style={[grid.rowdir, grid.flexwrap, g.mt5]}>
             {generateIcon(
               GlobalInclude.Assets.CameraAttach,
@@ -600,7 +547,7 @@ const UploadMedia = ({
             </View>
           </View>
           <CommonButton
-            showLoader={isLoading}
+            showLoader={false}
             title={
               videoData !== undefined && videoData !== null ? 'Update' : 'Save'
             }
@@ -608,155 +555,19 @@ const UploadMedia = ({
           />
         </View>
       </RBSheet>
-      <RBSheet
-        ref={cropRef}
-        height={height - 100}
-        onClose={() => {}}
-        duration={350}
-        closeOnDragDown={false}
-        closeOnPressBack={false}
-        dragFromTopOnly={false}
-        closeOnPressMask={false}
-        customStyles={{
-          container: {
-            backgroundColor: '#fff',
-            borderTopLeftRadius: 30,
-            borderTopRightRadius: 30,
-            paddingLeft: 15,
-            paddingRight: 15,
-            paddingTop: 20,
-          },
-        }}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={grid.flex1}>
-            <View
-              style={[
-                g.title2,
-                grid.rowdir,
-                grid.justifyContent,
-                grid.alignItems,
-              ]}>
-              <Text style={[g.title2txt]}>{'Selected Images'}</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  cropRef.current.close();
-                }}
-                hitSlop={{top: 10, bottom: 10, left: 20, right: 20}}
-                activeOpacity={0.8}>
-                <Text style={[g.title2txt]}>{'Back'}</Text>
-              </TouchableOpacity>
-            </View>
-            <View>
-              <ScrollView
-                ref={scrollRef}
-                showsHorizontalScrollIndicator={false}
-                horizontal
-                keyboardShouldPersistTaps="handled">
-                {tempImages.map((item, index) => {
-                  return (
-                    <TouchableOpacity
-                      onPress={() => {
-                        setSelectedImage(item);
-                      }}
-                      style={[
-                        {
-                          height: scale(100),
-                          aspectRatio: 16 / 9,
-                          borderRadius: scale(6),
-                          marginHorizontal: scale(2),
-                        },
-                        g.bggray3,
-                        g.gphotoupload,
-                      ]}>
-                      <ProgressImage
-                        source={{
-                          uri: item.path,
-                        }}
-                        containerStyle={{
-                          aspectRatio: 16 / 9,
-                          borderRadius: scale(6),
-                        }}
-                        imageStyle={{
-                          aspectRatio: 16 / 9,
-                          borderRadius: scale(6),
-                        }}
-                        mode={'cover'}
-                      />
-                      <TouchableOpacity
-                        onPress={() => {
-                          setImage(index);
-                        }}
-                        style={[
-                          g.boxShadow,
-                          g.bgWhite,
-                          {
-                            position: 'absolute',
-                            bottom: 2,
-                            right: 2,
-                            height: 30,
-                            width: 30,
-                            borderRadius: 26,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                          },
-                        ]}>
-                        <GlobalInclude.BaseIcon
-                          containerStyle={{
-                            height: 20,
-                            width: 20,
-                            justifyContent: 'center',
-                          }}
-                          iconColor={GlobalInclude.Color.ColorPrimary}
-                          iconName={'close'}
-                          iconSize={20}
-                          iconType={IconType[10]}
-                        />
-                      </TouchableOpacity>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View>
 
-            <View style={g.mb10}>
-              {selectedImage !== null && selectedImage !== undefined ? (
-                <View>
-                  <Text style={[g.colorBlack, g.fs12, g.FHNR, g.mb5]}>
-                    {'Image Size'} : {selectedImage.width}X
-                    {selectedImage.height}
-                  </Text>
-                  <ProgressImage
-                    source={{
-                      uri: selectedImage.path,
-                    }}
-                    containerStyle={{
-                      aspectRatio: 1 / 1,
-                      borderRadius: scale(5),
-                    }}
-                    imageStyle={{
-                      aspectRatio: 1 / 1,
-                      borderRadius: scale(5),
-                    }}
-                    mode={'cover'}
-                  />
-                </View>
-              ) : null}
-            </View>
-            <View style={styles.buttonContainer}>
-              <CommonButton
-                showLoader={false}
-                title={'Upload Now'}
-                onPress={() => {
-                  //uploadMultipleImages();
-                  let tmpData = tempImages;
-                  cropRef.current.close();
-                  uploadMultipleImages(tmpData);
-                }}
-              />
-            </View>
-          </View>
-        </ScrollView>
-      </RBSheet>
+      {showPickedImages && (
+        <ShowPickedImages
+          imageData={tempImages}
+          onClose={() => {
+            setShowPickedImages(false);
+          }}
+          uplodFinalImages={(finalImages) => {
+            setShowPickedImages(false);
+            uploadMultipleImages(finalImages);
+          }}
+        />
+      )}
     </View>
   );
 };

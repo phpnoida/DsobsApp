@@ -1,7 +1,8 @@
 import React from 'react';
-import {View, StyleSheet, Platform} from 'react-native';
+import {View, StyleSheet, Platform, Dimensions} from 'react-native';
 import ProgresImage from './ProgresImage';
 import {scale} from '../theme/Scalling';
+const {width: displayWidth} = Dimensions.get('window');
 
 const Preview = ({
   style,
@@ -24,7 +25,7 @@ const Preview = ({
           borderBottomLeftRadius: 0,
           borderBottomRightRadius: 0,
           aspectRatio: 16 / 9,
-          width: style.width,
+          width: displayWidth,
           overflow: 'hidden',
         },
         ViewStyle,
@@ -36,7 +37,7 @@ const Preview = ({
           borderBottomLeftRadius: 0,
           borderBottomRightRadius: 0,
           aspectRatio: 16 / 9,
-          width: style.width,
+          width: displayWidth,
           ...containerStyle,
         }}
         imageStyle={{
@@ -44,7 +45,7 @@ const Preview = ({
           borderBottomLeftRadius: 0,
           borderBottomRightRadius: 0,
           aspectRatio: 16 / 9,
-          width: style.width,
+          width: displayWidth,
           ...imageStyle,
         }}
         mode={imageMode ? imageMode : 'cover'}

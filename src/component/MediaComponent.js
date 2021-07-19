@@ -1,13 +1,5 @@
-import React, {useRef} from 'react';
-import {
-  Text,
-  View,
-  TouchableOpacity,
-  Image,
-  Platform,
-  ScrollView,
-  Animated,
-} from 'react-native';
+import React from 'react';
+import {Text, View, TouchableOpacity} from 'react-native';
 import g from '../theme/global';
 import grid from '../theme/grid';
 import {scale} from '../theme/Scalling';

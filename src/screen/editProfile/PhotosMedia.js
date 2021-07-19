@@ -53,8 +53,6 @@ const PhotosMedia = (props) => {
     if (global.isConnected) {
       let cloneData = JSON.parse(JSON.stringify(mediaData));
       cloneData = cloneData.reverse();
-
-      console.log('cloneData', cloneData);
       let requestData = {
         photos: cloneData,
       };
@@ -136,9 +134,10 @@ const PhotosMedia = (props) => {
       />
 
       <UploadMedia
+        navigation={props.navigation}
         refRBSheet={uploadRef}
         media={{image: false, video: false, document: false, audio: true}}
-        supportMultiple={false}
+        supportMultiple={true}
         onPickMedia={(media) => {
           uploadRef.current.close();
           if (media !== undefined && media !== null) {

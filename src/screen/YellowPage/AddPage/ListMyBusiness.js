@@ -594,6 +594,7 @@ const ListMyBusiness = ({route, navigation}) => {
       case 1:
         return (
           <TabOne
+            navigation={navigation}
             inEditMode={inEditMode}
             businessName={businessName}
             professionList={professionList}

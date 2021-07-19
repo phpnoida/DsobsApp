@@ -22,6 +22,7 @@ import AutoSuggestUser from '../../../component/AutoSuggestUser';
 
 let lastIndex = 0;
 const VolunteerTeam = ({
+  navigation,
   onSaveTab,
   onPreviousTab,
   addNewVolunteer,
@@ -223,6 +224,7 @@ const VolunteerTeam = ({
       />
 
       <UploadMedia
+        navigation={navigation}
         refRBSheet={uploadRef}
         media={{image: false, video: true, document: true, audio: true}}
         supportMultiple={false}

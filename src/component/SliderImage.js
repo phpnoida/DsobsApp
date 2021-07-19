@@ -1,10 +1,9 @@
 import React, {useRef} from 'react';
-import {View, Dimensions, StyleSheet, TouchableOpacity} from 'react-native';
-import ResponsiveImage from './ResponsiveImage';
+import {View, Dimensions, TouchableOpacity} from 'react-native';
+
 import ProgressImage from './ProgresImage';
 import g from '../theme/global';
 import {scale} from '../theme/Scalling';
-import Pdf from 'react-native-pdf';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import {IconType} from '../helper/Constants';
 

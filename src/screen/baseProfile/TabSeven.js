@@ -88,6 +88,7 @@ const TabSeven = (props) => {
 
       <UploadMedia
         refRBSheet={uploadRef}
+        navigation={props.navigation}
         media={{
           image: false,
           video: true,

@@ -17,7 +17,6 @@ import ImageShareModal from '../component/ImageShareModal';
 import YoutubeView from '../component/YoutubeView';
 import g from '../theme/global';
 import grid from '../theme/grid';
-import Sound from 'react-native-sound';
 import ProgressImage from './ProgresImage';
 import TrackPlayer, {usePlaybackState} from 'react-native-track-player';
 import Player from './Player/Player';

@@ -187,6 +187,7 @@ const EditProfile = ({route, navigation}) => {
       case 1: {
         return (
           <BasicProfile
+            navigation={navigation}
             profileData={profileData}
             onSaveTab={() => validateAndMoveNextTab()}
             updateData={updateMultipleFields}
@@ -206,6 +207,7 @@ const EditProfile = ({route, navigation}) => {
       case 3: {
         return (
           <PhotosMedia
+            navigation={navigation}
             profileData={profileData}
             onSaveTab={() => validateAndMoveNextTab()}
             onPreviuosTab={() => goPreviousTab()}
@@ -284,6 +286,7 @@ const EditProfile = ({route, navigation}) => {
       case 10: {
         return (
           <MyFamily
+            navigation={navigation}
             profileData={profileData}
             onSaveTab={() => validateAndMoveNextTab()}
             onPreviuosTab={() => goPreviousTab()}
@@ -365,7 +368,9 @@ const EditProfile = ({route, navigation}) => {
                       {menuOptions.map(function (item, i) {
                         let arrayStyle = [styles.menuDefaultStyle];
                         if (item.label === selectedTab) {
-                          arrayStyle.push({color: GlobalInclude.Color.ColorPrimary});
+                          arrayStyle.push({
+                            color: GlobalInclude.Color.ColorPrimary,
+                          });
                         } else {
                           arrayStyle.push({color: '#bababa'});
                         }

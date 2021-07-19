@@ -8,7 +8,6 @@ import {
   Keyboard,
   StyleSheet,
   FlatList,
-  Alert,
   Platform,
 } from 'react-native';
 import g from '../../theme/global';
@@ -21,7 +20,6 @@ import EditLinksExperience from '../../component/EditLinksExperience';
 import Radio from '../../component/Radio';
 import NextPreviousButton from '../../component/NextPreviousButton';
 import {IconType} from '../../helper/Constants';
-import {launchImageLibrary} from 'react-native-image-picker';
 import {uploadProfilePic, updateUserProfile} from '../../Actions/UserActions';
 import RNFetchBlob from 'rn-fetch-blob';
 import ZoomImage from '../../component/ZoomImage';
@@ -83,20 +81,6 @@ const generateOptionList = (defaultValue) => {
     selected: defaultValue === 'Separated' ? true : false,
   });
   return optionList;
-};
-
-const options = {
-  title: 'Select Image',
-  noData: true,
-  maxWidth: 720,
-  maxHeight: 1024,
-  allowsEditing: false,
-  storageOptions: {
-    skipBackup: true,
-    path: 'images',
-    cameraRoll: true,
-    waitUntilSaved: true,
-  },
 };
 
 var lastSelectedIndex = -1;
@@ -193,64 +177,6 @@ const MyFamily = (props) => {
     }
   };
 
-  const uploadProfile = () => {
-    let body = [];
-
-    if (profileUri !== null) {
-      setIsLoading(true);
-      var path = profileUri.uri;
-      let imageName = '';
-      if (
-        profileUri.fileName === undefined ||
-        profileUri.fileName == null ||
-        profileUri.fileName === ''
-      ) {
-        var getFilename = path.split('/');
-        imageName = getFilename[getFilename.length - 1];
-        var extension = imageName.split('.')[1];
-        imageName = new Date().getTime() + '.' + extension;
-      } else {
-        imageName = profileUri.fileName;
-      }
-
-      let imagePath =
-        Platform.OS === 'ios' ? path.replace('file://', '') : path;
-
-      let imageType = profileUri.type;
-
-      var imageData = {
-        name: 'image',
-        filename: imageName,
-        type: imageType,
-        data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
-      };
-      body.push(imageData);
-
-      uploadProfilePic(
-        body,
-        (response) => {
-          setIsLoading(false);
-          if (response && response !== undefined && response !== null) {
-            if (response.status) {
-              if (response.data && response.data !== null) {
-                let childData = response.data.data;
-                if (requestImagePicker === 1) {
-                  setSpousePhoto(childData);
-                } else if (requestImagePicker === 2) {
-                  setChildPhoto(childData);
-                }
-              }
-            }
-          }
-        },
-        (error) => {
-          setIsLoading(false);
-          console.log('error', error);
-        },
-      );
-    }
-  };
-
   const inputHandler = (fieldName, fieldValue) => {
     if (fieldName === 'spouseName') {
       setSpouseName(fieldValue);
@@ -278,29 +204,6 @@ const MyFamily = (props) => {
     } else if (requestPicker === 2) {
       setChildBirthDate(dateVa);
     }
-  };
-
-  const launchImagePicker = () => {
-    launchImageLibrary(options, (res) => {
-      if (res) {
-        if (res !== null) {
-          if (res.didCancel) {
-            Alert.alert('Cancel Image Selection!');
-          } else {
-            if (
-              res.assets !== undefined &&
-              res.assets !== null &&
-              res.assets.length > 0
-            ) {
-              profileUri = res.assets[0];
-              if (global.isConnected) {
-                uploadProfile();
-              }
-            }
-          }
-        }
-      }
-    });
   };
 
   const inflateLinks = ({index, item}) => {
@@ -535,8 +438,8 @@ const MyFamily = (props) => {
                   underlineColorAndroid="transparent"
                   style={[g.inputWhite, g.bw0, grid.col]}
                   placeholder={'Spouse Photo'}
-                  value={spousePhoto}
-                  editable={true}
+                  value={spousePhoto !== '' ? 'Image Uploaded' : 'Select Photo'}
+                  editable={false}
                 />
                 <GlobalInclude.BaseIcon
                   containerStyle={{height: scale(22), width: scale(22)}}
@@ -653,8 +556,8 @@ const MyFamily = (props) => {
                   underlineColorAndroid="transparent"
                   style={[g.inputWhite, g.bw0, grid.col]}
                   placeholder={'Child Photo'}
-                  value={childPhoto}
-                  editable={true}
+                  value={childPhoto !== '' ? 'Image Uploaded' : 'Select Photo'}
+                  editable={false}
                 />
                 <GlobalInclude.BaseIcon
                   containerStyle={{height: scale(22), width: scale(22)}}
@@ -762,6 +665,7 @@ const MyFamily = (props) => {
             document: true,
             audio: true,
           }}
+          navigation={props.navigation}
           supportMultiple={false}
           onPickMedia={(media) => {
             uploadRef.current.close();

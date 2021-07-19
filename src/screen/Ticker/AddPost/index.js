@@ -71,7 +71,6 @@ const PostTicker = ({route, navigation}) => {
     newsImage = '';
     title = '';
     newsLink = '';
-    pickMultiple = false;
 
     if (route.params !== undefined && route.params !== null) {
       if (route.params.data !== undefined && route.params.data !== null) {
@@ -587,29 +586,14 @@ const PostTicker = ({route, navigation}) => {
             style={[grid.col, g.mr10]}
             activeOpacity={1}
             onPress={() => {
-              if (mediaData.length < 5) {
-                if (categoryId === 8) {
-                  if (uploadRef.current !== null) {
-                    uploadRef.current.open();
-                  }
-                } else {
-                  // pickMedia();
-                  setDisableDoc(true);
-                  if (uploadRef.current !== null) {
-                    uploadRef.current.open();
-                  }
+              if (categoryId === 8) {
+                if (uploadRef.current !== null) {
+                  uploadRef.current.open();
                 }
               } else {
-                if (categoryId === 8) {
-                  Alert.alert(
-                    'Max Upload Reached',
-                    'You can only upload 5 images or PDFs',
-                  );
-                } else {
-                  Alert.alert(
-                    'Max Image Reached',
-                    'You can upload max 5 images',
-                  );
+                setDisableDoc(true);
+                if (uploadRef.current !== null) {
+                  uploadRef.current.open();
                 }
               }
             }}>
@@ -633,29 +617,14 @@ const PostTicker = ({route, navigation}) => {
             activeOpacity={1}
             style={styles.addTag}
             onPress={() => {
-              if (mediaData.length < 5) {
-                if (categoryId === 8) {
-                  if (uploadRef.current !== null) {
-                    uploadRef.current.open();
-                  }
-                } else {
-                  // pickMedia();
-                  setDisableDoc(true);
-                  if (uploadRef.current !== null) {
-                    uploadRef.current.open();
-                  }
+              if (categoryId === 8) {
+                if (uploadRef.current !== null) {
+                  uploadRef.current.open();
                 }
               } else {
-                if (categoryId === 8) {
-                  Alert.alert(
-                    'Max Upload Reached',
-                    'You can only upload 5 images or PDFs',
-                  );
-                } else {
-                  Alert.alert(
-                    'Max Image Reached',
-                    'You can upload max 5 images',
-                  );
+                setDisableDoc(true);
+                if (uploadRef.current !== null) {
+                  uploadRef.current.open();
                 }
               }
             }}>
@@ -682,7 +651,7 @@ const PostTicker = ({route, navigation}) => {
             {errorMessage.uploadImage}
           </Text>
         ) : null}
-        <Text
+        {/* <Text
           style={[
             g.errorMsg,
             grid.justifyContentLeft,
@@ -691,7 +660,7 @@ const PostTicker = ({route, navigation}) => {
             g.colorBlack,
           ]}>
           You can upload max 5 Images
-        </Text>
+        </Text> */}
       </View>
     );
   };
@@ -1064,6 +1033,7 @@ const PostTicker = ({route, navigation}) => {
       )}
 
       <UploadMedia
+        navigation={navigation}
         refRBSheet={uploadRef}
         media={{
           image: disableImage,
@@ -1075,8 +1045,6 @@ const PostTicker = ({route, navigation}) => {
         onPickMedia={(media) => {
           uploadRef.current.close();
           if (media !== undefined && media !== null) {
-            console.log('media', media);
-
             let oldData = mediaData;
             if (oldData.length === 0) {
               if (media.type === 1) {
