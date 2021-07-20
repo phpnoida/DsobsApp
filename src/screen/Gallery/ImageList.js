@@ -24,7 +24,10 @@ import OptionsSheet from 'react-native-raw-bottom-sheet';
 import {renderNoDataComponent} from '../../component/Common';
 import {APP_NAME, IconType} from '../../helper/Constants';
 import ImageViewer from 'react-native-image-zoom-viewer';
-import ResponsiveImage from '../../component/ResponsiveImage';
+//import ResponsiveImage from '../../component/ResponsiveImage';
+//import ResponsiveImage from '../../component/FitImage';
+import ResponsiveImage from '../../component/ProgresImage';
+import GalleryImageCard from '../../component/GalleryImageCard';
 import Helper from '../../helper/Helper';
 import Orientation, {
   OrientationLocker,
@@ -63,113 +66,6 @@ let imageArray = [];
 let imageId = '';
 let selectedImageLink = '';
 
-function GalleryImage({
-  index: itemIndex,
-  item: {about, imagesLink},
-  showTaggedUser,
-  showAboutPhoto,
-  onTouchImage,
-}) {
-  return useMemo(() => {
-    return (
-      <View key={itemIndex} style={{marginVertical: scale(10)}}>
-        <View
-          style={[
-            grid.rowrow,
-            grid.flex1,
-            g.p10,
-            grid.justifyContentCenter,
-            grid.alignItems,
-          ]}>
-          <View
-            style={[
-              grid.flex1,
-              grid.alignItems,
-              grid.justifyContentLeft,
-              grid.rowrow,
-            ]}>
-            <TouchableOpacity
-              style={[grid.rowrow, grid.alignItems, grid.justifyContentLeft]}
-              onPress={showTaggedUser}>
-              <Text style={[g.fs14, g.FHNB, g.colorBlue]}>
-                People In This Image
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={[grid.flex1, grid.justifyContentRight]}>
-            <TouchableOpacity
-              style={[grid.rowrow, grid.alignItems, grid.justifyContentRight]}
-              onPress={showAboutPhoto}>
-              <GlobalInclude.BaseIcon
-                containerStyle={{height: scale(15), width: scale(15)}}
-                iconColor={GlobalInclude.Color.ColorPrimary}
-                iconName={'dots-three-horizontal'}
-                iconSize={scale(15)}
-                iconType={IconType[9]}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={g.bgBlack06}>
-          <TouchableOpacity onPress={onTouchImage} activeOpacity={0.9}>
-            {imagesLink !== undefined &&
-            imagesLink !== null &&
-            imagesLink !== '' ? (
-              <ResponsiveImage showEdges={true} edges={100} source={{uri: imagesLink}} />
-            ) : (
-              <ProgressImage
-                source={GlobalInclude.Assets.DefaultImage}
-                containerStyle={{
-                  aspectRatio: 16 / 9,
-                }}
-                imageStyle={{
-                  aspectRatio: 16 / 9,
-                }}
-                mode={'contain'}
-              />
-            )}
-          </TouchableOpacity>
-        </View>
-        {/* <View style={[grid.rowrow, grid.flex1, g.ml10, g.mr10, g.mt8]}>
-          <View
-            style={[
-              grid.flex1,
-              grid.alignItems,
-              grid.justifyContentLeft,
-              grid.rowrow,
-            ]}>
-            <TouchableOpacity
-              style={[grid.rowrow, grid.alignItems, grid.justifyContentLeft]}
-              onPress={showAboutPhoto}>
-              <View
-                style={{
-                  height: scale(24),
-                  width: scale(24),
-                  borderRadius: scale(25),
-                  backgroundColor: GlobalInclude.Color.ColorPrimary,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginHorizontal: scale(3),
-                }}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={{height: scale(15), width: scale(15)}}
-                  iconColor={'#FFF'}
-                  iconName={'info'}
-                  iconSize={scale(15)}
-                  iconType={IconType[9]}
-                />
-              </View>
-              <Text style={[g.fs12, g.FHNB, g.colorBlue]}>About Photo</Text>
-            </TouchableOpacity>
-          </View>
-        </View> */}
-      </View>
-    );
-  }, [itemIndex, imagesLink, showTaggedUser, showAboutPhoto, onTouchImage]);
-}
-
 const ImageList = ({route, navigation}) => {
   const flatList = useRef();
   const aboutPhotoRef = useRef();
@@ -201,9 +97,6 @@ const ImageList = ({route, navigation}) => {
       pageTitle = route.params.title;
       filterObject = route.params.filterObject;
       pickedIndex = route.params.index;
-      // pickedIndex = pickedIndex + 1;
-
-      //      alert(pickedIndex);
 
       setTitle(pageTitle);
       getGalleryData();
@@ -238,37 +131,23 @@ const ImageList = ({route, navigation}) => {
     doFilterGallery(
       filterObject,
       (response) => {
-        setIsFetching(false);
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let responseData = response.data;
-
-            if (responseData.status) {
-              let results = responseData.data;
-
-              if (filterObject.index === 0) {
-                filterObject.size = 10;
-                totalCount = responseData.totalCount;
-                setImageData([...results]);
-
-                // setTimeout(() => {
-                //   if (flatList !== null && flatList.current !== null) {
-                //     flatList.current.scrollToIndex({
-                //       index: pickedIndex,
-                //       animated: false,
-                //     });
-                //   }
-                // }, 1000);
-              } else {
-                setImageData([...imageData, ...results]);
-              }
-              setPaginationStatus(PaginationStatus.waiting);
-            }
+        if (
+          response &&
+          response !== null &&
+          response.data &&
+          response.data !== undefined &&
+          response.data !== null
+        ) {
+          let responseData = response.data;
+          if (responseData.status) {
+            _processImages(responseData);
+          } else {
+            setPaginationStatus(PaginationStatus.allLoaded);
+            setIsFetching(false);
           }
+        } else {
+          setPaginationStatus(PaginationStatus.allLoaded);
+          setIsFetching(false);
         }
       },
       (error, message) => {
@@ -282,6 +161,54 @@ const ImageList = ({route, navigation}) => {
         console.log('error', message);
       },
     );
+  };
+
+  const getSize = (url, element) => {
+    return new Promise(function (resolve, reject) {
+      Image.getSize(
+        url,
+        (iw, ih) => {
+          let windowWidth = 0,
+            windowHeight = 0;
+          if (ih > iw) {
+            windowWidth = width - 30;
+            windowHeight = height - 30;
+          } else {
+            windowWidth = width;
+            windowHeight = height;
+          }
+          let ratio = Math.min(windowWidth / iw, windowHeight / ih);
+          let iWidth = Math.ceil(iw * ratio);
+          let iHeight = Math.ceil(ih * ratio);
+          element.iw = iWidth;
+          element.ih = iHeight;
+          resolve(element);
+        },
+        () => reject(element),
+      );
+    });
+  };
+
+  const _processImages = async (arrayItems) => {
+    let results = arrayItems.data;
+
+    let tmpArray = [];
+    for (let i = 0; i < results.length; i++) {
+      const element = results[i];
+      tmpArray.push(getSize(element.imagesLink, element));
+    }
+    Promise.all(tmpArray)
+      .then((finalList) => {
+        if (filterObject.index === 0) {
+          filterObject.size = 10;
+          totalCount = arrayItems.totalCount;
+        }
+        setImageData([...imageData, ...finalList]);
+      })
+      .finally(() => {
+        setIsFetching(false);
+        setPaginationStatus(PaginationStatus.waiting);
+      });
   };
 
   const getImageDetail = (itemId) => {
@@ -317,10 +244,6 @@ const ImageList = ({route, navigation}) => {
                 itemObject.userTag.sort((a, b) =>
                   a.batch > b.batch ? 1 : b.batch > a.batch ? -1 : 0,
                 );
-
-                console.log('====================================');
-                console.log('itemObject', itemObject);
-                console.log('====================================');
 
                 setImageDetail(itemObject);
 
@@ -782,32 +705,29 @@ const ImageList = ({route, navigation}) => {
     );
   };
 
-  const renderItem = useCallback(
-    ({item, index}) => (
-      <GalleryImage
-        index={index}
-        item={item}
-        showTaggedUser={() => {
-          requestType = 'tagging';
-          getImageDetail(item._id);
-        }}
-        showAboutPhoto={() => {
-          imageId = item._id;
-          selectedImageLink = item.imagesLink;
-          if (optionRef.current !== null) {
-            optionRef.current.open();
-          }
-        }}
-        onTouchImage={() => {
-          requestType = 'detail';
-          getImageDetail(item._id);
-        }}
-      />
-    ),
-    [],
+  const renderItem = ({item, index}) => (
+    <GalleryImageCard
+      index={index}
+      item={item}
+      showTaggedUser={() => {
+        requestType = 'tagging';
+        getImageDetail(item._id);
+      }}
+      showAboutPhoto={() => {
+        imageId = item._id;
+        selectedImageLink = item.imagesLink;
+        if (optionRef.current !== null) {
+          optionRef.current.open();
+        }
+      }}
+      onTouchImage={() => {
+        requestType = 'detail';
+        getImageDetail(item._id);
+      }}
+    />
   );
 
-  const keyExtractor = useCallback((item, index) => index, []);
+  const keyExtractor = (item, index) => index;
 
   const getItemLayout = useCallback(
     (data, index) => ({
@@ -874,28 +794,22 @@ const ImageList = ({route, navigation}) => {
               onRefresh={handleRefresh}
               ListEmptyComponent={renderNoDataComponent}
               ListFooterComponent={renderFooter}
+              scrollEventThrottle={16}
+              bounces={false}
               contentContainerStyle={{
                 paddingBottom: imageData.length > 0 ? scale(130) : 0,
                 flexGrow: 1,
               }}
-              getItemLayout={getItemLayout}
-              onScrollToIndexFailed={(error) => {
-                console.log('failed', error);
-                if (flatList !== null && flatList.current !== null) {
-                  flatList.current.scrollToOffset({
-                    offset: error.averageItemLength * error.index,
-                    animated: true,
-                  });
-                  setTimeout(() => {
-                    if (flatList !== null && flatList.current !== null) {
-                      flatList.current.scrollToIndex({
-                        index: error.index,
-                        animated: true,
-                      });
-                    }
-                  }, 500);
-                }
-              }}
+              initialNumToRender={10}
+              maxToRenderPerBatch={8}
+              updateCellsBatchingPeriod={100}
+              // getItemLayout={(data, index) => {
+              //   return {
+              //     length: data[index].ih,
+              //     offset: data[index].ih * index,
+              //     index,
+              //   };
+              // }}
             />
           </View>
         )}
