@@ -16,6 +16,8 @@ import ProgressImage from './ProgresImage';
 import Radio from './Radio';
 import Helper from '../helper/Helper';
 import {IconType} from '../helper/Constants';
+import * as Progress from 'react-native-progress';
+
 const {height, width} = Dimensions.get('window');
 
 export const drawCheckbox = (title, checked, onClick) => {
@@ -337,6 +339,25 @@ export const renderCity = (cityList, onPress) => {
         showsHorizontalScrollIndicator={false}>
         {data}
       </ScrollView>
+    </View>
+  );
+};
+
+export const showProgess = (canShow) => {
+  return (
+    <View style={{marginTop: 8, height: scale(4)}}>
+      {canShow && (
+        <Progress.Bar
+          height={scale(3)}
+          width={width}
+          indeterminate={true}
+          borderRadius={0}
+          borderWidth={0}
+          useNativeDriver={true}
+          unfilledColor={'#fff'}
+          color={GlobalInclude.Color.ColorPrimaryTooLight}
+        />
+      )}
     </View>
   );
 };

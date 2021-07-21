@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef, useMemo, useCallback} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {
   View,
   StyleSheet,
@@ -19,14 +19,11 @@ import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
 import HeaderBar from '../../component/HeaderBar';
-import ProgressImage from '../../component/ProgresImage';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
-import {renderNoDataComponent} from '../../component/Common';
+import {renderNoDataComponent, showProgess} from '../../component/Common';
+import CommonButton from '../../component/CommonButton';
 import {APP_NAME, IconType} from '../../helper/Constants';
 import ImageViewer from 'react-native-image-zoom-viewer';
-//import ResponsiveImage from '../../component/ResponsiveImage';
-//import ResponsiveImage from '../../component/FitImage';
-import ResponsiveImage from '../../component/ProgresImage';
 import GalleryImageCard from '../../component/GalleryImageCard';
 import Helper from '../../helper/Helper';
 import Orientation, {
@@ -41,14 +38,16 @@ import {
 } from '../../Actions/GalleryActions';
 import {showUser} from '../../component/Common';
 import {_downloadContent} from '../../helper/mediaHelper';
+import {useDispatch, useSelector, shallowEqual} from 'react-redux';
+import {clearUpdateImage} from '../../reducer/NotificationReducer';
 
 const {height, width} = Dimensions.get('window');
-const ITEM_HEIGHT = 340;
 
 const PaginationStatus = {
   firstLoad: 0,
   waiting: 1,
   allLoaded: 2,
+  fetching: 3,
 };
 let totalCount = 0;
 let filterObject = {
@@ -65,18 +64,21 @@ let reportText = '';
 let imageArray = [];
 let imageId = '';
 let selectedImageLink = '';
+let tmpArray = [];
+let eventData = {};
 
 const ImageList = ({route, navigation}) => {
   const flatList = useRef();
   const aboutPhotoRef = useRef();
   const showTagUserRef = useRef();
   const optionRef = useRef();
+  const dispatch = useDispatch();
 
   const [title, setTitle] = useState(APP_NAME);
   const [imageData, setImageData] = useState([]);
   const [isFetching, setIsFetching] = useState(true);
   const [paginationStatus, setPaginationStatus] = useState(
-    PaginationStatus.firstLoad,
+    PaginationStatus.fetching,
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -110,6 +112,38 @@ const ImageList = ({route, navigation}) => {
       Orientation.removeOrientationListener(_orientationDidChange);
     };
   }, [route]);
+
+  const refreshState = useSelector((state) => {
+    if (state.notification && state.notification !== undefined) {
+      let notification = state.notification;
+      if (notification.update && notification.update !== undefined) {
+        eventData = notification.eventData;
+        return true;
+      }
+    }
+    return false;
+  }, shallowEqual);
+
+  useEffect(() => {
+    if (refreshState) {
+      dispatch(clearUpdateImage());
+      setTimeout(() => {
+        if (eventData && eventData !== {}) {
+          if (eventData.update) {
+            pickedIndex = eventData.selectedIndex;
+            var tagged = eventData.totalTagged;
+            let oldData = imageData;
+            if (oldData.length > pickedIndex) {
+              oldData[pickedIndex].userTag = tagged;
+            }
+            setImageData([...oldData]);
+          }
+          eventData = {};
+        }
+      }, 200);
+    }
+    return () => {};
+  }, [refreshState]);
 
   const clearFields = () => {
     pageTitle = '';
@@ -192,22 +226,32 @@ const ImageList = ({route, navigation}) => {
   const _processImages = async (arrayItems) => {
     let results = arrayItems.data;
 
-    let tmpArray = [];
+    let arrayList = [];
     for (let i = 0; i < results.length; i++) {
       const element = results[i];
-      tmpArray.push(getSize(element.imagesLink, element));
+      arrayList.push(getSize(element.imagesLink, element));
     }
-    Promise.all(tmpArray)
+    Promise.all(arrayList)
       .then((finalList) => {
         if (filterObject.index === 0) {
           filterObject.size = 10;
           totalCount = arrayItems.totalCount;
         }
+        tmpArray = tmpArray.concat(finalList);
         setImageData([...imageData, ...finalList]);
       })
       .finally(() => {
         setIsFetching(false);
         setPaginationStatus(PaginationStatus.waiting);
+        // setTimeout(() => {
+        //   if (flatList !== null && flatList.current !== null) {
+        //     flatList.current.scrollToIndex({
+        //       index: pickedIndex,
+        //       animated: false,
+        //     });
+        //   }
+        // }, 1000);
+        // //flatList.current.scrollToIndex({animated: true, index: 4});
       });
   };
 
@@ -364,7 +408,7 @@ const ImageList = ({route, navigation}) => {
   const onPaginate = () => {
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
       console.log('onPaginate()');
-      setPaginationStatus(PaginationStatus.waiting);
+      setPaginationStatus(PaginationStatus.fetching);
       callNextBatch();
     }
   };
@@ -483,11 +527,49 @@ const ImageList = ({route, navigation}) => {
               </View>
             </ScrollView>
           ) : (
-            <View style={GlobalInclude.AppStyle.fillCenter}>
-              <Text style={[g.colorBlack, g.FHNM, g.fs12, g.txtCenter]}>
-                Currently No People Tagged in This Photo - Please Click on the
-                Photo to Tag People
-              </Text>
+            <View style={GlobalInclude.AppStyle.fill}>
+              <View style={GlobalInclude.AppStyle.fillCenter}>
+                <Text style={[g.colorBlack, g.FHNM, g.fs12, g.txtCenter]}>
+                  Currently No People Tagged in This Photo
+                </Text>
+                <Text
+                  style={[g.colorBlack, g.FHNM, g.fs12, g.txtCenter, g.mt5]}>
+                  Please click on the Tag People Button below
+                </Text>
+              </View>
+              <View
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: scale(150),
+                  paddingTop: scale(10),
+                  paddingBottom: scale(10),
+                  alignContent: 'center',
+                  alignSelf: 'center',
+                  marginBottom: scale(20),
+                }}>
+                <CommonButton
+                  showLoader={false}
+                  title={'Tag People'}
+                  onPress={() => {
+                    console.log('pickedIndex', pickedIndex);
+                    let payload = {
+                      id: imageDetail._id,
+                      imageKey: imageDetail.imageKey,
+                      about: imageDetail.about,
+                      category: imageDetail.category,
+                      userTag: imageDetail.userTag,
+                      year: imageDetail.year,
+                      index: pickedIndex,
+                      filterObject: filterObject,
+                    };
+                    showTagUserRef.current.close();
+                    setTimeout(() => {
+                      navigation.navigate('TagUser', payload);
+                    }, 230);
+                  }}
+                />
+              </View>
             </View>
           )}
         </View>
@@ -590,11 +672,48 @@ const ImageList = ({route, navigation}) => {
               </Text>
             </View>
           ) : (
-            <View style={GlobalInclude.AppStyle.fillCenter}>
-              <Text style={[g.colorBlack, g.FHNM, g.fs12, g.txtCenter]}>
-                Currently No Information is available for this Photo - Please
-                Click on the Photo to add information about the Photo
-              </Text>
+            <View style={GlobalInclude.AppStyle.fill}>
+              <View style={GlobalInclude.AppStyle.fillCenter}>
+                <Text style={[g.colorBlack, g.FHNM, g.fs12, g.txtCenter]}>
+                  Currently No Information is available for this Photo
+                </Text>
+                <Text
+                  style={[g.colorBlack, g.FHNM, g.fs12, g.txtCenter, g.mt5]}>
+                  Please click on the About Photo Button below
+                </Text>
+              </View>
+              <View
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: scale(150),
+                  paddingTop: scale(10),
+                  paddingBottom: scale(10),
+                  alignContent: 'center',
+                  alignSelf: 'center',
+                  marginBottom: scale(20),
+                }}>
+                <CommonButton
+                  showLoader={false}
+                  title={'About Photo'}
+                  onPress={() => {
+                    let payload = {
+                      id: imageDetail._id,
+                      imageKey: imageDetail.imageKey,
+                      about: imageDetail.about,
+                      category: imageDetail.category,
+                      userTag: imageDetail.userTag,
+                      year: imageDetail.year,
+                      index: pickedIndex,
+                      filterObject: filterObject,
+                    };
+                    aboutPhotoRef.current.close();
+                    setTimeout(() => {
+                      navigation.navigate('AboutPhoto', payload);
+                    }, 230);
+                  }}
+                />
+              </View>
             </View>
           )}
         </View>
@@ -710,33 +829,27 @@ const ImageList = ({route, navigation}) => {
       index={index}
       item={item}
       showTaggedUser={() => {
+        pickedIndex = index;
         requestType = 'tagging';
         getImageDetail(item._id);
       }}
       showAboutPhoto={() => {
         imageId = item._id;
         selectedImageLink = item.imagesLink;
+        pickedIndex = index;
         if (optionRef.current !== null) {
           optionRef.current.open();
         }
       }}
       onTouchImage={() => {
         requestType = 'detail';
+        pickedIndex = index;
         getImageDetail(item._id);
       }}
     />
   );
 
   const keyExtractor = (item, index) => index;
-
-  const getItemLayout = useCallback(
-    (data, index) => ({
-      length: ITEM_HEIGHT,
-      offset: ITEM_HEIGHT * index,
-      index,
-    }),
-    [],
-  );
 
   const closeImageViewer = () => {
     Orientation.lockToPortrait();
@@ -753,7 +866,7 @@ const ImageList = ({route, navigation}) => {
         category: imageDetail.category,
         userTag: imageDetail.userTag,
         year: imageDetail.year,
-        index: 0,
+        index: pickedIndex,
         filterObject: filterObject,
       };
       navigation.navigate(screenName, payload);
@@ -763,6 +876,7 @@ const ImageList = ({route, navigation}) => {
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
       <HeaderBar navigation={navigation} showBack={true} title={title} />
+      {showProgess(paginationStatus === PaginationStatus.fetching)}
       <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
         {isFetching ? (
           <View style={GlobalInclude.AppStyle.fillCenter}>
@@ -773,13 +887,7 @@ const ImageList = ({route, navigation}) => {
           </View>
         ) : (
           <View style={GlobalInclude.AppStyle.fill}>
-            <OrientationLocker
-              orientation={PORTRAIT}
-              onChange={(orientation) => console.log('onChange', orientation)}
-              onDeviceChange={(orientation) =>
-                console.log('onDeviceChange', orientation)
-              }
-            />
+            <OrientationLocker orientation={PORTRAIT} />
             <FlatList
               ref={flatList}
               removeClippedSubviews={Platform.OS !== 'web'}
@@ -793,13 +901,12 @@ const ImageList = ({route, navigation}) => {
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
               ListEmptyComponent={renderNoDataComponent}
-              ListFooterComponent={renderFooter}
               scrollEventThrottle={16}
               bounces={false}
-              contentContainerStyle={{
-                paddingBottom: imageData.length > 0 ? scale(130) : 0,
-                flexGrow: 1,
-              }}
+              // contentContainerStyle={{
+              //   paddingBottom: imageData.length > 0 ? scale(130) : 0,
+              //   flexGrow: 1,
+              // }}
               initialNumToRender={10}
               maxToRenderPerBatch={8}
               updateCellsBatchingPeriod={100}
@@ -809,6 +916,23 @@ const ImageList = ({route, navigation}) => {
               //     offset: data[index].ih * index,
               //     index,
               //   };
+              // }}
+              // onScrollToIndexFailed={(error) => {
+              //   console.log('failed', error);
+              //   if (flatList !== null && flatList.current !== null) {
+              //     flatList.current.scrollToOffset({
+              //       offset: error.averageItemLength * error.index,
+              //       animated: true,
+              //     });
+              //     setTimeout(() => {
+              //       if (flatList !== null && flatList.current !== null) {
+              //         flatList.current.scrollToIndex({
+              //           index: error.index,
+              //           animated: true,
+              //         });
+              //       }
+              //     }, 500);
+              //   }
               // }}
             />
           </View>

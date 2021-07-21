@@ -84,6 +84,7 @@
     "react-native-youtube": "^2.0.1",
     "react-number-format": "^4.6.3",
     "react-redux": "^7.2.4",
+    "recyclerlistview": "^3.0.5",
     "redux": "^4.1.0",
     "redux-thunk": "^2.3.0",
     "rn-fetch-blob": "^0.12.0",

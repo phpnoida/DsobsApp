@@ -6,17 +6,18 @@ import g from '../theme/global';
 import grid from '../theme/grid';
 import {IconType} from '../helper/Constants';
 import ProgressImage from '../component/ProgresImage';
+import FastImageView from '../component/FastImageView';
 
 class GalleryImageCard extends PureComponent {
   render() {
     const {
-      item: {imagesLink, ih, iw},
+      item: {imagesLink, ih, iw, userTag},
       showTaggedUser,
       showAboutPhoto,
       onTouchImage,
     } = this.props;
     return (
-      <View style={{marginVertical: scale(5)}}>
+      <View>
         <View
           style={[
             grid.rowrow,
@@ -33,11 +34,28 @@ class GalleryImageCard extends PureComponent {
               grid.rowrow,
             ]}>
             <TouchableOpacity
-              style={[grid.rowrow, grid.alignItems, grid.justifyContentLeft]}
+              style={[grid.rowrow, grid.alignItems, grid.justifyContentCenter]}
               onPress={showTaggedUser}>
-              <Text style={[g.fs14, g.FHNB, g.colorBlue]}>
-                People In This Image
-              </Text>
+              <GlobalInclude.BaseIcon
+                containerStyle={{height: scale(18), width: scale(18)}}
+                iconColor={GlobalInclude.Color.ColorPrimary}
+                iconName={'account-group'}
+                iconSize={scale(18)}
+                iconType={IconType[1]}
+              />
+              {userTag.length > 0 && (
+                <Text
+                  style={[
+                    g.fs16,
+                    g.FHNB,
+                    g.colorBlue,
+                    grid.alignItems,
+                    grid.justifyContentCenter,
+                    g.ml5,
+                  ]}>
+                  {userTag.length}
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
 
@@ -63,7 +81,7 @@ class GalleryImageCard extends PureComponent {
           {imagesLink !== undefined &&
           imagesLink !== null &&
           imagesLink !== '' ? (
-            <ProgressImage
+            <FastImageView
               source={{uri: imagesLink}}
               containerStyle={{width: iw, height: ih}}
               mode={'cover'}

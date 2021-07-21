@@ -12,22 +12,28 @@ import {
   Dimensions,
 } from 'react-native';
 import RbSheet from 'react-native-raw-bottom-sheet';
+import OptionsSheet from 'react-native-raw-bottom-sheet';
+
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {IconType} from '../../helper/Constants';
-import {generateMenuOption, renderCity} from '../../component/Common';
+import Helper from '../../helper/Helper';
+
+import {
+  generateMenuOption,
+  renderCity,
+  showProgess,
+} from '../../component/Common';
 import TopHeaderView from '../../component/TopHeaderView';
-import ProgressImage from '../../component/ProgresImage';
-import OptionsSheet from 'react-native-raw-bottom-sheet';
 import SingleSearchWithFilter from '../../component/SingleSearchWithFilter';
-import {renderNoDataComponent} from '../../component/Common';
 import ProfessionalSheet from '../../component/ProfessionalSheetFilter';
 import AutoSuggestLocationCompany from '../../component/AutoSuggestLocationCompany';
 import BottomSheetHeader from '../../component/BottomSheetHeader';
 import RadioButton from '../../component/RadioButton';
-import Helper from '../../helper/Helper';
+import JobComponent from '../../component/JobComponent';
+
 import {getProfessionList} from '../../Actions/UserActions';
 import {
   doFilterJobs,
@@ -39,6 +45,7 @@ const PaginationStatus = {
   firstLoad: 0,
   waiting: 1,
   allLoaded: 2,
+  fetching: 3,
 };
 let totalCount = 0;
 let professionListMain = [];
@@ -65,10 +72,10 @@ const JobListing = ({navigation}) => {
   const [filterQuery, setFilterQuery] = useState('');
   const [pageContent, setPageContent] = useState([]);
   const [paginationStatus, setPaginationStatus] = useState(
-    PaginationStatus.firstLoad,
+    PaginationStatus.allLoaded,
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [animatedHeight, setAnimatedHeight] = useState(100);
+  const [animatedHeight, setAnimatedHeight] = useState(0);
   const [searchCategory, setSearchCategory] = useState([]);
   const [searchCityList, setSearchCityList] = useState([]);
   const [topCityList, setTopCityList] = useState([]);
@@ -268,7 +275,7 @@ const JobListing = ({navigation}) => {
   const onPaginate = () => {
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
       console.log('onPaginate()');
-      setPaginationStatus(PaginationStatus.waiting);
+      setPaginationStatus(PaginationStatus.fetching);
       filterObject.index = filterObject.index + 1;
     }
   };
@@ -445,144 +452,21 @@ const JobListing = ({navigation}) => {
     );
   };
 
-  const renderFooter = () => {
-    return (
-      <View style={style.footerView}>
-        {pageContent.length === totalCount ? (
-          <View />
-        ) : (
-          <View style={{height: scale(30)}}>
-            {paginationStatus === PaginationStatus.waiting ? (
-              <View style={g.p10}>
-                <ActivityIndicator
-                  size={'small'}
-                  color={GlobalInclude.Color.ColorPrimary}
-                />
-              </View>
-            ) : null}
-          </View>
-        )}
-      </View>
-    );
-  };
-
-  const concateLocation = (item) => {
-    let locationString = '';
-
-    if (item.city !== undefined && item.city !== null && item.city !== '') {
-      locationString += item.city + ', ';
-    }
-
-    if (
-      item.country !== undefined &&
-      item.country !== null &&
-      item.country !== ''
-    ) {
-      locationString += item.country;
-    }
-    return locationString;
-  };
-
   const renderItem = ({item, index}) => {
     return (
-      <View key={index}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('JobDetails', {data: item})}
-          activeOpacity={1}
-          key={index}
-          style={{
-            marginBottom: scale(15),
-            marginHorizontal: scale(15),
-          }}>
-          <View
-            style={[g.bgWhite, g.boxShadow, {borderRadius: scale(10)}, g.p10]}>
-            <View style={grid.rowdir}>
-              <ProgressImage
-                source={
-                  item.logo !== undefined &&
-                  item.logo !== null &&
-                  item.logo !== ''
-                    ? {uri: item.logo}
-                    : GlobalInclude.Assets.MainLogo
-                }
-                containerStyle={{
-                  height: scale(65),
-                  width: scale(65),
-                  borderRadius: scale(10),
-                }}
-                imageStyle={{
-                  height: scale(65),
-                  width: scale(65),
-                  borderRadius: scale(10),
-                }}
-                mode={'contain'}
-              />
-              <View style={[grid.col, g.ml5]}>
-                <Text
-                  numberOfLines={1}
-                  style={[
-                    g.txtRight,
-                    item.status === 1 ? g.FHNB : g.FHNM,
-                    g.fs13,
-                    GlobalInclude.AppStyle.transform,
-                    item.status === 1
-                      ? g.colorBlue
-                      : item.status === 2
-                      ? g.colorGray
-                      : g.colordarkGray,
-                  ]}>
-                  {item.status === 1 ? 'Open' : 'Closed'}
-                </Text>
-              </View>
-            </View>
-            <View style={g.mt5}>
-              <Text
-                numberOfLines={2}
-                style={[
-                  g.FHNM,
-                  g.fs14,
-                  g.colorBlack,
-                  GlobalInclude.AppStyle.transform,
-                ]}>
-                {item.title !== undefined &&
-                item.title !== null &&
-                item.title !== ''
-                  ? item.title
-                  : 'N/A'}
-              </Text>
-
-              <Text
-                numberOfLines={1}
-                style={[
-                  g.FHNM,
-                  g.fs14,
-                  g.colorGray,
-                  GlobalInclude.AppStyle.transform,
-                ]}>
-                {item.forCompany !== undefined &&
-                item.forCompany !== null &&
-                item.forCompany !== ''
-                  ? item.forCompany
-                  : 'N/A'}
-              </Text>
-              <Text
-                numberOfLines={1}
-                style={[
-                  g.FHNM,
-                  g.fs14,
-                  g.colorGray,
-                  GlobalInclude.AppStyle.transform,
-                ]}>
-                {concateLocation(item)}
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-      </View>
+      <JobComponent
+        key={index}
+        item={item}
+        onTouchItem={() => navigation.navigate('JobDetails', {data: item})}
+      />
     );
   };
 
-  const headerDistance = Animated.diffClamp(curY, 0, 100).interpolate({
+  const headerDistance = Animated.diffClamp(
+    curY,
+    0,
+    animatedHeight,
+  ).interpolate({
     inputRange: [0, 1],
     outputRange: [0, -1],
   });
@@ -688,35 +572,33 @@ const JobListing = ({navigation}) => {
               />
             </View>
           ) : (
-            <View style={GlobalInclude.AppStyle.fill}>
-              <Animated.FlatList
-                ref={flatList}
-                showsVerticalScrollIndicator={false}
-                extraData={pageContent}
-                data={pageContent}
-                renderItem={renderItem}
-                keyExtractor={(item, index) => index.toString()}
-                onEndReachedThreshold={0.1}
-                onEndReached={onEndReached}
-                refreshing={isRefreshing}
-                onRefresh={handleRefresh}
-                ListEmptyComponent={renderNoDataComponent}
-                ListFooterComponent={renderFooter}
-                contentContainerStyle={{
-                  marginTop: animatedHeight,
-                  paddingBottom:
-                    searchCategory.length > 0 ? scale(280) : scale(130),
-                }}
-                scrollEventThrottle={16}
-                onScroll={Animated.event(
-                  [{nativeEvent: {contentOffset: {y: curY}}}],
-                  {useNativeDriver: true},
-                )}
-              />
-              {renderHeader()}
-            </View>
+            <Animated.FlatList
+              ref={flatList}
+              showsVerticalScrollIndicator={false}
+              extraData={pageContent}
+              data={pageContent}
+              renderItem={renderItem}
+              keyExtractor={(item, index) => index.toString()}
+              onEndReachedThreshold={0.1}
+              onEndReached={onEndReached}
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              contentContainerStyle={{
+                marginTop: animatedHeight,
+                paddingBottom:
+                  searchCategory.length > 0 ? scale(280) : scale(130),
+              }}
+              scrollEventThrottle={16}
+              onScroll={Animated.event(
+                [{nativeEvent: {contentOffset: {y: curY}}}],
+                {useNativeDriver: true},
+              )}
+            />
           )}
+
+          {renderHeader()}
         </View>
+        {showProgess(paginationStatus === PaginationStatus.fetching)}
       </SafeAreaView>
 
       <ProfessionalSheet

@@ -459,6 +459,22 @@ const Helpers = {
     var yiq = (r * 299 + g * 587 + b * 114) / 1000;
     return yiq >= 128 ? 'black' : 'white';
   },
+  checkVideoUrl: function (url) {
+    url.match(
+      /(http:\/\/|https:\/\/|)(player.|www.)?(vimeo\.com|youtu(be\.com|\.be|be\.googleapis\.com))\/(video\/|embed\/|watch\?v=|v\/)?([A-Za-z0-9._%-]*)(\&\S+)?/,
+    );
+    var type = null;
+    if (RegExp.$3.indexOf('youtu') > -1) {
+      type = 'youtube';
+    } else if (RegExp.$3.indexOf('vimeo') > -1) {
+      type = 'vimeo';
+    }
+
+    return {
+      type: type,
+      id: RegExp.$6,
+    };
+  },
 };
 
 export default Helpers;

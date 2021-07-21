@@ -18,13 +18,12 @@ import {scale} from '../../theme/Scalling';
 import grid from '../../theme/grid';
 import {IconType} from '../../helper/Constants';
 import TopHeaderView from '../../component/TopHeaderView';
+import {showProgess} from '../../component/Common';
 import Helper from '../../helper/Helper';
 import YellowPageSearch from '../../component/YellowPageSearch';
 import AutoSuggestLocationCompany from '../../component/AutoSuggestLocationCompany';
 import ProfessionalSheetFilter from '../../component/ProfessionalSheetFilter';
 import ProgresImage from '../../component/ProgresImage';
-import FlatListSlider from '../../component/FlatListSlider';
-import Preview from '../../component/Preview';
 import BottomSheetAbout from 'react-native-raw-bottom-sheet';
 import {
   doSearchCity,
@@ -46,6 +45,7 @@ const PaginationStatus = {
   firstLoad: 0,
   waiting: 1,
   allLoaded: 2,
+  fetching: 3,
 };
 let totalCount = 0;
 let filterObject = {
@@ -78,12 +78,11 @@ const YellowPages = ({navigation}) => {
   const [sortedBy, setSortedBy] = useState('');
   const [pageContent, setPageContent] = useState([]);
   const [paginationStatus, setPaginationStatus] = useState(
-    PaginationStatus.firstLoad,
+    PaginationStatus.fetching,
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [myBusinessList, setMyBusinessList] = useState([]);
-  const [animatedHeight, setAnimatedHeight] = useState(223);
-  const [viewWidth, setViewWidth] = useState(width);
+  const [animatedHeight, setAnimatedHeight] = useState(0);
 
   useEffect(() => {
     professionListMain = [];
@@ -126,9 +125,7 @@ const YellowPages = ({navigation}) => {
             response.data !== null
           ) {
             let data = response.data;
-            console.log('====================================');
-            console.log('My Business', data);
-            console.log('====================================');
+
             if (data.status) {
               setMyBusinessList([...data.data]);
             }
@@ -152,10 +149,6 @@ const YellowPages = ({navigation}) => {
             response.data !== null
           ) {
             let data = response.data;
-
-            console.log('====================================');
-            console.log('profession', data);
-            console.log('====================================');
 
             if (data.status) {
               let professionArray = [];
@@ -325,7 +318,7 @@ const YellowPages = ({navigation}) => {
   const onPaginate = () => {
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
       console.log('onPaginate()');
-      setPaginationStatus(PaginationStatus.waiting);
+      setPaginationStatus(PaginationStatus.fetching);
       filterObject.index = filterObject.index + 1;
       getYellowPage();
     }
@@ -415,9 +408,6 @@ const YellowPages = ({navigation}) => {
         }}>
         <View style={[g.bgWhite, g.boxShadow, {borderRadius: scale(10)}]}>
           <View
-            onLayout={(event) => {
-              setViewWidth(event.nativeEvent.layout.width);
-            }}
             style={[
               g.bggray3,
               {
@@ -541,31 +531,10 @@ const YellowPages = ({navigation}) => {
     );
   };
 
-  const renderFooter = () => {
-    return (
-      <View style={style.footerView}>
-        {pageContent.length === totalCount ? (
-          <View />
-        ) : (
-          <View style={{height: scale(30)}}>
-            {paginationStatus === PaginationStatus.waiting ? (
-              <View style={g.p10}>
-                <ActivityIndicator
-                  size={'small'}
-                  color={GlobalInclude.Color.ColorPrimary}
-                />
-              </View>
-            ) : null}
-          </View>
-        )}
-      </View>
-    );
-  };
-
   const headerDistance = Animated.diffClamp(
     curY,
     0,
-    searchedCityCompany.length > 0 ? 510 : 223,
+    searchedCityCompany.length > 0 ? 510 : animatedHeight,
   ).interpolate({
     inputRange: [0, 1],
     outputRange: [0, -1],
@@ -809,34 +778,32 @@ const YellowPages = ({navigation}) => {
               />
             </View>
           ) : (
-            <View style={GlobalInclude.AppStyle.fill}>
-              <Animated.FlatList
-                showsVerticalScrollIndicator={false}
-                extraData={pageContent}
-                data={pageContent}
-                renderItem={renderItem}
-                keyExtractor={(item, index) => index.toString()}
-                onEndReachedThreshold={0.1}
-                onEndReached={onEndReached}
-                refreshing={isRefreshing}
-                onRefresh={handleRefresh}
-                ListEmptyComponent={renderNoDataComponent}
-                ListFooterComponent={renderFooter}
-                contentContainerStyle={{
-                  marginTop: animatedHeight,
-                  paddingBottom:
-                    searchedCityCompany.length > 0 ? scale(400) : scale(230),
-                }}
-                scrollEventThrottle={16}
-                onScroll={Animated.event(
-                  [{nativeEvent: {contentOffset: {y: curY}}}],
-                  {useNativeDriver: true},
-                )}
-              />
-              {renderHeader()}
-            </View>
+            <Animated.FlatList
+              showsVerticalScrollIndicator={false}
+              extraData={pageContent}
+              data={pageContent}
+              renderItem={renderItem}
+              keyExtractor={(item, index) => index.toString()}
+              onEndReachedThreshold={0.1}
+              onEndReached={onEndReached}
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              ListEmptyComponent={renderNoDataComponent}
+              contentContainerStyle={{
+                marginTop: animatedHeight,
+                paddingBottom:
+                  searchedCityCompany.length > 0 ? scale(400) : scale(230),
+              }}
+              scrollEventThrottle={16}
+              onScroll={Animated.event(
+                [{nativeEvent: {contentOffset: {y: curY}}}],
+                {useNativeDriver: true},
+              )}
+            />
           )}
+          {renderHeader()}
         </View>
+        {showProgess(paginationStatus === PaginationStatus.fetching)}
       </SafeAreaView>
 
       <BottomSheetAbout

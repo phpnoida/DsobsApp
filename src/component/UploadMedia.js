@@ -124,6 +124,7 @@ const UploadMedia = ({
     let options = {
       cropping: true,
       path: singleItem.path,
+      multiple: true,
     };
 
     if (Platform.OS === 'ios') {

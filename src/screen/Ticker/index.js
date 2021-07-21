@@ -83,7 +83,7 @@ const Ticker = ({route, navigation}) => {
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
   );
-  const [animatedHeight, setAnimatedHeight] = useState(101);
+  const [animatedHeight, setAnimatedHeight] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedFeed, setSelectedFeed] = useState(null);
   const [categoryList, setCategoryList] = useState([]);
@@ -843,7 +843,11 @@ const Ticker = ({route, navigation}) => {
 
   const keyExtractor = (item, index) => index;
 
-  const headerDistance = Animated.diffClamp(curY, 0, 101).interpolate({
+  const headerDistance = Animated.diffClamp(
+    curY,
+    0,
+    animatedHeight,
+  ).interpolate({
     inputRange: [0, 1],
     outputRange: [0, -1],
   });
@@ -947,7 +951,7 @@ const Ticker = ({route, navigation}) => {
       />
 
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
-        <View style={GlobalInclude.AppStyle.fill}>
+        <View style={[GlobalInclude.AppStyle.fill]}>
           {firstTimeLoad ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
               <ActivityIndicator
@@ -988,10 +992,9 @@ const Ticker = ({route, navigation}) => {
                   maxToRenderPerBatch={2}
                 />
               )}
-
-              {renderHeader()}
             </View>
           )}
+          {renderHeader()}
         </View>
       </SafeAreaView>
       {userOptions()}

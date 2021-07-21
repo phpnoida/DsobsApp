@@ -56,7 +56,7 @@ const SocialEvents = ({navigation}) => {
     PaginationStatus.firstLoad,
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [animatedHeight, setAnimatedHeight] = useState(119);
+  const [animatedHeight, setAnimatedHeight] = useState(0);
   const [categoryList, setCategoryList] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchCategory, setSearchCategory] = useState([]);
@@ -409,7 +409,7 @@ const SocialEvents = ({navigation}) => {
   const headerDistance = Animated.diffClamp(
     curY,
     0,
-    searchCategory.length > 0 ? 328 : 119,
+    searchCategory.length > 0 ? 328 : animatedHeight,
   ).interpolate({
     inputRange: [0, 1],
     outputRange: [0, -1],
@@ -501,34 +501,33 @@ const SocialEvents = ({navigation}) => {
               />
             </View>
           ) : (
-            <View style={GlobalInclude.AppStyle.fill}>
-              <Animated.FlatList
-                ref={flatList}
-                showsVerticalScrollIndicator={false}
-                extraData={pageContent}
-                data={pageContent}
-                renderItem={renderItem}
-                keyExtractor={(item, index) => index.toString()}
-                onEndReachedThreshold={0.1}
-                onEndReached={onEndReached}
-                refreshing={isRefreshing}
-                onRefresh={handleRefresh}
-                ListEmptyComponent={renderNoDataComponent}
-                ListFooterComponent={renderFooter}
-                contentContainerStyle={{
-                  marginTop: animatedHeight,
-                  paddingBottom:
-                    searchCategory.length > 0 ? scale(280) : scale(130),
-                }}
-                scrollEventThrottle={16}
-                onScroll={Animated.event(
-                  [{nativeEvent: {contentOffset: {y: curY}}}],
-                  {useNativeDriver: true},
-                )}
-              />
-              {renderHeader()}
-            </View>
+            <Animated.FlatList
+              ref={flatList}
+              showsVerticalScrollIndicator={false}
+              extraData={pageContent}
+              data={pageContent}
+              renderItem={renderItem}
+              keyExtractor={(item, index) => index.toString()}
+              onEndReachedThreshold={0.1}
+              onEndReached={onEndReached}
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              ListEmptyComponent={renderNoDataComponent}
+              ListFooterComponent={renderFooter}
+              contentContainerStyle={{
+                marginTop: animatedHeight,
+                paddingBottom:
+                  searchCategory.length > 0 ? scale(280) : scale(130),
+              }}
+              scrollEventThrottle={16}
+              onScroll={Animated.event(
+                [{nativeEvent: {contentOffset: {y: curY}}}],
+                {useNativeDriver: true},
+              )}
+            />
           )}
+
+          {renderHeader()}
         </View>
       </SafeAreaView>
 
