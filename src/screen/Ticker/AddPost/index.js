@@ -27,6 +27,8 @@ import UploadMedia from '../../../component/UploadMedia';
 import ModelAlert from '../../../component/ModalAlert';
 import {getCategories, addPost, editPost} from '../../../Actions/TickerActions';
 import {getScrappedData} from '../../../Actions/CommonActions';
+import {useDispatch} from 'react-redux';
+import {refreshPreviousScreen} from '../../../reducer/NotificationReducer';
 
 let selectedIndex = -1;
 let responseMessage = '';
@@ -41,6 +43,8 @@ let newsLink = '';
 const PostTicker = ({route, navigation}) => {
   const categoryRef = useRef();
   const uploadRef = useRef();
+  const dispatch = useDispatch();
+
   const [loading, setLoading] = useState(true);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
 
@@ -337,7 +341,8 @@ const PostTicker = ({route, navigation}) => {
             if (data.status) {
               isSuccess = true;
               setTimeout(() => {
-                route.params.onGoBack();
+                //route.params.onGoBack();
+                dispatch(refreshPreviousScreen());
                 navigation.goBack();
               }, 250);
             } else {

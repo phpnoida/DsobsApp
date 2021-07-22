@@ -136,7 +136,8 @@ const Ticker = ({route, navigation}) => {
             setPostContent([...oldData]);
           }, 100);
         }, 200);
-      } else if (refresh) {
+      } else if (refreshPage) {
+        refreshPage = false;
         setTimeout(() => {
           dispatch(clearRefreshPrevious());
           setTimeout(() => {
@@ -271,7 +272,6 @@ const Ticker = ({route, navigation}) => {
               postMode = '';
               navigation.navigate('PostTicker', {
                 data: {inEditMode: true, data: item},
-                onGoBack: () => refresh(),
               });
             }
           } else {
@@ -584,9 +584,7 @@ const Ticker = ({route, navigation}) => {
           {generateMenuOption('Make a New Post', 'add-to-list', 9, () => {
             refOptions.current.close();
             setTimeout(() => {
-              navigation.navigate('PostTicker', {
-                onGoBack: () => refresh(),
-              });
+              navigation.navigate('PostTicker');
             }, 220);
           })}
 

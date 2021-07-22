@@ -1,5 +1,11 @@
 import React, {useState, useEffect} from 'react';
-import {View, Image, TouchableOpacity, StyleSheet} from 'react-native';
+import {
+  View,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import {WebView} from 'react-native-webview';
 import g from '../theme/global';
 import Helper from '../helper/Helper';
@@ -8,6 +14,9 @@ import {YOUTUBE_KEY} from '../../config';
 import {scale} from '../theme/Scalling';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import {IconType} from '../helper/Constants';
+import axios from 'axios';
+import * as RootNavigation from '../helper/NavigationService';
+import Video from 'react-native-video-controls';
 
 let _youTubeRef = React.createRef();
 const YoutubeView = (props) => {
@@ -16,13 +25,40 @@ const YoutubeView = (props) => {
   );
   const [thumbnail, setThumbnail] = useState('');
   const [youtubeId, setyoutubeId] = useState('');
+  const [isApiCall, setIsApiCall] = useState(true);
+  const [videoType, setVideoType] = useState('youtube');
 
   useEffect(() => {
     if (props.link !== '') {
-      let videoId = Helper.GetYoutubeId(props.link);
-      setThumbnail(Helper.loadYoutubeThumb(videoId));
-      setyoutubeId(videoId);
-      // console.log('props.link', props.link);
+      let videoObj = Helper.checkVideoUrl(props.link);
+      if (videoObj.type === 'vimeo') {
+        axios
+          .get(`https://player.vimeo.com/video/${videoObj.id}/config`)
+          .then((data) => {
+            if (data.status) {
+              if (data.data !== null && data.data !== undefined) {
+                let postData = data.data;
+                let thumbUrl = postData.video.thumbs.base;
+                let videoUrl =
+                  postData.request.files.hls.cdns[
+                    postData.request.files.hls.default_cdn
+                  ].url;
+
+                setThumbnail(thumbUrl);
+                setyoutubeId(videoUrl);
+                setVideoType('vimeo');
+              }
+            }
+          })
+          .finally(() => {
+            setIsApiCall(false);
+          });
+      } else {
+        let videoId = Helper.GetYoutubeId(props.link);
+        setThumbnail(Helper.loadYoutubeThumb(videoId));
+        setyoutubeId(videoId);
+        setIsApiCall(false);
+      }
     }
 
     return () => {};
@@ -30,9 +66,10 @@ const YoutubeView = (props) => {
 
   return (
     <View>
-      {playVideo ? (
+      {playVideo && videoType === 'vimeo' ? (
+        <Video source={{uri: youtubeId}} />
+      ) : playVideo ? (
         <YouTube
-          ref={_youTubeRef}
           apiKey={YOUTUBE_KEY}
           origin="http://www.youtube.com"
           videoId={youtubeId}
@@ -41,63 +78,116 @@ const YoutubeView = (props) => {
           onChangeFullscreen={(e) => {
             setPlayVideo(e.isFullscreen);
           }}
+          onError={(e) => {
+            console.log('error', e);
+          }}
           style={props.containerStyle ? props.containerStyle : style.container}
         />
       ) : (
-        <TouchableOpacity
-          onPress={() => {
-            setPlayVideo(true);
-          }}
-          activeOpacity={1}>
-          {thumbnail !== undefined && thumbnail !== null && thumbnail !== '' ? (
+        <View>
+          {isApiCall ? (
             <View
               style={
                 props.containerStyle ? props.containerStyle : style.container
               }>
-              <Image
-                style={props.thumbStyle ? props.thumbStyle : style.thumb}
-                resizeMode={'cover'}
-                source={{
-                  uri: thumbnail,
-                }}
+              <ActivityIndicator
+                color={GlobalInclude.Color.ColorPrimary}
+                size={'large'}
               />
-              <View
-                style={props.overlayStyle ? props.overlayStyle : g.videoBlackBg}
-              />
-              {props.showPlay && (
-                <View
-                  style={
-                    props.playIconstyle ? props.playIconstyle : style.playIcon
-                  }>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setPlayVideo(true);
-                    }}
-                    activeOpacity={1}>
-                    <GlobalInclude.BaseIcon
-                      containerStyle={
-                        props.playIconContainer
-                          ? props.playIconContainer
-                          : style.playContainer
-                      }
-                      iconColor={'#fff'}
-                      iconName={props.iconName ? props.iconName : 'play'}
-                      iconSize={props.iconSize ? props.iconSize : scale(36)}
-                      iconType={props.iconType ? props.iconType : IconType[4]}
-                    />
-                  </TouchableOpacity>
-                </View>
-              )}
             </View>
           ) : (
-            <View
-              style={
-                props.containerStyle ? props.containerStyle : style.container
-              }>
-              <WebView source={{uri: props.link}} />
-            </View>
+            <TouchableOpacity
+              onPress={() => {
+                if (Helper.checkVideoUrl(props.link).type === 'vimeo') {
+                  RootNavigation.navigate('VideoPlayer', {
+                    playerLink: youtubeId,
+                  });
+                } else {
+                  //setPlayVideo(true);
+                  RootNavigation.navigate('YoutubePlayer', {
+                    youtubeId: youtubeId,
+                  });
+                }
+              }}
+              activeOpacity={1}>
+              {thumbnail !== undefined &&
+              thumbnail !== null &&
+              thumbnail !== '' ? (
+                <View
+                  style={
+                    props.containerStyle
+                      ? props.containerStyle
+                      : style.container
+                  }>
+                  <Image
+                    style={props.thumbStyle ? props.thumbStyle : style.thumb}
+                    resizeMode={'cover'}
+                    source={{
+                      uri: thumbnail,
+                    }}
+                  />
+                  <View
+                    style={
+                      props.overlayStyle ? props.overlayStyle : g.videoBlackBg
+                    }
+                  />
+                  {props.showPlay && (
+                    <View
+                      style={
+                        props.playIconstyle
+                          ? props.playIconstyle
+                          : style.playIcon
+                      }>
+                      <TouchableOpacity
+                        onPress={() => {
+                          console.log(
+                            'Helper.checkVideoUrl(props.link).type',
+                            Helper.checkVideoUrl(props.link).type,
+                          );
+                          if (
+                            Helper.checkVideoUrl(props.link).type === 'vimeo'
+                          ) {
+                            RootNavigation.navigate('VideoPlayer', {
+                              playerLink: youtubeId,
+                            });
+                          } else {
+                            RootNavigation.navigate('YoutubePlayer', {
+                              youtubeId: youtubeId,
+                            });
+                            //setPlayVideo(true);
+                          }
+                        }}
+                        activeOpacity={1}>
+                        <GlobalInclude.BaseIcon
+                          containerStyle={
+                            props.playIconContainer
+                              ? props.playIconContainer
+                              : style.playContainer
+                          }
+                          iconColor={'#fff'}
+                          iconName={props.iconName ? props.iconName : 'play'}
+                          iconSize={props.iconSize ? props.iconSize : scale(36)}
+                          iconType={
+                            props.iconType ? props.iconType : IconType[4]
+                          }
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <View
+                  style={
+                    props.containerStyle
+                      ? props.containerStyle
+                      : style.container
+                  }>
+                  <WebView source={{uri: props.link}} />
+                </View>
+              )}
+            </TouchableOpacity>
           )}
-        </TouchableOpacity>
+        </View>
       )}
     </View>
   );

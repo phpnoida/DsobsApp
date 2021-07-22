@@ -208,12 +208,21 @@ const Login = ({navigation}) => {
   };
 
   const _onReceiveSms = (event) => {
-    let otpCode = event.message.toString().split(' ')[1].replace(/\D/g, '');
-    console.log('====================================');
-    console.log('event.message', otpCode);
-    console.log('====================================');
+    if (event && event !== undefined && event !== null) {
+      if (
+        event.message &&
+        event.message !== undefined &&
+        event.message !== null
+      ) {
+        let otpCode = event.message.toString().split(' ')[1].replace(/\D/g, '');
+        console.log('====================================');
+        console.log('event.message', otpCode);
+        console.log('====================================');
 
-    setAuthCode(otpCode);
+        setAuthCode(otpCode);
+      }
+    }
+
     SmsRetriever.removeSmsListener();
   };
 
@@ -295,6 +304,10 @@ const Login = ({navigation}) => {
           }
         },
         (statusCode, error) => {
+          console.log('====================================');
+          console.log('statusCode', statusCode);
+          console.log('error', error);
+          console.log('====================================');
           setIsLoading(false);
           setErrorMessage({otp: error});
         },

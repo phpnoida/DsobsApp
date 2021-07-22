@@ -51,6 +51,8 @@ import Comments from '../screen/Ticker/Comments';
 import JobListing from '../screen/jobs/';
 import AddJobPost from '../screen/jobs/PostJob';
 import JobDetails from '../screen/jobs/JobDetails/';
+import VideoPlayer from '../component/VideoPlayer';
+import YoutubePlayer from '../component/YoutubePlayer';
 
 const Stack = createStackNavigator();
 
@@ -310,6 +312,16 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="JobDetails"
         component={JobDetails}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="VideoPlayer"
+        component={VideoPlayer}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="YoutubePlayer"
+        component={YoutubePlayer}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

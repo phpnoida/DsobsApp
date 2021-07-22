@@ -20,7 +20,21 @@ export function verifyAuthCode(data, callback, errCallback) {
     .post(requestPath, data)
     .then((res) => callback(res))
     .catch((err) => {
-      handleError(err, errCallback);
+      if (
+        err.response &&
+        err.response !== null &&
+        err.response.data &&
+        err.response.data !== null
+      ) {
+        let errorData = err.response.data;
+        if (errorData.message) {
+          errCallback(err.response.status, errorData.message);
+        } else {
+          errCallback(err.response.status, err);
+        }
+      } else {
+        errCallback('-1', err.toString());
+      }
     });
   return {
     payload: request,
