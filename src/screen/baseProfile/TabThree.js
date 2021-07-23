@@ -137,15 +137,13 @@ const TabThree = (props) => {
           maximumDate={new Date()}
           dateFormat={'day month year'}
           onChange={(event, selected) => {
-            // const currentDate = selected || new Date();
-            // let obj = Helper.formateDate(currentDate);
-            // props.setSelectedDate(obj.displayDate, obj.serverDate);
-
             if (event && event !== null && event !== undefined) {
               if (event.type === 'set') {
                 const currentDate = selected || new Date();
                 let obj = Helper.formateDate(currentDate);
                 props.setSelectedDate(obj.displayDate, obj.serverDate);
+              } else {
+                props.openDatePicker();
               }
             } else {
               props.openDatePicker();

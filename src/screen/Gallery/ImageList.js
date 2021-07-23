@@ -78,7 +78,7 @@ const ImageList = ({route, navigation}) => {
   const [imageData, setImageData] = useState([]);
   const [isFetching, setIsFetching] = useState(true);
   const [paginationStatus, setPaginationStatus] = useState(
-    PaginationStatus.fetching,
+    PaginationStatus.firstLoad,
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);

@@ -10,6 +10,7 @@ import {
   PixelRatio,
 } from 'react-native';
 import YouTube from 'react-native-youtube';
+
 import {YOUTUBE_KEY} from '../../config';
 import Orientation from 'react-native-orientation-locker';
 
@@ -18,7 +19,7 @@ const YoutubePlayer = ({route, navigation}) => {
   const [containerWidth, setContainerWidth] = useState(null);
 
   useEffect(() => {
-    Orientation.lockToLandscape();
+    //Orientation.lockToLandscape();
     return () => {};
   }, []);
 
@@ -42,7 +43,7 @@ const YoutubePlayer = ({route, navigation}) => {
       onError={(e) => {
         console.log('error', e);
       }}
-      controls={1}
+      //controls={1}
     />
   );
 };

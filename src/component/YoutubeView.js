@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import {WebView} from 'react-native-webview';
 import g from '../theme/global';
@@ -17,6 +18,10 @@ import {IconType} from '../helper/Constants';
 import axios from 'axios';
 import * as RootNavigation from '../helper/NavigationService';
 import Video from 'react-native-video-controls';
+import {
+  YouTubeStandaloneAndroid,
+  YouTubeStandaloneIOS,
+} from 'react-native-youtube';
 
 let _youTubeRef = React.createRef();
 const YoutubeView = (props) => {
@@ -64,6 +69,34 @@ const YoutubeView = (props) => {
     return () => {};
   }, [props.link]);
 
+  const playYoutubeVideo = () => {
+    if (Helper.checkVideoUrl(props.link).type === 'vimeo') {
+      RootNavigation.navigate('VideoPlayer', {
+        playerLink: youtubeId,
+      });
+    } else {
+      if (Platform.OS === 'ios') {
+        setPlayVideo(true);
+        // YouTubeStandaloneIOS.playVideo(youtubeId)
+        //   .then((message) => console.log(message))
+        //   .catch((errorMessage) => console.error(errorMessage));
+
+        // RootNavigation.navigate('YoutubePlayer', {
+        //   youtubeId: youtubeId,
+        // });
+      } else if (Platform.OS === 'android') {
+        YouTubeStandaloneAndroid.playVideo({
+          apiKey: YOUTUBE_KEY,
+          videoId: youtubeId,
+          autoplay: true,
+          startTime: 0,
+        })
+          .then(() => console.log('Standalone Player Exited'))
+          .catch((errorMessage) => console.error(errorMessage));
+      }
+    }
+  };
+
   return (
     <View>
       {playVideo && videoType === 'vimeo' ? (
@@ -98,16 +131,7 @@ const YoutubeView = (props) => {
           ) : (
             <TouchableOpacity
               onPress={() => {
-                if (Helper.checkVideoUrl(props.link).type === 'vimeo') {
-                  RootNavigation.navigate('VideoPlayer', {
-                    playerLink: youtubeId,
-                  });
-                } else {
-                  //setPlayVideo(true);
-                  RootNavigation.navigate('YoutubePlayer', {
-                    youtubeId: youtubeId,
-                  });
-                }
+                playYoutubeVideo();
               }}
               activeOpacity={1}>
               {thumbnail !== undefined &&
@@ -140,22 +164,7 @@ const YoutubeView = (props) => {
                       }>
                       <TouchableOpacity
                         onPress={() => {
-                          console.log(
-                            'Helper.checkVideoUrl(props.link).type',
-                            Helper.checkVideoUrl(props.link).type,
-                          );
-                          if (
-                            Helper.checkVideoUrl(props.link).type === 'vimeo'
-                          ) {
-                            RootNavigation.navigate('VideoPlayer', {
-                              playerLink: youtubeId,
-                            });
-                          } else {
-                            RootNavigation.navigate('YoutubePlayer', {
-                              youtubeId: youtubeId,
-                            });
-                            //setPlayVideo(true);
-                          }
+                          playYoutubeVideo();
                         }}
                         activeOpacity={1}>
                         <GlobalInclude.BaseIcon

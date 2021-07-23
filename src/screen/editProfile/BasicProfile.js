@@ -738,7 +738,6 @@ const BasicProfile = (props) => {
                 dateFormat={'day month year'}
                 onChange={(event, selected) => {
                   if (event && event !== null && event !== undefined) {
-                    console.log('event.type', event.type);
                     if (event.type === 'set') {
                       const currentDate = selected || new Date();
                       let obj = Helper.formateDate(currentDate);

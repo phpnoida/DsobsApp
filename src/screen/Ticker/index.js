@@ -44,6 +44,11 @@ import {
   clearIncreaseComment,
   clearRefreshPrevious,
 } from '../../reducer/NotificationReducer';
+import Orientation, {
+  OrientationLocker,
+  PORTRAIT,
+  LANDSCAPE,
+} from 'react-native-orientation-locker';
 
 const {height: displayHeight, width: displayWidth} = Dimensions.get('window');
 
@@ -132,17 +137,13 @@ const Ticker = ({route, navigation}) => {
         oldData[postIndex].totalComments = count;
         setTimeout(() => {
           dispatch(clearIncreaseComment());
-          setTimeout(() => {
-            setPostContent([...oldData]);
-          }, 100);
+          setPostContent([...oldData]);
         }, 200);
       } else if (refreshPage) {
         refreshPage = false;
         setTimeout(() => {
           dispatch(clearRefreshPrevious());
-          setTimeout(() => {
-            refresh();
-          }, 100);
+          refresh();
         }, 200);
       }
     }
@@ -931,6 +932,7 @@ const Ticker = ({route, navigation}) => {
 
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
+      <OrientationLocker orientation={PORTRAIT} />
       <TopHeaderView
         navigation={navigation}
         index={10}

@@ -137,6 +137,7 @@ const TabFive = ({
               value={emailAddress}
               keyboardType={'email-address'}
               returnKeyType={'done'}
+              autoCapitalize={'none'}
               placeholder={'Enter your text here'}
               onChangeText={(value) => {
                 handleInput('emailAddress', value);
@@ -200,7 +201,7 @@ const TabFive = ({
                 {height: scale(100), textAlignVertical: 'top'},
               ]}
               keyboardType={'default'}
-              autoCapitalize={'words'}
+              autoCapitalize={'sentences'}
               returnKeyType={'done'}
               placeholder={'Enter your text here'}
               onChangeText={(value) => {

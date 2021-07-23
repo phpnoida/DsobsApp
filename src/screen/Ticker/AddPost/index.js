@@ -341,7 +341,6 @@ const PostTicker = ({route, navigation}) => {
             if (data.status) {
               isSuccess = true;
               setTimeout(() => {
-                //route.params.onGoBack();
                 dispatch(refreshPreviousScreen());
                 navigation.goBack();
               }, 250);
@@ -376,7 +375,7 @@ const PostTicker = ({route, navigation}) => {
             if (data.status) {
               isSuccess = true;
               setTimeout(() => {
-                route.params.onGoBack();
+                dispatch(refreshPreviousScreen());
                 navigation.goBack();
               }, 250);
             } else {

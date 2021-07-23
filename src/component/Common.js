@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Dimensions,
   ScrollView,
+  Platform,
 } from 'react-native';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import g from '../theme/global';
@@ -345,7 +346,7 @@ export const renderCity = (cityList, onPress) => {
 
 export const showProgess = (canShow) => {
   return (
-    <View style={{marginTop: 8, height: scale(4)}}>
+    <View style={{marginTop: Platform.OS === 'ios' ? 0 : 8, height: scale(4)}}>
       {canShow && (
         <Progress.Bar
           height={scale(3)}
