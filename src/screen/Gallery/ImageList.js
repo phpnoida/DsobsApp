@@ -14,6 +14,7 @@ import {
   Modal,
   TextInput,
   Keyboard,
+  Alert,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -308,7 +309,9 @@ const ImageList = ({route, navigation}) => {
                   imageArray.push({
                     url: itemObject.imagesLink,
                   });
+                  selectedImageLink = itemObject.imagesLink;
                   setImageViewerArray([...imageArray]);
+
                   setShowImageModal(true);
                 }
               }
@@ -369,11 +372,14 @@ const ImageList = ({route, navigation}) => {
               }
               setShowReportModal(false);
 
-              setShowModal(true);
-
-              setTimeout(() => {
-                setShowModal(false);
-              }, 2000);
+              if (showImageModal) {
+                Alert.alert('', responseMessage);
+              } else {
+                setShowModal(true);
+                setTimeout(() => {
+                  setShowModal(false);
+                }, 2000);
+              }
             }
           }
         },
@@ -446,10 +452,15 @@ const ImageList = ({route, navigation}) => {
         responseMessage = 'Error while downloading content!';
       }
       setIsDownloading(false);
-      setShowModal(true);
-      setTimeout(() => {
-        setShowModal(false);
-      }, 2000);
+
+      if (showImageModal) {
+        Alert.alert('', responseMessage);
+      } else {
+        setShowModal(true);
+        setTimeout(() => {
+          setShowModal(false);
+        }, 2000);
+      }
     }
   };
 
@@ -942,23 +953,6 @@ const ImageList = ({route, navigation}) => {
       {showAboutPhoto()}
       {showOptionsList()}
 
-      {showModal && (
-        <Modal
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => {
-            setShowModal(!showModal);
-          }}
-          hardwareAccelerated={true}
-          visible={showModal}>
-          <View style={style.centeredView}>
-            <View style={style.responseMessage}>
-              <Text style={style.headerText}>{responseMessage}</Text>
-            </View>
-          </View>
-        </Modal>
-      )}
-
       <Modal
         transparent={true}
         animationType="fade"
@@ -1163,6 +1157,23 @@ const ImageList = ({route, navigation}) => {
               </TouchableOpacity>
             </View>
           )}
+        </View>
+      </Modal>
+
+      {console.log('showModal', showModal)}
+
+      <Modal
+        animationType={'fade'}
+        transparent={true}
+        onRequestClose={() => {
+          setShowModal(!showModal);
+        }}
+        hardwareAccelerated={true}
+        visible={showModal}>
+        <View style={style.centeredView}>
+          <View style={style.responseMessage}>
+            <Text style={style.headerText}>{responseMessage}</Text>
+          </View>
         </View>
       </Modal>
     </View>

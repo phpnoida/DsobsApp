@@ -847,7 +847,7 @@ const AddJobPost = ({route, navigation}) => {
                         {renderRadioButton(selectedGender)}
                       </View>
                     </View>
-                    <View style={g.mb15}>
+                    {/* <View style={g.mb15}>
                       {generateHeader('Post Ad Date', true)}
                       <TouchableOpacity
                         style={[g.inputWhite]}
@@ -883,6 +883,7 @@ const AddJobPost = ({route, navigation}) => {
                         </View>
                       </TouchableOpacity>
                     </View>
+                     */}
                     <View style={g.mb15}>
                       {generateHeader('Upload Company Logo', false)}
                       <View style={[grid.rowdir]}>

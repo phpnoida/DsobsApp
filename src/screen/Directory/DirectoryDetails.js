@@ -27,6 +27,7 @@ import BottomSheetHeader from '../../component/BottomSheetHeader';
 import RadioButton from '../../component/RadioButton';
 import {doFilterDirectory} from '../../Actions/DirectoryActions';
 import Helper from '../../helper/Helper';
+import ParallaxScroll from '../../component/ParallaxScroll';
 
 let deviceWidth = Dimensions.get('window').width;
 let deviceHeight = Dimensions.get('window').height;
@@ -587,7 +588,7 @@ const DirectoryDetails = ({route, navigation}) => {
                 value={lookingFor}
                 style={[
                   g.inputNew,
-                  g.fs18,
+                  g.fs16,
                   grid.col,
                   grid.justifyContentCenter,
                 ]}
@@ -743,7 +744,11 @@ const DirectoryDetails = ({route, navigation}) => {
     );
   };
 
-  const headerDistance = Animated.diffClamp(curY, 0, 130).interpolate({
+  const headerDistance = Animated.diffClamp(
+    curY,
+    0,
+    animatedHeight,
+  ).interpolate({
     inputRange: [0, 1],
     outputRange: [0, -1],
   });
@@ -757,7 +762,10 @@ const DirectoryDetails = ({route, navigation}) => {
           <View style={{height: scale(60)}}>
             {paginationStatus === PaginationStatus.waiting ? (
               <View style={g.p10}>
-                <ActivityIndicator size={'large'} color={GlobalInclude.Color.ColorPrimary} />
+                <ActivityIndicator
+                  size={'large'}
+                  color={GlobalInclude.Color.ColorPrimary}
+                />
               </View>
             ) : null}
           </View>
@@ -779,7 +787,10 @@ const DirectoryDetails = ({route, navigation}) => {
           <View style={GlobalInclude.AppStyle.fill}>
             {isLoading ? (
               <View style={GlobalInclude.AppStyle.fillCenter}>
-                <ActivityIndicator size={'small'} color={GlobalInclude.Color.ColorPrimary} />
+                <ActivityIndicator
+                  size={'small'}
+                  color={GlobalInclude.Color.ColorPrimary}
+                />
               </View>
             ) : (
               <View style={GlobalInclude.AppStyle.fill}>
@@ -798,6 +809,7 @@ const DirectoryDetails = ({route, navigation}) => {
                     paddingEnd: scale(15),
                     paddingBottom: animatedHeight,
                   }}
+                  bounces={false}
                   ListFooterComponent={renderFooter}
                   keyExtractor={(v, i) => i.toString()}
                   onScrollEndDrag={onScrollEndDrag}

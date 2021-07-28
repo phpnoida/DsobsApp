@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "postinstall": "npx jetify",
-    "run:a": "react-native run-android",
+    "run:a": "node init && react-native run-android",
     "ios": "react-native run-ios",
-    "start": "react-native start",
+    "start": "node init && react-native start",
     "test": "jest",
     "lint": "eslint .",
     "open": "npm start --reset-cache",
@@ -15,7 +15,7 @@
     "clean:ios": "cd ios && xcodebuild clean && cd -",
     "copy:android": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res",
     "assemble:android": "cd android && ./gradlew clean && ./gradlew assembledebug",
-    "build:ios": "react-native bundle --entry-file='index.js' --bundle-output='./ios/main.jsbundle' --dev=false --platform='ios'",
+    "build:ios": "node init && react-native bundle --entry-file='index.js' --bundle-output='./ios/main.jsbundle' --dev=false --platform='ios'",
     "update:a": "cd android && ./gradlew cleanBuildCache && ./gradlew clean && react-native bundle --platform android --dev false --entry-file index.js --bundle-output app/src/main/assets/index.android.bundle --assets-dest app/src/main/res && ./gradlew clean && ./gradlew assembledebug && cd -"
   },
   "dependencies": {
@@ -24,6 +24,7 @@
     "@react-native-async-storage/async-storage": "^1.15.5",
     "@react-native-clipboard/clipboard": "^1.8.1",
     "@react-native-community/blur": "^3.6.0",
+    "@react-native-community/cameraroll": "^4.0.4",
     "@react-native-community/datetimepicker": "^3.5.2",
     "@react-native-community/masked-view": "^0.1.11",
     "@react-native-community/netinfo": "^6.0.0",

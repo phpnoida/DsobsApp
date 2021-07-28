@@ -431,6 +431,7 @@ const SocialVenture = ({navigation}) => {
           ) : (
             <Animated.FlatList
               ref={flatList}
+              bounces={false}
               showsVerticalScrollIndicator={false}
               extraData={pageContent}
               data={pageContent}

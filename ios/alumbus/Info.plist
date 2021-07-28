@@ -57,6 +57,8 @@
 	<string>Need microphone access for recording videos</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Select pictures for certain activities</string>
+  <key>NSPhotoLibraryAddUsageDescription</key>
+  <string>save photos downloaded from gallery</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Font AwesomeFreeSolid-900.ttf</string>
