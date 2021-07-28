@@ -627,7 +627,7 @@ const SearchDirectory = ({route, navigation}) => {
                   g.mb10,
                   tablet && g.pt10,
                 ]}>
-                <View style={{width: scale(115)}}>
+                <View style={{width: scale(110)}}>
                   <View style={[grid.rowdir, grid.alignItems]}>
                     <CheckBoxIOS
                       checkBoxColor={GlobalInclude.Color.ColorPrimary}
@@ -659,8 +659,8 @@ const SearchDirectory = ({route, navigation}) => {
                 <View
                   style={{
                     width: scale(75),
-                    marginStart: scale(3),
-                    marginEnd: scale(3),
+                    marginStart: scale(2),
+                    marginEnd: scale(2),
                   }}>
                   <View style={[grid.rowdir, grid.alignItems]}>
                     <CheckBoxIOS
@@ -719,7 +719,7 @@ const SearchDirectory = ({route, navigation}) => {
                     </Text>
                   </View>
                 </View>
-                <View style={[grid.col, {marginStart: scale(3)}]}>
+                <View style={[grid.col, {marginStart: scale(2)}]}>
                   <View style={[grid.rowdir, grid.alignItems]}>
                     <CheckBoxIOS
                       checkBoxColor={GlobalInclude.Color.ColorPrimary}

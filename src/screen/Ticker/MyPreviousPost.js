@@ -72,7 +72,7 @@ const MyPreviousPost = ({route, navigation}) => {
   const [selectedFeed, setSelectedFeed] = useState(null);
   const [showImageViewer, setshowImageViewer] = useState(false);
   const [showDocViewer, setShowDocViewer] = useState(false);
-  const [postTitle, setPostTitle] = useState('My Post');
+  const [postTitle, setPostTitle] = useState('My Post(s)');
   const dispatch = useDispatch();
 
   const refreshState = useSelector((state) => {

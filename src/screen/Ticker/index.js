@@ -598,7 +598,7 @@ const Ticker = ({route, navigation}) => {
               setTimeout(() => {
                 navigation.navigate('MyPreviousPost', {
                   userId: global.userId,
-                  title: 'My Post',
+                  title: 'My Post(s)',
                 });
               }, 220);
             },
@@ -966,6 +966,7 @@ const Ticker = ({route, navigation}) => {
               ) : (
                 <Animated.FlatList
                   ref={refFlatList}
+                  
                   removeClippedSubviews={Platform.OS !== 'web'}
                   showsVerticalScrollIndicator={false}
                   extraData={postContent}

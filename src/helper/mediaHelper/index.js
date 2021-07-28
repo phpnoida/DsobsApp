@@ -1,6 +1,7 @@
 import {Platform, Alert, PermissionsAndroid} from 'react-native';
 import RNFetchBlob from 'rn-fetch-blob';
 const {config} = RNFetchBlob;
+import CameraRoll from '@react-native-community/cameraroll';
 
 export const hasPermission = async () => {
   if (Platform.OS !== 'android') {
@@ -51,38 +52,56 @@ export const _downloadContent = async (file) => {
 };
 
 export const downloadData = async (file) => {
-  let newImgUri = file.lastIndexOf('/');
-  let imageName = file.substring(newImgUri);
+  if (Platform.OS === 'ios') {
+    let status = await CameraRoll.save(file);
 
-  let extension = imageName.split('.')[1];
-
-  let dirs = RNFetchBlob.fs.dirs;
-  let path =
-    Platform.OS === 'ios'
-      ? dirs['MainBundleDir'] + imageName
-      : dirs.PictureDir + imageName;
-
-  let downloadOptions = {
-    fileCache: true,
-    appendExt: extension,
-    indicator: true,
-    IOSBackgroundTask: true,
-    path: path,
-    addAndroidDownloads: {
-      useDownloadManager: true,
-      notification: true,
-      path: path,
-      description: 'Image',
-    },
-  };
-
-  let status = await config(downloadOptions)
-    .fetch('GET', file.replace(/ /g, '%20'))
-    .then((res) => {
+    if (status !== '') {
       return true;
-    })
-    .catch(() => {
+    } else {
       return false;
-    });
-  return status;
+    }
+  } else {
+    let newImgUri = file.lastIndexOf('/');
+    let imageName = file.substring(newImgUri);
+
+    let extension = imageName.split('.')[1];
+
+    let dirs = RNFetchBlob.fs.dirs;
+    let path =
+      Platform.OS === 'ios'
+        ? dirs['MainBundleDir'] + imageName
+        : dirs.PictureDir + imageName;
+
+    let downloadOptions = {
+      fileCache: true,
+      appendExt: extension,
+      indicator: true,
+      IOSBackgroundTask: true,
+      path: path,
+      addAndroidDownloads: {
+        useDownloadManager: true,
+        notification: true,
+        path: path,
+        description: 'Image',
+      },
+    };
+
+    let status = await config(downloadOptions)
+      .fetch('GET', file.replace(/ /g, '%20'))
+      .then((res) => {
+        console.log('====================================');
+        console.log('res', res);
+        console.log('====================================');
+        return true;
+      })
+      .catch((error) => {
+        console.log('error', error);
+        return false;
+      });
+    return status;
+  }
+};
+
+export const getExtention = (filename) => {
+  return /[.]/.exec(filename) ? /[^.]+$/.exec(filename) : undefined;
 };

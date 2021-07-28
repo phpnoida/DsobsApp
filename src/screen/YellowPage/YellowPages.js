@@ -779,6 +779,7 @@ const YellowPages = ({navigation}) => {
             </View>
           ) : (
             <Animated.FlatList
+              bounces={false}
               showsVerticalScrollIndicator={false}
               extraData={pageContent}
               data={pageContent}
