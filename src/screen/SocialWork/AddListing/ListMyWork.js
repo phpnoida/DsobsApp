@@ -462,6 +462,7 @@ const ListMyWork = ({route, navigation}) => {
       case 2:
         return (
           <VentureDetails
+            navigation={navigation}
             errorMessage={errorMessage}
             handleInput={handleInput}
             onPreviousTab={goPreviousTab}
@@ -506,6 +507,7 @@ const ListMyWork = ({route, navigation}) => {
       case 3:
         return (
           <VolunteerTeam
+            navigation={navigation}
             onSaveTab={() => validateAndMoveNextTab()}
             onPreviousTab={() => goPreviousTab()}
             volunteers={volunteers}
@@ -540,6 +542,7 @@ const ListMyWork = ({route, navigation}) => {
       case 4:
         return (
           <VentureMedia
+            navigation={navigation}
             loader={loader}
             onSaveTab={() => validateAndMoveNextTab()}
             onPreviousTab={() => goPreviousTab()}
@@ -547,7 +550,7 @@ const ListMyWork = ({route, navigation}) => {
             removeMedia={(index) => removeIndex(index)}
             onMediaPick={(media) => {
               let oldData = mediaData;
-              oldData.splice(0, 0, media);
+              Array.prototype.push.apply(oldData, media);
               setMediaData([...oldData]);
             }}
           />
@@ -557,13 +560,12 @@ const ListMyWork = ({route, navigation}) => {
 
   return (
     <View style={GlobalInclude.AppStyle.fill}>
-    <HeaderBar
-          title={'Post a Social'}
-          navigation={navigation}
-          showBack={true}
-        />
+      <HeaderBar
+        title={'Post a Social'}
+        navigation={navigation}
+        showBack={true}
+      />
       <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
-        
         <View style={GlobalInclude.AppStyle.fill}>{loadTab(step)}</View>
       </SafeAreaView>
 

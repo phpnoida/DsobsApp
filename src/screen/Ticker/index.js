@@ -44,6 +44,11 @@ import {
   clearIncreaseComment,
   clearRefreshPrevious,
 } from '../../reducer/NotificationReducer';
+import Orientation, {
+  OrientationLocker,
+  PORTRAIT,
+  LANDSCAPE,
+} from 'react-native-orientation-locker';
 
 const {height: displayHeight, width: displayWidth} = Dimensions.get('window');
 
@@ -83,7 +88,7 @@ const Ticker = ({route, navigation}) => {
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
   );
-  const [animatedHeight, setAnimatedHeight] = useState(119);
+  const [animatedHeight, setAnimatedHeight] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedFeed, setSelectedFeed] = useState(null);
   const [categoryList, setCategoryList] = useState([]);
@@ -132,16 +137,13 @@ const Ticker = ({route, navigation}) => {
         oldData[postIndex].totalComments = count;
         setTimeout(() => {
           dispatch(clearIncreaseComment());
-          setTimeout(() => {
-            setPostContent([...oldData]);
-          }, 100);
+          setPostContent([...oldData]);
         }, 200);
-      } else if (refresh) {
+      } else if (refreshPage) {
+        refreshPage = false;
         setTimeout(() => {
           dispatch(clearRefreshPrevious());
-          setTimeout(() => {
-            refresh();
-          }, 100);
+          refresh();
         }, 200);
       }
     }
@@ -271,7 +273,6 @@ const Ticker = ({route, navigation}) => {
               postMode = '';
               navigation.navigate('PostTicker', {
                 data: {inEditMode: true, data: item},
-                onGoBack: () => refresh(),
               });
             }
           } else {
@@ -584,9 +585,7 @@ const Ticker = ({route, navigation}) => {
           {generateMenuOption('Make a New Post', 'add-to-list', 9, () => {
             refOptions.current.close();
             setTimeout(() => {
-              navigation.navigate('PostTicker', {
-                onGoBack: () => refresh(),
-              });
+              navigation.navigate('PostTicker');
             }, 220);
           })}
 
@@ -599,7 +598,7 @@ const Ticker = ({route, navigation}) => {
               setTimeout(() => {
                 navigation.navigate('MyPreviousPost', {
                   userId: global.userId,
-                  title: 'My Post',
+                  title: 'My Post(s)',
                 });
               }, 220);
             },
@@ -843,7 +842,11 @@ const Ticker = ({route, navigation}) => {
 
   const keyExtractor = (item, index) => index;
 
-  const headerDistance = Animated.diffClamp(curY, 0, 119).interpolate({
+  const headerDistance = Animated.diffClamp(
+    curY,
+    0,
+    animatedHeight,
+  ).interpolate({
     inputRange: [0, 1],
     outputRange: [0, -1],
   });
@@ -929,6 +932,7 @@ const Ticker = ({route, navigation}) => {
 
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
+      <OrientationLocker orientation={PORTRAIT} />
       <TopHeaderView
         navigation={navigation}
         index={10}
@@ -947,7 +951,7 @@ const Ticker = ({route, navigation}) => {
       />
 
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
-        <View style={GlobalInclude.AppStyle.fill}>
+        <View style={[GlobalInclude.AppStyle.fill]}>
           {firstTimeLoad ? (
             <View style={GlobalInclude.AppStyle.fillCenter}>
               <ActivityIndicator
@@ -962,6 +966,7 @@ const Ticker = ({route, navigation}) => {
               ) : (
                 <Animated.FlatList
                   ref={refFlatList}
+                  
                   removeClippedSubviews={Platform.OS !== 'web'}
                   showsVerticalScrollIndicator={false}
                   extraData={postContent}
@@ -988,10 +993,9 @@ const Ticker = ({route, navigation}) => {
                   maxToRenderPerBatch={2}
                 />
               )}
-
-              {renderHeader()}
             </View>
           )}
+          {renderHeader()}
         </View>
       </SafeAreaView>
       {userOptions()}

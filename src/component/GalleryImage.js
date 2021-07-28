@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import {
   View,
   StyleSheet,
@@ -20,7 +20,7 @@ import grid from '../theme/grid';
 import Assets from '../theme/Assets';
 const {height, width} = Dimensions.get('window');
 
-class GalleryImage extends Component {
+class GalleryImage extends PureComponent {
   constructor(props) {
     super(props);
   }
@@ -78,12 +78,6 @@ class GalleryImage extends Component {
     return this.renderImages(data, true);
   };
 
-  // shouldComponentUpdate(nextProps, nextState) {
-  //   const {isExpanded} = nextProps;
-  //   const {isExpanded: oldLiked} = this.props;
-  //   return isExpanded !== oldLiked;
-  // }
-
   render() {
     return (
       <View
@@ -95,8 +89,8 @@ class GalleryImage extends Component {
             borderRadius: 10,
             shadowOffset: {width: 2},
           },
-          g.mb5,
-          g.mt10,
+          g.mb10,
+          g.mt5,
           g.pb15,
           g.bgWhite,
           g.boxShadow,

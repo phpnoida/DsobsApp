@@ -189,10 +189,6 @@ const Login = ({navigation}) => {
     setErrorMessage({});
     if (phone.trim().length === 0) {
       setErrorMessage({phone: 'Please enter the Phone Number'});
-    } else if (phone.trim().length < 6) {
-      setErrorMessage({phone: 'Please enter the valid Phone Number'});
-    } else if (!Helper.validateRegex(phoneRegex, phone)) {
-      setErrorMessage({phone: 'Please enter the valid Phone Number'});
     } else {
       let requestData = {
         countryCode: countryCode,
@@ -212,12 +208,21 @@ const Login = ({navigation}) => {
   };
 
   const _onReceiveSms = (event) => {
-    let otpCode = event.message.toString().split(' ')[1].replace(/\D/g, '');
-    console.log('====================================');
-    console.log('event.message', otpCode);
-    console.log('====================================');
+    if (event && event !== undefined && event !== null) {
+      if (
+        event.message &&
+        event.message !== undefined &&
+        event.message !== null
+      ) {
+        let otpCode = event.message.toString().split(' ')[1].replace(/\D/g, '');
+        console.log('====================================');
+        console.log('event.message', otpCode);
+        console.log('====================================');
 
-    setAuthCode(otpCode);
+        setAuthCode(otpCode);
+      }
+    }
+
     SmsRetriever.removeSmsListener();
   };
 
@@ -262,9 +267,9 @@ const Login = ({navigation}) => {
     Keyboard.dismiss();
     setErrorMessage({});
     if (authCode.trim().authCode === 0) {
-      setErrorMessage({otp: 'Please enter auth code'});
+      setErrorMessage({otp: 'Please enter valid authorization code'});
     } else if (authCode.trim().length < 4) {
-      setErrorMessage({otp: 'Please enter valid auth code'});
+      setErrorMessage({otp: 'Please enter valid authorization code'});
     } else {
       let requestData = {
         id: requestId,
@@ -299,6 +304,10 @@ const Login = ({navigation}) => {
           }
         },
         (statusCode, error) => {
+          console.log('====================================');
+          console.log('statusCode', statusCode);
+          console.log('error', error);
+          console.log('====================================');
           setIsLoading(false);
           setErrorMessage({otp: error});
         },

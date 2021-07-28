@@ -1,47 +1,13 @@
-import React from 'react';
-import {Text, View, TouchableOpacity, Image, Alert} from 'react-native';
+import React, {useRef} from 'react';
+import {Text, View, TouchableOpacity, Image} from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
-import {launchImageLibrary} from 'react-native-image-picker';
 import GlobalInclude from '../../globalInclude/Globalinclude';
-
-const options = {
-  title: 'Select Image',
-  noData: true,
-  maxWidth: 720,
-  maxHeight: 1024,
-  allowsEditing: false,
-  storageOptions: {
-    skipBackup: true,
-    path: 'images',
-    cameraRoll: true,
-    waitUntilSaved: true,
-  },
-};
-
-const launchImagePicker = (props) => {
-  launchImageLibrary(options, (res) => {
-    if (res) {
-      if (res !== null) {
-        if (res.didCancel) {
-          Alert.alert('Cancel Image Selection!');
-        } else {
-          if (
-            res.assets !== undefined &&
-            res.assets !== null &&
-            res.assets.length > 0
-          ) {
-            props.onSelectImage(res.assets[0]);
-          }
-        }
-      }
-    }
-  });
-};
+import UploadMedia from '../../component/UploadMedia';
 
 const TabSeven = (props) => {
-  const {errorMessage} = props;
+  const uploadRef = useRef();
   return (
     <View style={g.mt45}>
       <Text style={[g.fs24, g.FHNB, g.mb20, g.colorBlack, g.txtCenter]}>
@@ -51,7 +17,13 @@ const TabSeven = (props) => {
         <TouchableOpacity
           activeOpacity={1}
           onPress={(e) => {
-            launchImagePicker(props);
+            if (
+              uploadRef &&
+              uploadRef.current !== undefined &&
+              uploadRef.current !== null
+            ) {
+              uploadRef.current.open();
+            }
           }}>
           <View
             style={[
@@ -98,7 +70,13 @@ const TabSeven = (props) => {
           <TouchableOpacity
             style={[g.btnL, {width: scale(150), height: scale(45)}]}
             onPress={(e) => {
-              launchImagePicker(props);
+              if (
+                uploadRef &&
+                uploadRef.current !== undefined &&
+                uploadRef.current !== null
+              ) {
+                uploadRef.current.open();
+              }
             }}
             activeOpacity={0.8}>
             <Text style={[g.colorWhite, g.FHNR, g.fs15, g.txtCenter]}>
@@ -107,6 +85,25 @@ const TabSeven = (props) => {
           </TouchableOpacity>
         </View>
       ) : null}
+
+      <UploadMedia
+        refRBSheet={uploadRef}
+        navigation={props.navigation}
+        media={{
+          image: false,
+          video: true,
+          document: true,
+          audio: true,
+        }}
+        supportMultiple={false}
+        onPickMedia={(media) => {
+          uploadRef.current.close();
+          if (media !== undefined && media !== null) {
+            console.log('media', media);
+            props.onSelectImage(media[0]);
+          }
+        }}
+      />
     </View>
   );
 };

@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Image,
   Platform,
-  ActivityIndicator,
   TextInput,
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
@@ -22,23 +21,27 @@ import {uploadMedia} from '../Actions/CommonActions';
 import CommonButton from './CommonButton';
 import getPath from '@flyerhq/react-native-android-uri-path';
 import {hasPermission} from '../helper/mediaHelper';
+import ShowPickedImages from '../component/ShowPickedImages';
 
 var re = /(?:\.([^.]+))?$/;
 
+let uploadTmpImages = [];
+let uploadFinalImages = [];
+let imageIndex = 0;
 const UploadMedia = ({
   refRBSheet,
   media,
   videoData,
   onPickMedia,
-  showLoader,
+  supportMultiple,
 }) => {
   const videoRef = useRef();
 
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedLink, setSelectedLink] = useState('');
   const [selectedLinkTags, setSelectedLinkTags] = useState('');
   const [errorMessage, setErrorMessage] = useState({});
-
+  const [tempImages, setTempImages] = useState([]);
+  const [showPickedImages, setShowPickedImages] = useState(false);
   /**
    *
    * API SECTION
@@ -46,35 +49,33 @@ const UploadMedia = ({
    */
 
   const uploadMediaContent = (body, childPath, mediaType) => {
-    global.loader_ref.show_loader(1);
-    uploadMedia(
-      childPath,
-      body,
-      (response) => {
-        global.loader_ref.show_loader(0);
-        if (response && response !== undefined && response !== null) {
-          if (response.status && response.data && response.data !== null) {
-            let childData = response.data.data;
-            let object = {
-              thumbnail: childData,
-              fileName: childData,
-              type: mediaType,
-            };
-            onPickMedia(object);
+    return new Promise(function (resolve, reject) {
+      uploadMedia(
+        childPath,
+        body,
+        (response) => {
+          global.loader_ref.show_loader(0);
+          if (response && response !== undefined && response !== null) {
+            if (response.status && response.data && response.data !== null) {
+              let childData = response.data.data;
+              let object = {
+                thumbnail: childData,
+                fileName: childData,
+                type: mediaType,
+              };
+              resolve(object);
+            } else {
+              reject(null);
+            }
           } else {
-            onPickMedia(null);
+            reject(null);
           }
-        } else {
-          onPickMedia(null);
-        }
-      },
-      (error, message) => {
-        global.loader_ref.show_loader(1);
-        console.log('error', error);
-        onPickMedia(null);
-        Alert.alert('Uploading Failed');
-      },
-    );
+        },
+        (error, message) => {
+          reject(null);
+        },
+      );
+    });
   };
 
   /**
@@ -86,20 +87,25 @@ const UploadMedia = ({
   const pickImage = () => {
     ImagePicker.openPicker({
       includeBase64: false,
-      cropping: false,
       includeExif: false,
       mediaType: 'photo',
-      multiple: false,
+      multiple: supportMultiple ? supportMultiple : false,
     })
       .then((images) => {
         if (images !== null) {
-          //refRBSheet.current.open();
           console.log('images', images);
-          uploadImage(images, 'utils/imageupload', 1);
+          uploadTmpImages = [];
+          uploadFinalImages = [];
+          imageIndex = 0;
+          if (Array.isArray(images)) {
+            uploadTmpImages = images;
+          } else {
+            uploadTmpImages.push(images);
+          }
+          cropSingleImage();
         }
       })
       .catch((err) => {
-        console.log('err', err.code);
         if (err.code === 'E_PICKER_CANCELLED') {
           onPickMedia(null);
           Alert.alert('Cancel Selection', 'User Cancelled Selection!');
@@ -107,17 +113,85 @@ const UploadMedia = ({
       });
   };
 
+  const cropSingleImage = () => {
+    if (imageIndex > uploadTmpImages.length - 1) {
+      completeCropping();
+      return;
+    }
+
+    let singleItem = uploadTmpImages[imageIndex];
+
+    let options = {
+      cropping: true,
+      path: singleItem.path,
+      multiple: true,
+    };
+
+    if (Platform.OS === 'ios') {
+      options.freeStyleCropEnabled = true;
+      options.cropperChooseText = 'Done';
+      options.width = singleItem.width;
+      options.height = singleItem.height;
+    } else if (Platform.OS === 'android') {
+      options.enableRotationGesture = true;
+    }
+
+    ImagePicker.openCropper(options)
+      .then((image) => {
+        uploadFinalImages.push(image);
+      })
+      .catch((err) => {})
+      .finally(() => {
+        imageIndex = imageIndex + 1;
+        cropSingleImage();
+      });
+  };
+
+  const completeCropping = () => {
+    console.log('====================================');
+    console.log('Cropping done');
+    console.log('====================================');
+
+    if (uploadFinalImages.length > 0) {
+      if (supportMultiple) {
+        setTempImages(uploadFinalImages);
+        setShowPickedImages(true);
+      } else {
+        uploadMultipleImages(uploadFinalImages);
+      }
+    } else {
+      onPickMedia(null);
+    }
+  };
+
+  const uploadMultipleImages = (tmpData) => {
+    var promises = [];
+    global.loader_ref.show_loader(1);
+
+    tmpData.forEach((element) => {
+      promises.push(uploadImage(element, 'utils/imageupload', 1));
+    });
+
+    Promise.all(promises)
+      .then((arrList) => {
+        onPickMedia(arrList);
+      })
+      .finally(() => {
+        global.loader_ref.show_loader(0);
+      });
+  };
+
   const uploadImage = (pickFile, childPath, mediaType) => {
     try {
       let body = [];
       if (pickFile !== null) {
-        var path = '';
+        var path = pickFile.path;
 
-        if (Platform.OS === 'android') {
-          path = pickFile.path;
-        } else if (Platform.OS === 'ios') {
-          path = pickFile.sourceURL;
-        }
+        // if (Platform.OS === 'android') {
+        //   path = pickFile.path;
+        // } else if (Platform.OS === 'ios') {
+        //   path = pickFile.path;
+        // }
 
         var ext = re.exec(path)[1];
         var timestamp = new Date().getTime().toString();
@@ -136,7 +210,19 @@ const UploadMedia = ({
         };
         body.push(imageData);
 
-        uploadMediaContent(body, childPath, mediaType);
+        return new Promise(function (resolve, reject) {
+          uploadMediaContent(body, childPath, mediaType)
+            .then((data) => {
+              if (data !== undefined && data !== null) {
+                resolve(data);
+              } else {
+                reject(null);
+              }
+            })
+            .catch((error) => {
+              reject(null);
+            });
+        });
       } else {
         onPickMedia(null);
         Alert.alert(
@@ -174,7 +260,25 @@ const UploadMedia = ({
             data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
           };
           body.push(imageData);
-          uploadMediaContent(body, childPath, mediaType);
+
+          global.loader_ref.show_loader(1);
+          uploadMediaContent(body, childPath, mediaType)
+            .then((data) => {
+              if (data !== undefined && data !== null) {
+                let tmpArray = [];
+                tmpArray.push(data);
+                onPickMedia(tmpArray);
+              } else {
+                onPickMedia(null);
+              }
+            })
+            .catch((error) => {
+              onPickMedia(null);
+              Alert.alert('Uploading Failed');
+            })
+            .finally(() => {
+              global.loader_ref.show_loader(0);
+            });
         } else {
           onPickMedia(null);
           Alert.alert(
@@ -239,7 +343,7 @@ const UploadMedia = ({
           type: [DocumentPicker.types.audio],
         });
         if (res !== null) {
-         // refRBSheet.current.open();
+          // refRBSheet.current.open();
           uploadDoc(res, 'utils/imageupload?type=3', 4);
         }
       } catch (error) {
@@ -248,37 +352,6 @@ const UploadMedia = ({
       }
     }
   };
-
-  // const hasPermission = async () => {
-  //   if (Platform.OS !== 'android') {
-  //     return true;
-  //   }
-
-  //   const pm1 = await PermissionsAndroid.check(
-  //     PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-  //   );
-  //   const pm2 = await PermissionsAndroid.check(
-  //     PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-  //   );
-
-  //   if (pm1 && pm2) {
-  //     return true;
-  //   }
-
-  //   const userResponse = await PermissionsAndroid.requestMultiple([
-  //     PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-  //     PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-  //   ]);
-
-  //   if (
-  //     userResponse['android.permission.READ_EXTERNAL_STORAGE'] === 'granted' &&
-  //     userResponse['android.permission.WRITE_EXTERNAL_STORAGE'] === 'granted'
-  //   ) {
-  //     return true;
-  //   } else {
-  //     return false;
-  //   }
-  // };
 
   const addToVideo = () => {
     if (selectedLink.trim() === '') {
@@ -303,7 +376,10 @@ const UploadMedia = ({
         type: 2,
         tags: selectedLinkTags,
       };
-      onPickMedia(obj);
+
+      let tmpArray = [];
+      tmpArray.push(obj);
+      onPickMedia(tmpArray);
     }
   };
 
@@ -364,22 +440,6 @@ const UploadMedia = ({
         }}>
         <View
           style={{flex: 1, justifyContent: 'center', alignContent: 'center'}}>
-          {isLoading && (
-            <View
-              style={{
-                position: 'absolute',
-                top: 0,
-                bottom: 0,
-                left: 0,
-                right: 0,
-                justifyContent: 'center',
-              }}>
-              <ActivityIndicator
-                size={'small'}
-                color={GlobalInclude.Color.ColorPrimary}
-              />
-            </View>
-          )}
           <View style={[grid.rowdir, grid.flexwrap, g.mt5]}>
             {generateIcon(
               GlobalInclude.Assets.CameraAttach,
@@ -488,7 +548,7 @@ const UploadMedia = ({
             </View>
           </View>
           <CommonButton
-            showLoader={isLoading}
+            showLoader={false}
             title={
               videoData !== undefined && videoData !== null ? 'Update' : 'Save'
             }
@@ -496,6 +556,19 @@ const UploadMedia = ({
           />
         </View>
       </RBSheet>
+
+      {showPickedImages && (
+        <ShowPickedImages
+          imageData={tempImages}
+          onClose={() => {
+            setShowPickedImages(false);
+          }}
+          uplodFinalImages={(finalImages) => {
+            setShowPickedImages(false);
+            uploadMultipleImages(finalImages);
+          }}
+        />
+      )}
     </View>
   );
 };
@@ -508,6 +581,15 @@ const styles = StyleSheet.create({
   mainBox: {
     borderRadius: 10,
     flex: 1 / 2,
+  },
+  buttonContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: scale(150),
+    paddingTop: scale(10),
+    paddingBottom: scale(10),
+    alignContent: 'center',
+    alignSelf: 'center',
   },
 });
 

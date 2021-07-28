@@ -11,7 +11,6 @@ import {
   Dimensions,
   Alert,
   TouchableNativeFeedback,
-  DeviceEventEmitter,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -138,6 +137,8 @@ const TagUser = ({route, navigation}) => {
                 let updateData = {
                   selectedIndex: selectedIndex,
                   filterObject: filterObject,
+                  totalTagged: taggedIds,
+                  update: true,
                 };
                 dispatch(updateImage(updateData));
                 setShowModal(false);

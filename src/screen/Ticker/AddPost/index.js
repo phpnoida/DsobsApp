@@ -24,14 +24,11 @@ import FilterCategory from '../../../component/FilterCategory';
 import {generateHeader} from '../../../component/Common';
 import {loadMedia} from '../../../component/MediaComponent';
 import UploadMedia from '../../../component/UploadMedia';
-import {
-  pickImage,
-  uploadImage,
-  uploadMediaContent,
-} from '../../../helper/mediaHelper';
 import ModelAlert from '../../../component/ModalAlert';
 import {getCategories, addPost, editPost} from '../../../Actions/TickerActions';
 import {getScrappedData} from '../../../Actions/CommonActions';
+import {useDispatch} from 'react-redux';
+import {refreshPreviousScreen} from '../../../reducer/NotificationReducer';
 
 let selectedIndex = -1;
 let responseMessage = '';
@@ -46,6 +43,8 @@ let newsLink = '';
 const PostTicker = ({route, navigation}) => {
   const categoryRef = useRef();
   const uploadRef = useRef();
+  const dispatch = useDispatch();
+
   const [loading, setLoading] = useState(true);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
 
@@ -102,11 +101,6 @@ const PostTicker = ({route, navigation}) => {
       setBackgroundColor(defaultData.colorCode);
 
       postId = defaultData._id;
-
-      console.log('====================================');
-      console.log('defaultData', JSON.stringify(defaultData));
-      console.log('====================================');
-
       if (
         defaultData.links !== undefined &&
         defaultData.links !== null &&
@@ -347,17 +341,8 @@ const PostTicker = ({route, navigation}) => {
             if (data.status) {
               isSuccess = true;
               setTimeout(() => {
-                route.params.onGoBack();
+                dispatch(refreshPreviousScreen());
                 navigation.goBack();
-
-                // navigation.pop();
-                // navigation.navigate('CommonRoom', {refresh: true});
-                // navigation.dispatch(
-                //   CommonActions.reset({
-                //     index: 1,
-                //     routes: [{name: 'CommonRoom'}],
-                //   }),
-                // );
               }, 250);
             } else {
               responseMessage = 'Error while posting your request!';
@@ -390,7 +375,7 @@ const PostTicker = ({route, navigation}) => {
             if (data.status) {
               isSuccess = true;
               setTimeout(() => {
-                route.params.onGoBack();
+                dispatch(refreshPreviousScreen());
                 navigation.goBack();
               }, 250);
             } else {
@@ -454,33 +439,6 @@ const PostTicker = ({route, navigation}) => {
         if (global.isConnected) {
           completePosting();
         }
-      }
-    }
-  };
-
-  const pickMedia = async () => {
-    let result = await pickImage();
-
-    if (result !== undefined && result !== null) {
-      setShowImageLoading(true);
-      let itemObject = uploadImage(result, 'utils/imageupload', 1);
-
-      if (itemObject !== undefined && itemObject !== null) {
-        uploadMediaContent(
-          itemObject.body,
-          itemObject.childPath,
-          itemObject.mediaType,
-          (uploadResult) => {
-            setShowImageLoading(false);
-            if (uploadResult !== null && uploadResult !== undefined) {
-              let oldData = mediaData;
-              oldData.splice(0, 0, uploadResult);
-              setMediaData([...oldData]);
-            }
-          },
-        );
-      } else {
-        setShowImageLoading(false);
       }
     }
   };
@@ -632,25 +590,14 @@ const PostTicker = ({route, navigation}) => {
             style={[grid.col, g.mr10]}
             activeOpacity={1}
             onPress={() => {
-              if (mediaData.length < 5) {
-                if (categoryId === 8) {
-                  if (uploadRef.current !== null) {
-                    uploadRef.current.open();
-                  }
-                } else {
-                  pickMedia();
+              if (categoryId === 8) {
+                if (uploadRef.current !== null) {
+                  uploadRef.current.open();
                 }
               } else {
-                if (categoryId === 8) {
-                  Alert.alert(
-                    'Max Upload Reached',
-                    'You can only upload 5 images or PDFs',
-                  );
-                } else {
-                  Alert.alert(
-                    'Max Image Reached',
-                    'You can upload max 5 images',
-                  );
+                setDisableDoc(true);
+                if (uploadRef.current !== null) {
+                  uploadRef.current.open();
                 }
               }
             }}>
@@ -674,25 +621,14 @@ const PostTicker = ({route, navigation}) => {
             activeOpacity={1}
             style={styles.addTag}
             onPress={() => {
-              if (mediaData.length < 5) {
-                if (categoryId === 8) {
-                  if (uploadRef.current !== null) {
-                    uploadRef.current.open();
-                  }
-                } else {
-                  pickMedia();
+              if (categoryId === 8) {
+                if (uploadRef.current !== null) {
+                  uploadRef.current.open();
                 }
               } else {
-                if (categoryId === 8) {
-                  Alert.alert(
-                    'Max Upload Reached',
-                    'You can only upload 5 images or PDFs',
-                  );
-                } else {
-                  Alert.alert(
-                    'Max Image Reached',
-                    'You can upload max 5 images',
-                  );
+                setDisableDoc(true);
+                if (uploadRef.current !== null) {
+                  uploadRef.current.open();
                 }
               }
             }}>
@@ -719,7 +655,7 @@ const PostTicker = ({route, navigation}) => {
             {errorMessage.uploadImage}
           </Text>
         ) : null}
-        <Text
+        {/* <Text
           style={[
             g.errorMsg,
             grid.justifyContentLeft,
@@ -728,7 +664,7 @@ const PostTicker = ({route, navigation}) => {
             g.colorBlack,
           ]}>
           You can upload max 5 Images
-        </Text>
+        </Text> */}
       </View>
     );
   };
@@ -998,6 +934,15 @@ const PostTicker = ({route, navigation}) => {
         selectedFilter={selectedCategory}
         setSelectedFilter={(value, item) => {
           Keyboard.dismiss();
+          if (inEditMode) {
+            if (categoryId !== item.key) {
+              console.log('gethere');
+              setTimeout(() => {
+                setDisableDoc(false);
+                setDisableImage(false);
+              }, 200);
+            }
+          }
           setSelectedCategory(Helper.capitalize(value));
           setCategoryId(item.key);
           resetOptions();
@@ -1092,6 +1037,7 @@ const PostTicker = ({route, navigation}) => {
       )}
 
       <UploadMedia
+        navigation={navigation}
         refRBSheet={uploadRef}
         media={{
           image: disableImage,
@@ -1099,11 +1045,10 @@ const PostTicker = ({route, navigation}) => {
           document: disableDoc,
           audio: true,
         }}
+        supportMultiple={true}
         onPickMedia={(media) => {
           uploadRef.current.close();
           if (media !== undefined && media !== null) {
-            console.log('media', media);
-
             let oldData = mediaData;
             if (oldData.length === 0) {
               if (media.type === 1) {
@@ -1112,7 +1057,8 @@ const PostTicker = ({route, navigation}) => {
                 setDisableImage(true);
               }
             }
-            oldData.splice(0, 0, media);
+
+            Array.prototype.push.apply(oldData, media);
             setMediaData([...oldData]);
           }
         }}

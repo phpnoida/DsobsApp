@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef, useMemo, useCallback} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {
   View,
   StyleSheet,
@@ -14,17 +14,18 @@ import {
   Modal,
   TextInput,
   Keyboard,
+  Alert,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
 import HeaderBar from '../../component/HeaderBar';
-import ProgressImage from '../../component/ProgresImage';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
-import {renderNoDataComponent} from '../../component/Common';
+import {renderNoDataComponent, showProgess} from '../../component/Common';
+import CommonButton from '../../component/CommonButton';
 import {APP_NAME, IconType} from '../../helper/Constants';
 import ImageViewer from 'react-native-image-zoom-viewer';
-import ResponsiveImage from '../../component/ResponsiveImage';
+import GalleryImageCard from '../../component/GalleryImageCard';
 import Helper from '../../helper/Helper';
 import Orientation, {
   OrientationLocker,
@@ -42,12 +43,12 @@ import {useDispatch, useSelector, shallowEqual} from 'react-redux';
 import {clearUpdateImage} from '../../reducer/NotificationReducer';
 
 const {height, width} = Dimensions.get('window');
-const ITEM_HEIGHT = 340;
 
 const PaginationStatus = {
   firstLoad: 0,
   waiting: 1,
   allLoaded: 2,
+  fetching: 3,
 };
 let totalCount = 0;
 let filterObject = {
@@ -64,119 +65,15 @@ let reportText = '';
 let imageArray = [];
 let imageId = '';
 let selectedImageLink = '';
-
-function GalleryImage({
-  index: itemIndex,
-  item: {about, imagesLink},
-  showTaggedUser,
-  showAboutPhoto,
-  onTouchImage,
-}) {
-  return useMemo(() => {
-    return (
-      <View key={itemIndex} style={{marginVertical: scale(10)}}>
-        <View
-          style={[
-            grid.rowrow,
-            grid.flex1,
-            g.p10,
-            grid.justifyContentCenter,
-            grid.alignItems,
-          ]}>
-          <View
-            style={[
-              grid.flex1,
-              grid.alignItems,
-              grid.justifyContentLeft,
-              grid.rowrow,
-            ]}>
-            <TouchableOpacity
-              style={[grid.rowrow, grid.alignItems, grid.justifyContentLeft]}
-              onPress={showTaggedUser}>
-              <Text style={[g.fs14, g.FHNB, g.colorBlue]}>
-                People In This Image
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={[grid.flex1, grid.justifyContentRight]}>
-            <TouchableOpacity
-              style={[grid.rowrow, grid.alignItems, grid.justifyContentRight]}
-              onPress={showAboutPhoto}>
-              <GlobalInclude.BaseIcon
-                containerStyle={{height: scale(15), width: scale(15)}}
-                iconColor={GlobalInclude.Color.ColorPrimary}
-                iconName={'dots-three-horizontal'}
-                iconSize={scale(15)}
-                iconType={IconType[9]}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={g.bgBlack06}>
-          <TouchableOpacity onPress={onTouchImage} activeOpacity={0.9}>
-            {imagesLink !== undefined &&
-            imagesLink !== null &&
-            imagesLink !== '' ? (
-              <ResponsiveImage showEdges={true} edges={100} source={{uri: imagesLink}} />
-            ) : (
-              <ProgressImage
-                source={GlobalInclude.Assets.DefaultImage}
-                containerStyle={{
-                  aspectRatio: 16 / 9,
-                }}
-                imageStyle={{
-                  aspectRatio: 16 / 9,
-                }}
-                mode={'contain'}
-              />
-            )}
-          </TouchableOpacity>
-        </View>
-        {/* <View style={[grid.rowrow, grid.flex1, g.ml10, g.mr10, g.mt8]}>
-          <View
-            style={[
-              grid.flex1,
-              grid.alignItems,
-              grid.justifyContentLeft,
-              grid.rowrow,
-            ]}>
-            <TouchableOpacity
-              style={[grid.rowrow, grid.alignItems, grid.justifyContentLeft]}
-              onPress={showAboutPhoto}>
-              <View
-                style={{
-                  height: scale(24),
-                  width: scale(24),
-                  borderRadius: scale(25),
-                  backgroundColor: GlobalInclude.Color.ColorPrimary,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginHorizontal: scale(3),
-                }}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={{height: scale(15), width: scale(15)}}
-                  iconColor={'#FFF'}
-                  iconName={'info'}
-                  iconSize={scale(15)}
-                  iconType={IconType[9]}
-                />
-              </View>
-              <Text style={[g.fs12, g.FHNB, g.colorBlue]}>About Photo</Text>
-            </TouchableOpacity>
-          </View>
-        </View> */}
-      </View>
-    );
-  }, [itemIndex, imagesLink, showTaggedUser, showAboutPhoto, onTouchImage]);
-}
+let tmpArray = [];
+let eventData = {};
 
 const ImageList = ({route, navigation}) => {
   const flatList = useRef();
   const aboutPhotoRef = useRef();
   const showTagUserRef = useRef();
   const optionRef = useRef();
+  const dispatch = useDispatch();
 
   const [title, setTitle] = useState(APP_NAME);
   const [imageData, setImageData] = useState([]);
@@ -203,9 +100,6 @@ const ImageList = ({route, navigation}) => {
       pageTitle = route.params.title;
       filterObject = route.params.filterObject;
       pickedIndex = route.params.index;
-      // pickedIndex = pickedIndex + 1;
-
-      //      alert(pickedIndex);
 
       setTitle(pageTitle);
       getGalleryData();
@@ -219,6 +113,38 @@ const ImageList = ({route, navigation}) => {
       Orientation.removeOrientationListener(_orientationDidChange);
     };
   }, [route]);
+
+  const refreshState = useSelector((state) => {
+    if (state.notification && state.notification !== undefined) {
+      let notification = state.notification;
+      if (notification.update && notification.update !== undefined) {
+        eventData = notification.eventData;
+        return true;
+      }
+    }
+    return false;
+  }, shallowEqual);
+
+  useEffect(() => {
+    if (refreshState) {
+      dispatch(clearUpdateImage());
+      setTimeout(() => {
+        if (eventData && eventData !== {}) {
+          if (eventData.update) {
+            pickedIndex = eventData.selectedIndex;
+            var tagged = eventData.totalTagged;
+            let oldData = imageData;
+            if (oldData.length > pickedIndex) {
+              oldData[pickedIndex].userTag = tagged;
+            }
+            setImageData([...oldData]);
+          }
+          eventData = {};
+        }
+      }, 200);
+    }
+    return () => {};
+  }, [refreshState]);
 
   const clearFields = () => {
     pageTitle = '';
@@ -240,37 +166,23 @@ const ImageList = ({route, navigation}) => {
     doFilterGallery(
       filterObject,
       (response) => {
-        setIsFetching(false);
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let responseData = response.data;
-
-            if (responseData.status) {
-              let results = responseData.data;
-
-              if (filterObject.index === 0) {
-                filterObject.size = 10;
-                totalCount = responseData.totalCount;
-                setImageData([...results]);
-
-                // setTimeout(() => {
-                //   if (flatList !== null && flatList.current !== null) {
-                //     flatList.current.scrollToIndex({
-                //       index: pickedIndex,
-                //       animated: false,
-                //     });
-                //   }
-                // }, 1000);
-              } else {
-                setImageData([...imageData, ...results]);
-              }
-              setPaginationStatus(PaginationStatus.waiting);
-            }
+        if (
+          response &&
+          response !== null &&
+          response.data &&
+          response.data !== undefined &&
+          response.data !== null
+        ) {
+          let responseData = response.data;
+          if (responseData.status) {
+            _processImages(responseData);
+          } else {
+            setPaginationStatus(PaginationStatus.allLoaded);
+            setIsFetching(false);
           }
+        } else {
+          setPaginationStatus(PaginationStatus.allLoaded);
+          setIsFetching(false);
         }
       },
       (error, message) => {
@@ -284,6 +196,64 @@ const ImageList = ({route, navigation}) => {
         console.log('error', message);
       },
     );
+  };
+
+  const getSize = (url, element) => {
+    return new Promise(function (resolve, reject) {
+      Image.getSize(
+        url,
+        (iw, ih) => {
+          let windowWidth = 0,
+            windowHeight = 0;
+          if (ih > iw) {
+            windowWidth = width - 30;
+            windowHeight = height - 30;
+          } else {
+            windowWidth = width;
+            windowHeight = height;
+          }
+          let ratio = Math.min(windowWidth / iw, windowHeight / ih);
+          let iWidth = Math.ceil(iw * ratio);
+          let iHeight = Math.ceil(ih * ratio);
+          element.iw = iWidth;
+          element.ih = iHeight;
+          resolve(element);
+        },
+        () => reject(element),
+      );
+    });
+  };
+
+  const _processImages = async (arrayItems) => {
+    let results = arrayItems.data;
+
+    let arrayList = [];
+    for (let i = 0; i < results.length; i++) {
+      const element = results[i];
+      arrayList.push(getSize(element.imagesLink, element));
+    }
+    Promise.all(arrayList)
+      .then((finalList) => {
+        if (filterObject.index === 0) {
+          filterObject.size = 10;
+          totalCount = arrayItems.totalCount;
+        }
+        tmpArray = tmpArray.concat(finalList);
+        setImageData([...imageData, ...finalList]);
+      })
+      .finally(() => {
+        setIsFetching(false);
+        setPaginationStatus(PaginationStatus.waiting);
+        // setTimeout(() => {
+        //   if (flatList !== null && flatList.current !== null) {
+        //     flatList.current.scrollToIndex({
+        //       index: pickedIndex,
+        //       animated: false,
+        //     });
+        //   }
+        // }, 1000);
+        // //flatList.current.scrollToIndex({animated: true, index: 4});
+      });
   };
 
   const getImageDetail = (itemId) => {
@@ -320,10 +290,6 @@ const ImageList = ({route, navigation}) => {
                   a.batch > b.batch ? 1 : b.batch > a.batch ? -1 : 0,
                 );
 
-                console.log('====================================');
-                console.log('itemObject', itemObject);
-                console.log('====================================');
-
                 setImageDetail(itemObject);
 
                 selectedImageLink = itemObject.imagesLink;
@@ -343,7 +309,9 @@ const ImageList = ({route, navigation}) => {
                   imageArray.push({
                     url: itemObject.imagesLink,
                   });
+                  selectedImageLink = itemObject.imagesLink;
                   setImageViewerArray([...imageArray]);
+
                   setShowImageModal(true);
                 }
               }
@@ -404,11 +372,14 @@ const ImageList = ({route, navigation}) => {
               }
               setShowReportModal(false);
 
-              setShowModal(true);
-
-              setTimeout(() => {
-                setShowModal(false);
-              }, 2000);
+              if (showImageModal) {
+                Alert.alert('', responseMessage);
+              } else {
+                setShowModal(true);
+                setTimeout(() => {
+                  setShowModal(false);
+                }, 2000);
+              }
             }
           }
         },
@@ -443,7 +414,7 @@ const ImageList = ({route, navigation}) => {
   const onPaginate = () => {
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
       console.log('onPaginate()');
-      setPaginationStatus(PaginationStatus.waiting);
+      setPaginationStatus(PaginationStatus.fetching);
       callNextBatch();
     }
   };
@@ -481,10 +452,15 @@ const ImageList = ({route, navigation}) => {
         responseMessage = 'Error while downloading content!';
       }
       setIsDownloading(false);
-      setShowModal(true);
-      setTimeout(() => {
-        setShowModal(false);
-      }, 2000);
+
+      if (showImageModal) {
+        Alert.alert('', responseMessage);
+      } else {
+        setShowModal(true);
+        setTimeout(() => {
+          setShowModal(false);
+        }, 2000);
+      }
     }
   };
 
@@ -562,11 +538,49 @@ const ImageList = ({route, navigation}) => {
               </View>
             </ScrollView>
           ) : (
-            <View style={GlobalInclude.AppStyle.fillCenter}>
-              <Text style={[g.colorBlack, g.FHNM, g.fs12, g.txtCenter]}>
-                Currently No People Tagged in This Photo - Please Click on the
-                Photo to Tag People
-              </Text>
+            <View style={GlobalInclude.AppStyle.fill}>
+              <View style={GlobalInclude.AppStyle.fillCenter}>
+                <Text style={[g.colorBlack, g.FHNM, g.fs12, g.txtCenter]}>
+                  Currently No People Tagged in This Photo
+                </Text>
+                <Text
+                  style={[g.colorBlack, g.FHNM, g.fs12, g.txtCenter, g.mt5]}>
+                  Please click on the Tag People Button below
+                </Text>
+              </View>
+              <View
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: scale(150),
+                  paddingTop: scale(10),
+                  paddingBottom: scale(10),
+                  alignContent: 'center',
+                  alignSelf: 'center',
+                  marginBottom: scale(20),
+                }}>
+                <CommonButton
+                  showLoader={false}
+                  title={'Tag People'}
+                  onPress={() => {
+                    console.log('pickedIndex', pickedIndex);
+                    let payload = {
+                      id: imageDetail._id,
+                      imageKey: imageDetail.imageKey,
+                      about: imageDetail.about,
+                      category: imageDetail.category,
+                      userTag: imageDetail.userTag,
+                      year: imageDetail.year,
+                      index: pickedIndex,
+                      filterObject: filterObject,
+                    };
+                    showTagUserRef.current.close();
+                    setTimeout(() => {
+                      navigation.navigate('TagUser', payload);
+                    }, 230);
+                  }}
+                />
+              </View>
             </View>
           )}
         </View>
@@ -669,11 +683,48 @@ const ImageList = ({route, navigation}) => {
               </Text>
             </View>
           ) : (
-            <View style={GlobalInclude.AppStyle.fillCenter}>
-              <Text style={[g.colorBlack, g.FHNM, g.fs12, g.txtCenter]}>
-                Currently No Information is available for this Photo - Please
-                Click on the Photo to add information about the Photo
-              </Text>
+            <View style={GlobalInclude.AppStyle.fill}>
+              <View style={GlobalInclude.AppStyle.fillCenter}>
+                <Text style={[g.colorBlack, g.FHNM, g.fs12, g.txtCenter]}>
+                  Currently No Information is available for this Photo
+                </Text>
+                <Text
+                  style={[g.colorBlack, g.FHNM, g.fs12, g.txtCenter, g.mt5]}>
+                  Please click on the About Photo Button below
+                </Text>
+              </View>
+              <View
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: scale(150),
+                  paddingTop: scale(10),
+                  paddingBottom: scale(10),
+                  alignContent: 'center',
+                  alignSelf: 'center',
+                  marginBottom: scale(20),
+                }}>
+                <CommonButton
+                  showLoader={false}
+                  title={'About Photo'}
+                  onPress={() => {
+                    let payload = {
+                      id: imageDetail._id,
+                      imageKey: imageDetail.imageKey,
+                      about: imageDetail.about,
+                      category: imageDetail.category,
+                      userTag: imageDetail.userTag,
+                      year: imageDetail.year,
+                      index: pickedIndex,
+                      filterObject: filterObject,
+                    };
+                    aboutPhotoRef.current.close();
+                    setTimeout(() => {
+                      navigation.navigate('AboutPhoto', payload);
+                    }, 230);
+                  }}
+                />
+              </View>
             </View>
           )}
         </View>
@@ -784,41 +835,32 @@ const ImageList = ({route, navigation}) => {
     );
   };
 
-  const renderItem = useCallback(
-    ({item, index}) => (
-      <GalleryImage
-        index={index}
-        item={item}
-        showTaggedUser={() => {
-          requestType = 'tagging';
-          getImageDetail(item._id);
-        }}
-        showAboutPhoto={() => {
-          imageId = item._id;
-          selectedImageLink = item.imagesLink;
-          if (optionRef.current !== null) {
-            optionRef.current.open();
-          }
-        }}
-        onTouchImage={() => {
-          requestType = 'detail';
-          getImageDetail(item._id);
-        }}
-      />
-    ),
-    [],
+  const renderItem = ({item, index}) => (
+    <GalleryImageCard
+      index={index}
+      item={item}
+      showTaggedUser={() => {
+        pickedIndex = index;
+        requestType = 'tagging';
+        getImageDetail(item._id);
+      }}
+      showAboutPhoto={() => {
+        imageId = item._id;
+        selectedImageLink = item.imagesLink;
+        pickedIndex = index;
+        if (optionRef.current !== null) {
+          optionRef.current.open();
+        }
+      }}
+      onTouchImage={() => {
+        requestType = 'detail';
+        pickedIndex = index;
+        getImageDetail(item._id);
+      }}
+    />
   );
 
-  const keyExtractor = useCallback((item, index) => index, []);
-
-  const getItemLayout = useCallback(
-    (data, index) => ({
-      length: ITEM_HEIGHT,
-      offset: ITEM_HEIGHT * index,
-      index,
-    }),
-    [],
-  );
+  const keyExtractor = (item, index) => index;
 
   const closeImageViewer = () => {
     Orientation.lockToPortrait();
@@ -835,7 +877,7 @@ const ImageList = ({route, navigation}) => {
         category: imageDetail.category,
         userTag: imageDetail.userTag,
         year: imageDetail.year,
-        index: 0,
+        index: pickedIndex,
         filterObject: filterObject,
       };
       navigation.navigate(screenName, payload);
@@ -845,6 +887,7 @@ const ImageList = ({route, navigation}) => {
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
       <HeaderBar navigation={navigation} showBack={true} title={title} />
+      {showProgess(paginationStatus === PaginationStatus.fetching)}
       <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
         {isFetching ? (
           <View style={GlobalInclude.AppStyle.fillCenter}>
@@ -855,13 +898,7 @@ const ImageList = ({route, navigation}) => {
           </View>
         ) : (
           <View style={GlobalInclude.AppStyle.fill}>
-            <OrientationLocker
-              orientation={PORTRAIT}
-              onChange={(orientation) => console.log('onChange', orientation)}
-              onDeviceChange={(orientation) =>
-                console.log('onDeviceChange', orientation)
-              }
-            />
+            <OrientationLocker orientation={PORTRAIT} />
             <FlatList
               ref={flatList}
               removeClippedSubviews={Platform.OS !== 'web'}
@@ -875,29 +912,39 @@ const ImageList = ({route, navigation}) => {
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
               ListEmptyComponent={renderNoDataComponent}
-              ListFooterComponent={renderFooter}
-              contentContainerStyle={{
-                paddingBottom: imageData.length > 0 ? scale(130) : 0,
-                flexGrow: 1,
-              }}
-              getItemLayout={getItemLayout}
-              onScrollToIndexFailed={(error) => {
-                console.log('failed', error);
-                if (flatList !== null && flatList.current !== null) {
-                  flatList.current.scrollToOffset({
-                    offset: error.averageItemLength * error.index,
-                    animated: true,
-                  });
-                  setTimeout(() => {
-                    if (flatList !== null && flatList.current !== null) {
-                      flatList.current.scrollToIndex({
-                        index: error.index,
-                        animated: true,
-                      });
-                    }
-                  }, 500);
-                }
-              }}
+              scrollEventThrottle={16}
+              bounces={false}
+              // contentContainerStyle={{
+              //   paddingBottom: imageData.length > 0 ? scale(130) : 0,
+              //   flexGrow: 1,
+              // }}
+              initialNumToRender={10}
+              maxToRenderPerBatch={8}
+              updateCellsBatchingPeriod={100}
+              // getItemLayout={(data, index) => {
+              //   return {
+              //     length: data[index].ih,
+              //     offset: data[index].ih * index,
+              //     index,
+              //   };
+              // }}
+              // onScrollToIndexFailed={(error) => {
+              //   console.log('failed', error);
+              //   if (flatList !== null && flatList.current !== null) {
+              //     flatList.current.scrollToOffset({
+              //       offset: error.averageItemLength * error.index,
+              //       animated: true,
+              //     });
+              //     setTimeout(() => {
+              //       if (flatList !== null && flatList.current !== null) {
+              //         flatList.current.scrollToIndex({
+              //           index: error.index,
+              //           animated: true,
+              //         });
+              //       }
+              //     }, 500);
+              //   }
+              // }}
             />
           </View>
         )}
@@ -905,23 +952,6 @@ const ImageList = ({route, navigation}) => {
       {showTagedUser()}
       {showAboutPhoto()}
       {showOptionsList()}
-
-      {showModal && (
-        <Modal
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => {
-            setShowModal(!showModal);
-          }}
-          hardwareAccelerated={true}
-          visible={showModal}>
-          <View style={style.centeredView}>
-            <View style={style.responseMessage}>
-              <Text style={style.headerText}>{responseMessage}</Text>
-            </View>
-          </View>
-        </Modal>
-      )}
 
       <Modal
         transparent={true}
@@ -1127,6 +1157,23 @@ const ImageList = ({route, navigation}) => {
               </TouchableOpacity>
             </View>
           )}
+        </View>
+      </Modal>
+
+      {console.log('showModal', showModal)}
+
+      <Modal
+        animationType={'fade'}
+        transparent={true}
+        onRequestClose={() => {
+          setShowModal(!showModal);
+        }}
+        hardwareAccelerated={true}
+        visible={showModal}>
+        <View style={style.centeredView}>
+          <View style={style.responseMessage}>
+            <Text style={style.headerText}>{responseMessage}</Text>
+          </View>
         </View>
       </Modal>
     </View>

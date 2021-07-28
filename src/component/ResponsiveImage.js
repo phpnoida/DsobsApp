@@ -73,6 +73,14 @@ export default class ResponsiveImage extends Component {
       imgHeight: iHeight,
       imgWidth: iWidth,
     });
+
+    let object = {
+      height: iHeight,
+      width: iWidth,
+      image: this.props.source.uri,
+    };
+
+    console.log('object', object);
   }
 
   render() {

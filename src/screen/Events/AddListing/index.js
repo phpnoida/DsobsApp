@@ -370,35 +370,8 @@ const ListSocialVenture = ({route, navigation}) => {
     } else if (step === 4) {
       if (global.isConnected) {
         setLoader(true);
-
-        // let mapLink = '';
-        // if (
-        //   googleMapLink !== null &&
-        //   googleMapLink !== undefined &&
-        //   googleMapLink !== ''
-        // ) {
-        //   fetch(googleMapLink, {
-        //     followRedirects: false,
-        //   })
-        //     .then((response) => {
-        //       if (response && response !== undefined && response !== null) {
-        //         if (
-        //           response.url &&
-        //           response.url !== undefined &&
-        //           response.url !== null
-        //         ) {
-        //           mapLink = response.url;
-        //         }
-        //       }
-        //     })
-        //     .then(() => {
-        //       listMyWork(mapLink);
-        //     });
-        // }
-
         listMyWork('');
       }
-
       return;
     }
     setStep(step + 1);
@@ -550,6 +523,7 @@ const ListSocialVenture = ({route, navigation}) => {
       case 2:
         return (
           <VentureDetails
+            navigation={navigation}
             errorMessage={errorMessage}
             handleInput={handleInput}
             onPreviousTab={goPreviousTab}
@@ -599,6 +573,7 @@ const ListSocialVenture = ({route, navigation}) => {
       case 3:
         return (
           <VolunteerTeam
+            navigation={navigation}
             onSaveTab={() => validateAndMoveNextTab()}
             onPreviousTab={() => goPreviousTab()}
             volunteers={volunteers}
@@ -633,6 +608,7 @@ const ListSocialVenture = ({route, navigation}) => {
       case 4:
         return (
           <VentureMedia
+            navigation={navigation}
             loader={loader}
             onSaveTab={() => validateAndMoveNextTab()}
             onPreviousTab={() => goPreviousTab()}
@@ -640,7 +616,7 @@ const ListSocialVenture = ({route, navigation}) => {
             removeMedia={(index) => removeIndex(index)}
             onMediaPick={(media) => {
               let oldData = mediaData;
-              oldData.splice(0, 0, media);
+              Array.prototype.push.apply(oldData, media);
               setMediaData([...oldData]);
             }}
           />

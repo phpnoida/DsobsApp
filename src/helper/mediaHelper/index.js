@@ -1,100 +1,7 @@
 import {Platform, Alert, PermissionsAndroid} from 'react-native';
-import ImagePicker from 'react-native-image-crop-picker';
 import RNFetchBlob from 'rn-fetch-blob';
-import {uploadMedia} from '../../Actions/CommonActions';
 const {config} = RNFetchBlob;
-
-var re = /(?:\.([^.]+))?$/;
-
-export const pickImage = async () => {
-  let result = await ImagePicker.openPicker({
-    includeBase64: false,
-    cropping: false,
-    includeExif: false,
-    mediaType: 'photo',
-    multiple: false,
-  }).catch((err) => {
-    if (err.toString() === 'Error: User cancelled image selection') {
-      ImagePicker.clean();
-      Alert.alert('Cancel Selection', 'User Cancelled Selection!');
-    }
-  });
-  return result;
-};
-
-export const uploadImage = (pickFile, childPath, mediaType) => {
-  let object = null;
-  try {
-    let body = [];
-    if (pickFile !== null) {
-      var path = '';
-
-      if (Platform.OS === 'android') {
-        path = pickFile.path;
-      } else if (Platform.OS === 'ios') {
-        path = pickFile.sourceURL;
-      }
-
-      var ext = re.exec(path)[1];
-      var timestamp = new Date().getTime().toString();
-      let imageName = timestamp + '.' + ext;
-
-      let imagePath =
-        Platform.OS === 'ios' ? path.replace('file://', '') : path;
-
-      let imageType = pickFile.mime;
-
-      var imageData = {
-        name: 'image',
-        filename: imageName,
-        type: imageType,
-        data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
-      };
-      body.push(imageData);
-
-      object = {};
-      object.body = body;
-      object.childPath = childPath;
-      object.mediaType = mediaType;
-    } else {
-      Alert.alert(
-        'Erorr While pick media',
-        'Unable to pick file choose another',
-      );
-    }
-  } catch (error) {
-    Alert.alert('Erorr While pick media', 'Unable to pick file choose another');
-  }
-  return object;
-};
-
-export const uploadMediaContent = (body, childPath, mediaType, onPickMedia) => {
-  uploadMedia(
-    childPath,
-    body,
-    (response) => {
-      if (response && response !== undefined && response !== null) {
-        if (response.status && response.data && response.data !== null) {
-          let childData = response.data.data;
-          let object = {
-            thumbnail: childData,
-            fileName: childData,
-            type: mediaType,
-          };
-          onPickMedia(object);
-        } else {
-          onPickMedia(null);
-        }
-      } else {
-        onPickMedia(null);
-      }
-    },
-    (error, message) => {
-      onPickMedia(null);
-      Alert.alert('Uploading Failed', message);
-    },
-  );
-};
+import CameraRoll from '@react-native-community/cameraroll';
 
 export const hasPermission = async () => {
   if (Platform.OS !== 'android') {
@@ -145,38 +52,56 @@ export const _downloadContent = async (file) => {
 };
 
 export const downloadData = async (file) => {
-  let newImgUri = file.lastIndexOf('/');
-  let imageName = file.substring(newImgUri);
+  if (Platform.OS === 'ios') {
+    let status = await CameraRoll.save(file);
 
-  let extension = imageName.split('.')[1];
-
-  let dirs = RNFetchBlob.fs.dirs;
-  let path =
-    Platform.OS === 'ios'
-      ? dirs['MainBundleDir'] + imageName
-      : dirs.PictureDir + imageName;
-
-  let downloadOptions = {
-    fileCache: true,
-    appendExt: extension,
-    indicator: true,
-    IOSBackgroundTask: true,
-    path: path,
-    addAndroidDownloads: {
-      useDownloadManager: true,
-      notification: true,
-      path: path,
-      description: 'Image',
-    },
-  };
-
-  let status = await config(downloadOptions)
-    .fetch('GET', file.replace(/ /g, '%20'))
-    .then((res) => {
+    if (status !== '') {
       return true;
-    })
-    .catch(() => {
+    } else {
       return false;
-    });
-  return status;
+    }
+  } else {
+    let newImgUri = file.lastIndexOf('/');
+    let imageName = file.substring(newImgUri);
+
+    let extension = imageName.split('.')[1];
+
+    let dirs = RNFetchBlob.fs.dirs;
+    let path =
+      Platform.OS === 'ios'
+        ? dirs['MainBundleDir'] + imageName
+        : dirs.PictureDir + imageName;
+
+    let downloadOptions = {
+      fileCache: true,
+      appendExt: extension,
+      indicator: true,
+      IOSBackgroundTask: true,
+      path: path,
+      addAndroidDownloads: {
+        useDownloadManager: true,
+        notification: true,
+        path: path,
+        description: 'Image',
+      },
+    };
+
+    let status = await config(downloadOptions)
+      .fetch('GET', file.replace(/ /g, '%20'))
+      .then((res) => {
+        console.log('====================================');
+        console.log('res', res);
+        console.log('====================================');
+        return true;
+      })
+      .catch((error) => {
+        console.log('error', error);
+        return false;
+      });
+    return status;
+  }
+};
+
+export const getExtention = (filename) => {
+  return /[.]/.exec(filename) ? /[^.]+$/.exec(filename) : undefined;
 };

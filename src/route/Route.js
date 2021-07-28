@@ -50,16 +50,16 @@ import MyPreviousPost from '../screen/Ticker/MyPreviousPost';
 import Comments from '../screen/Ticker/Comments';
 import ImageDemo from '../ImageDemo';
 import ChatUserList from '../screen/chat/';
+import JobListing from '../screen/jobs/';
+import AddJobPost from '../screen/jobs/PostJob';
+import JobDetails from '../screen/jobs/JobDetails/';
+import VideoPlayer from '../component/VideoPlayer';
+import YoutubePlayer from '../component/YoutubePlayer';
 const Stack = createStackNavigator();
 
 export const RootNavigators = (baseRoute) => {
   return (
     <Stack.Navigator initialRouteName={baseRoute}>
-      <Stack.Screen
-        name="ImageDemo"
-        component={ImageDemo}
-        options={{headerShown: false}}
-      />
       <Stack.Screen
         name="AppTour"
         component={AppTour}
@@ -303,6 +303,32 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="ChatUserList"
         component={ChatUserList}
+        options={{headerShown: false}}
+      />
+
+      <Stack.Screen
+        name="JobListing"
+        component={JobListing}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="AddJobPost"
+        component={AddJobPost}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="JobDetails"
+        component={JobDetails}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="VideoPlayer"
+        component={VideoPlayer}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="YoutubePlayer"
+        component={YoutubePlayer}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

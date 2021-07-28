@@ -1,11 +1,10 @@
-import React, {useState} from 'react';
+import React, {useState, useRef} from 'react';
 import {
   Text,
   View,
   TouchableOpacity,
   TextInput,
   StyleSheet,
-  ActivityIndicator,
   Keyboard,
 } from 'react-native';
 import g from '../../../theme/global';
@@ -17,16 +16,12 @@ import NextPreviousButton from '../../../component/NextPreviousButton';
 import ModelAlert from '../../../component/ModalAlert';
 import {generateHeader} from './HeaderTitle';
 import {IconType, TEXTAREA_COUNT} from '../../../helper/Constants';
-import {
-  pickImage,
-  uploadImage,
-  uploadMediaContent,
-} from '../../../helper/mediaHelper';
-import ProgressImage from '../../../component/ProgresImage';
+import UploadMedia from '../../../component/UploadMedia';
 
 let selectedIndex = -1;
 
 const VentureDetails = ({
+  navigation,
   handleInput,
   onSaveTab,
   onPreviousTab,
@@ -42,32 +37,7 @@ const VentureDetails = ({
   errorMessage,
 }) => {
   const [showRemoveAlert, setShowRemoveAlert] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const pickMedia = async () => {
-    let result = await pickImage();
-
-    if (result !== undefined && result !== null) {
-      setIsLoading(true);
-      let itemObject = uploadImage(result, 'utils/imageupload', 1);
-
-      if (itemObject !== undefined && itemObject !== null) {
-        uploadMediaContent(
-          itemObject.body,
-          itemObject.childPath,
-          itemObject.mediaType,
-          (uploadResult) => {
-            setIsLoading(false);
-            if (uploadResult !== null && uploadResult !== undefined) {
-              uploadMedia(uploadResult);
-            }
-          },
-        );
-      } else {
-        setIsLoading(false);
-      }
-    }
-  };
-
+  const uploadRef = useRef();
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.pl15, g.pr15, g.pt30]}>
       <KeyboardAwareScrollView
@@ -78,46 +48,6 @@ const VentureDetails = ({
           <View style={g.mb15}>
             {generateHeader('Social Venture Video', false)}
             <View style={[grid.rowdir]}>
-              {/* {socialPhoto !== null && (
-                <View
-                  style={[grid.alignItems, grid.justifyContentCenter, g.mr5]}>
-                  <View>
-                    <ProgressImage
-                      source={{uri: socialPhoto.thumbnail}}
-                      containerStyle={{
-                        height: scale(50),
-                        width: scale(50),
-                        borderRadius: scale(5),
-                      }}
-                      imageStyle={{
-                        height: scale(50),
-                        width: scale(50),
-                        borderRadius: scale(5),
-                      }}
-                      mode={'contain'}
-                    />
-                    <TouchableOpacity
-                      hitSlop={{
-                        top: 15,
-                        bottom: 15,
-                        left: 15,
-                        right: 15,
-                      }}
-                      onPress={() => {
-                        uploadMedia(null);
-                      }}
-                      style={styles.buttonCircle}>
-                      <GlobalInclude.BaseIcon
-                        containerStyle={{height: scale(15), width: scale(15)}}
-                        iconColor={'#FFF'}
-                        iconName={'close'}
-                        iconSize={scale(15)}
-                        iconType={IconType[8]}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )} */}
               <View style={[grid.flex1]}>
                 <TextInput
                   underlineColorAndroid={'transparent'}
@@ -138,7 +68,14 @@ const VentureDetails = ({
                       style={[grid.col, g.mr10]}
                       activeOpacity={1}
                       onPress={() => {
-                        pickMedia();
+                        if (
+                          uploadRef &&
+                          uploadRef !== null &&
+                          uploadRef.current !== undefined &&
+                          uploadRef.current !== null
+                        ) {
+                          uploadRef.current.open();
+                        }
                       }}>
                       <View
                         style={[
@@ -171,24 +108,16 @@ const VentureDetails = ({
                       activeOpacity={1}
                       style={styles.addTag}
                       onPress={() => {
-                        pickMedia();
+                        if (
+                          uploadRef &&
+                          uploadRef !== null &&
+                          uploadRef.current !== undefined &&
+                          uploadRef.current !== null
+                        ) {
+                          uploadRef.current.open();
+                        }
                       }}>
-                      {isLoading ? (
-                        <View
-                          style={[
-                            grid.alignItems,
-                            grid.justifyContentCenter,
-                            grid.flex1,
-                          ]}>
-                          <ActivityIndicator
-                            size={'small'}
-                            color={'#fff'}
-                            style={[grid.alignItems, grid.justifyContentCenter]}
-                          />
-                        </View>
-                      ) : (
-                        <Text style={styles.addImageStyle}>Add</Text>
-                      )}
+                      <Text style={styles.addImageStyle}>Add</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -320,6 +249,20 @@ const VentureDetails = ({
           }}
         />
       )}
+
+      <UploadMedia
+        navigation={navigation}
+        refRBSheet={uploadRef}
+        media={{image: false, video: true, document: true, audio: true}}
+        supportMultiple={false}
+        onPickMedia={(media) => {
+          uploadRef.current.close();
+          if (media !== undefined && media !== null) {
+            console.log('media', media);
+            uploadMedia(media[0]);
+          }
+        }}
+      />
     </View>
   );
 };

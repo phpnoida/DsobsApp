@@ -146,6 +146,7 @@ const Educational = (props) => {
           });
         }}
         onEditPress={() => {
+          console.log('item', item);
           setIsEdit(true);
           setErrorMessage({});
           lastSelectedIndex = index;
@@ -153,6 +154,7 @@ const Educational = (props) => {
           setTrainingNature(item.trainingNature);
           setTotalDays(item.trainingPeriod);
           setSelectedOption(DURATION_UNIT[item.trainingUnit]);
+          selectedUnit = item.trainingUnit;
           setValueFrom(item.trainingYear);
         }}
       />
@@ -179,6 +181,7 @@ const Educational = (props) => {
         link: '',
       };
       let oldData = educational;
+
       if (updateMode) {
         oldData[lastSelectedIndex] = insertedItem;
         setEducational([...oldData]);

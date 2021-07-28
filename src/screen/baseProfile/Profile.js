@@ -856,12 +856,12 @@ const Profile = ({navigation}) => {
       case 7: {
         return (
           <TabSeven
+            navigation={navigation}
             profileImg={profileImg}
             errorMessage={errorMessage}
             onSelectImage={(res) => {
               profileUri = res;
-              //setProfileImg(res.uri);
-              uploadProfile();
+              setProfileImg(res.thumbnail);
             }}
           />
         );

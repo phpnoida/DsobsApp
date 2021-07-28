@@ -1,5 +1,13 @@
 import React from 'react';
-import {View, Image, Text, TouchableOpacity, Dimensions} from 'react-native';
+import {
+  View,
+  Image,
+  Text,
+  TouchableOpacity,
+  Dimensions,
+  ScrollView,
+  Platform,
+} from 'react-native';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import g from '../theme/global';
 import {scale} from '../theme/Scalling';
@@ -9,6 +17,8 @@ import ProgressImage from './ProgresImage';
 import Radio from './Radio';
 import Helper from '../helper/Helper';
 import {IconType} from '../helper/Constants';
+import * as Progress from 'react-native-progress';
+
 const {height, width} = Dimensions.get('window');
 
 export const drawCheckbox = (title, checked, onClick) => {
@@ -256,6 +266,99 @@ export const generateHeader = (title, required) => {
     <View style={[grid.rowdir, grid.alignItemsTop]}>
       <Text style={g.labeltext1}>{title}</Text>
       {required && <Text style={g.colorRed}>*</Text>}
+    </View>
+  );
+};
+
+export const renderCity = (cityList, onPress) => {
+  var data = cityList.map((row, index) => {
+    return (
+      <TouchableOpacity
+        key={index}
+        activeOpacity={1}
+        style={{
+          width: scale(73),
+          marginEnd: scale(10),
+          marginTop: scale(6),
+          marginBottom: scale(6),
+        }}
+        onPress={() => {
+          onPress(row, index);
+        }}>
+        <View
+          style={{
+            backgroundColor: '#323232',
+            borderRadius: scale(10),
+            height: scale(93),
+          }}
+        />
+        <View style={{marginStart: scale(5)}}>
+          <Text
+            style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              alignSelf: 'flex-start',
+              alignContent: 'center',
+              textAlign: 'left',
+              fontSize: scale(11),
+              color: '#333333',
+              fontFamily: 'Lato-Regular',
+              marginTop: scale(5),
+              textTransform: 'capitalize',
+            }}>
+            {row.name}
+          </Text>
+        </View>
+        <View style={{marginStart: scale(5)}}>
+          <Text
+            style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              alignSelf: 'flex-start',
+              alignContent: 'center',
+              textAlign: 'left',
+              fontSize: scale(11),
+              color: '#333333',
+              fontFamily: 'Lato-Regular',
+              marginTop: scale(5),
+              textTransform: 'capitalize',
+            }}>
+            {row.country_name}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  });
+  return (
+    <View style={[g.AutoCompleteList1, g.p10]}>
+      <Text style={[g.colordarkGray, g.fs12, g.FHNM, g.pb5]}>
+        Search Suggestion:
+      </Text>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        horizontal={true}
+        showsHorizontalScrollIndicator={false}>
+        {data}
+      </ScrollView>
+    </View>
+  );
+};
+
+export const showProgess = (canShow) => {
+  return (
+    <View style={{marginTop: Platform.OS === 'ios' ? 0 : 8, height: scale(4)}}>
+      {canShow && (
+        <Progress.Bar
+          height={scale(3)}
+          width={width}
+          indeterminate={true}
+          borderRadius={0}
+          borderWidth={0}
+          useNativeDriver={true}
+          unfilledColor={'#fff'}
+          color={GlobalInclude.Color.ColorPrimaryTooLight}
+        />
+      )}
     </View>
   );
 };

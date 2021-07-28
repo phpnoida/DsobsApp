@@ -60,7 +60,7 @@ const GalleryListing = ({navigation}) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [checkedType, setCheckedType] = useState(1);
   const [searchedUser, setSearchedUser] = useState([]);
-  const [animatedHeight, setAnimatedHeight] = useState(222);
+  const [animatedHeight, setAnimatedHeight] = useState(0);
 
   useEffect(() => {
     userData = null;
@@ -287,7 +287,7 @@ const GalleryListing = ({navigation}) => {
               galleryId: item._id,
               index: 0,
             },
-            index: subIndex,
+            index: subIndex + 1,
             title: item.title,
           };
           //navigation.navigate('GalleryDetail', payload);
@@ -429,7 +429,7 @@ const GalleryListing = ({navigation}) => {
   const headerDistance = Animated.diffClamp(
     curY,
     0,
-    searchedUser.length > 0 ? 512 : 222,
+    searchedUser.length > 0 ? 512 : animatedHeight,
   ).interpolate({
     inputRange: [0, 1],
     outputRange: [0, -1],
@@ -467,49 +467,48 @@ const GalleryListing = ({navigation}) => {
               />
             </View>
           ) : (
-            <View style={GlobalInclude.AppStyle.fill}>
-              <Animated.FlatList
-                showsVerticalScrollIndicator={false}
-                data={pageContent}
-                renderItem={generateGalleryView}
-                keyExtractor={(item, index) => index.toString()}
-                onEndReachedThreshold={0.1}
-                onEndReached={onEndReached}
-                refreshing={isRefreshing}
-                onRefresh={handleRefresh}
-                ListFooterComponent={renderFooter}
-                ListEmptyComponent={renderNoDataComponent}
-                contentContainerStyle={{
-                  marginTop: animatedHeight,
-                  paddingBottom:
-                    searchedUser.length > 0 ? scale(400) : scale(230),
-                }}
-                scrollEventThrottle={16}
-                onScroll={Animated.event(
-                  [{nativeEvent: {contentOffset: {y: curY}}}],
-                  {useNativeDriver: true},
-                )}
-                contentInset={{top: 0, bottom: 20, left: 0, right: 0}}
-                contentInsetAdjustmentBehavior="automatic"
-              />
-              <Animated.View
-                style={[
-                  g.newHeaderConcept,
-                  {
-                    transform: [
-                      {
-                        translateY: headerDistance,
-                      },
-                    ],
-                  },
-                ]}
-                onLayout={({nativeEvent}) => {
-                  setAnimatedHeight(nativeEvent.layout.height);
-                }}>
-                {renderHeaderComponents()}
-              </Animated.View>
-            </View>
+            <Animated.FlatList
+              showsVerticalScrollIndicator={false}
+              data={pageContent}
+              renderItem={generateGalleryView}
+              keyExtractor={(item, index) => index.toString()}
+              onEndReachedThreshold={0.1}
+              onEndReached={onEndReached}
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              ListFooterComponent={renderFooter}
+              ListEmptyComponent={renderNoDataComponent}
+              contentContainerStyle={{
+                marginTop: animatedHeight,
+                paddingBottom:
+                  searchedUser.length > 0 ? scale(400) : scale(230),
+              }}
+              scrollEventThrottle={16}
+              onScroll={Animated.event(
+                [{nativeEvent: {contentOffset: {y: curY}}}],
+                {useNativeDriver: true},
+              )}
+              contentInset={{top: 0, bottom: 20, left: 0, right: 0}}
+              contentInsetAdjustmentBehavior="automatic"
+            />
           )}
+
+          <Animated.View
+            style={[
+              g.newHeaderConcept,
+              {
+                transform: [
+                  {
+                    translateY: headerDistance,
+                  },
+                ],
+              },
+            ]}
+            onLayout={({nativeEvent}) => {
+              setAnimatedHeight(nativeEvent.layout.height);
+            }}>
+            {renderHeaderComponents()}
+          </Animated.View>
         </View>
 
         {/* filter sheet */}

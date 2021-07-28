@@ -139,8 +139,8 @@ android {
         applicationId "com.dsobs"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 40
-        versionName "3.7.6"
+        versionCode 41
+        versionName "3.7.7"
         multiDexEnabled true
         externalNativeBuild {
             cmake {
@@ -170,8 +170,8 @@ android {
         debug {
             signingConfig signingConfigs.debug
            ndk {
-               //, "x86","armeabi-v7a"
-               abiFilters "x86_64"
+               //, "x86","armeabi-v7a","x86_64"
+               abiFilters "x86"
            }
         }
         release {

@@ -594,6 +594,7 @@ const ListMyBusiness = ({route, navigation}) => {
       case 1:
         return (
           <TabOne
+            navigation={navigation}
             inEditMode={inEditMode}
             businessName={businessName}
             professionList={professionList}
@@ -608,7 +609,9 @@ const ListMyBusiness = ({route, navigation}) => {
             }}
             coverImages={coverImages}
             setCoverImages={(image) => {
-              uploadImage(image, 'utils/imageupload', 4);
+              let oldData = coverImages;
+              Array.prototype.push.apply(oldData, image);
+              setCoverImages([...oldData]);
             }}
             onDeleteImage={(index) => {
               let oldData = coverImages;
@@ -723,7 +726,7 @@ const ListMyBusiness = ({route, navigation}) => {
             removeMedia={(index) => removeIndex(index)}
             onMediaPick={(media) => {
               let oldData = mediaData;
-              oldData.splice(0, 0, media);
+              Array.prototype.push.apply(oldData, media);
               setMediaData([...oldData]);
             }}
           />

@@ -112,6 +112,7 @@ const Dashboard = ({props, navigation}) => {
       validatePushNotification();
 
       console.log('global.userDetails.fcmTopic', global.userDetails.fcmTopic);
+      //console.log('global.userDetails.fcmTopic', global.accessToken);
     });
 
     if (refreshState) {
@@ -897,7 +898,10 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    Alert.alert('Coming soon...');
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('JobListing');
+                    }, 200);
                   }}>
                   <Image
                     source={GlobalInclude.Assets.Jobs}

@@ -47,10 +47,16 @@ const MyFamily = (props) => {
   const [showImageModal, setShowImageModal] = useState(false);
   const {profileData} = props;
 
-  const generateWorkExperience = ({item, index}) => {
-    console.log('item', item);
+  const generateWorkExperience = (item, index) => {
     return (
-      <View>
+      <View
+        key={index}
+        style={{
+          paddingTop: scale(8),
+          paddingStart: scale(5),
+          paddingEnd: scale(5),
+          paddingBottom: scale(5),
+        }}>
         <WorkExperience
           indexName={index}
           header={item.childName}
@@ -68,6 +74,7 @@ const MyFamily = (props) => {
           }
           image={item.childPhoto}
           onImagePress={() => {
+            imageArray=[];
             imageArray = [{url: item.childPhoto}];
             setShowImageModal(!showImageModal);
           }}
@@ -90,7 +97,11 @@ const MyFamily = (props) => {
           {profileData.spouseName !== null && profileData.spouseName !== '' ? (
             <TouchableOpacity
               activeOpacity={1}
-              onPress={() => {}}
+              onPress={() => {
+                imageArray = [];
+                imageArray = [{url: profileData.spousePhoto}];
+                setShowImageModal(!showImageModal);
+              }}
               style={GlobalInclude.AppStyle.userProfileBox}>
               <View style={[grid.rowdir, grid.alignItems]}>
                 <View style={[grid.col, g.pr10]}>
@@ -102,10 +113,13 @@ const MyFamily = (props) => {
                 {profileData.spousePhoto && profileData.spousePhoto !== '' ? (
                   <View
                     style={[
-                      g.br3,
                       g.oh,
                       g.bggray3,
-                      {backgroundColor: '#b2b2b2', width: 50},
+                      {
+                        backgroundColor: '#b2b2b2',
+                        width: 50,
+                        borderRadius: 100,
+                      },
                     ]}>
                     <Image
                       style={[{aspectRatio: 1 / 1}]}
@@ -147,17 +161,13 @@ const MyFamily = (props) => {
                 ]}>
                 Children
               </Text>
-              <FlatList
-                data={profileData.children}
-                renderItem={generateWorkExperience}
-                keyExtractor={(item, index) => index.toString()}
-                contentContainerStyle={{
-                  paddingTop: scale(8),
-                  paddingStart: scale(5),
-                  paddingEnd: scale(5),
-                  paddingBottom: scale(5),
-                }}
-              />
+
+              {profileData.children &&
+                profileData.children !== undefined &&
+                profileData.children !== null &&
+                profileData.children.map((item, index) => {
+                  return generateWorkExperience(item, index);
+                })}
             </View>
           )}
         </View>

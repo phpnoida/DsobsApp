@@ -1,11 +1,10 @@
-import React, {useState} from 'react';
+import React, {useRef} from 'react';
 import {
   Text,
   View,
   TouchableOpacity,
   TextInput,
   StyleSheet,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
 import g from '../../../theme/global';
@@ -15,18 +14,16 @@ import GlobalInclude from '../../../globalInclude/Globalinclude';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import NextPreviousButton from '../../../component/NextPreviousButton';
 import ProgressImage from '../../../component/ProgresImage';
-import ModelAlert from '../../../component/ModalAlert';
+import UploadMedia from '../../../component/UploadMedia';
 import {generateHeader} from './HeaderTitle';
-import {IconType, TEXTAREA_COUNT} from '../../../helper/Constants';
-import {
-  pickImage,
-  uploadImage,
-  uploadMediaContent,
-} from '../../../helper/mediaHelper';
+import {IconType} from '../../../helper/Constants';
 import {drawCheckbox} from '../../../component/Common';
 import AutoSuggestUser from '../../../component/AutoSuggestUser';
 
+let lastIndex = 0;
+
 const VolunteerTeam = ({
+  navigation,
   onSaveTab,
   onPreviousTab,
   addNewVolunteer,
@@ -37,31 +34,7 @@ const VolunteerTeam = ({
   onUserSelect,
   requestedIndex,
 }) => {
-  const pickMedia = async (index) => {
-    let result = await pickImage();
-
-    if (result !== undefined && result !== null) {
-      updateIndex('isLoading', true, index);
-
-      let itemObject = uploadImage(result, 'utils/imageupload', 1);
-
-      if (itemObject !== undefined && itemObject !== null) {
-        uploadMediaContent(
-          itemObject.body,
-          itemObject.childPath,
-          itemObject.mediaType,
-          (uploadResult) => {
-            updateIndex('isLoading', false, index);
-            if (uploadResult !== null && uploadResult !== undefined) {
-              updateIndex('imageData', uploadResult.thumbnail, index);
-            }
-          },
-        );
-      } else {
-        updateIndex('isLoading', false, index);
-      }
-    }
-  };
+  const uploadRef = useRef();
 
   const renderVolunteers = () => {
     return volunteers.map((item, index) => {
@@ -170,7 +143,15 @@ const VolunteerTeam = ({
                   <TouchableOpacity
                     activeOpacity={1}
                     onPress={() => {
-                      pickMedia(index);
+                      lastIndex = index;
+                      if (
+                        uploadRef &&
+                        uploadRef !== null &&
+                        uploadRef.current !== undefined &&
+                        uploadRef.current !== null
+                      ) {
+                        uploadRef.current.open();
+                      }
                     }}>
                     {item.isLoading ? (
                       <View
@@ -240,6 +221,20 @@ const VolunteerTeam = ({
         }}
         onSaveTab={() => {
           onSaveTab();
+        }}
+      />
+
+      <UploadMedia
+        navigation={navigation}
+        refRBSheet={uploadRef}
+        media={{image: false, video: true, document: true, audio: true}}
+        supportMultiple={false}
+        onPickMedia={(media) => {
+          uploadRef.current.close();
+          if (media !== undefined && media !== null) {
+            console.log('media', media);
+            updateIndex('imageData', media[0].thumbnail, lastIndex);
+          }
         }}
       />
     </View>

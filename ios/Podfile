@@ -14,7 +14,9 @@ target 'alumbus' do
 
   pod 'RNShare', :path => '../node_modules/react-native-share'
 
-  pod 'RNSound', :path => '../node_modules/react-native-sound'
+  pod "XCDYouTubeKit", "~> 2.15"
+
+  pod 'react-native-cameraroll', :path => '../node_modules/@react-native-community/cameraroll'
 
   target 'alumbusTests' do
     inherit! :complete

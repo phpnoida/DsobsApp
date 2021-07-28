@@ -1,4 +1,5 @@
 import AppLogo from '../../Assets/Icon/alumbus_logo.png';
+import MainLogo from '../../Assets/Icon/main_logo.png';
 import Close from '../../Assets/Icon/close.png';
 import NeedHelp from '../../Assets/Icon/need_help.png';
 import SlideOne from '../../Assets/Icon/slide_one.jpg';
@@ -64,6 +65,7 @@ import TickerComment from '../../Assets/Icon/ticker_comment.png';
 import TickerLike from '../../Assets/Icon/ticker_like.png';
 export default {
   AppLogo: AppLogo,
+  MainLogo: MainLogo,
   Alumbus: Alumbus,
   Close: Close,
   NeedHelp: NeedHelp,

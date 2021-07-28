@@ -13,9 +13,11 @@ import {
   Dimensions,
   Modal,
   BackHandler,
+  KeyboardAvoidingView,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {scale} from '../../theme/Scalling';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import ProgressImage from '../../component/ProgresImage';
@@ -791,6 +793,108 @@ const Comments = ({route, navigation}) => {
     );
   };
 
+  const showUserPostOptions = () => {
+    return (
+      <View>
+        <TouchableOpacity
+          onPress={() => {
+            selectedOption = 'Edit';
+            if (
+              refPostComments.current !== undefined &&
+              refPostComments.current !== null
+            ) {
+              refPostComments.current.close();
+            }
+            setIsReplayEditComment(true);
+            setCommentText(selectedPost.commentText);
+          }}
+          style={[
+            grid.justifyContentCenter,
+            grid.alignItems,
+            g.p15,
+            {
+              borderBottomWidth: 2,
+              borderBottomColor: '#ebebe4',
+            },
+          ]}>
+          <Text
+            style={[
+              g.fs18,
+              g.FHNM,
+              g.colorBlue,
+              grid.justifyContentCenter,
+              grid.alignItems,
+              g.txtCenterVertical,
+            ]}>
+            Edit
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            selectedOption = 'Remove';
+            if (
+              refPostComments.current !== undefined &&
+              refPostComments.current !== null
+            ) {
+              refPostComments.current.close();
+            }
+            removeIndex();
+          }}
+          style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
+          <Text
+            style={[
+              g.fs18,
+              g.FHNM,
+              g.colorBlue,
+              grid.justifyContentCenter,
+              grid.alignItems,
+              g.txtCenterVertical,
+            ]}>
+            Remove Comment
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const showOtherPostOptions = () => {
+    return (
+      <View>
+        
+        <TouchableOpacity
+          onPress={() => {
+            if (
+              refPostComments.current !== undefined &&
+              refPostComments.current !== null
+            ) {
+              refPostComments.current.close();
+            }
+            setTimeout(() => {
+              setShowReportModal(true);
+            }, 250);
+          }}
+          style={[
+            grid.justifyContentCenter,
+            grid.alignItems,
+            g.p15,
+            
+          ]}>
+          <Text
+            style={[
+              g.fs18,
+              g.FHNM,
+              g.colorBlue,
+              grid.justifyContentCenter,
+              grid.alignItems,
+              g.txtCenterVertical,
+            ]}>
+            Report Comment
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   const postComments = () => {
     return (
       <OptionsSheet
@@ -827,7 +931,12 @@ const Comments = ({route, navigation}) => {
                 }
                 setIsReplayEditComment(true);
               }}
-              style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
+              style={[
+                grid.justifyContentCenter,
+                grid.alignItems,
+                g.p15,
+                {borderBottomWidth: 2, borderBottomColor: '#ebebe4'},
+              ]}>
               <Text
                 style={[
                   g.fs18,
@@ -841,111 +950,11 @@ const Comments = ({route, navigation}) => {
               </Text>
             </TouchableOpacity>
           )}
-
-          {selectedPost !== null &&
-            selectedPost.authorId._id === global.userId && (
-              <TouchableOpacity
-                onPress={() => {
-                  selectedOption = 'Edit';
-                  if (
-                    refPostComments.current !== undefined &&
-                    refPostComments.current !== null
-                  ) {
-                    refPostComments.current.close();
-                  }
-                  setIsReplayEditComment(true);
-                  setCommentText(selectedPost.commentText);
-                }}
-                style={[
-                  grid.justifyContentCenter,
-                  grid.alignItems,
-                  g.p15,
-                  {
-                    borderBottomWidth: 2,
-                    borderBottomColor: '#ebebe4',
-                    borderTopWidth: 2,
-                    borderTopColor: '#ebebe4',
-                  },
-                ]}>
-                <Text
-                  style={[
-                    g.fs18,
-                    g.FHNM,
-                    g.colorBlue,
-                    grid.justifyContentCenter,
-                    grid.alignItems,
-                    g.txtCenterVertical,
-                  ]}>
-                  Edit
-                </Text>
-              </TouchableOpacity>
-            )}
-
-          {selectedPost !== null &&
-            selectedPost.authorId._id === global.userId && (
-              <TouchableOpacity
-                onPress={() => {
-                  selectedOption = 'Remove';
-                  if (
-                    refPostComments.current !== undefined &&
-                    refPostComments.current !== null
-                  ) {
-                    refPostComments.current.close();
-                  }
-                  removeIndex();
-                }}
-                style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
-                <Text
-                  style={[
-                    g.fs18,
-                    g.FHNM,
-                    g.colorBlue,
-                    grid.justifyContentCenter,
-                    grid.alignItems,
-                    g.txtCenterVertical,
-                  ]}>
-                  Remove Comment
-                </Text>
-              </TouchableOpacity>
-            )}
-
-          {selectedPost !== null &&
-            selectedPost.authorId._id !== global.userId && (
-              <TouchableOpacity
-                onPress={() => {
-                  if (
-                    refPostComments.current !== undefined &&
-                    refPostComments.current !== null
-                  ) {
-                    refPostComments.current.close();
-                  }
-                  setTimeout(() => {
-                    setShowReportModal(true);
-                  }, 250);
-                }}
-                style={[
-                  grid.justifyContentCenter,
-                  grid.alignItems,
-                  g.p15,
-                  {
-                    borderTopWidth: 2,
-                    borderTopColor: '#ebebe4',
-                  },
-                ]}>
-                <Text
-                  style={[
-                    g.fs18,
-                    g.FHNM,
-                    g.colorBlue,
-                    grid.justifyContentCenter,
-                    grid.alignItems,
-                    g.txtCenterVertical,
-                  ]}>
-                  Report Comment
-                </Text>
-              </TouchableOpacity>
-            )}
+          {selectedPost !== null && selectedPost.authorId._id === global.userId
+            ? showUserPostOptions()
+            : showOtherPostOptions()}
         </View>
+
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={() => {
@@ -989,189 +998,200 @@ const Comments = ({route, navigation}) => {
         onGoBack={() => manageCommentDraft()}
       />
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
-        <View style={grid.flex1}>
-          {firstTimeLoad ? (
-            <View style={GlobalInclude.AppStyle.fillCenter}>
-              <ActivityIndicator
-                size={'small'}
-                color={GlobalInclude.Color.ColorPrimary}
-              />
-            </View>
-          ) : (
-            <FlatList
-              showsVerticalScrollIndicator={false}
-              extraData={comments}
-              data={comments}
-              renderItem={renderItem}
-              keyExtractor={(item, index) => index.toString()}
-              onEndReachedThreshold={0.1}
-              onEndReached={onEndReached}
-              refreshing={isRefreshing}
-              onRefresh={handleRefresh}
-              ListEmptyComponent={renderNoDataComponent}
-              ListFooterComponent={renderFooter}
-              contentContainerStyle={{
-                paddingBottom: scale(70),
-                paddingTop: scale(25),
-                paddingHorizontal: scale(15),
-              }}
-            />
-          )}
-        </View>
-        <View style={[g.mb20, g.pl15, g.pr15]}>
-          <View
-            style={
-              isReplayEditComment
-                ? [
-                    g.bggray3,
-                    {
-                      borderTopLeftRadius: scale(10),
-                      borderTopRightRadius: scale(10),
-                      borderBottomLeftRadius: scale(8),
-                      borderBottomRightRadius: scale(15),
-                    },
-                  ]
-                : {}
-            }>
-            {isReplayEditComment && (
-              <View style={[g.pl10, g.pb10, grid.rowdir]}>
-                <View style={[grid.col, g.pt10]}>
-                  <Text
-                    style={[
-                      g.fs14,
-                      g.FHNB,
-                      g.colorBlue,
-                      grid.justifyContentCenter,
-                      grid.alignItems,
-                      g.txtCenterVertical,
-                    ]}>
-                    {selectedOption === 'Edit' ? 'Editing:' : 'Commenting On:'}
-                  </Text>
-                  <Text
-                    style={[
-                      g.fs12,
-                      g.FHNM,
-                      g.colorBlue,
-                      grid.justifyContentCenter,
-                      grid.alignItems,
-                      g.txtCenterVertical,
-                      g.mt5,
-                    ]}
-                    numberOfLines={2}>
-                    {selectedPost != null && selectedPost.commentText}
-                  </Text>
+        <KeyboardAvoidingView
+          behavior="padding"
+          keyboardVerticalOffset={70}
+          style={grid.flex1}>
+          <View style={grid.flex1}>
+            <View style={grid.flex1}>
+              {firstTimeLoad ? (
+                <View style={GlobalInclude.AppStyle.fillCenter}>
+                  <ActivityIndicator
+                    size={'small'}
+                    color={GlobalInclude.Color.ColorPrimary}
+                  />
                 </View>
-                <TouchableOpacity
-                  onPress={() => {
-                    selectedOption = '';
-                    setIsReplayEditComment(false);
-                    setSelectedPost(null);
+              ) : (
+                <FlatList
+                  showsVerticalScrollIndicator={false}
+                  extraData={comments}
+                  data={comments}
+                  renderItem={renderItem}
+                  keyExtractor={(item, index) => index.toString()}
+                  onEndReachedThreshold={0.1}
+                  onEndReached={onEndReached}
+                  refreshing={isRefreshing}
+                  onRefresh={handleRefresh}
+                  ListEmptyComponent={renderNoDataComponent}
+                  ListFooterComponent={renderFooter}
+                  contentContainerStyle={{
+                    paddingBottom: scale(70),
+                    paddingTop: scale(25),
+                    paddingHorizontal: scale(15),
                   }}
-                  style={{
-                    width: scale(26),
-                    height: scale(26),
-                    borderRadius: scale(30),
-                    backgroundColor: GlobalInclude.Color.ColorPrimary,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginTop: scale(5),
-                    marginRight: scale(5),
-                  }}>
-                  <GlobalInclude.BaseIcon
-                    containerStyle={{
-                      height: scale(14),
-                      width: scale(14),
-                      justifyContent: 'center',
-                    }}
-                    iconColor={'#fff'}
-                    iconName={'close'}
-                    iconSize={scale(14)}
-                    iconType={IconType[6]}
-                  />
-                </TouchableOpacity>
-              </View>
-            )}
-            <View
-              style={[grid.rowrow, grid.justifyContentCenter, grid.alignItems]}>
-              <TextInput
-                underlineColorAndroid={'transparent'}
-                style={[
-                  grid.flex1,
-                  g.mr5,
-                  {
-                    backgroundColor: '#f8f8f8',
-                    padding: scale(10),
-                    margin: 0,
-                    minHeight: scale(38),
-                    width: '100%',
-                    fontSize: scale(12),
-                    borderRadius: scale(8),
-                    fontFamily: 'Lato-Regular',
-                    justifyContent: 'center',
-                    textAlignVertical: 'center',
-                  },
-                ]}
-                keyboardType={'default'}
-                autoCapitalize={'sentences'}
-                returnKeyType={'done'}
-                value={commentText}
-                multiline={true}
-                placeholder={'Add/Paste Comment'}
-                onChangeText={(value) => {
-                  setCommentText(value);
-                  setCommentError('');
-                  inputValue = value;
-                }}
-              />
-
-              <TouchableOpacity
-                onPress={() => {
-                  if (commentText.trim() === '') {
-                    setCommentError('This field is required!');
-                  } else {
-                    setIsCommenting(true);
-                    if (selectedOption === '') {
-                      let requestObject = {
-                        postId: filterObject.postId,
-                        depth: 0,
-                        parentId: '',
-                        commentText: commentText,
-                      };
-                      postUserComment(requestObject);
-                    } else if (selectedOption === 'Replay') {
-                      let requestObject = {
-                        postId: filterObject.postId,
-                        depth: parseInt(selectedPost.depth, 10) + 1,
-                        parentId: selectedPost._id,
-                        commentText: commentText,
-                      };
-                      postUserComment(requestObject);
-                    } else if (selectedOption === 'Edit') {
-                      updateUserCommentData();
-                    }
-                  }
-                }}
-                style={styles.commentButton}>
-                {isCommenting ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <GlobalInclude.BaseIcon
-                    containerStyle={{height: scale(20), width: scale(20)}}
-                    iconColor={'#FFF'}
-                    iconName={'send-o'}
-                    iconSize={scale(20)}
-                    iconType={IconType[4]}
-                  />
-                )}
-              </TouchableOpacity>
+                />
+              )}
             </View>
-            {commentError &&
-            commentError !== null &&
-            commentError.length > 0 ? (
-              <Text style={g.errorMsg}>{commentError}</Text>
-            ) : null}
+            <View style={[g.mb20, g.pl15, g.pr15]}>
+              <View
+                style={
+                  isReplayEditComment
+                    ? [
+                        g.bggray3,
+                        {
+                          borderTopLeftRadius: scale(10),
+                          borderTopRightRadius: scale(10),
+                          borderBottomLeftRadius: scale(8),
+                          borderBottomRightRadius: scale(15),
+                        },
+                      ]
+                    : {}
+                }>
+                {isReplayEditComment && (
+                  <View style={[g.pl10, g.pb10, grid.rowdir]}>
+                    <View style={[grid.col, g.pt10]}>
+                      <Text
+                        style={[
+                          g.fs14,
+                          g.FHNB,
+                          g.colorBlue,
+                          grid.justifyContentCenter,
+                          grid.alignItems,
+                          g.txtCenterVertical,
+                        ]}>
+                        {selectedOption === 'Edit'
+                          ? 'Editing:'
+                          : 'Commenting On:'}
+                      </Text>
+                      <Text
+                        style={[
+                          g.fs12,
+                          g.FHNM,
+                          g.colorBlue,
+                          grid.justifyContentCenter,
+                          grid.alignItems,
+                          g.txtCenterVertical,
+                          g.mt5,
+                        ]}
+                        numberOfLines={2}>
+                        {selectedPost != null && selectedPost.commentText}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        selectedOption = '';
+                        setIsReplayEditComment(false);
+                        setSelectedPost(null);
+                      }}
+                      style={{
+                        width: scale(26),
+                        height: scale(26),
+                        borderRadius: scale(30),
+                        backgroundColor: GlobalInclude.Color.ColorPrimary,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        marginTop: scale(5),
+                        marginRight: scale(5),
+                      }}>
+                      <GlobalInclude.BaseIcon
+                        containerStyle={{
+                          height: scale(14),
+                          width: scale(14),
+                          justifyContent: 'center',
+                        }}
+                        iconColor={'#fff'}
+                        iconName={'close'}
+                        iconSize={scale(14)}
+                        iconType={IconType[6]}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                )}
+                <View
+                  style={[
+                    grid.rowrow,
+                    grid.justifyContentCenter,
+                    grid.alignItems,
+                  ]}>
+                  <TextInput
+                    underlineColorAndroid={'transparent'}
+                    style={[
+                      grid.flex1,
+                      g.mr5,
+                      {
+                        backgroundColor: '#f8f8f8',
+                        fontSize: scale(12),
+                        borderRadius: scale(8),
+                        fontFamily: 'Lato-Regular',
+                        justifyContent: 'center',
+                        textAlignVertical: 'center',
+                        minHeight: scale(40),
+                        padding: scale(10),
+                      },
+                    ]}
+                    keyboardType={'default'}
+                    autoCapitalize={'sentences'}
+                    returnKeyType={'done'}
+                    value={commentText}
+                    multiline={true}
+                    placeholder={'Add/Paste Comment'}
+                    onChangeText={(value) => {
+                      setCommentText(value);
+                      setCommentError('');
+                      inputValue = value;
+                    }}
+                  />
+
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (commentText.trim() === '') {
+                        setCommentError('This field is required!');
+                      } else {
+                        setIsCommenting(true);
+                        if (selectedOption === '') {
+                          let requestObject = {
+                            postId: filterObject.postId,
+                            depth: 0,
+                            parentId: '',
+                            commentText: commentText,
+                          };
+                          postUserComment(requestObject);
+                        } else if (selectedOption === 'Replay') {
+                          let requestObject = {
+                            postId: filterObject.postId,
+                            depth: parseInt(selectedPost.depth, 10) + 1,
+                            parentId: selectedPost._id,
+                            commentText: commentText,
+                          };
+                          postUserComment(requestObject);
+                        } else if (selectedOption === 'Edit') {
+                          updateUserCommentData();
+                        }
+                      }
+                    }}
+                    style={styles.commentButton}>
+                    {isCommenting ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <GlobalInclude.BaseIcon
+                        containerStyle={{height: scale(20), width: scale(20)}}
+                        iconColor={'#FFF'}
+                        iconName={'send-o'}
+                        iconSize={scale(20)}
+                        iconType={IconType[4]}
+                      />
+                    )}
+                  </TouchableOpacity>
+                </View>
+                {commentError &&
+                commentError !== null &&
+                commentError.length > 0 ? (
+                  <Text style={g.errorMsg}>{commentError}</Text>
+                ) : null}
+              </View>
+            </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
       {postComments()}
 

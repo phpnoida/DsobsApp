@@ -346,7 +346,7 @@ const UserProfile = ({route, navigation}) => {
                         />
                       </TouchableOpacity>
                     </View>
-                    {console.log('Line 365-', userId)}
+
                     <UserProfileHeader
                       profileImg={profileData.profileImg}
                       firstName={profileData.firstName}

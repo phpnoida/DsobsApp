@@ -1,11 +1,10 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   Text,
   View,
   TouchableOpacity,
   TextInput,
   Image,
-  Alert,
   StyleSheet,
   Dimensions,
   Keyboard,
@@ -15,7 +14,6 @@ import {
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
-import {launchImageLibrary} from 'react-native-image-picker';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import Helper from '../../helper/Helper';
 import {IconType} from '../../helper/Constants';
@@ -32,15 +30,10 @@ import BottomSheetHeader from '../../component/BottomSheetHeader';
 import CountryPicker from 'react-native-country-picker-modal';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DatePickerView from '../../component/DatePickerView';
-import RNFetchBlob from 'rn-fetch-blob';
 import {getCountries, getStates, getCities} from '../../Actions/CommonActions';
-import {
-  getProfessionList,
-  uploadProfilePic,
-  updateUserProfile,
-} from '../../Actions/UserActions';
+import {getProfessionList, updateUserProfile} from '../../Actions/UserActions';
+import UploadMedia from '../../component/UploadMedia';
 
-let profileUri = null;
 let stringDate = '';
 let birthDate = '';
 let bloodGroupSheet = null;
@@ -64,20 +57,6 @@ let isCountrySelected = false,
 let pickerSelectionType = -1;
 let responseMessage = '';
 let height = Dimensions.get('window').height;
-
-const options = {
-  title: 'Select Image',
-  noData: true,
-  maxWidth: 720,
-  maxHeight: 1024,
-  allowsEditing: false,
-  storageOptions: {
-    skipBackup: true,
-    path: 'images',
-    cameraRoll: true,
-    waitUntilSaved: true,
-  },
-};
 
 const concatSchoolAndHouse = (profileData) => {
   let string = '';
@@ -129,7 +108,9 @@ const createPrimaryVisibilityRadio = (value) => {
 };
 
 const BasicProfile = (props) => {
-  const {profileData} = props;
+  const {profileData, navigation} = props;
+
+  const uploadRef = useRef();
 
   // step 1
   const [prefix, setPrefix] = useState('');
@@ -171,7 +152,6 @@ const BasicProfile = (props) => {
   const [showContactUsModal, setShowContactUsModal] = useState(false);
 
   useEffect(() => {
-    profileUri = null;
     stringDate = 'N/A';
     birthDate = '';
     professionListMain = [];
@@ -326,62 +306,6 @@ const BasicProfile = (props) => {
         console.log('error', error);
       },
     );
-  };
-
-  const uploadProfile = () => {
-    let body = [];
-
-    if (profileUri !== null) {
-      setIsLoading(true);
-      var path = profileUri.uri;
-      let imageName = '';
-      if (
-        profileUri.fileName === undefined ||
-        profileUri.fileName == null ||
-        profileUri.fileName === ''
-      ) {
-        var getFilename = path.split('/');
-        imageName = getFilename[getFilename.length - 1];
-        var extension = imageName.split('.')[1];
-        imageName = new Date().getTime() + '.' + extension;
-      } else {
-        imageName = profileUri.fileName;
-      }
-
-      let imagePath =
-        Platform.OS === 'ios' ? path.replace('file://', '') : path;
-
-      let imageType = profileUri.type;
-
-      var imageData = {
-        name: 'image',
-        filename: imageName,
-        type: imageType,
-        data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
-      };
-      body.push(imageData);
-
-      uploadProfilePic(
-        body,
-        (response) => {
-          setIsLoading(false);
-          //console.log('response', response);
-          if (response && response !== undefined && response !== null) {
-            if (response.status) {
-              if (response.data && response.data !== null) {
-                let childData = response.data.data;
-                setProfileImg(childData);
-                //props.updateData('profileImg', childData);
-              }
-            }
-          }
-        },
-        (error) => {
-          setIsLoading(false);
-          console.log('error', error);
-        },
-      );
-    }
   };
 
   const getCountryList = () => {
@@ -644,29 +568,6 @@ const BasicProfile = (props) => {
     }
   };
 
-  const launchImagePicker = () => {
-    launchImageLibrary(options, (res) => {
-      if (res) {
-        if (res !== null) {
-          if (res.didCancel) {
-            Alert.alert('Cancel Image Selection!');
-          } else {
-            if (
-              res.assets !== undefined &&
-              res.assets !== null &&
-              res.assets.length > 0
-            ) {
-              profileUri = res.assets[0];
-              if (global.isConnected) {
-                uploadProfile();
-              }
-            }
-          }
-        }
-      }
-    });
-  };
-
   const renderRadioButton = (radioObj, type) => {
     return radioObj.map((item, key) => {
       return (
@@ -841,11 +742,13 @@ const BasicProfile = (props) => {
                       const currentDate = selected || new Date();
                       let obj = Helper.formateDate(currentDate);
                       birthDate = obj.serverDate;
-                      setShowDatePicker(Platform.OS === 'ios');
+                      setShowDatePicker(false);
                       setSelectedDate(obj.displayDate);
+                    } else {
+                      setShowDatePicker(false);
                     }
                   } else {
-                    setShowDatePicker(Platform.OS === 'ios');
+                    setShowDatePicker(false);
                   }
                 }}
                 onTouchCancel={(event) => {
@@ -878,7 +781,13 @@ const BasicProfile = (props) => {
                 style={g.mb5}
                 activeOpacity={1}
                 onPress={(e) => {
-                  launchImagePicker();
+                  if (
+                    uploadRef &&
+                    uploadRef.current !== undefined &&
+                    uploadRef.current !== null
+                  ) {
+                    uploadRef.current.open();
+                  }
                 }}>
                 <View style={styles.profileImg}>
                   {profileImg !== '' ? (
@@ -904,7 +813,13 @@ const BasicProfile = (props) => {
                   <TouchableOpacity
                     style={[g.btnL, {width: scale(150), height: scale(40)}]}
                     onPress={(e) => {
-                      launchImagePicker();
+                      if (
+                        uploadRef &&
+                        uploadRef.current !== undefined &&
+                        uploadRef.current !== null
+                      ) {
+                        uploadRef.current.open();
+                      }
                     }}
                     activeOpacity={0.8}>
                     <Text style={[g.colorWhite, g.FHNR, g.fs15, g.txtCenter]}>
@@ -1510,7 +1425,7 @@ const BasicProfile = (props) => {
           ref={(ref) => {
             bloodGroupSheet = ref;
           }}
-          height={375}
+          height={430}
           minClosingHeight={50}
           duration={350}
           closeOnDragDown={true}
@@ -1735,6 +1650,25 @@ const BasicProfile = (props) => {
             }}
           />
         </CityListSheet>
+
+        <UploadMedia
+          navigation={navigation}
+          refRBSheet={uploadRef}
+          media={{
+            image: false,
+            video: true,
+            document: true,
+            audio: true,
+          }}
+          supportMultiple={false}
+          onPickMedia={(media) => {
+            uploadRef.current.close();
+            if (media !== undefined && media !== null) {
+              console.log('media', media);
+              setProfileImg(media[0].thumbnail);
+            }
+          }}
+        />
       </View>
     </TouchableWithoutFeedback>
   );

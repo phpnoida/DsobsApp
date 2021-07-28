@@ -19,18 +19,16 @@ import ProfessionalSheet from '../../../component/ProfessionalSheetFilter';
 import ProgresImage from '../../../component/ProgresImage';
 import CommonButton from '../../../component/CommonButton';
 import {IconType} from '../../../helper/Constants';
-import ImagePicker from 'react-native-image-crop-picker';
 import RbSheet from 'react-native-raw-bottom-sheet';
 import BottomSheetHeader from '../../../component/BottomSheetHeader';
 import ModelAlert from '../../../component/ModalAlert';
+import UploadMedia from '../../../component/UploadMedia';
 
 const {height} = Dimensions.get('window');
 let selectedIndex = -1;
-let isEndReached = false;
-let isHomeReached = false;
-let scrollHold = 120;
 
 const scrollRef = React.createRef();
+const uploadRef = React.createRef();
 const refRBSheetCity = React.createRef();
 const refProfessionSheet = React.createRef();
 
@@ -55,6 +53,7 @@ const generateHeader = (title, required) => {
 };
 
 const TabOne = ({
+  navigation,
   onSaveTab,
   handleInput,
   businessName,
@@ -188,23 +187,9 @@ const TabOne = ({
             <TouchableOpacity
               activeOpacity={1}
               onPress={() => {
-                ImagePicker.openPicker({
-                  includeBase64: false,
-                  cropping: true,
-                  includeExif: false,
-                  mediaType: 'photo',
-                  multiple: false,
-                })
-                  .then((images) => {
-                    if (images !== null) {
-                      console.log('images', images);
-                      setCoverImages(images);
-                    }
-                  })
-                  .catch((err) => {
-                    Alert.alert('User Cancelled Selection!');
-                    console.log('err', err);
-                  });
+                if (uploadRef.current !== null) {
+                  uploadRef.current.open();
+                }
               }}>
               <ProgresImage
                 source={GlobalInclude.Assets.DefaultImage}
@@ -228,11 +213,7 @@ const TabOne = ({
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                ref={scrollRef}
-                onScroll={({nativeEvent}) => {
-                  isEndReached = isCloseToRight(nativeEvent);
-                  isHomeReached = isAtHome(nativeEvent);
-                }}>
+                ref={scrollRef}>
                 {coverImages.map((item, index) => {
                   return (
                     <View style={{margin: scale(5)}} key={index}>
@@ -442,6 +423,24 @@ const TabOne = ({
           }}
         />
       )}
+
+      <UploadMedia
+        navigation={navigation}
+        refRBSheet={uploadRef}
+        media={{image: false, video: true, document: true, audio: true}}
+        supportMultiple={true}
+        onPickMedia={(media) => {
+          uploadRef.current.close();
+          if (media !== undefined && media !== null) {
+            console.log('media', media);
+            let tmp = [];
+            media.forEach((element) => {
+              tmp.push(element.fileName);
+            });
+            setCoverImages(tmp);
+          }
+        }}
+      />
     </View>
   );
 };

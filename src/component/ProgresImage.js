@@ -23,6 +23,8 @@ const ProgresImage = ({source, containerStyle, imageStyle, mode}) => (
           }),
         },
       ],
+      priority: FastImage.priority.normal,
+      cache: FastImage.cacheControl.immutable,
     }}
     indicatorProps={{
       animated: true,
