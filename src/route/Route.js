@@ -49,12 +49,16 @@ import Etiquette from '../screen/Ticker/Etiquette';
 import MyPreviousPost from '../screen/Ticker/MyPreviousPost';
 import Comments from '../screen/Ticker/Comments';
 import ImageDemo from '../ImageDemo';
-import ChatUserList from '../screen/chat/';
 import JobListing from '../screen/jobs/';
 import AddJobPost from '../screen/jobs/PostJob';
 import JobDetails from '../screen/jobs/JobDetails/';
 import VideoPlayer from '../component/VideoPlayer';
 import YoutubePlayer from '../component/YoutubePlayer';
+import ChatUserList from '../screen/chat/';
+import ChatSettings from '../screen/chat/ChatSettings';
+import ChatEtiquette from '../screen/chat/ChatEtiquette';
+import StartChatWith from '../screen/chat/StartChatWith';
+import ChatScreen from '../screen/chat/ChatScreen';
 const Stack = createStackNavigator();
 
 export const RootNavigators = (baseRoute) => {
@@ -300,11 +304,6 @@ export const RootNavigators = (baseRoute) => {
         component={Comments}
         options={{headerShown: false}}
       />
-      <Stack.Screen
-        name="ChatUserList"
-        component={ChatUserList}
-        options={{headerShown: false}}
-      />
 
       <Stack.Screen
         name="JobListing"
@@ -329,6 +328,31 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="YoutubePlayer"
         component={YoutubePlayer}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ChatUserList"
+        component={ChatUserList}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ChatSettings"
+        component={ChatSettings}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ChatEtiquette"
+        component={ChatEtiquette}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="StartChatWith"
+        component={StartChatWith}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ChatScreen"
+        component={ChatScreen}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

@@ -62,9 +62,6 @@ const MagazineDetails = ({route, navigation}) => {
       magazineData = route.params.data;
       currentIndex = route.params.currentIndex;
 
-      console.log('magazine', currentIndex);
-      console.log('magazine', magazineData.length);
-
       setPageContent(magazineData);
 
       setTimeout(() => {

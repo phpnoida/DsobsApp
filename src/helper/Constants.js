@@ -14,18 +14,23 @@ export const IconType = [
   'entypo',
   'antdesign',
   'feather',
+  'material-icon',
 ];
 export const URL_REGX = {
-  urlRegex: /(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&/=]*)/g,
+  urlRegex:
+    /(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&/=]*)/g,
   emailRegex: /^[a-zA-Z0-9]+[a-zA-Z0-9.+_]+@[a-zA-Z0-9]+\.[a-zA-Z.-]{2,20}$/,
-  fbRegex: /(?:(?:http|https):\/\/)?(?:www.)?facebook.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[?\w\-]*\/)?(?:profile.php\?id=(?=\d.*))?([\w\-]*)?/,
+  fbRegex:
+    /(?:(?:http|https):\/\/)?(?:www.)?facebook.com\/(?:(?:\w)*#!\/)?(?:pages\/)?(?:[?\w\-]*\/)?(?:profile.php\?id=(?=\d.*))?([\w\-]*)?/,
   instaRegex: /(?:(?:http|https):\/\/)?(?:www.)?(?:instagram.com|instagr.am)/,
   twiterRegex: /(?:http|https):\/\/(?:www.)?twitter\.com\//,
 
   googleRegex: /(?:(?:http|https):\/\/)?plus\.google\.com\/.?\/?.?\/?([0-9]*)/,
-  youtubeRegex: /^(?:https?:\/\/)?(?:m\.|www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})(\?\S*)?$/,
+  youtubeRegex:
+    /^(?:https?:\/\/)?(?:m\.|www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})(\?\S*)?$/,
   vimeoRegex: /^(http:\/\/|https:\/\/)(vimeo\.com)\/([\w\/]+)([\?].*)?$/,
-  wikiRegex: /(?:(?:http|https):\/\/)?(?:www.)?(?:wikipedia.org)\/([A-Za-z0-9-_]+)/,
+  wikiRegex:
+    /(?:(?:http|https):\/\/)?(?:www.)?(?:wikipedia.org)\/([A-Za-z0-9-_]+)/,
   phoneRegex: /^([0|\+[0-9]{1,5})?([7-9][0-9]{9})$/,
 };
 

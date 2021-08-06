@@ -65,7 +65,7 @@ const TabThree = ({
                   />
                   <TextInput
                     underlineColorAndroid="transparent"
-                    searchUserName={searchUserName}
+                    value={searchUserName}
                     style={[
                       g.inputNew,
                       g.pl0,

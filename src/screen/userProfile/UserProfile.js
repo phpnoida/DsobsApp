@@ -37,7 +37,7 @@ import Awards from './Awards';
 import MyRelatives from './MyRelatives';
 import MyFamily from './MyFamily';
 import Links from './Links';
-
+import {addUser} from '../../helper/ChatHelper';
 import {IconType} from '../../helper/Constants';
 
 let profileSheetMenu = [
@@ -120,6 +120,8 @@ const UserProfile = ({route, navigation}) => {
               global.userDetails = profile;
               global.firstName = profile.firstName;
               global.lastName = profile.lastName;
+
+              addUser(profile._id, profile, () => {});
 
               AsyncStorage.setItem('userDetails', JSON.stringify(profile)).then(
                 () => {

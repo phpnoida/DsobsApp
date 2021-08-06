@@ -331,6 +331,9 @@ export default {
   txtLeft: {
     textAlign: 'left',
   },
+  textJustify: {
+    textAlign: 'justify',
+  },
   bgBlack: {
     backgroundColor: '#000000',
   },

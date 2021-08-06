@@ -3,6 +3,7 @@ import {Platform} from 'react-native';
 import {SERVER_PATH} from '../../config';
 import RNFetchBlob from 'rn-fetch-blob';
 import {getModel} from 'react-native-device-info';
+import {updateUserObject} from '../helper/ChatHelper';
 
 export function getCountries(callback, errCallback) {
   let requestPath = `${SERVER_PATH}utils/countries`;
@@ -81,6 +82,11 @@ export function sendPresenceStatus(callback, errCallback) {
   let requestPath = `${SERVER_PATH}utils/users/online?deviceType=${deviceType}&deviceModelNumber=${modelNumber}`;
 
   console.log('requestPath', requestPath);
+
+  // let object = {
+  //   platform: Platform.OS,
+  // };
+  //updateUserObject(object, global.userId, (status) => {});
 
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})

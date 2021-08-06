@@ -32,6 +32,7 @@ import {useDispatch, useSelector, shallowEqual} from 'react-redux';
 import {clearState} from '../../reducer/NotificationReducer';
 import messaging from '@react-native-firebase/messaging';
 import {IconType} from '../../helper/Constants';
+import {setUserLastSeen} from '../../helper/ChatHelper';
 
 let deviceHeight = Dimensions.get('screen').height;
 let deviceWidth = Dimensions.get('screen').width;
@@ -92,7 +93,14 @@ const Dashboard = ({props, navigation}) => {
             onPress: () => null,
             style: 'cancel',
           },
-          {text: 'YES', onPress: () => BackHandler.exitApp()},
+          {
+            text: 'YES',
+            onPress: () => {
+              setUserLastSeen(false, new Date().getTime(), () => {
+                BackHandler.exitApp();
+              });
+            },
+          },
         ]);
         return true;
       }
@@ -432,6 +440,7 @@ const Dashboard = ({props, navigation}) => {
               style={styles.headIconContainer}
               onPress={() => {
                 navigation.navigate('ChatUserList');
+                //navigation.navigate('ChatScreen');
               }}>
               <Image
                 source={GlobalInclude.Assets.Chat}
