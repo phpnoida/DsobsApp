@@ -475,6 +475,21 @@ const Helpers = {
       id: RegExp.$6,
     };
   },
+  getChatDate: function (date) {
+    if (!moment.isMoment(date)) {
+      date = moment(date); // ok for js date, milliseconds or string in ISO format
+    }
+
+    if (date.isSame(moment(), 'day')) {
+      return date.format('hh:mm a');
+    } else if (date.isSame(moment().subtract(1, 'd'), 'day')) {
+      return 'Yesterday';
+    } else if (date.isSame(moment(), 'week')) {
+      return date.format('dddd');
+    } else {
+      return date.format('DD/MM/YYYY');
+    }
+  },
 };
 
 export default Helpers;

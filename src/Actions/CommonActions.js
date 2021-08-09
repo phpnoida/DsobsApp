@@ -83,10 +83,10 @@ export function sendPresenceStatus(callback, errCallback) {
 
   console.log('requestPath', requestPath);
 
-  // let object = {
-  //   platform: Platform.OS,
-  // };
-  //updateUserObject(object, global.userId, (status) => {});
+  let object = {
+    platform: Platform.OS,
+  };
+  updateUserObject(object, global.userId, (status) => {});
 
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})

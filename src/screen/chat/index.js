@@ -59,9 +59,9 @@ const ChatUserList = ({navigation}) => {
     PaginationStatus.allLoaded,
   );
   const [selectedItem, setSelectedItem] = useState(null);
-  const [snapshot, loading, error] = useCollectionDataOnce(
-    chatCollection.where('users', 'array-contains', global.userId),
-  );
+  // const [snapshot, loading, error] = useCollection(
+  //   chatCollection.where('users', 'array-contains', global.userId),
+  // );
 
   useEffect(() => {
     /**
@@ -84,79 +84,102 @@ const ChatUserList = ({navigation}) => {
     setChatList([]);
   }, []);
 
-  // useEffect(() => {
-  //   let subscriber;
+  useEffect(() => {
+    let subscriber;
 
-  //   navigation.addListener('focus', () => {
-  //     executeFunctions();
-  //   });
-  //   navigation.addListener('blur', () => {
-  //     subscriber();
-  //   });
+    navigation.addListener('focus', () => {
+      executeFunctions();
+    });
+    navigation.addListener('blur', () => {
+      subscriber();
+    });
 
-  //   const executeFunctions = () => {
-  //     subscriber = chatCollection
-  //       .where('users', 'array-contains', global.userId)
-  //       .onSnapshot((query) => {
-  //         setPaginationStatus(PaginationStatus.fetching);
-  //         if (!query.empty) {
-  //           tmpArray = [];
-  //           query.docs.forEach((item) => {
-  //             let data = item.data();
-  //             tmpArray.push(data);
-  //           });
+    const executeFunctions = () => {
+      subscriber = chatCollection
+        .where('users', 'array-contains', global.userId)
+        .onSnapshot((query) => {
+          setPaginationStatus(PaginationStatus.fetching);
+          if (!query.empty) {
+            tmpArray = [];
+            query.docs.forEach((item) => {
+              let data = item.data();
+              tmpArray.push(data);
+            });
+            setFirstTimeLoad(false);
 
-  //           var allComplete = new Promise((resolve, reject) => {
-  //             tmpArray.forEach((element, index, array) => {
-  //               let data = element;
+            tmpArray.sort(function (a, b) {
+              let unreadOne = a.unreadCount;
+              let unreadTwo = b.unreadCount;
 
-  //               if (!data.isGroup) {
-  //                 let users = data.users;
-  //                 let opponentUser = users.filter(
-  //                   (userId) => global.userId !== userId,
-  //                 );
+              if (getChatCount(unreadOne) < getChatCount(unreadTwo)) {
+                return -1;
+              }
+              if (getChatCount(unreadOne) > getChatCount(unreadTwo)) {
+                return 1;
+              }
+              return 0;
+            });
 
-  //                 var isExist = allUsersArray.filter(
-  //                   (user) => opponentUser[0] === user._id,
-  //                 );
+            console.log('====================================');
+            console.log('tmpArray', tmpArray);
+            console.log('====================================');
+            setChatList(tmpArray);
+            setPaginationStatus(PaginationStatus.waiting);
 
-  //                 if (isExist.length === 0) {
-  //                   checkUserExist(opponentUser[0])
-  //                     .then((result) => {
-  //                       data.opponentUser = result;
-  //                     })
-  //                     .then(() => {
-  //                       if (index === array.length - 1) {
-  //                         resolve();
-  //                       }
-  //                     });
-  //                 } else {
-  //                   data.opponentUser = isExist[0];
-  //                   if (index === array.length - 1) {
-  //                     resolve();
-  //                   }
-  //                 }
-  //               }
-  //             });
-  //           });
+            // var allComplete = new Promise((resolve, reject) => {
+            //   tmpArray.forEach((element, index, array) => {
+            //     let data = element;
 
-  //           allComplete.then(() => {
-  //             setFirstTimeLoad(false);
-  //             setChatList(tmpArray);
-  //             setPaginationStatus(PaginationStatus.waiting);
-  //             console.log('====================================');
-  //             console.log('all task complete', tmpArray.length);
-  //             console.log('====================================');
-  //           });
-  //         }
-  //       });
-  //   };
+            //     if (!data.isGroup) {
+            //       let users = data.users;
+            //       let opponentUser = users.filter(
+            //         (userId) => global.userId !== userId,
+            //       );
 
-  //   return () => {
-  //     console.log('blur');
-  //     subscriber();
-  //   };
-  // }, [navigation]);
+            //       var isExist = allUsersArray.filter(
+            //         (user) => opponentUser[0] === user._id,
+            //       );
+
+            //       if (isExist.length === 0) {
+            //         checkUserExist(opponentUser[0])
+            //           .then((result) => {
+            //             data.opponentUser = result;
+            //           })
+            //           .then(() => {
+            //             if (index === array.length - 1) {
+            //               resolve();
+            //             }
+            //           });
+            //       } else {
+            //         data.opponentUser = isExist[0];
+            //         if (index === array.length - 1) {
+            //           resolve();
+            //         }
+            //       }
+            //     }
+            //   });
+            // });
+
+            // allComplete.then(() => {
+            //   setFirstTimeLoad(false);
+            //   setChatList(tmpArray);
+            //   setPaginationStatus(PaginationStatus.waiting);
+            //   console.log('====================================');
+            //   console.log('all task complete', tmpArray.length);
+            //   console.log('====================================');
+            // });
+          } else {
+            setFirstTimeLoad(false);
+            setPaginationStatus(PaginationStatus.waiting);
+          }
+        });
+    };
+
+    return () => {
+      console.log('blur');
+      subscriber();
+    };
+  }, [navigation]);
 
   const markAllRead = () => {
     if (selectedItem !== undefined && selectedItem !== null) {
@@ -258,12 +281,15 @@ const ChatUserList = ({navigation}) => {
   };
 
   const getOpponentInfo = (userList) => {
-    for (let i = 0; i < userList.length; i++) {
-      const element = userList[i];
-      if (element._id !== global.userId) {
-        return element;
+    if (userList !== undefined && userList !== null && userList !== '') {
+      for (let i = 0; i < userList.length; i++) {
+        const element = userList[i];
+        if (element._id !== global.userId) {
+          return element;
+        }
       }
     }
+
     return null;
   };
 
@@ -341,8 +367,8 @@ const ChatUserList = ({navigation}) => {
             grid.alignItems,
             grid.justifyContentCenter,
             {
-              width: scale(40),
-              height: scale(40),
+              width: scale(45),
+              height: scale(45),
               borderRadius: scale(50),
             },
           ]}>
@@ -353,39 +379,38 @@ const ChatUserList = ({navigation}) => {
           />
         </View>
         <View style={grid.flex1}>
-          <View style={[grid.rowdir]}>
-            <View style={[grid.alignItemsTop, grid.col]}>
+          <View style={[grid.rowdir, grid.alignItemsTop]}>
+            <View style={grid.col}>
               <Text
                 style={[
-                  g.fs15,
+                  g.fs13,
                   g.FHNM,
                   g.colorBlue,
                   GlobalInclude.AppStyle.transform,
                 ]}>
                 {headerTitle}
               </Text>
-              {subHeader !== undefined && subHeader !== '' && (
+              {/* {subHeader !== undefined && subHeader !== '' && (
                 <Text
                   style={[
                     g.fs12,
                     g.FHNM,
                     g.colorBlue,
                     GlobalInclude.AppStyle.transform,
+                    g.mt2,
                   ]}>
                   {subHeader}
                 </Text>
-              )}
+              )} */}
             </View>
             {item.lastMessageTime > 0 && (
               <Text
                 style={[
-                  g.fs12,
+                  g.fs13,
                   g.FHNR,
-                  g.colorBlue,
-                  grid.justifyContentCenter,
-                  grid.alignItems,
+                  unreadCount > 0 ? g.colorBlue : g.colordarkGray,
                 ]}>
-                {moment(item.lastMessageTime).fromNow()}
+                {Helper.getChatDate(item.lastMessageTime)}
               </Text>
             )}
           </View>
@@ -419,32 +444,40 @@ const ChatUserList = ({navigation}) => {
                 </Text>
               )}
             </View>
-            {unreadCount > 0 && (
-              <View style={styles.unreadCount}>
-                <Text
-                  style={[
-                    g.fs15,
-                    g.FHNB,
-                    g.colorWhite,
-                    g.txtCenter,
-                    grid.alignItems,
-                  ]}>
-                  {unreadCount > 99 ? '+99' : unreadCount}
-                </Text>
-              </View>
-            )}
+            <View
+              style={[
+                g.ml5,
+                grid.alignItems,
+                grid.justifyContentCenter,
+                grid.rowrow,
+              ]}>
+              {isConversionMuted(item.mutedBy) && (
+                <View style={[g.ml5, g.mr5]}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(18), width: scale(18)}}
+                    iconColor={GlobalInclude.Color.ColorPrimary}
+                    iconName={'sound-mute'}
+                    iconSize={scale(18)}
+                    iconType={IconType[9]}
+                  />
+                </View>
+              )}
+              {unreadCount > 0 && (
+                <View style={styles.unreadCount}>
+                  <Text
+                    style={[
+                      g.fs13,
+                      g.FHNB,
+                      g.colorWhite,
+                      g.txtCenter,
+                      grid.alignItems,
+                    ]}>
+                    {unreadCount > 99 ? '+99' : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
-        </View>
-        <View style={[g.ml5, grid.alignItems, grid.justifyContentCenter]}>
-          {isConversionMuted(item.mutedBy) && (
-            <GlobalInclude.BaseIcon
-              containerStyle={{height: scale(20), width: scale(20)}}
-              iconColor={GlobalInclude.Color.ColorPrimary}
-              iconName={'sound-mute'}
-              iconSize={scale(20)}
-              iconType={IconType[9]}
-            />
-          )}
         </View>
       </TouchableOpacity>
     );
@@ -581,20 +614,18 @@ const ChatUserList = ({navigation}) => {
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.fill}>
           <View style={grid.flex1}>
-            {loading ? (
+            {firstTimeLoad ? (
               <View style={GlobalInclude.AppStyle.fillCenter}>
                 <ActivityIndicator
                   size={'small'}
                   color={GlobalInclude.Color.ColorPrimary}
                 />
               </View>
-            ) : error ? (
-              renderNoDataComponent()
             ) : (
               <FlatList
                 showsVerticalScrollIndicator={false}
-                extraData={snapshot}
-                data={snapshot}
+                extraData={chatList}
+                data={chatList}
                 renderItem={renderItem}
                 keyExtractor={(item, index) => index.toString()}
                 onEndReachedThreshold={0.1}
@@ -602,7 +633,7 @@ const ChatUserList = ({navigation}) => {
                 contentContainerStyle={{
                   paddingBottom: scale(70),
                   paddingTop: scale(25),
-                  paddingHorizontal: scale(15),
+                  paddingHorizontal: scale(10),
                 }}
               />
             )}
@@ -620,16 +651,15 @@ const styles = StyleSheet.create({
   imageStyle: {
     aspectRatio: 1 / 1,
     alignSelf: 'center',
-    width: scale(40),
+    width: scale(45),
     justifyContent: 'center',
   },
   unreadCount: {
-    height: scale(30),
-    width: scale(30),
     borderRadius: scale(100),
     backgroundColor: GlobalInclude.Color.ColorPrimary,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: scale(5),
   },
 });
 

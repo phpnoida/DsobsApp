@@ -8,6 +8,7 @@ import ProgressImage from '../../component/ProgresImage';
 import YoutubeView from '../../component/YoutubeView';
 import moment from 'moment';
 import Pdf from 'react-native-pdf';
+import Helper from '../../helper/Helper';
 
 import {isSameUser, isSameDay} from '../../helper/ChatHelper';
 import {IconType} from '../../helper/Constants';
@@ -128,14 +129,18 @@ class ChatItem extends PureComponent {
             g.txtCenterVertical,
             g.mt5,
           ]}>
-          {moment(source.createdAt).fromNow()}
+          {Helper.getChatDate(source.createdAt)}
         </Text>
       </View>
     );
   }
 
   renderAvtar() {
-    const {nextMessage, currentMessage} = this.props;
+    const {nextMessage, currentMessage, isGroup} = this.props;
+
+    if (!isGroup) {
+      return null;
+    }
 
     if (!isSameUser(currentMessage, nextMessage)) {
       return (
@@ -154,7 +159,7 @@ class ChatItem extends PureComponent {
     return (
       <View style={[grid.rowdir]}>
         {this.renderAvtar()}
-        <View style={[g.ml5, g.bggray3, styles.bubbleLeft]}>
+        <View style={[g.ml5, g.bgWhite, styles.bubbleLeft]}>
           {currentMessage.messageType === 1
             ? this.renderTextComponent(currentMessage.message, true)
             : currentMessage.messageType === 2
@@ -199,6 +204,19 @@ class ChatItem extends PureComponent {
     );
   }
 
+  renderSystemMessage() {
+    const {currentMessage, customFont} = this.props;
+    return (
+      <View style={[styles.container]}>
+        <View>
+          <Text style={[styles.text, customFont]}>
+            {currentMessage.message}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   renderDay() {
     const {previousMessage, currentMessage, customFont} = this.props;
 
@@ -222,19 +240,25 @@ class ChatItem extends PureComponent {
     const sameUser = isSameUser(currentMessage, nextMessage);
 
     return (
-      <View
-        style={[
-          g.pl5,
-          g.pr5,
-          {marginBottom: sameUser ? 2 : 10},
-          {marginBottom: 2},
-        ]}>
-        <View style={[grid.rowdir, grid.justifyContentCenter]}>
-          {this.renderDay()}
-        </View>
-        {position === 'right'
-          ? this.renderRightSide(currentMessage)
-          : this.renderLeftSide(currentMessage)}
+      <View>
+        {currentMessage.system ? (
+          this.renderSystemMessage()
+        ) : (
+          <View
+            style={[
+              g.pl5,
+              g.pr5,
+              {marginBottom: sameUser ? 2 : 10},
+              {marginBottom: 2},
+            ]}>
+            <View style={[grid.rowdir, grid.justifyContentCenter]}>
+              {this.renderDay()}
+            </View>
+            {position === 'right'
+              ? this.renderRightSide(currentMessage)
+              : this.renderLeftSide(currentMessage)}
+          </View>
+        )}
       </View>
     );
   }
@@ -327,6 +351,25 @@ const styles = StyleSheet.create({
   usernameView: {
     flexDirection: 'row',
     marginHorizontal: 10,
+  },
+  container: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    marginTop: scale(10),
+    marginBottom: scale(10),
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    paddingVertical: scale(8),
+  },
+  text: {
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
+    color: 'white',
+    fontSize: scale(14),
+    paddingVertical: scale(8),
+    paddingHorizontal: scale(10),
+    borderRadius: scale(15),
+    ...g.FHNR,
+    letterSpacing: 1,
   },
 });
 

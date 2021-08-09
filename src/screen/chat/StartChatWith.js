@@ -68,7 +68,8 @@ const StartChatWith = ({navigation}) => {
       opponent: opponentUser || {},
       isGroup: false,
     };
-    navigation.navigate('ChatScreen', payload);
+    //navigation.navigate('ChatScreen', payload);
+    navigation.replace('ChatScreen', payload);
   };
 
   // Filter section

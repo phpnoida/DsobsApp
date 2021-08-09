@@ -3,6 +3,8 @@ import firestore from '@react-native-firebase/firestore';
 import moment from 'moment';
 import _ from 'lodash';
 import axios from 'axios';
+import Helpers from './Helper';
+import {PUSH_KEY} from '../../config';
 
 const usersCollection = firestore().collection('Users');
 const chatCollection = firestore().collection('Chats');
@@ -347,40 +349,144 @@ export function isSameUser(currentMessage = {}, diffMessage = {}) {
 /**
  * Push notification
  */
-export const sendPushNotification = () => {
-  var data = JSON.stringify({
-    to: '/topics/fcm-602a65dca1714c5bd918612e',
+export const sendPushNotification = async (opponentUser, message) => {
+  const result = await checkUserExist(opponentUser._id);
+
+  if (result !== undefined && result !== null) {
+    let notificationKey = result.notificationKey;
+    let notificationTimestamp = result.notificationTimestamp;
+    let platform = result.platform;
+    let userId = result._id;
+    let topic = `/topics/fcm-${userId}`;
+    let fullname = Helpers.concatName(result);
+
+    let title = `Message from :${fullname}`;
+
+    let data = {
+      title: title,
+      body: message,
+      eventType: 1002,
+      extra: '',
+      linkUrl: '',
+      icon: '',
+    };
+
+    // 1-send notification on all new post 2-twice a day 3-one a day 4-every hour 5-every two hour
+    let chatObject = {
+      notificationTimestamp: new Date().getTime(),
+    };
+    switch (notificationKey) {
+      case 1:
+        executePushNotification(topic, platform, title, message, data);
+        break;
+      case 2:
+        if (
+          notificationTimestamp !== undefined &&
+          notificationTimestamp !== null &&
+          notificationTimestamp !== 0
+        ) {
+          var duration = moment.duration(moment().diff(notificationTimestamp));
+          var hours = duration.asHours();
+          if (hours > 12) {
+            updateUserObject(chatObject, userId, () => {
+              executePushNotification(topic, platform, title, message, data);
+            });
+          }
+        } else {
+          updateUserObject(chatObject, userId, () => {
+            executePushNotification(topic, platform, title, message, data);
+          });
+        }
+        break;
+      case 3:
+        if (
+          notificationTimestamp !== undefined &&
+          notificationTimestamp !== null &&
+          notificationTimestamp !== 0
+        ) {
+          if (!moment().isSame(notificationTimestamp, 'day')) {
+            updateUserObject(chatObject, userId, () => {
+              executePushNotification(topic, platform, title, message, data);
+            });
+          }
+        } else {
+          updateUserObject(chatObject, userId, () => {
+            executePushNotification(topic, platform, title, message, data);
+          });
+        }
+        break;
+      case 4:
+        if (
+          notificationTimestamp !== undefined &&
+          notificationTimestamp !== null &&
+          notificationTimestamp !== 0
+        ) {
+          var duration = moment.duration(moment().diff(notificationTimestamp));
+          var hours = duration.asHours();
+          if (hours > 1) {
+            updateUserObject(chatObject, userId, () => {
+              executePushNotification(topic, platform, title, message, data);
+            });
+          }
+        } else {
+          updateUserObject(chatObject, userId, () => {
+            executePushNotification(topic, platform, title, message, data);
+          });
+        }
+        break;
+      case 5:
+        if (
+          notificationTimestamp !== undefined &&
+          notificationTimestamp !== null &&
+          notificationTimestamp !== 0
+        ) {
+          var duration = moment.duration(moment().diff(notificationTimestamp));
+          var hours = duration.asHours();
+          if (hours > 2) {
+            updateUserObject(chatObject, userId, () => {
+              executePushNotification(topic, platform, title, message, data);
+            });
+          }
+        } else {
+          updateUserObject(chatObject, userId, () => {
+            executePushNotification(topic, platform, title, message, data);
+          });
+        }
+        break;
+      default:
+        break;
+    }
+  }
+};
+
+export const executePushNotification = (to, platform, title, message, data) => {
+  var data = {
+    to: to,
     priority: 'high',
     content_available: true,
     mutable_content: true,
-    data: {
-      title: 'Title Text',
-      body: 'Kill app from recent',
-      picture:
-        'https://dsobs-new.s3.ap-south-1.amazonaws.com/1614672143_993702_unnamed.png',
-      eventType: 1,
-      extra: '',
-      linkUrl: 'https://github.com/invertase/react-native-firebase/issues/3476',
-      icon: 'https://homepages.cae.wisc.edu/~ece533/images/airplane.png',
-    },
+    data: data,
     notification: {
-      body: 'mongoose',
-      title: 'mongoosee',
-      image: 'https://homepages.cae.wisc.edu/~ece533/images/airplane.png',
+      body: message,
+      title: title,
     },
-  });
+  };
+
+  if (platform === 'android') {
+    data = _.omit(data, 'notification');
+  }
+
+  data = JSON.stringify(data);
 
   var config = {
     method: 'post',
     url: 'https://fcm.googleapis.com/fcm/send',
     headers: {
-      Authorization:
-        'key=AAAAa3gDRh0:APA91bHs8zrX6pvbJv7Ada8PmtOmDCA_ef0xtZKGflfjRBoMoGF-JmrfJrdtVKc2lzLIjiEMtEUYv3FjzEe3_0XiHzBcKzTyWVLzMvJFg47OtMzibvwC0ra03uzVlvxmM1qUdy3RZAOZ',
+      Authorization: PUSH_KEY,
       'Content-Type': 'application/json',
     },
     data: data,
   };
-
   axios(config)
     .then(function (response) {
       console.log(JSON.stringify(response.data));
@@ -389,6 +495,7 @@ export const sendPushNotification = () => {
       console.log(error);
     });
 };
+
 /**
  * Push notification
  */

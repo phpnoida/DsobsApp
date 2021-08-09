@@ -15,6 +15,7 @@ import {
   FlatList,
   ActivityIndicator,
   Keyboard,
+  BackHandler,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
@@ -25,6 +26,7 @@ import ProgressImage from '../../component/ProgresImage';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {getStatusBarHeight} from 'react-native-iphone-x-helper';
 import {IconType, APP_NAME} from '../../helper/Constants';
+import ThreeDotsLoader from '../../helper/ThreeDotsLoader';
 import ChatItem from './ChatItem';
 import Helper from '../../helper/Helper';
 import moment from 'moment';
@@ -47,6 +49,9 @@ let challenger = null,
   opponent = null,
   isGroup = null;
 let isChatExist = null;
+let newItems = false;
+let lastPickedMsgId = '';
+let backHandler = null;
 
 const usersCollection = firestore().collection('Users');
 const chatCollection = firestore().collection('Chats');
@@ -111,7 +116,18 @@ const ChatScreen = ({route, navigation}) => {
       }
     };
     appFunction();
-  }, [route]);
+
+    const backAction = () => {
+      if (navigation.isFocused()) {
+        setUserLastSeen(false, new Date().getTime(), () => {
+          navigation.replace('ChatUserList');
+        });
+        return true;
+      }
+    };
+
+    backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+  }, [route, navigation]);
 
   useEffect(() => {
     if (snapshot !== undefined && snapshot !== null) {
@@ -174,11 +190,16 @@ const ChatScreen = ({route, navigation}) => {
     };
 
     const onChildAdded = (child, previousKey) => {
+      if (!newItems || lastPickedMsgId === child.val()._id) {
+        return;
+      }
+
       console.log('====================================');
       console.log('childAdded', child, previousKey);
       console.log('====================================');
       if (child && child !== null && child !== undefined) {
         let nextMsg = JSON.parse(JSON.stringify(child.val()));
+
         let msgUser = nextMsg.user;
         if (
           msgUser._id !== undefined &&
@@ -186,7 +207,7 @@ const ChatScreen = ({route, navigation}) => {
           msgUser._id !== global.userId
         ) {
           nextMsg.isRead = true;
-          updateChatMsg(nextMsg);
+          updateChatMsg(nextMsg, true);
         } else {
           setMessages((previousMessages) =>
             append(previousMessages, child.val()),
@@ -197,15 +218,17 @@ const ChatScreen = ({route, navigation}) => {
 
     const onValue = (snapshots) => {
       if (snapshots && snapshots !== undefined) {
+        console.log('====================================');
+        console.log('onValue');
+        console.log('====================================');
         let msgList = snapshots.reverse();
         setMessages([...msgList]);
+        setIsFirstLoad(false);
+        newItems = true;
+        childAddedHandler = mainRef
+          .limitToLast(1)
+          .on('child_added', onChildAdded, onError);
       }
-    };
-
-    const onChildChanged = (childChanged) => {
-      console.log('====================================');
-      console.log('snapshots-onChildChanged', childChanged);
-      console.log('====================================');
     };
 
     const onInitialLoad = (objectValue) => {
@@ -215,12 +238,11 @@ const ChatScreen = ({route, navigation}) => {
         : 0;
 
       if (childrenToProcess === 0) {
-        childAddedHandler = mainRef.on('child_added', onChildAdded, onError);
         onValue([]);
-        setIsFirstLoad(false);
       } else {
-        //
-        const children = [];
+        /**
+         * 
+         * const children = [];
         const onChildAddedWithoutInitialLoad = (addedChild, previousKey) => {
           if (childrenToProcess > 0) {
             childrenToProcess--;
@@ -234,65 +256,171 @@ const ChatScreen = ({route, navigation}) => {
           }
           onChildAdded(addedChild, previousKey);
         };
-        childAddedHandler = mainRef.on(
-          'child_added',
-          onChildAddedWithoutInitialLoad,
-          onError,
-        );
+        childAddedHandler = mainRef
+          .limitToLast(1)
+          .on('child_added', onChildAddedWithoutInitialLoad, onError);
+         * 
+         */
+        const children = [];
+        let unreadPosition = -1;
+        let unreadCount = 0;
+
+        try {
+          objectValue.forEach((item, index, array) => {
+            const element = item.val();
+            childrenToProcess--;
+            if (!isGroup) {
+              if (!element.isRead && element.user._id !== global.userId) {
+                unreadCount++;
+                if (unreadPosition === -1) {
+                  unreadPosition = index;
+                }
+              }
+            }
+
+            children.push(element);
+            if (childrenToProcess === 0) {
+              lastPickedMsgId = element._id;
+
+              let systemMsg = {
+                system: true,
+                message: `(${unreadCount}) Unread Messages`,
+                createdAt: new Date().getTime(),
+                messageType: 1,
+                media: '',
+                user: getUserObject(),
+                isRead: true,
+                isSent: true,
+                replay: {},
+                removedBy: [],
+              };
+              if (unreadPosition > -1) {
+                children.splice(unreadPosition, 0, systemMsg);
+              }
+              onValue(children);
+              updateAllChilds(children, messageThreadId);
+            }
+          });
+        } catch (error) {
+          console.log('====================================');
+          console.log('error', error);
+          console.log('====================================');
+        }
       }
     };
 
     mainRef.once('value', onInitialLoad, onError);
+
+    return () => {
+      mainRef.off('child_added', childAddedHandler);
+      //mainRef.off('child_changed', childChangedHandler);
+      backHandler.remove();
+    };
+  }, [messageThreadId, updateChatMsg, updateAllChilds]);
+
+  useEffect(() => {
+    if (messageThreadId === '') {
+      return;
+    }
+
+    const mainRef = reference.child(messageThreadId).ref;
+
+    const onError = (error) => {
+      console.log('====================================');
+      console.log('firebase error', error);
+      console.log('====================================');
+    };
+
+    const onChildChanged = (childChanged) => {
+      console.log('====================================');
+      console.log('snapshots-onChildChanged', childChanged);
+      console.log('====================================');
+      if (childChanged && childChanged !== null && childChanged !== undefined) {
+        let nextMsg = JSON.parse(JSON.stringify(childChanged.val()));
+        let msgUser = nextMsg.user;
+        if (
+          msgUser._id !== undefined &&
+          msgUser._id !== null &&
+          msgUser._id === global.userId
+        ) {
+          nextMsg.isRead = true;
+          setTimeout(() => {
+            refreshChildrens(nextMsg);
+          }, 200);
+        }
+      }
+    };
+
     const childChangedHandler = mainRef.on(
       'child_changed',
       onChildChanged,
       onError,
     );
-
     return () => {
-      mainRef.off('child_added', childAddedHandler);
       mainRef.off('child_changed', childChangedHandler);
     };
-  }, [messageThreadId, updateChatMsg]);
+  }, [messages, messageThreadId, refreshChildrens]);
 
-  const updateAllChilds = useCallback(
-    (childs) => {
-      let updateArray = [];
+  const refreshChildrens = useCallback(
+    (child) => {
+      let oldData = messages;
+      let isFound = false;
 
-      var rv = {};
-      for (var i = 0; i < childs.length; ++i) {
-        const element = childs[i];
-        if (element.user._id !== global.userId) {
+      for (let i = 0; i < oldData.length; i++) {
+        const item = oldData[i];
+        if (item._id === child._id) {
+          oldData[i] = child;
+          isFound = true;
+          break;
+        }
+      }
+      if (isFound) {
+        updateChatMsg(child, false);
+        setMessages([...oldData]);
+      }
+    },
+    [messages, updateChatMsg],
+  );
+
+  const updateAllChilds = useCallback((childs, messageId) => {
+    let updateArray = [];
+    let isFound = false;
+    var rv = {};
+    for (var i = 0; i < childs.length; ++i) {
+      const element = childs[i];
+      if (element.user._id !== global.userId) {
+        if (!element.isRead || !element.isSent) {
+          isFound = true;
           element.isRead = true;
           element.isSent = true;
           updateArray.push(element);
           rv[element._id] = element;
         }
       }
+    }
+
+    if (isFound) {
       reference
-        .child(messageThreadId)
+        .child(messageId)
         .update(rv)
         .then(() => {
-          getChatObject(messageThreadId, (response) => {
+          getChatObject(messageId, (response) => {
             if (response && response !== null && response !== undefined) {
               let unreadCount = response.unreadCount;
-
               unreadCount.forEach((element) => {
-                if (element.userId !== global.userId) {
+                if (element.userId === global.userId) {
                   element.count = 0;
                 }
               });
-
               const request = {
                 unreadCount: unreadCount,
               };
-              updateChatObject(messageThreadId, request, () => {});
+              updateChatObject(messageId, request, () => {});
             }
           });
         });
-    },
-    [messageThreadId],
-  );
+    }
+  }, []);
 
   const setUnreadCount = () => {
     getChatObject(messageThreadId, (response) => {
@@ -314,15 +442,17 @@ const ChatScreen = ({route, navigation}) => {
   };
 
   const updateChatMsg = useCallback(
-    (updateObject) => {
+    (updateObject, appendMsg) => {
       reference
         .child(messageThreadId)
         .child(updateObject._id)
         .update(updateObject)
         .then(() => {
-          setMessages((previousMessages) =>
-            append(previousMessages, updateObject),
-          );
+          if (appendMsg) {
+            setMessages((previousMessages) =>
+              append(previousMessages, updateObject),
+            );
+          }
         });
     },
     [messageThreadId],
@@ -385,12 +515,56 @@ const ChatScreen = ({route, navigation}) => {
     }
   };
 
-  const setLastMessage = () => {
-    const request = {
-      lastMessage: inputValue.trim() === '' ? 'Shared Media' : inputValue,
-      lastMessageTime: new Date().getTime(),
+  const addMessageToThread = (chatId) => {
+    let request = {
+      message: inputValue,
+      createdAt: new Date().getTime(),
+      messageType: 1,
+      media: '',
+      user: getUserObject(),
+      isRead: isOpponentOnline,
+      isSent: true,
+      replay: {},
+      removedBy: [],
     };
-    updateChatObject(messageThreadId, request, () => {});
+    addObjectToChat(request, chatId);
+  };
+
+  const addObjectToChat = (request, chatId) => {
+    let childRef = reference.child(chatId);
+    childRef.push().then((snap) => {
+      const _id = snap.key;
+      request._id = _id;
+      snap.set(request).then(() => {
+        if (!isGroup && !isOpponentOnline) {
+          setUnreadCount();
+          sendPushNotification(
+            opponent,
+            inputValue.trim() === '' ? 'Shared Media' : inputValue,
+          );
+        }
+        setLastMessage(
+          inputValue.trim() === '' ? 'Shared Media' : inputValue,
+          chatId,
+        );
+        setIsSending(false);
+        setInputValue('');
+        //Keyboard.dismiss();
+      });
+    });
+  };
+
+  const setLastMessage = (lastMsg, chatId) => {
+    const request = {
+      lastMessage: lastMsg,
+      lastMessageTime: new Date().getTime(),
+      isTyping: [
+        {userId: global.userId, status: false},
+        {userId: opponent._id, status: false},
+      ],
+    };
+
+    updateChatObject(chatId, request, () => {});
   };
 
   const getUserObject = () => {
@@ -403,39 +577,6 @@ const ChatScreen = ({route, navigation}) => {
     };
   };
 
-  const addMessageToThread = (inputObject) => {
-    let request = {
-      message: inputValue,
-      createdAt: new Date().getTime(),
-      messageType: 1,
-      media: '',
-      user: getUserObject(),
-      isRead: isOpponentOnline,
-      isSent: true,
-      replay: {},
-      removedBy: [],
-    };
-    addObjectToChat(request, inputObject);
-  };
-
-  const addObjectToChat = (request, inputObject) => {
-    let childRef = reference.child(inputObject);
-    childRef.push().then((snap) => {
-      const _id = snap.key;
-      request._id = _id;
-      snap.set(request).then(() => {
-        if (!isGroup && !isOpponentOnline) {
-          setUnreadCount();
-        }
-        setLastMessage();
-        setIsSending(false);
-        setInputValue('');
-        sendUserTyping(false);
-        Keyboard.dismiss();
-      });
-    });
-  };
-
   const renderHeader = () => {
     return (
       <View style={headerStyle.headerContainer}>
@@ -445,7 +586,7 @@ const ChatScreen = ({route, navigation}) => {
             <TouchableOpacity
               onPress={() => {
                 setUserLastSeen(false, new Date().getTime(), () => {
-                  navigation.goBack();
+                  navigation.replace('ChatUserList');
                 });
               }}
               style={[grid.alignItems, grid.justifyContentCenter]}>
@@ -475,7 +616,7 @@ const ChatScreen = ({route, navigation}) => {
               </View>
               <View
                 style={{
-                  backgroundColor: isOpponentOnline ? 'green' : 'red',
+                  backgroundColor: isOpponentOnline ? 'green' : 'gray',
                   height: scale(12),
                   width: scale(12),
                   borderRadius: scale(100),
@@ -485,17 +626,22 @@ const ChatScreen = ({route, navigation}) => {
                 }}
               />
             </View>
-            <View style={[grid.col, grid.justifyContentCenter, g.ml5, g.mr5]}>
+            <View style={[grid.col, g.ml5, g.mr5]}>
               <Text
                 style={[g.fs14, g.FHNB, g.colordarkGray, g.txtLeft]}
                 numberOfLines={1}>
                 {header}
               </Text>
-              {isOpponentOnline ? (
+              <Text
+                style={[g.fs11, g.FHNB, g.colordarkGray, g.txtLeft, g.mt2]}
+                numberOfLines={1}>
+                {isOpponentTyping ? 'typing...' : subHeader}
+              </Text>
+              {/* {isOpponentOnline ? (
                 <Text
                   style={[g.fs11, g.FHNB, g.colordarkGray, g.txtLeft, g.mt1]}
                   numberOfLines={1}>
-                  {isOpponentTyping ? 'Typing...' : subHeader}
+                  {isOpponentTyping ? 'typing...' : subHeader}
                 </Text>
               ) : (
                 <Text
@@ -503,7 +649,7 @@ const ChatScreen = ({route, navigation}) => {
                   numberOfLines={1}>
                   LastSeen: {moment(lastSeen).fromNow()}
                 </Text>
-              )}
+              )} */}
             </View>
           </View>
           <View
@@ -580,6 +726,7 @@ const ChatScreen = ({route, navigation}) => {
     const customFont = {fontSize: fontSize};
 
     const messageProps = {
+      isGroup: isGroup,
       key: item._id,
       currentMessage: item,
       previousMessage,
@@ -614,43 +761,53 @@ const ChatScreen = ({route, navigation}) => {
   const keyExtractor = (item, index) => index;
 
   return (
-    <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
+    <View style={[GlobalInclude.AppStyle.fill, g.bggray3]}>
       {renderHeader()}
       {showProgess(isFirstLoad)}
       <View style={[GlobalInclude.AppStyle.fill]}>
-        <FlatList
-          inverted={-1}
-          data={messages}
-          renderItem={renderChatItem}
-          removeClippedSubviews={Platform.OS !== 'web'}
-          showsVerticalScrollIndicator={false}
-          keyExtractor={keyExtractor}
-          onEndReachedThreshold={0.1}
-          // onEndReached={onEndReached}
-          // refreshing={isRefreshing}
-          // onRefresh={handleRefresh}
-          ListEmptyComponent={emptyComponent}
-          scrollEventThrottle={16}
-          bounces={false}
-          initialNumToRender={10}
-          maxToRenderPerBatch={8}
-          updateCellsBatchingPeriod={100}
-          automaticallyAdjustContentInsets={false}
-          initialListSize={5}
-          pageSize={1}
-          contentContainerStyle={{
-            paddingTop: scale(15),
-            paddingBottom: scale(20),
-          }}
-          // style={{transform: [{scaleY: -1}]}}
-        />
+        {isFirstLoad ? (
+          <View style={[GlobalInclude.AppStyle.fillCenter]}>
+            <ThreeDotsLoader
+              size={scale(12)}
+              activeBackground={GlobalInclude.Color.ColorPrimary}
+            />
+          </View>
+        ) : (
+          <FlatList
+            inverted={-1}
+            data={messages}
+            renderItem={renderChatItem}
+            removeClippedSubviews={Platform.OS !== 'web'}
+            showsVerticalScrollIndicator={false}
+            keyExtractor={keyExtractor}
+            onEndReachedThreshold={0.1}
+            // onEndReached={onEndReached}
+            // refreshing={isRefreshing}
+            // onRefresh={handleRefresh}
+            ListEmptyComponent={emptyComponent}
+            scrollEventThrottle={16}
+            bounces={false}
+            initialNumToRender={10}
+            maxToRenderPerBatch={8}
+            updateCellsBatchingPeriod={100}
+            automaticallyAdjustContentInsets={false}
+            initialListSize={5}
+            pageSize={1}
+            contentContainerStyle={{
+              paddingTop: scale(15),
+              paddingBottom: scale(20),
+            }}
+            // style={{transform: [{scaleY: -1}]}}
+          />
+        )}
+
         <KeyboardAvoidingView
           behavior={Platform.select({android: 'height', ios: 'padding'})}
           style={{marginBottom: scale(10)}}>
           <View style={styles.footer}>
             <View
               style={{
-                backgroundColor: '#eee',
+                backgroundColor: '#fff',
                 flexDirection: 'row',
                 flex: 1,
                 borderRadius: scale(10),
@@ -689,7 +846,6 @@ const ChatScreen = ({route, navigation}) => {
 
             <TouchableOpacity
               onPress={() => {
-                sendPushNotification();
                 setIsSending(true);
                 if (isChatExist === null) {
                   generateSingleChat();
@@ -709,7 +865,7 @@ const ChatScreen = ({route, navigation}) => {
               ) : (
                 <GlobalInclude.BaseIcon
                   containerStyle={{height: scale(20), width: scale(20)}}
-                  iconColor={'#FFF'}
+                  iconColor={inputValue.trim().length > 0 ? '#fff' : '#b2b2b2'}
                   iconName={'send-o'}
                   iconSize={scale(20)}
                   iconType={IconType[4]}
