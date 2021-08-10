@@ -9,22 +9,22 @@ import {
   TextInput,
   Dimensions,
   Keyboard,
+  Alert,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import HeaderBar from '../../component/HeaderBar';
 import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
-import {APP_NAME, IconType} from '../../helper/Constants';
+import {IconType} from '../../helper/Constants';
 import {getDirectory} from '../../Actions/DirectoryActions';
 import AutoSuggestUser from '../../component/AutoSuggestUser';
-import {showUser} from '../../component/Common';
 import Helper from '../../helper/Helper';
 import ProgresImage from '../../component/ProgresImage';
 import ModelAlert from '../../component/ModalAlert';
 import CommonButton from '../../component/CommonButton';
 import {addUser, checkUserExist} from '../../helper/ChatHelper';
-const {height, width} = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
 let searchVal = '';
 let lastIndex = 1;
@@ -57,7 +57,35 @@ const StartChatWith = ({navigation}) => {
         createChatUser(selectedUser[0]);
       });
     } else {
-      createChatUser(selectedUser[0]);
+      if (result !== undefined && result !== null) {
+        if (
+          result.chatEnabled &&
+          result.chatEnabled !== undefined &&
+          result.chatEnabled !== null &&
+          result.chatEnabled
+        ) {
+          let blockedUser = result.blockedUser;
+
+          if (blockedUser.indexOf(global.userId) > -1) {
+            setIsLoading(false);
+            Alert.alert(
+              'You have been blocked',
+              'user has blocked you on chat.',
+            );
+          } else {
+            createChatUser(selectedUser[0]);
+          }
+        } else {
+          setIsLoading(false);
+          Alert.alert(
+            'Feature not available',
+            'user has disabled this feature.',
+          );
+        }
+      } else {
+        setIsLoading(false);
+        Alert.alert('Feature not available', 'user has disabled this feature.');
+      }
     }
   };
 

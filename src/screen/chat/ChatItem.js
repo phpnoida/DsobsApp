@@ -1,5 +1,11 @@
 import React, {PureComponent} from 'react';
-import {View, Text, StyleSheet, Dimensions} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+} from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
@@ -55,6 +61,20 @@ class ChatItem extends PureComponent {
           isLeft ? g.colorBlack : g.colorWhite,
           g.txtCenterVertical,
           {textAlign: 'justify'},
+        ]}>
+        {source}
+      </Text>
+    );
+  }
+
+  renderEmojiComponent(source, isLeft) {
+    return (
+      <Text
+        style={[
+          g.FHNR,
+          isLeft ? g.colorBlack : g.colorWhite,
+          g.txtCenterVertical,
+          {textAlign: 'justify', fontSize: scale(54)},
         ]}>
         {source}
       </Text>
@@ -160,7 +180,9 @@ class ChatItem extends PureComponent {
       <View style={[grid.rowdir]}>
         {this.renderAvtar()}
         <View style={[g.ml5, g.bgWhite, styles.bubbleLeft]}>
-          {currentMessage.messageType === 1
+          {currentMessage.delete
+            ? this.renderRemovedMsg(true)
+            : currentMessage.messageType === 1
             ? this.renderTextComponent(currentMessage.message, true)
             : currentMessage.messageType === 2
             ? this.renderImageComponent(currentMessage.media)
@@ -170,6 +192,8 @@ class ChatItem extends PureComponent {
             ? this.renderAudioComponent(currentMessage.media)
             : currentMessage.messageType === 5
             ? this.renderPdfComponent(currentMessage.media)
+            : currentMessage.messageType === 6
+            ? this.renderEmojiComponent(currentMessage.message)
             : null}
 
           {this.renderDateComponent(currentMessage, true)}
@@ -182,7 +206,9 @@ class ChatItem extends PureComponent {
     return (
       <View style={[grid.rowdir, styles.viewRight]}>
         <View style={[g.bgBlue, styles.bubbleRight]}>
-          {currentMessage.messageType === 1
+          {currentMessage.delete
+            ? this.renderRemovedMsg(false)
+            : currentMessage.messageType === 1
             ? this.renderTextComponent(currentMessage.message, false)
             : currentMessage.messageType === 2
             ? this.renderImageComponent(currentMessage.media)
@@ -192,6 +218,8 @@ class ChatItem extends PureComponent {
             ? this.renderAudioComponent(currentMessage.media)
             : currentMessage.messageType === 5
             ? this.renderPdfComponent(currentMessage.media)
+            : currentMessage.messageType === 6
+            ? this.renderEmojiComponent(currentMessage.message)
             : null}
 
           <View style={[grid.rowrow, styles.viewRight]}>
@@ -216,6 +244,31 @@ class ChatItem extends PureComponent {
       </View>
     );
   }
+  renderRemovedMsg(isLeft) {
+    const {customFont} = this.props;
+    return (
+      <View style={[grid.rowrow, grid.alignItems, grid.justifyContentCenter]}>
+        <GlobalInclude.BaseIcon
+          containerStyle={{height: scale(16), width: scale(16)}}
+          iconColor={'#FFF'}
+          iconName={'block'}
+          iconSize={scale(16)}
+          iconType={IconType[9]}
+        />
+        <Text
+          style={[
+            customFont,
+            g.FHNR,
+            g.ml5,
+            isLeft ? g.colorBlack : g.colorWhite,
+            g.txtCenterVertical,
+            {textAlign: 'justify'},
+          ]}>
+          This message has been deleted
+        </Text>
+      </View>
+    );
+  }
 
   renderDay() {
     const {previousMessage, currentMessage, customFont} = this.props;
@@ -236,7 +289,7 @@ class ChatItem extends PureComponent {
   }
 
   render() {
-    const {currentMessage, nextMessage, position} = this.props;
+    const {currentMessage, nextMessage, position, onLongPress} = this.props;
     const sameUser = isSameUser(currentMessage, nextMessage);
 
     return (
@@ -244,7 +297,9 @@ class ChatItem extends PureComponent {
         {currentMessage.system ? (
           this.renderSystemMessage()
         ) : (
-          <View
+          <TouchableOpacity
+            onLongPress={onLongPress}
+            activeOpacity={1}
             style={[
               g.pl5,
               g.pr5,
@@ -257,7 +312,7 @@ class ChatItem extends PureComponent {
             {position === 'right'
               ? this.renderRightSide(currentMessage)
               : this.renderLeftSide(currentMessage)}
-          </View>
+          </TouchableOpacity>
         )}
       </View>
     );

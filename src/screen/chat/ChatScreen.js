@@ -16,6 +16,8 @@ import {
   ActivityIndicator,
   Keyboard,
   BackHandler,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
@@ -23,13 +25,18 @@ import {scale} from '../../theme/Scalling';
 import {renderNoDataComponent, showProgess} from '../../component/Common';
 import UploadMedia from '../../component/UploadMedia';
 import ProgressImage from '../../component/ProgresImage';
+import AnimatedHideView from '../../component/AnimatedHideView';
+
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {getStatusBarHeight} from 'react-native-iphone-x-helper';
 import {IconType, APP_NAME} from '../../helper/Constants';
 import ThreeDotsLoader from '../../helper/ThreeDotsLoader';
 import ChatItem from './ChatItem';
 import Helper from '../../helper/Helper';
-import moment from 'moment';
+import EmojiSelector from 'react-native-emoji-selector';
+import OptionsSheet from 'react-native-raw-bottom-sheet';
+import * as Animatable from 'react-native-animatable';
+
 // Firestore
 import firestore from '@react-native-firebase/firestore';
 import database from '@react-native-firebase/database';
@@ -44,6 +51,7 @@ import {
   sendPushNotification,
 } from '../../helper/ChatHelper';
 
+const {height, width} = Dimensions.get('window');
 let selectedFontSize = 1;
 let challenger = null,
   opponent = null,
@@ -52,6 +60,8 @@ let isChatExist = null;
 let newItems = false;
 let lastPickedMsgId = '';
 let backHandler = null;
+let isStickerShowing = false;
+let lastPickIndex = -1;
 
 const usersCollection = firestore().collection('Users');
 const chatCollection = firestore().collection('Chats');
@@ -59,6 +69,10 @@ const reference = database().ref('Messages');
 
 const ChatScreen = ({route, navigation}) => {
   const uploadRef = useRef();
+  const emojiRef = useRef();
+  const animRef = useRef();
+  const chatObjRef = useRef();
+
   const transform =
     Platform.OS === 'android'
       ? [{scaleY: -1}, {perspective: 1280}]
@@ -78,6 +92,12 @@ const ChatScreen = ({route, navigation}) => {
   const [lastSeen, setLastSeen] = useState(0);
   const [isSending, setIsSending] = useState(false);
   const [messageThreadId, setMessageThreadId] = useState('');
+
+  const [selectedChatObject, setSelectedChatObject] = useState(null);
+
+  const [animatedWidth] = useState(new Animated.Value(0));
+  const [animatedOpacity] = useState(new Animated.Value(0));
+
   const [snapshot] = useCollection(
     usersCollection.where('_id', '==', route.params.opponent._id),
   );
@@ -501,18 +521,14 @@ const ChatScreen = ({route, navigation}) => {
     updateChatObject(messageThreadId, request, () => {});
   };
 
-  const generateSingleChat = async () => {
-    if (isChatExist === null) {
-      createSingleChat(opponent, (chatId) => {
-        if (chatId !== undefined && chatId !== null) {
-          isChatExist = chatId;
-          setMessageThreadId(chatId);
-          addMessageToThread(chatId);
-        }
-      });
-    } else {
-      addMessageToThread(messageThreadId);
-    }
+  const generateSingleChat = async (callback) => {
+    createSingleChat(opponent, (chatId) => {
+      if (chatId !== undefined && chatId !== null) {
+        isChatExist = chatId;
+        setMessageThreadId(chatId);
+        callback(chatId);
+      }
+    });
   };
 
   const addMessageToThread = (chatId) => {
@@ -626,7 +642,11 @@ const ChatScreen = ({route, navigation}) => {
                 }}
               />
             </View>
-            <View style={[grid.col, g.ml5, g.mr5]}>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('ChatUserProfile', {userId: opponent._id});
+              }}
+              style={[grid.col, g.ml5, g.mr5]}>
               <Text
                 style={[g.fs14, g.FHNB, g.colordarkGray, g.txtLeft]}
                 numberOfLines={1}>
@@ -650,7 +670,7 @@ const ChatScreen = ({route, navigation}) => {
                   LastSeen: {moment(lastSeen).fromNow()}
                 </Text>
               )} */}
-            </View>
+            </TouchableOpacity>
           </View>
           <View
             style={[
@@ -735,7 +755,257 @@ const ChatScreen = ({route, navigation}) => {
       position: item.user._id === global.userId ? 'right' : 'left',
     };
 
-    return <ChatItem {...messageProps} />;
+    return (
+      <ChatItem
+        {...messageProps}
+        onLongPress={() => {
+          setSelectedChatObject(item);
+          lastPickIndex = index;
+          setTimeout(() => {
+            if (
+              chatObjRef.current !== undefined &&
+              chatObjRef.current !== null
+            ) {
+              chatObjRef.current.open();
+            }
+          }, 200);
+        }}
+      />
+    );
+  };
+
+  const emojiList = () => {
+    return (
+      <OptionsSheet
+        ref={emojiRef}
+        minClosingHeight={50}
+        height={height / 2 + 150}
+        duration={200}
+        closeOnDragDown={true}
+        customStyles={{
+          container: GlobalInclude.AppStyle.sheetContainer,
+        }}>
+        <EmojiSelector
+          onEmojiSelected={(emoji) => {
+            emojiRef.current.close();
+            let request = {
+              message: emoji,
+              createdAt: new Date().getTime(),
+              messageType: 6,
+              media: '',
+              user: getUserObject(),
+              isRead: false,
+              isSent: true,
+              replay: {},
+              removedBy: [],
+            };
+            if (isChatExist === null) {
+              generateSingleChat((chatId) => {
+                addMessageToThread(chatId);
+                addObjectToChat(request, chatId);
+              });
+            } else {
+              addObjectToChat(request, messageThreadId);
+            }
+          }}
+        />
+      </OptionsSheet>
+    );
+  };
+
+  const showUserPostOptions = () => {
+    return (
+      <View>
+        <TouchableOpacity
+          onPress={() => {
+            if (
+              chatObjRef.current !== undefined &&
+              chatObjRef.current !== null
+            ) {
+              chatObjRef.current.close();
+            }
+          }}
+          style={[
+            grid.justifyContentCenter,
+            grid.alignItems,
+            g.p15,
+            {
+              borderBottomWidth: 2,
+              borderBottomColor: '#ebebe4',
+            },
+          ]}>
+          <Text
+            style={[
+              g.fs18,
+              g.FHNM,
+              g.colorBlue,
+              grid.justifyContentCenter,
+              grid.alignItems,
+              g.txtCenterVertical,
+            ]}>
+            Edit
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            if (
+              chatObjRef.current !== undefined &&
+              chatObjRef.current !== null
+            ) {
+              chatObjRef.current.close();
+            }
+
+            setTimeout(() => {
+              let selectedMsg = selectedChatObject;
+              selectedMsg.delete = true;
+
+              reference
+                .child(messageThreadId)
+                .child(selectedMsg._id)
+                .update(selectedMsg)
+                .then(() => {
+                  let oldData = messages;
+                  oldData[lastPickIndex] = selectedMsg;
+                  setMessages([...oldData]);
+                });
+            }, 220);
+          }}
+          style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
+          <Text
+            style={[
+              g.fs18,
+              g.FHNM,
+              g.colorBlue,
+              grid.justifyContentCenter,
+              grid.alignItems,
+              g.txtCenterVertical,
+            ]}>
+            Remove Message
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const showOtherPostOptions = () => {
+    return (
+      <View>
+        <TouchableOpacity
+          onPress={() => {
+            if (
+              chatObjRef.current !== undefined &&
+              chatObjRef.current !== null
+            ) {
+              chatObjRef.current.close();
+            }
+          }}
+          style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
+          <Text
+            style={[
+              g.fs18,
+              g.FHNM,
+              g.colorBlue,
+              grid.justifyContentCenter,
+              grid.alignItems,
+              g.txtCenterVertical,
+            ]}>
+            Report Comment
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const postComments = () => {
+    return (
+      <OptionsSheet
+        ref={chatObjRef}
+        minClosingHeight={50}
+        height={
+          selectedChatObject !== null &&
+          selectedChatObject.user._id === global.userId
+            ? 260
+            : 210
+        }
+        duration={200}
+        closeOnDragDown={false}
+        keyboardAvoidingViewEnabled={false}
+        customStyles={{
+          container: {
+            backgroundColor: 'transparent',
+          },
+        }}>
+        <View
+          style={{
+            backgroundColor: 'white',
+            marginHorizontal: scale(10),
+            borderRadius: 15,
+          }}>
+          <TouchableOpacity
+            onPress={() => {
+              if (
+                chatObjRef.current !== undefined &&
+                chatObjRef.current !== null
+              ) {
+                chatObjRef.current.close();
+              }
+            }}
+            style={[
+              grid.justifyContentCenter,
+              grid.alignItems,
+              g.p15,
+              {borderBottomWidth: 2, borderBottomColor: '#ebebe4'},
+            ]}>
+            <Text
+              style={[
+                g.fs18,
+                g.FHNM,
+                g.colorBlue,
+                grid.justifyContentCenter,
+                grid.alignItems,
+                g.txtCenterVertical,
+              ]}>
+              Reply
+            </Text>
+          </TouchableOpacity>
+          {selectedChatObject !== null &&
+          selectedChatObject.user._id === global.userId
+            ? showUserPostOptions()
+            : showOtherPostOptions()}
+        </View>
+
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => {
+            if (
+              chatObjRef.current !== undefined &&
+              chatObjRef.current !== null
+            ) {
+              chatObjRef.current.close();
+            }
+          }}
+          style={{
+            backgroundColor: 'white',
+            marginHorizontal: scale(10),
+            borderRadius: 15,
+            marginVertical: scale(10),
+          }}>
+          <View style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
+            <Text
+              style={[
+                g.fs18,
+                g.FHNM,
+                g.colorBlue,
+                grid.justifyContentCenter,
+                grid.alignItems,
+                g.txtCenterVertical,
+              ]}>
+              Close
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </OptionsSheet>
+    );
   };
 
   const emptyComponent = () => {
@@ -759,6 +1029,16 @@ const ChatScreen = ({route, navigation}) => {
   };
 
   const keyExtractor = (item, index) => index;
+
+  const interpolatedHeight = animatedWidth.interpolate({
+    inputRange: [0, 1],
+    outputRange: [isStickerShowing ? 0 : 45, !isStickerShowing ? 45 : 0],
+  });
+
+  const interpolatedOpacity = animatedOpacity.interpolate({
+    inputRange: [0, 1],
+    outputRange: [!isStickerShowing ? 1.0 : 0.0, isStickerShowing ? 0.0 : 1.0],
+  });
 
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bggray3]}>
@@ -810,8 +1090,62 @@ const ChatScreen = ({route, navigation}) => {
                 backgroundColor: '#fff',
                 flexDirection: 'row',
                 flex: 1,
-                borderRadius: scale(10),
+                borderRadius: scale(30),
               }}>
+              {/* <Animatable.View
+                ref={animRef}
+                useNativeDriver={true}
+                style={{
+                  width: !isStickerShowing ? scale(40) : 0,
+                  height: scale(40),
+                  borderRadius: scale(10),
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  alignSelf: 'center',
+                }}
+                easing={'linear'}>
+                <TouchableOpacity
+                  onPress={() => {}}
+                  style={[styles.commentButton]}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(20), width: scale(20)}}
+                    iconColor={GlobalInclude.Color.ColorPrimary}
+                    iconName={'sticker-emoji'}
+                    iconSize={scale(20)}
+                    iconType={IconType[1]}
+                  />
+                </TouchableOpacity>
+              </Animatable.View> */}
+
+              <Animated.View
+                style={[
+                  {
+                    width: interpolatedHeight,
+                    opacity: interpolatedOpacity,
+                    height: scale(40),
+                    borderRadius: scale(10),
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    alignSelf: 'center',
+                  },
+                ]}>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (emojiRef !== undefined && emojiRef !== null) {
+                      emojiRef.current.open();
+                    }
+                  }}
+                  style={[styles.commentButton]}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(20), width: scale(20)}}
+                    iconColor={GlobalInclude.Color.ColorPrimary}
+                    iconName={'sticker-emoji'}
+                    iconSize={scale(20)}
+                    iconType={IconType[1]}
+                  />
+                </TouchableOpacity>
+              </Animated.View>
+
               <TextInput
                 autoCapitalize="none"
                 underlineColorAndroid="transparent"
@@ -819,59 +1153,105 @@ const ChatScreen = ({route, navigation}) => {
                 keyboardType="default"
                 value={inputValue}
                 placeholder="Enter text here"
-                onChangeText={(value) => {
-                  setInputValue(value);
-                  sendUserTyping(value.length > 0 ? true : false);
+                onChangeText={(input) => {
+                  setInputValue(input);
+                  sendUserTyping(input.length > 0 ? true : false);
+
+                  if (input.length > 0 && !isStickerShowing) {
+                    isStickerShowing = true;
+                    //animRef.current.slideOutLeft().then(() => {});
+                    Animated.parallel(
+                      [
+                        Animated.timing(animatedWidth, {
+                          toValue: 1,
+                          duration: 1000,
+                        }),
+                        Animated.timing(animatedOpacity, {
+                          toValue: 1,
+                          duration: 500,
+                        }),
+                      ],
+                      {
+                        stopTogether: false,
+                      },
+                    ).start();
+                  } else if (input.length === 0 && isStickerShowing) {
+                    isStickerShowing = false;
+                    //animRef.current.slideInLeft().then(() => {});
+                    Animated.parallel(
+                      [
+                        Animated.timing(animatedWidth, {
+                          toValue: 0,
+                          duration: 500,
+                        }),
+                        Animated.timing(animatedOpacity, {
+                          toValue: 0,
+                          duration: 500,
+                        }),
+                      ],
+                      {
+                        stopTogether: false,
+                      },
+                    ).start();
+                  }
                 }}
                 placeholderTextColor={'#b2b2b2'}
               />
-              {inputValue.trim().length === 0 && (
-                <TouchableOpacity
-                  onPress={() => {
-                    if (uploadRef.current !== null) {
-                      uploadRef.current.open();
-                    }
-                  }}
-                  style={[styles.commentButton, styles.enableButton]}>
-                  <GlobalInclude.BaseIcon
-                    containerStyle={{height: scale(20), width: scale(20)}}
-                    iconColor={'#FFF'}
-                    iconName={'attach-file'}
-                    iconSize={scale(20)}
-                    iconType={IconType[0]}
-                  />
-                </TouchableOpacity>
-              )}
-            </View>
-
-            <TouchableOpacity
-              onPress={() => {
-                setIsSending(true);
-                if (isChatExist === null) {
-                  generateSingleChat();
-                } else {
-                  addMessageToThread(messageThreadId);
-                }
-              }}
-              style={[
-                g.ml10,
-                styles.commentButton,
-                inputValue.trim().length > 0
-                  ? styles.enableButton
-                  : styles.disbleButton,
-              ]}>
-              {isSending ? (
-                <ActivityIndicator size={'small'} color={'#fff'} />
-              ) : (
+              <TouchableOpacity
+                onPress={() => {
+                  if (uploadRef.current !== null) {
+                    uploadRef.current.open();
+                  }
+                }}
+                style={[styles.commentButton]}>
                 <GlobalInclude.BaseIcon
                   containerStyle={{height: scale(20), width: scale(20)}}
-                  iconColor={inputValue.trim().length > 0 ? '#fff' : '#b2b2b2'}
-                  iconName={'send-o'}
+                  iconColor={GlobalInclude.Color.ColorPrimary}
+                  iconName={'attach-file'}
                   iconSize={scale(20)}
-                  iconType={IconType[4]}
+                  iconType={IconType[0]}
                 />
-              )}
-            </TouchableOpacity>
+              </TouchableOpacity>
+            </View>
+
+            {inputValue.trim().length > 0 && (
+              <Animatable.View
+                animation={'slideInRight'}
+                style={[
+                  g.ml5,
+                  styles.commentButton,
+                  inputValue.trim().length > 0
+                    ? styles.enableButton
+                    : styles.disbleButton,
+                ]}>
+                <TouchableOpacity
+                  style={[styles.commentButton, styles.enableButton]}
+                  onPress={() => {
+                    setIsSending(true);
+                    if (isChatExist === null) {
+                      generateSingleChat((chatId) => {
+                        addMessageToThread(chatId);
+                      });
+                    } else {
+                      addMessageToThread(messageThreadId);
+                    }
+                  }}>
+                  {isSending ? (
+                    <ActivityIndicator size={'small'} color={'#fff'} />
+                  ) : (
+                    <GlobalInclude.BaseIcon
+                      containerStyle={{height: scale(20), width: scale(20)}}
+                      iconColor={
+                        inputValue.trim().length > 0 ? '#fff' : '#b2b2b2'
+                      }
+                      iconName={'send-o'}
+                      iconSize={scale(20)}
+                      iconType={IconType[4]}
+                    />
+                  )}
+                </TouchableOpacity>
+              </Animatable.View>
+            )}
           </View>
         </KeyboardAvoidingView>
       </View>
@@ -907,13 +1287,24 @@ const ChatScreen = ({route, navigation}) => {
                 replay: {},
                 removedBy: [],
               };
-              addObjectToChat(request, messageThreadId);
+
+              setIsSending(true);
+              if (isChatExist === null) {
+                generateSingleChat((chatId) => {
+                  addMessageToThread(chatId);
+                  addObjectToChat(request, chatId);
+                });
+              } else {
+                addObjectToChat(request, messageThreadId);
+              }
             });
           }
 
           uploadRef.current.close();
         }}
       />
+      {emojiList()}
+      {postComments()}
     </View>
   );
 };

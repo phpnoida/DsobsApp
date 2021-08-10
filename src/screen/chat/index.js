@@ -91,7 +91,9 @@ const ChatUserList = ({navigation}) => {
       executeFunctions();
     });
     navigation.addListener('blur', () => {
-      subscriber();
+      if (subscriber !== undefined && subscriber !== null) {
+        subscriber();
+      }
     });
 
     const executeFunctions = () => {
@@ -119,10 +121,6 @@ const ChatUserList = ({navigation}) => {
               }
               return 0;
             });
-
-            console.log('====================================');
-            console.log('tmpArray', tmpArray);
-            console.log('====================================');
             setChatList(tmpArray);
             setPaginationStatus(PaginationStatus.waiting);
 
@@ -176,8 +174,9 @@ const ChatUserList = ({navigation}) => {
     };
 
     return () => {
-      console.log('blur');
-      subscriber();
+      if (subscriber !== undefined && subscriber !== null) {
+        subscriber();
+      }
     };
   }, [navigation]);
 
@@ -231,7 +230,7 @@ const ChatUserList = ({navigation}) => {
       Alert.alert(
         'Block User',
         `Are you sure you want to block ${Helper.concatName(
-          selectedItem.opponentUser,
+          getOpponentInfo(selectedItem.userInfo),
         )}?`,
         [
           {
@@ -242,7 +241,8 @@ const ChatUserList = ({navigation}) => {
           {
             text: 'Yes',
             onPress: () => {
-              addUserToBlockList(selectedItem.opponentUser._id, (status) => {
+              let opponentUser = getOpponentInfo(selectedItem.userInfo);
+              addUserToBlockList(opponentUser._id, (status) => {
                 Alert.alert(
                   status
                     ? 'User Blocked successfully'
@@ -642,6 +642,25 @@ const ChatUserList = ({navigation}) => {
         {showProgess(paginationStatus === PaginationStatus.fetching)}
         {userOptions()}
         {postOptions()}
+
+        <View style={styles.chatIcon}>
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => {
+              setTimeout(() => {
+                navigation.navigate('StartChatWith');
+              }, 220);
+            }}
+            style={[grid.alignItems, grid.justifyContentCenter]}>
+            <GlobalInclude.BaseIcon
+              containerStyle={{height: scale(25), width: scale(25)}}
+              iconColor={'#fff'}
+              iconName={'chat'}
+              iconSize={scale(25)}
+              iconType={IconType[9]}
+            />
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     </View>
   );
@@ -660,6 +679,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: scale(5),
+  },
+  chatIcon: {
+    position: 'absolute',
+    bottom: scale(10),
+    right: scale(10),
+    height: scale(46),
+    width: scale(46),
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
+    borderRadius: scale(100),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

@@ -92,7 +92,44 @@ const UserProfileHeader = (props) => {
               style={{height: scale(24), width: scale(24)}}
               activeOpacity={0.8}
               onPress={() => {
-                Alert.alert('Coming soon.');
+                let chatObject = props.chatObject;
+                let challengerUser = props.challengerUser;
+
+                if (chatObject !== undefined && chatObject !== null) {
+                  if (
+                    chatObject.chatEnabled &&
+                    chatObject.chatEnabled !== undefined &&
+                    chatObject.chatEnabled !== null &&
+                    chatObject.chatEnabled
+                  ) {
+                    let blockedUser = chatObject.blockedUser;
+
+                    if (blockedUser.indexOf(global.userId) > -1) {
+                      Alert.alert(
+                        'You have been blocked',
+                        'user has blocked you on chat.',
+                      );
+                    } else {
+                      let payload = {
+                        challenger: challengerUser,
+                        opponent: chatObject || {},
+                        isGroup: false,
+                      };
+                      props.navigation.navigate('ChatScreen', payload);
+                      //props.navigation.replace('ChatScreen', payload);
+                    }
+                  } else {
+                    Alert.alert(
+                      'Feature not available',
+                      'user has disabled this feature.',
+                    );
+                  }
+                } else {
+                  Alert.alert(
+                    'Feature not available',
+                    'user has disabled this feature.',
+                  );
+                }
               }}>
               <Image
                 source={GlobalInclude.Assets.ChatBlue}

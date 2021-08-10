@@ -248,7 +248,6 @@ const Helpers = {
   },
   concatName: function (item) {
     let fullName = '';
-
     if (
       item.firstName &&
       item.firstName !== undefined &&

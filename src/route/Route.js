@@ -59,6 +59,7 @@ import ChatSettings from '../screen/chat/ChatSettings';
 import ChatEtiquette from '../screen/chat/ChatEtiquette';
 import StartChatWith from '../screen/chat/StartChatWith';
 import ChatScreen from '../screen/chat/ChatScreen';
+import ChatUserProfile from '../screen/chat/ChatUserProfile';
 const Stack = createStackNavigator();
 
 export const RootNavigators = (baseRoute) => {
@@ -353,6 +354,11 @@ export const RootNavigators = (baseRoute) => {
       <Stack.Screen
         name="ChatScreen"
         component={ChatScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ChatUserProfile"
+        component={ChatUserProfile}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

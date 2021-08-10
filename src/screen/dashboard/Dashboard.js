@@ -32,8 +32,7 @@ import {useDispatch, useSelector, shallowEqual} from 'react-redux';
 import {clearState} from '../../reducer/NotificationReducer';
 import messaging from '@react-native-firebase/messaging';
 import {IconType} from '../../helper/Constants';
-import {setUserLastSeen} from '../../helper/ChatHelper';
-
+import {setUserLastSeen, addUser} from '../../helper/ChatHelper';
 let deviceHeight = Dimensions.get('screen').height;
 let deviceWidth = Dimensions.get('screen').width;
 let bottomSheet = null;
@@ -122,6 +121,7 @@ const Dashboard = ({props, navigation}) => {
       console.log('global.userDetails.fcmTopic', global.userDetails.fcmTopic);
       //console.log('global.userDetails.fcmTopic', global.accessToken);
     });
+    addUser(global.userId, global.userDetails, () => {});
 
     if (refreshState) {
       setTimeout(() => {

@@ -37,7 +37,7 @@ import Awards from './Awards';
 import MyRelatives from './MyRelatives';
 import MyFamily from './MyFamily';
 import Links from './Links';
-import {addUser} from '../../helper/ChatHelper';
+import {addUser, checkUserExist} from '../../helper/ChatHelper';
 import {IconType} from '../../helper/Constants';
 
 let profileSheetMenu = [
@@ -63,11 +63,13 @@ let profileSheet = null,
   userId = '',
   birthDate = 'N/A',
   moveToTab = 1;
+let challengerUser = null;
 
 const UserProfile = ({route, navigation}) => {
   const [step, setStep] = useState(1);
   const [profileData, setProfileData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [chatObject, setChatObject] = useState(null);
 
   useEffect(() => {
     if (route !== null) {
@@ -81,6 +83,13 @@ const UserProfile = ({route, navigation}) => {
     moveToTab = 1;
 
     console.log('Request for', userId);
+
+    checkUserExist(global.userId).then((result) => {
+      if (result !== undefined && result !== null) {
+        challengerUser = result;
+      }
+    });
+
     if (userId === global.userId) {
       getProfile();
     } else {
@@ -145,30 +154,36 @@ const UserProfile = ({route, navigation}) => {
     getUserProfileFromDirectory(
       userId,
       (response) => {
-        setIsLoading(false);
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
+        checkUserExist(userId).then((result) => {
+          if (result !== undefined && result !== null) {
+            setChatObject(result);
+          }
 
-            if (data.status) {
-              let profile =
-                Array.isArray(data.data) && data.data.length > 0
-                  ? data.data[0]
-                  : null;
+          setIsLoading(false);
+          if (response && response !== null) {
+            if (
+              response.data &&
+              response.data !== undefined &&
+              response.data !== null
+            ) {
+              let data = response.data;
 
-              console.log('otherProfile', profile);
+              if (data.status) {
+                let profile =
+                  Array.isArray(data.data) && data.data.length > 0
+                    ? data.data[0]
+                    : null;
 
-              profileSheetMenu.splice(0, 1);
-              profileSheetMenu.splice(3, 1);
+               // console.log('otherProfile', profile);
 
-              manageProfile(profile);
+                profileSheetMenu.splice(0, 1);
+                profileSheetMenu.splice(3, 1);
+
+                manageProfile(profile);
+              }
             }
           }
-        }
+        });
       },
       (error) => {
         setIsLoading(false);
@@ -350,6 +365,9 @@ const UserProfile = ({route, navigation}) => {
                     </View>
 
                     <UserProfileHeader
+                      navigation={navigation}
+                      chatObject={chatObject}
+                      challengerUser={challengerUser}
                       profileImg={profileData.profileImg}
                       firstName={profileData.firstName}
                       lastName={profileData.lastName}
@@ -452,8 +470,7 @@ const UserProfile = ({route, navigation}) => {
                         <Links tabLabel={'Links'} profileData={profileData} />
                       )}
                   </ScrollableTabView>
-                  {console.log('matched', userId === global.userId)}
-                  {console.log('matched', global.userId)}
+
                   {userId === global.userId ? (
                     <TouchableOpacity
                       onPress={() => {

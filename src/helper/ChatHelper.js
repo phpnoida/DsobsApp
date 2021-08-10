@@ -225,7 +225,9 @@ export const checkUserExist = async (userId) => {
 
 export const addUser = async (userId, opponentUser, callback) => {
   const isExist = await checkUserExist(userId);
-
+  console.log('====================================');
+  console.log('opponentUser', opponentUser);
+  console.log('====================================');
   if (isExist === null) {
     let requestObject = {
       _id: opponentUser._id,
@@ -235,11 +237,21 @@ export const addUser = async (userId, opponentUser, callback) => {
       lastName: opponentUser.lastName,
       profession: opponentUser.profession,
       batch: opponentUser.batch,
+      schoolNo: opponentUser.schoolNumber,
+      house: opponentUser.house,
+      section: opponentUser.section,
+      city: opponentUser.city,
       blockedUser: [],
+      blockedBy: [],
       lastseen: new Date().getTime(),
       chatEnabled: true,
       groups: [],
       isOnline: false,
+      email: opponentUser.email,
+      emailScope: opponentUser.emailScope,
+      countryCode: opponentUser.countryCode,
+      phone: opponentUser.phone,
+      phoneScope: opponentUser.phoneScope,
       notificationKey: 1, // 1-send notification on all new post 2-twice a day 3-one a day 4-every hour 5-every two hour
       enableNotification: true,
       notificationTimestamp: 0,
@@ -307,6 +319,34 @@ export const addUserToBlockList = async (opponentId, callback) => {
     };
     usersCollection
       .doc(global.userId)
+      .update(chatObject)
+      .then(() => {
+        updateOpponentBlocking(opponentId, callback);
+      })
+      .catch(() => {
+        callback(false);
+      });
+  }
+};
+
+export const updateOpponentBlocking = async (opponentId, callback) => {
+  const result = await checkUserExist(opponentId);
+
+  if (result !== undefined && result !== null) {
+    let blockedUser = result.blockedUser;
+
+    const index = blockedUser.indexOf(global.userId);
+    if (index > -1) {
+      blockedUser.splice(index, 1);
+    } else {
+      blockedUser.push(global.userId);
+    }
+
+    let chatObject = {
+      blockedBy: blockedUser,
+    };
+    usersCollection
+      .doc(opponentId)
       .update(chatObject)
       .then(() => {
         callback(true);

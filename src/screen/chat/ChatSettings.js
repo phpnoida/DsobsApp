@@ -55,6 +55,7 @@ const ChatSettings = ({route, navigation}) => {
         setEnableChat(result.chatEnabled);
         setEnableNotification(result.enableNotification);
         setSelectedFilter(result.notificationKey);
+        selectedSetting = result.notificationKey;
       }
     });
     return () => {};
@@ -149,27 +150,32 @@ const ChatSettings = ({route, navigation}) => {
           </View>
 
           <View style={grid.flex1}>
-            <RadioButton
-              defaultSelected={selectedFilter}
-              PROP={filterList}
-              onRadioSelect={(item) => {
-                defaultSelected = '';
-                selectedSetting = item.key;
-                setSelectedFilter(item.key);
-              }}
-            />
+            {enableNotification && (
+              <RadioButton
+                defaultSelected={selectedFilter}
+                PROP={filterList}
+                onRadioSelect={(item) => {
+                  defaultSelected = '';
+                  selectedSetting = item.key;
+                  setSelectedFilter(item.key);
+                }}
+              />
+            )}
           </View>
           <View style={[styles.filterButton, g.mb10]}>
             <CommonButton
               showLoader={isSubmitting}
               title={'Apply'}
               onPress={() => {
-                if (selectedSetting === '') {
+                if (enableNotification && selectedSetting === '') {
                   Alert.alert(
                     'Required Selection',
                     'You must select one setting',
                   );
-                } else if (defaultSelected === selectedSetting) {
+                } else if (
+                  enableNotification &&
+                  defaultSelected === selectedSetting
+                ) {
                   Alert.alert('Already Selected', 'Settings already selected');
                 } else {
                   setUserSettings();
