@@ -18,6 +18,7 @@ import Helper from '../../helper/Helper';
 
 import {isSameUser, isSameDay} from '../../helper/ChatHelper';
 import {IconType} from '../../helper/Constants';
+import {showMediaType, showImageThumb} from './ChatDelegates';
 
 const {height, width} = Dimensions.get('window');
 
@@ -40,11 +41,25 @@ class ChatItem extends PureComponent {
       currentMessage &&
       (currentMessage.isSent || currentMessage.isRead || currentMessage.pending)
     ) {
+      let tickIcon = '',
+        iconColor = '#bababa';
+
+      if (currentMessage.isSent) {
+        tickIcon = 'md-checkmark-outline';
+        iconColor = '#bababa';
+      } else if (currentMessage.isRead) {
+        tickIcon = 'md-checkmark-done-outline';
+        iconColor = GlobalInclude.Color.ColorPrimary;
+      }
       return (
         <View style={styles.tickView}>
-          {!!currentMessage.isSent && <Text style={[styles.tick]}>✓</Text>}
-          {!!currentMessage.isRead && <Text style={[styles.tick]}>✓</Text>}
-          {!!currentMessage.pending && <Text style={[styles.tick]}>🕓</Text>}
+          <GlobalInclude.BaseIcon
+            containerStyle={{height: scale(16), width: scale(16)}}
+            iconColor={iconColor}
+            iconName={tickIcon}
+            iconSize={scale(16)}
+            iconType={IconType[6]}
+          />
         </View>
       );
     }
@@ -138,16 +153,21 @@ class ChatItem extends PureComponent {
   renderDateComponent(source, isLeft) {
     const {customFont} = this.props;
     return (
-      <View style={[grid.justifyContentRight, grid.alignItemsBottom]}>
+      <View
+        style={[
+          isLeft ? grid.justifyContentLeft : grid.justifyContentRight,
+          isLeft ? grid.alignSelf : grid.alignItemsBottom,
+        ]}>
         <Text
           style={[
             customFont,
             g.FHNM,
             isLeft ? g.colorBlue : g.colorWhite,
-            grid.justifyContentRight,
-            grid.alignItemsBottom,
+            isLeft ? grid.justifyContentLeft : grid.justifyContentRight,
+            isLeft ? grid.alignSelf : grid.alignItemsBottom,
             g.txtCenterVertical,
-            g.mt5,
+            isLeft && g.ml5,
+            isLeft && g.mb2,
           ]}>
           {Helper.getChatDate(source.createdAt)}
         </Text>
@@ -175,28 +195,69 @@ class ChatItem extends PureComponent {
     return <View style={styles.imageStyle} />;
   }
 
+  renderReplyMessage(currentMessage, isLeft) {
+    const {customFont} = this.props;
+    return (
+      <View style={[styles.replayContainer, grid.col]}>
+        <View
+          style={[
+            styles.renderBorder,
+            {
+              backgroundColor: isLeft
+                ? GlobalInclude.Color.ColorPrimary
+                : '#FFF',
+            },
+          ]}
+        />
+        <View
+          style={[
+            g.mt5,
+            g.mb5,
+            {marginRight: currentMessage.messageType === 1 ? 0 : scale(52)},
+          ]}>
+          <Text
+            style={[
+              customFont,
+              g.FHNB,
+              isLeft ? g.colorBlack : g.colorWhite,
+              g.p3,
+            ]}>
+            {Helper.concatName(currentMessage.replay.user)}
+          </Text>
+          <Text
+            numberOfLines={2}
+            style={[
+              customFont,
+              g.FHNR,
+              isLeft ? g.colorBlack : g.colorWhite,
+              g.p3,
+            ]}>
+            {currentMessage.messageType === 1
+              ? currentMessage.message
+              : showMediaType(currentMessage.messageType)}
+          </Text>
+        </View>
+        <View
+          style={{
+            alignSelf: 'flex-end',
+            position: 'absolute',
+            right: 0,
+            bottom: 0,
+            top: 0,
+            justifyContent: 'center',
+          }}>
+          {showImageThumb(currentMessage.media, currentMessage.messageType)}
+        </View>
+      </View>
+    );
+  }
+
   renderLeftSide(currentMessage) {
     return (
       <View style={[grid.rowdir]}>
         {this.renderAvtar()}
         <View style={[g.ml5, g.bgWhite, styles.bubbleLeft]}>
-          {currentMessage.delete
-            ? this.renderRemovedMsg(true)
-            : currentMessage.messageType === 1
-            ? this.renderTextComponent(currentMessage.message, true)
-            : currentMessage.messageType === 2
-            ? this.renderImageComponent(currentMessage.media)
-            : currentMessage.messageType === 3
-            ? this.renderVideoComponent(currentMessage.media)
-            : currentMessage.messageType === 4
-            ? this.renderAudioComponent(currentMessage.media)
-            : currentMessage.messageType === 5
-            ? this.renderPdfComponent(currentMessage.media)
-            : currentMessage.messageType === 6
-            ? this.renderEmojiComponent(currentMessage.message)
-            : null}
-
-          {this.renderDateComponent(currentMessage, true)}
+          {this.renderItem(currentMessage, true)}
         </View>
       </View>
     );
@@ -206,27 +267,64 @@ class ChatItem extends PureComponent {
     return (
       <View style={[grid.rowdir, styles.viewRight]}>
         <View style={[g.bgBlue, styles.bubbleRight]}>
-          {currentMessage.delete
-            ? this.renderRemovedMsg(false)
-            : currentMessage.messageType === 1
-            ? this.renderTextComponent(currentMessage.message, false)
-            : currentMessage.messageType === 2
-            ? this.renderImageComponent(currentMessage.media)
-            : currentMessage.messageType === 3
-            ? this.renderVideoComponent(currentMessage.media)
-            : currentMessage.messageType === 4
-            ? this.renderAudioComponent(currentMessage.media)
-            : currentMessage.messageType === 5
-            ? this.renderPdfComponent(currentMessage.media)
-            : currentMessage.messageType === 6
-            ? this.renderEmojiComponent(currentMessage.message)
-            : null}
+          {this.renderItem(currentMessage, false)}
+        </View>
+      </View>
+    );
+  }
 
-          <View style={[grid.rowrow, styles.viewRight]}>
-            {this.renderDateComponent(currentMessage, false)}
-            <View style={{marginHorizontal: scale(5)}} />
-            {this.renderTicks()}
+  renderItem(currentMessage, isLeft) {
+    let style = {
+      paddingHorizontal: scale(2),
+      paddingTop: scale(5),
+      paddingBottom: scale(5),
+    };
+    let messageContent = '';
+    let mediaContent = '';
+    let messageType = '';
+    if (
+      currentMessage.replay !== undefined &&
+      currentMessage.replay !== null &&
+      Object.keys(currentMessage.replay).length > 0
+    ) {
+      messageContent = currentMessage.replay.message;
+      mediaContent = currentMessage.replay.media;
+      messageType = currentMessage.replay.messageType;
+    } else {
+      messageContent = currentMessage.message;
+      mediaContent = currentMessage.media;
+      messageType = currentMessage.messageType;
+    }
+
+    return (
+      <View>
+        {currentMessage.replay !== undefined &&
+          currentMessage.replay !== null &&
+          Object.keys(currentMessage.replay).length > 0 &&
+          this.renderReplyMessage(currentMessage, isLeft)}
+        {currentMessage.delete ? (
+          <View style={style}>{this.renderRemovedMsg(isLeft)}</View>
+        ) : messageType === 1 ? (
+          <View style={style}>
+            {this.renderTextComponent(messageContent, isLeft)}
           </View>
+        ) : messageType === 2 ? (
+          <View style={style}>{this.renderImageComponent(mediaContent)}</View>
+        ) : messageType === 3 ? (
+          <View style={style}>{this.renderVideoComponent(mediaContent)}</View>
+        ) : messageType === 4 ? (
+          <View style={style}>{this.renderAudioComponent(mediaContent)}</View>
+        ) : messageType === 5 ? (
+          <View style={style}>{this.renderPdfComponent(mediaContent)}</View>
+        ) : messageType === 6 ? (
+          <View style={style}>{this.renderEmojiComponent(messageContent)}</View>
+        ) : null}
+
+        <View
+          style={[grid.rowrow, isLeft ? styles.viewLeft : styles.viewRight]}>
+          {this.renderDateComponent(currentMessage, isLeft)}
+          <View style={{marginHorizontal: scale(3)}} />
+          {this.renderTicks()}
         </View>
       </View>
     );
@@ -289,7 +387,8 @@ class ChatItem extends PureComponent {
   }
 
   render() {
-    const {currentMessage, nextMessage, position, onLongPress} = this.props;
+    const {currentMessage, nextMessage, position, onLongPress, onPress} =
+      this.props;
     const sameUser = isSameUser(currentMessage, nextMessage);
 
     return (
@@ -298,13 +397,14 @@ class ChatItem extends PureComponent {
           this.renderSystemMessage()
         ) : (
           <TouchableOpacity
+            onPress={onPress}
             onLongPress={onLongPress}
             activeOpacity={1}
             style={[
               g.pl5,
               g.pr5,
-              {marginBottom: sameUser ? 2 : 10},
-              {marginBottom: 2},
+              {marginBottom: sameUser ? scale(5) : scale(10)},
+              {marginBottom: scale(5), zIndex: 3},
             ]}>
             <View style={[grid.rowdir, grid.justifyContentCenter]}>
               {this.renderDay()}
@@ -339,9 +439,8 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 0,
     borderTopRightRadius: scale(10),
     borderBottomRightRadius: scale(10),
-    paddingHorizontal: scale(6),
-    paddingTop: scale(8),
-    paddingBottom: scale(8),
+    paddingHorizontal: scale(3),
+    paddingBottom: scale(5),
     maxWidth: width - 80,
   },
   bubbleRight: {
@@ -349,9 +448,8 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: scale(10),
     borderTopRightRadius: scale(10),
     borderBottomRightRadius: 0,
-    paddingHorizontal: scale(6),
-    paddingTop: scale(8),
-    paddingBottom: scale(8),
+    paddingHorizontal: scale(3),
+    paddingBottom: scale(5),
     maxWidth: width - 80,
   },
   viewRight: {
@@ -360,9 +458,15 @@ const styles = StyleSheet.create({
     alignContent: 'flex-end',
     justifyContent: 'flex-end',
   },
+  viewLeft: {
+    alignSelf: 'flex-start',
+    alignItems: 'flex-start',
+    alignContent: 'flex-start',
+    justifyContent: 'flex-start',
+  },
   youtubeView: {
-    height: scale(180),
-    width: scale(160),
+    aspectRatio: 1 / 1,
+    height: scale(165),
     borderRadius: scale(10),
     justifyContent: 'center',
   },
@@ -377,8 +481,8 @@ const styles = StyleSheet.create({
     borderRadius: scale(10),
   },
   thumbStyle: {
-    height: scale(180),
-    width: scale(160),
+    aspectRatio: 1 / 1,
+    height: scale(165),
     borderRadius: scale(10),
   },
   playIconstyle: {
@@ -394,7 +498,7 @@ const styles = StyleSheet.create({
   },
   tickView: {
     flexDirection: 'row',
-    marginRight: 10,
+    marginRight: 5,
   },
   username: {
     top: -3,
@@ -425,6 +529,22 @@ const styles = StyleSheet.create({
     borderRadius: scale(15),
     ...g.FHNR,
     letterSpacing: 1,
+  },
+  renderBorder: {
+    marginStart: scale(3),
+    width: scale(3),
+    borderRadius: 0,
+    borderBottomLeftRadius: scale(10),
+    borderTopLeftRadius: scale(10),
+  },
+  replayContainer: {
+    marginTop: scale(3),
+    borderRadius: scale(6),
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    paddingVertical: scale(3),
+    paddingEnd: scale(3),
+    width: '100%',
   },
 });
 

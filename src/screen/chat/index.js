@@ -15,6 +15,7 @@ import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
 import TopHeaderView from '../../component/TopHeaderView';
 import ProgressImage from '../../component/ProgresImage';
+import SingleSearchWithFilter from '../../component/SingleSearchWithFilter';
 import {
   renderNoDataComponent,
   generateMenuOption,
@@ -294,11 +295,12 @@ const ChatUserList = ({navigation}) => {
   };
 
   const renderItem = ({index, item}) => {
-    let itemImage = GlobalInclude.Assets.DefaultProfile;
+    let itemImage = '';
     let headerTitle = APP_NAME;
     let subHeader = '';
     let unreadCount = getChatCount(item.unreadCount);
     let opponentUser = null;
+    let emptyPicMsg = '';
     if (!item.isGroup) {
       opponentUser = getOpponentInfo(item.userInfo);
       if (opponentUser !== undefined && opponentUser !== null) {
@@ -312,6 +314,7 @@ const ChatUserList = ({navigation}) => {
         headerTitle =
           Helper.concatName(opponentUser) + ' - ' + opponentUser.batch;
 
+        emptyPicMsg = opponentUser.firstName.charAt(0);
         subHeader = opponentUser.profession;
       }
     } else {
@@ -323,6 +326,7 @@ const ChatUserList = ({navigation}) => {
         itemImage = {uri: item.profileImg};
       }
       headerTitle = item.groupName;
+      emptyPicMsg = item.groupName.charAt(0);
     }
 
     return (
@@ -372,11 +376,23 @@ const ChatUserList = ({navigation}) => {
               borderRadius: scale(50),
             },
           ]}>
-          <ProgressImage
-            source={itemImage}
-            containerStyle={styles.imageStyle}
-            mode={'cover'}
-          />
+          {itemImage !== undefined && itemImage !== null && itemImage !== '' ? (
+            <ProgressImage
+              source={itemImage}
+              containerStyle={styles.imageStyle}
+              mode={'cover'}
+            />
+          ) : (
+            <Text
+              style={[
+                g.fs32,
+                g.FHNM,
+                g.colorWhite,
+                GlobalInclude.AppStyle.transform,
+              ]}>
+              {emptyPicMsg}
+            </Text>
+          )}
         </View>
         <View style={grid.flex1}>
           <View style={[grid.rowdir, grid.alignItemsTop]}>
@@ -622,20 +638,28 @@ const ChatUserList = ({navigation}) => {
                 />
               </View>
             ) : (
-              <FlatList
-                showsVerticalScrollIndicator={false}
-                extraData={chatList}
-                data={chatList}
-                renderItem={renderItem}
-                keyExtractor={(item, index) => index.toString()}
-                onEndReachedThreshold={0.1}
-                ListEmptyComponent={renderNoDataComponent}
-                contentContainerStyle={{
-                  paddingBottom: scale(70),
-                  paddingTop: scale(25),
-                  paddingHorizontal: scale(10),
-                }}
-              />
+              <View>
+                <SingleSearchWithFilter
+                  placeholder={'Search By Keyword'}
+                  changeText={(text) => {}}
+                  showGoButton={false}
+                  onFilterPress={() => {}}
+                />
+                <FlatList
+                  showsVerticalScrollIndicator={false}
+                  extraData={chatList}
+                  data={chatList}
+                  renderItem={renderItem}
+                  keyExtractor={(item, index) => index.toString()}
+                  onEndReachedThreshold={0.1}
+                  ListEmptyComponent={renderNoDataComponent}
+                  contentContainerStyle={{
+                    paddingBottom: scale(70),
+                    paddingTop: scale(25),
+                    paddingHorizontal: scale(10),
+                  }}
+                />
+              </View>
             )}
           </View>
         </View>

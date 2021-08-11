@@ -16,10 +16,11 @@ import CommonButton from '../../component/CommonButton';
 import ProgressImage from '../../component/ProgresImage';
 import HeaderBar from '../../component/HeaderBar';
 import GlobalInclude from '../../globalInclude/Globalinclude';
-import {Switch} from 'react-native-elements';
+import {APP_NAME} from '../../helper/Constants';
 import {showProgess} from '../../component/Common';
 import {checkUserExist, updateUserObject} from '../../helper/ChatHelper';
 import Helpers from '../../helper/Helper';
+import moment from 'moment';
 
 const {width} = Dimensions.get('window');
 
@@ -49,15 +50,29 @@ const ChatUserProfile = ({route, navigation}) => {
 
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
-      <HeaderBar title={'Settings'} navigation={navigation} showBack={true} />
+      <HeaderBar
+        title={
+          profileData !== null
+            ? `${Helpers.concatName(profileData)} - ${profileData.batch}`
+            : APP_NAME
+        }
+        navigation={navigation}
+        showBack={true}
+      />
       {showProgess(isLoading)}
       <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
         {profileData !== null ? (
-          <View style={[grid.flex1, g.pl10, g.pr10, g.mt10]}>
+          <View style={[grid.flex1, g.pl10, g.pr10]}>
             <View style={styles.headerContainer}>
               <ProgressImage
-                source={profileData.profileImg}
+                source={{uri: profileData.profileImg}}
                 containerStyle={{
+                  aspectRatio: 1 / 1,
+                  height: scale(90),
+                  width: scale(90),
+                  borderRadius: scale(90),
+                }}
+                imageStyle={{
                   aspectRatio: 1 / 1,
                   height: scale(90),
                   width: scale(90),
@@ -98,11 +113,104 @@ const ChatUserProfile = ({route, navigation}) => {
                   ]}>
                   {profileData.city}
                 </Text>
-                {/* <Text style={[g.colorLightGray, g.fs14, g.FHNR, g.mt5]}>
-                  {showLastSeen(props.lastseen)}
-                </Text> */}
+                <Text style={[g.colorLightGray, g.fs14, g.FHNR, g.mt5]}>
+                  LastSeen: {moment(profileData.lastseen).fromNow()}
+                </Text>
               </View>
             </View>
+            {/* section two */}
+            <View>
+              <View
+                style={[
+                  g.boxShadow,
+                  g.bgWhite,
+                  g.br3,
+                  g.mt10,
+                  grid.alignItems,
+                  grid.justifyContentCenter,
+                  {minHeight: scale(65)},
+                ]}>
+                <Text style={[g.colordarkGray, g.fs16, g.FHNR, g.txtCenter]}>
+                  {Helpers.concatName(profileData)} has blocked
+                  <Text style={[g.colorBlue, g.fs24, g.FHNB]}>
+                    {' '}
+                    {profileData.blockedUser.length}{' '}
+                  </Text>
+                  <Text style={[g.colordarkGray, g.fs16, g.FHNR]}>
+                    users on chat.
+                  </Text>
+                </Text>
+              </View>
+              <View
+                style={[
+                  g.boxShadow,
+                  g.bgWhite,
+                  g.br3,
+                  g.mt10,
+                  g.p5,
+                  grid.alignItems,
+                  grid.justifyContentCenter,
+                  {minHeight: scale(65)},
+                ]}>
+                <Text style={[g.colordarkGray, g.fs15, g.FHNR, g.txtCenter]}>
+                  {Helpers.concatName(profileData)} has been blocked by
+                  <Text style={[g.colorBlue, g.fs24, g.FHNB]}>
+                    {' '}
+                    {profileData.blockedBy.length}{' '}
+                  </Text>
+                  <Text style={[g.colordarkGray, g.fs15, g.FHNR]}>
+                    users on chat.
+                  </Text>
+                </Text>
+              </View>
+            </View>
+            {/* section two */}
+
+            <Text style={[g.colordarkGray, g.fs16, g.FHNR, g.mt10, g.p5]}>
+              Primary Information
+            </Text>
+            {/* section three */}
+            <View>
+              <View
+                style={[
+                  g.boxShadow,
+                  g.bgWhite,
+                  g.br3,
+                  g.mt10,
+                  g.pl15,
+                  grid.justifyContentCenter,
+                  {minHeight: scale(65)},
+                ]}>
+                <Text style={[g.colordarkGray, g.fs18, g.FHNM, g.txtLeft]}>
+                  Email Address:
+                </Text>
+                <Text style={[g.colorBlack, g.fs16, g.FHNR, g.mt3]}>
+                  {profileData.emailScope === 0
+                    ? 'Set to Private'
+                    : profileData.email}
+                </Text>
+              </View>
+              <View
+                style={[
+                  g.boxShadow,
+                  g.bgWhite,
+                  g.br3,
+                  g.mt10,
+                  g.pl15,
+                  grid.justifyContentCenter,
+                  {minHeight: scale(65)},
+                ]}>
+                <Text style={[g.colordarkGray, g.fs18, g.FHNM, g.txtLeft]}>
+                  Phone Number:
+                </Text>
+                <Text style={[g.colorBlack, g.fs16, g.FHNR, g.mt3]}>
+                  {profileData.phoneScope === 0
+                    ? 'Set to Private'
+                    : profileData.phone}
+                </Text>
+              </View>
+            </View>
+            {/* section three */}
           </View>
         ) : null}
       </SafeAreaView>

@@ -225,9 +225,7 @@ export const checkUserExist = async (userId) => {
 
 export const addUser = async (userId, opponentUser, callback) => {
   const isExist = await checkUserExist(userId);
-  console.log('====================================');
-  console.log('opponentUser', opponentUser);
-  console.log('====================================');
+
   if (isExist === null) {
     let requestObject = {
       _id: opponentUser._id,
@@ -393,6 +391,12 @@ export const sendPushNotification = async (opponentUser, message) => {
   const result = await checkUserExist(opponentUser._id);
 
   if (result !== undefined && result !== null) {
+    let enableNotification = result.enableNotification;
+
+    if (!enableNotification) {
+      return;
+    }
+
     let notificationKey = result.notificationKey;
     let notificationTimestamp = result.notificationTimestamp;
     let platform = result.platform;

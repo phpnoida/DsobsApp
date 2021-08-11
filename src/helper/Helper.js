@@ -480,7 +480,7 @@ const Helpers = {
     }
 
     if (date.isSame(moment(), 'day')) {
-      return date.format('hh:mm a');
+      return date.format('hh:mm A');
     } else if (date.isSame(moment().subtract(1, 'd'), 'day')) {
       return 'Yesterday';
     } else if (date.isSame(moment(), 'week')) {

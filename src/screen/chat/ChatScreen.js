@@ -1,5 +1,4 @@
 import React, {useState, useCallback, useEffect, useRef} from 'react';
-import {GiftedChat, InputToolbar, Send} from 'react-native-gifted-chat';
 import {
   View,
   StyleSheet,
@@ -18,6 +17,7 @@ import {
   BackHandler,
   Animated,
   Dimensions,
+  Modal,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
@@ -25,7 +25,9 @@ import {scale} from '../../theme/Scalling';
 import {renderNoDataComponent, showProgess} from '../../component/Common';
 import UploadMedia from '../../component/UploadMedia';
 import ProgressImage from '../../component/ProgresImage';
-import AnimatedHideView from '../../component/AnimatedHideView';
+import DocViewer from '../../component/DocViewer';
+import Player from '../../component/Player/Player';
+import {showMediaType, showImageThumb} from './ChatDelegates';
 
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {getStatusBarHeight} from 'react-native-iphone-x-helper';
@@ -36,6 +38,7 @@ import Helper from '../../helper/Helper';
 import EmojiSelector from 'react-native-emoji-selector';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
 import * as Animatable from 'react-native-animatable';
+import TrackPlayer, {usePlaybackState} from 'react-native-track-player';
 
 // Firestore
 import firestore from '@react-native-firebase/firestore';
@@ -51,7 +54,7 @@ import {
   sendPushNotification,
 } from '../../helper/ChatHelper';
 
-const {height, width} = Dimensions.get('window');
+const {height} = Dimensions.get('window');
 let selectedFontSize = 1;
 let challenger = null,
   opponent = null,
@@ -62,6 +65,11 @@ let lastPickedMsgId = '';
 let backHandler = null;
 let isStickerShowing = false;
 let lastPickIndex = -1;
+let blockMsg = '';
+let inEditMode = false;
+let isOpponentMuted = false;
+let documentItem = '';
+let playAudio = '';
 
 const usersCollection = firestore().collection('Users');
 const chatCollection = firestore().collection('Chats');
@@ -72,6 +80,8 @@ const ChatScreen = ({route, navigation}) => {
   const emojiRef = useRef();
   const animRef = useRef();
   const chatObjRef = useRef();
+  const chatRef = useRef();
+  const playbackState = usePlaybackState();
 
   const transform =
     Platform.OS === 'android'
@@ -89,11 +99,13 @@ const ChatScreen = ({route, navigation}) => {
     GlobalInclude.Assets.DefaultProfile,
   );
   const [isOpponentOnline, setIsOpponentOnline] = useState(false);
-  const [lastSeen, setLastSeen] = useState(0);
   const [isSending, setIsSending] = useState(false);
   const [messageThreadId, setMessageThreadId] = useState('');
-
   const [selectedChatObject, setSelectedChatObject] = useState(null);
+  const [isReplayEditComment, setIsReplayEditComment] = useState(false);
+  const [chatEnabled, setChatEnabled] = useState(true);
+  const [showDocViewer, setShowDocViewer] = useState(false);
+  const [showPlayer, setShowPlayer] = useState(false);
 
   const [animatedWidth] = useState(new Animated.Value(0));
   const [animatedOpacity] = useState(new Animated.Value(0));
@@ -147,7 +159,7 @@ const ChatScreen = ({route, navigation}) => {
     };
 
     backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-  }, [route, navigation]);
+  }, [route, navigation, setHeaderBar]);
 
   useEffect(() => {
     if (snapshot !== undefined && snapshot !== null) {
@@ -158,11 +170,9 @@ const ChatScreen = ({route, navigation}) => {
       ) {
         let data = snapshot.docs[0].data();
         if (data && data !== null && data !== undefined) {
-          console.log('====================================');
-          console.log('data', data);
-          console.log('====================================');
-          setLastSeen(data.lastseen);
+          setChatEnabled(true);
           setIsOpponentOnline(data.isOnline);
+          checkOpponentBlocked(data.blockedUser, data.blockedBy);
         }
       }
     }
@@ -178,8 +188,9 @@ const ChatScreen = ({route, navigation}) => {
       ) {
         let data = isTyping.docs[0].data();
         if (data && data !== null && data !== undefined) {
+          let isMuted = data.mutedBy.filter((item) => global.userId === item);
+          isOpponentMuted = isMuted.length > 0 ? true : false;
           let typingUser = data.isTyping;
-
           for (let i = 0; i < typingUser.length; i++) {
             const element = typingUser[i];
             if (element.userId !== global.userId) {
@@ -485,7 +496,24 @@ const ChatScreen = ({route, navigation}) => {
     return message.concat(currentMessages);
   };
 
-  const setHeaderBar = () => {
+  const checkOpponentBlocked = (blockedList, blockedBy) => {
+    if (
+      blockedList !== undefined &&
+      blockedList !== null &&
+      blockedList !== ''
+    ) {
+      let isBlocked = blockedList.filter((user) => global.userId === user);
+      blockMsg = `${opponent.firstName} has blocked this chat.`;
+      setChatEnabled(isBlocked.length === 0);
+    }
+    if (blockedBy !== undefined && blockedBy !== null && blockedBy !== '') {
+      let isBlocked = blockedBy.filter((user) => global.userId === user);
+      blockMsg = `${challenger.firstName} has blocked this chat.`;
+      setChatEnabled(isBlocked.length === 0);
+    }
+  };
+
+  const setHeaderBar = useCallback(() => {
     if (!isGroup) {
       if (opponent !== undefined && opponent !== null) {
         if (
@@ -497,7 +525,7 @@ const ChatScreen = ({route, navigation}) => {
         }
         setHeader(Helper.concatName(opponent) + ' - ' + opponent.batch);
         setSubHeader(opponent.profession);
-        setLastSeen(opponent.lastseen);
+        checkOpponentBlocked(opponent.blockedUser, opponent.blockedBy);
       }
     } else {
       // if (
@@ -509,7 +537,7 @@ const ChatScreen = ({route, navigation}) => {
       // }
       // setHeader(chatDetail.groupName);
     }
-  };
+  }, []);
 
   const sendUserTyping = (typing) => {
     const request = {
@@ -531,19 +559,18 @@ const ChatScreen = ({route, navigation}) => {
     });
   };
 
-  const addMessageToThread = (chatId) => {
-    let request = {
-      message: inputValue,
+  const generateChatObject = (message, media, mediaType) => {
+    return {
+      message: message,
       createdAt: new Date().getTime(),
-      messageType: 1,
-      media: '',
+      messageType: mediaType,
+      media: media,
       user: getUserObject(),
       isRead: isOpponentOnline,
       isSent: true,
       replay: {},
       removedBy: [],
     };
-    addObjectToChat(request, chatId);
   };
 
   const addObjectToChat = (request, chatId) => {
@@ -554,18 +581,35 @@ const ChatScreen = ({route, navigation}) => {
       snap.set(request).then(() => {
         if (!isGroup && !isOpponentOnline) {
           setUnreadCount();
-          sendPushNotification(
-            opponent,
-            inputValue.trim() === '' ? 'Shared Media' : inputValue,
-          );
+          if (!isOpponentMuted) {
+            sendPushNotification(
+              opponent,
+              request.message.trim() === '' ? 'Shared Media' : request.message,
+            );
+          }
         }
         setLastMessage(
-          inputValue.trim() === '' ? 'Shared Media' : inputValue,
+          request.message.trim() === '' ? 'Shared Media' : request.message,
           chatId,
         );
         setIsSending(false);
         setInputValue('');
         //Keyboard.dismiss();
+        if (isReplayEditComment) {
+          if (
+            chatRef !== undefined &&
+            chatRef !== null &&
+            chatRef.current !== undefined &&
+            chatRef.current !== null
+          ) {
+            chatRef.current.scrollToOffset({
+              offset: 0,
+              animated: true,
+            });
+          }
+          setIsReplayEditComment(false);
+          setSelectedChatObject(null);
+        }
       });
     });
   };
@@ -592,6 +636,124 @@ const ChatScreen = ({route, navigation}) => {
       lastName: challenger.lastName,
     };
   };
+
+  const postMsg = (request) => {
+    setIsSending(true);
+    if (isChatExist === null) {
+      generateSingleChat((chatId) => {
+        addObjectToChat(request, chatId);
+      });
+    } else {
+      addObjectToChat(request, messageThreadId);
+    }
+  };
+
+  const editMessageInThread = () => {
+    let selectedMsg = selectedChatObject;
+    selectedMsg.message = inputValue;
+    reference
+      .child(messageThreadId)
+      .child(selectedMsg._id)
+      .update(selectedMsg)
+      .then(() => {
+        let oldData = messages;
+        oldData[lastPickIndex] = selectedMsg;
+        setMessages([...oldData]);
+        setIsSending(false);
+        setInputValue('');
+        Keyboard.dismiss();
+
+        if (
+          chatRef !== undefined &&
+          chatRef !== null &&
+          chatRef.current !== undefined &&
+          chatRef.current !== null
+        ) {
+          chatRef.current.scrollToOffset({
+            offset: 0,
+            animated: true,
+          });
+        }
+      });
+  };
+
+  const postUserCommentInThread = (
+    replayInput,
+    replayMedia,
+    replayMediaType,
+  ) => {
+    let selectedMsg = selectedChatObject;
+    let request = generateChatObject(
+      selectedMsg.message,
+      selectedMsg.media,
+      selectedMsg.messageType,
+    );
+
+    let reply = generateChatObject(replayInput, replayMedia, replayMediaType);
+    reply.user = selectedChatObject.user;
+    request.replay = reply;
+    postMsg(request);
+  };
+
+  /**
+   *
+   * Player
+   *
+   */
+  const start = async () => {
+    // Set up the player
+    await TrackPlayer.setupPlayer({});
+    await TrackPlayer.updateOptions({
+      stopWithApp: true,
+      capabilities: [
+        TrackPlayer.CAPABILITY_PLAY,
+        TrackPlayer.CAPABILITY_PAUSE,
+        TrackPlayer.CAPABILITY_SKIP_TO_NEXT,
+        TrackPlayer.CAPABILITY_SKIP_TO_PREVIOUS,
+        TrackPlayer.CAPABILITY_STOP,
+      ],
+      compactCapabilities: [
+        TrackPlayer.CAPABILITY_PLAY,
+        TrackPlayer.CAPABILITY_PAUSE,
+      ],
+    });
+
+    // Add a track to the queue
+    await TrackPlayer.add({
+      id: 'trackId',
+      url: playAudio,
+      title: 'Play Audio',
+      artist: 'Track Artist',
+    });
+
+    // Start playing it
+    await TrackPlayer.play();
+  };
+
+  async function togglePlayback() {
+    const currentTrack = await TrackPlayer.getCurrentTrack();
+    if (currentTrack == null) {
+      await TrackPlayer.reset();
+      await TrackPlayer.add({
+        id: 'trackId',
+        url: playAudio,
+        title: 'Play Audio',
+        artist: 'Track Artist',
+      });
+      await TrackPlayer.play();
+    } else {
+      if (playbackState === TrackPlayer.STATE_PAUSED) {
+        await TrackPlayer.play();
+      } else {
+        await TrackPlayer.pause();
+      }
+    }
+  }
+  /**
+   *
+   * Player
+   *
+   */
 
   const renderHeader = () => {
     return (
@@ -758,17 +920,36 @@ const ChatScreen = ({route, navigation}) => {
     return (
       <ChatItem
         {...messageProps}
-        onLongPress={() => {
-          setSelectedChatObject(item);
-          lastPickIndex = index;
-          setTimeout(() => {
-            if (
-              chatObjRef.current !== undefined &&
-              chatObjRef.current !== null
-            ) {
-              chatObjRef.current.open();
+        onPress={() => {
+          if (!item.delete) {
+            if (item.messageType === 5) {
+              documentItem =
+                item.fileName &&
+                item.fileName !== undefined &&
+                item.fileName !== null
+                  ? item.fileName
+                  : item.thumbnail;
+              setShowDocViewer(true);
+            } else if (item.messageType === 4) {
+              playAudio = item.thumbnail;
+              setShowPlayer(!showPlayer);
+              start();
             }
-          }, 200);
+          }
+        }}
+        onLongPress={() => {
+          if (!item.delete) {
+            setSelectedChatObject(item);
+            lastPickIndex = index;
+            setTimeout(() => {
+              if (
+                chatObjRef.current !== undefined &&
+                chatObjRef.current !== null
+              ) {
+                chatObjRef.current.open();
+              }
+            }, 200);
+          }
         }}
       />
     );
@@ -788,25 +969,8 @@ const ChatScreen = ({route, navigation}) => {
         <EmojiSelector
           onEmojiSelected={(emoji) => {
             emojiRef.current.close();
-            let request = {
-              message: emoji,
-              createdAt: new Date().getTime(),
-              messageType: 6,
-              media: '',
-              user: getUserObject(),
-              isRead: false,
-              isSent: true,
-              replay: {},
-              removedBy: [],
-            };
-            if (isChatExist === null) {
-              generateSingleChat((chatId) => {
-                addMessageToThread(chatId);
-                addObjectToChat(request, chatId);
-              });
-            } else {
-              addObjectToChat(request, messageThreadId);
-            }
+            let request = generateChatObject(emoji, '', 6);
+            postMsg(request);
           }}
         />
       </OptionsSheet>
@@ -816,36 +980,41 @@ const ChatScreen = ({route, navigation}) => {
   const showUserPostOptions = () => {
     return (
       <View>
-        <TouchableOpacity
-          onPress={() => {
-            if (
-              chatObjRef.current !== undefined &&
-              chatObjRef.current !== null
-            ) {
-              chatObjRef.current.close();
-            }
-          }}
-          style={[
-            grid.justifyContentCenter,
-            grid.alignItems,
-            g.p15,
-            {
-              borderBottomWidth: 2,
-              borderBottomColor: '#ebebe4',
-            },
-          ]}>
-          <Text
+        {selectedChatObject.messageType === 1 && (
+          <TouchableOpacity
+            onPress={() => {
+              if (
+                chatObjRef.current !== undefined &&
+                chatObjRef.current !== null
+              ) {
+                chatObjRef.current.close();
+              }
+              inEditMode = true;
+              setInputValue(selectedChatObject.message);
+            }}
             style={[
-              g.fs18,
-              g.FHNM,
-              g.colorBlue,
               grid.justifyContentCenter,
               grid.alignItems,
-              g.txtCenterVertical,
+              g.p15,
+              {
+                borderBottomWidth: 2,
+                borderBottomColor: '#ebebe4',
+              },
             ]}>
-            Edit
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={[
+                g.fs18,
+                g.FHNM,
+                g.colorBlue,
+                grid.justifyContentCenter,
+                grid.alignItems,
+                g.txtCenterVertical,
+              ]}>
+              Edit
+            </Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
           onPress={() => {
             if (
@@ -949,6 +1118,7 @@ const ChatScreen = ({route, navigation}) => {
               ) {
                 chatObjRef.current.close();
               }
+              setIsReplayEditComment(true);
             }}
             style={[
               grid.justifyContentCenter,
@@ -1054,6 +1224,7 @@ const ChatScreen = ({route, navigation}) => {
           </View>
         ) : (
           <FlatList
+            ref={chatRef}
             inverted={-1}
             data={messages}
             renderItem={renderChatItem}
@@ -1084,175 +1255,254 @@ const ChatScreen = ({route, navigation}) => {
         <KeyboardAvoidingView
           behavior={Platform.select({android: 'height', ios: 'padding'})}
           style={{marginBottom: scale(10)}}>
-          <View style={styles.footer}>
-            <View
-              style={{
-                backgroundColor: '#fff',
-                flexDirection: 'row',
-                flex: 1,
-                borderRadius: scale(30),
-              }}>
-              {/* <Animatable.View
-                ref={animRef}
-                useNativeDriver={true}
+          {chatEnabled ? (
+            <View style={styles.footer}>
+              <View
                 style={{
-                  width: !isStickerShowing ? scale(40) : 0,
-                  height: scale(40),
-                  borderRadius: scale(10),
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  alignSelf: 'center',
-                }}
-                easing={'linear'}>
-                <TouchableOpacity
-                  onPress={() => {}}
-                  style={[styles.commentButton]}>
-                  <GlobalInclude.BaseIcon
-                    containerStyle={{height: scale(20), width: scale(20)}}
-                    iconColor={GlobalInclude.Color.ColorPrimary}
-                    iconName={'sticker-emoji'}
-                    iconSize={scale(20)}
-                    iconType={IconType[1]}
-                  />
-                </TouchableOpacity>
-              </Animatable.View> */}
+                  backgroundColor: '#fff',
+                  flexDirection: 'row',
+                  flex: 1,
+                  borderRadius: isReplayEditComment ? scale(10) : scale(30),
+                }}>
+                <View
+                  style={[grid.flex1, isReplayEditComment && [g.pt5, g.pb5]]}>
+                  {isReplayEditComment && (
+                    <View style={grid.rowdir}>
+                      <View
+                        style={[
+                          styles.replayContainer,
+                          g.ml10,
+                          g.mr10,
+                          grid.col,
+                        ]}>
+                        <View
+                          style={[
+                            styles.renderBorder,
+                            {
+                              backgroundColor: GlobalInclude.Color.ColorPrimary,
+                            },
+                          ]}
+                        />
+                        <View style={[g.pl10, g.pt3, g.pr10, g.pb3]}>
+                          <Text
+                            style={[
+                              g.fs12,
+                              g.FHNB,
+                              g.colorBlue,
+                              grid.justifyContentCenter,
+                              grid.alignItems,
+                              g.txtCenterVertical,
+                              g.mb5,
+                            ]}>
+                            {'Replying To:'}
+                          </Text>
+                          <Text style={[g.fs14, g.FHNB, g.colorBlack]}>
+                            {Helper.concatName(selectedChatObject.user)}
+                          </Text>
+                          <View style={[g.mt2, g.mb2]} />
+                          <Text
+                            numberOfLines={1}
+                            style={[g.fs12, g.FHNR, g.colorBlack]}>
+                            {selectedChatObject.messageType === 1
+                              ? selectedChatObject.message
+                              : showMediaType(selectedChatObject.messageType)}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={[g.mt2, g.mr5]}>
+                        {showImageThumb(
+                          selectedChatObject.media,
+                          selectedChatObject.messageType,
+                        )}
+                      </View>
 
-              <Animated.View
-                style={[
-                  {
-                    width: interpolatedHeight,
-                    opacity: interpolatedOpacity,
-                    height: scale(40),
-                    borderRadius: scale(10),
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    alignSelf: 'center',
-                  },
-                ]}>
-                <TouchableOpacity
-                  onPress={() => {
-                    if (emojiRef !== undefined && emojiRef !== null) {
-                      emojiRef.current.open();
-                    }
-                  }}
-                  style={[styles.commentButton]}>
-                  <GlobalInclude.BaseIcon
-                    containerStyle={{height: scale(20), width: scale(20)}}
-                    iconColor={GlobalInclude.Color.ColorPrimary}
-                    iconName={'sticker-emoji'}
-                    iconSize={scale(20)}
-                    iconType={IconType[1]}
-                  />
-                </TouchableOpacity>
-              </Animated.View>
-
-              <TextInput
-                autoCapitalize="none"
-                underlineColorAndroid="transparent"
-                style={styles.inputView}
-                keyboardType="default"
-                value={inputValue}
-                placeholder="Enter text here"
-                onChangeText={(input) => {
-                  setInputValue(input);
-                  sendUserTyping(input.length > 0 ? true : false);
-
-                  if (input.length > 0 && !isStickerShowing) {
-                    isStickerShowing = true;
-                    //animRef.current.slideOutLeft().then(() => {});
-                    Animated.parallel(
-                      [
-                        Animated.timing(animatedWidth, {
-                          toValue: 1,
-                          duration: 1000,
-                        }),
-                        Animated.timing(animatedOpacity, {
-                          toValue: 1,
-                          duration: 500,
-                        }),
-                      ],
-                      {
-                        stopTogether: false,
-                      },
-                    ).start();
-                  } else if (input.length === 0 && isStickerShowing) {
-                    isStickerShowing = false;
-                    //animRef.current.slideInLeft().then(() => {});
-                    Animated.parallel(
-                      [
-                        Animated.timing(animatedWidth, {
-                          toValue: 0,
-                          duration: 500,
-                        }),
-                        Animated.timing(animatedOpacity, {
-                          toValue: 0,
-                          duration: 500,
-                        }),
-                      ],
-                      {
-                        stopTogether: false,
-                      },
-                    ).start();
-                  }
-                }}
-                placeholderTextColor={'#b2b2b2'}
-              />
-              <TouchableOpacity
-                onPress={() => {
-                  if (uploadRef.current !== null) {
-                    uploadRef.current.open();
-                  }
-                }}
-                style={[styles.commentButton]}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={{height: scale(20), width: scale(20)}}
-                  iconColor={GlobalInclude.Color.ColorPrimary}
-                  iconName={'attach-file'}
-                  iconSize={scale(20)}
-                  iconType={IconType[0]}
-                />
-              </TouchableOpacity>
-            </View>
-
-            {inputValue.trim().length > 0 && (
-              <Animatable.View
-                animation={'slideInRight'}
-                style={[
-                  g.ml5,
-                  styles.commentButton,
-                  inputValue.trim().length > 0
-                    ? styles.enableButton
-                    : styles.disbleButton,
-                ]}>
-                <TouchableOpacity
-                  style={[styles.commentButton, styles.enableButton]}
-                  onPress={() => {
-                    setIsSending(true);
-                    if (isChatExist === null) {
-                      generateSingleChat((chatId) => {
-                        addMessageToThread(chatId);
-                      });
-                    } else {
-                      addMessageToThread(messageThreadId);
-                    }
-                  }}>
-                  {isSending ? (
-                    <ActivityIndicator size={'small'} color={'#fff'} />
-                  ) : (
-                    <GlobalInclude.BaseIcon
-                      containerStyle={{height: scale(20), width: scale(20)}}
-                      iconColor={
-                        inputValue.trim().length > 0 ? '#fff' : '#b2b2b2'
-                      }
-                      iconName={'send-o'}
-                      iconSize={scale(20)}
-                      iconType={IconType[4]}
-                    />
+                      {/* part two */}
+                      <TouchableOpacity
+                        onPress={() => {
+                          setIsReplayEditComment(false);
+                          setSelectedChatObject(null);
+                        }}
+                        style={styles.closeComment}>
+                        <GlobalInclude.BaseIcon
+                          containerStyle={{
+                            height: scale(14),
+                            width: scale(14),
+                          }}
+                          iconColor={'#fff'}
+                          iconName={'close'}
+                          iconSize={scale(14)}
+                          iconType={IconType[6]}
+                        />
+                      </TouchableOpacity>
+                    </View>
                   )}
-                </TouchableOpacity>
-              </Animatable.View>
-            )}
-          </View>
+
+                  {/* row two */}
+                  <View style={[g.pb5, grid.rowdir]}>
+                    <Animated.View
+                      useNativeDriver={true}
+                      style={[
+                        {
+                          width: interpolatedHeight,
+                          opacity: interpolatedOpacity,
+                          height: scale(40),
+                          borderRadius: scale(10),
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          alignSelf: 'center',
+                        },
+                      ]}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          if (emojiRef !== undefined && emojiRef !== null) {
+                            emojiRef.current.open();
+                          }
+                        }}
+                        style={[styles.commentButton]}>
+                        <GlobalInclude.BaseIcon
+                          containerStyle={{height: scale(20), width: scale(20)}}
+                          iconColor={GlobalInclude.Color.ColorPrimary}
+                          iconName={'sticker-emoji'}
+                          iconSize={scale(20)}
+                          iconType={IconType[1]}
+                        />
+                      </TouchableOpacity>
+                    </Animated.View>
+                    <TextInput
+                      autoCapitalize="none"
+                      underlineColorAndroid="transparent"
+                      style={[styles.inputContainer, styles.inputView]}
+                      keyboardType="default"
+                      value={inputValue}
+                      placeholder="Enter text here"
+                      onChangeText={(input) => {
+                        setInputValue(input);
+                        sendUserTyping(input.length > 0 ? true : false);
+
+                        if (input.length > 0 && !isStickerShowing) {
+                          isStickerShowing = true;
+                          //animRef.current.slideOutLeft().then(() => {});
+                          Animated.parallel(
+                            [
+                              Animated.timing(animatedWidth, {
+                                toValue: 1,
+                                duration: 1000,
+                              }),
+                              Animated.timing(animatedOpacity, {
+                                toValue: 1,
+                                duration: 500,
+                              }),
+                            ],
+                            {
+                              stopTogether: false,
+                            },
+                          ).start();
+                        } else if (input.length === 0 && isStickerShowing) {
+                          isStickerShowing = false;
+                          //animRef.current.slideInLeft().then(() => {});
+                          Animated.parallel(
+                            [
+                              Animated.timing(animatedWidth, {
+                                toValue: 0,
+                                duration: 500,
+                              }),
+                              Animated.timing(animatedOpacity, {
+                                toValue: 0,
+                                duration: 500,
+                              }),
+                            ],
+                            {
+                              stopTogether: false,
+                            },
+                          ).start();
+                        }
+                      }}
+                      placeholderTextColor={'#b2b2b2'}
+                    />
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (uploadRef.current !== null) {
+                          uploadRef.current.open();
+                        }
+                      }}
+                      style={[styles.commentButton]}>
+                      <GlobalInclude.BaseIcon
+                        containerStyle={{height: scale(20), width: scale(20)}}
+                        iconColor={GlobalInclude.Color.ColorPrimary}
+                        iconName={'attach-file'}
+                        iconSize={scale(20)}
+                        iconType={IconType[0]}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  {/* row two */}
+                </View>
+              </View>
+              {inputValue.trim().length > 0 && (
+                <Animatable.View
+                  useNativeDriver={true}
+                  animation={'slideInRight'}
+                  style={[
+                    g.ml5,
+                    styles.commentButton,
+                    inputValue.trim().length > 0
+                      ? styles.enableButton
+                      : styles.disbleButton,
+                  ]}>
+                  <TouchableOpacity
+                    style={[styles.commentButton, styles.enableButton]}
+                    onPress={() => {
+                      setIsSending(true);
+                      if (inEditMode) {
+                        editMessageInThread();
+                      } else if (isReplayEditComment) {
+                        postUserCommentInThread(inputValue, '', 1);
+                      } else {
+                        let request = generateChatObject(inputValue, '', 1);
+                        postMsg(request);
+                      }
+                    }}>
+                    {isSending ? (
+                      <ActivityIndicator size={'small'} color={'#fff'} />
+                    ) : (
+                      <GlobalInclude.BaseIcon
+                        containerStyle={{height: scale(20), width: scale(20)}}
+                        iconColor={
+                          inputValue.trim().length > 0 ? '#fff' : '#b2b2b2'
+                        }
+                        iconName={'send-o'}
+                        iconSize={scale(20)}
+                        iconType={IconType[4]}
+                      />
+                    )}
+                  </TouchableOpacity>
+                </Animatable.View>
+              )}
+            </View>
+          ) : (
+            <View style={styles.footer}>
+              <View
+                style={[
+                  styles.whiteCurvedBox,
+                  g.p10,
+                  grid.alignItems,
+                  grid.justifyContentCenter,
+                  g.ml15,
+                  g.mr15,
+                ]}>
+                <Text
+                  style={[
+                    g.colorBlue,
+                    g.fs16,
+                    g.FHNB,
+                    g.txtCenter,
+                    g.txtCenterVertical,
+                  ]}>
+                  {blockMsg === '' ? 'This chat has been blocked' : blockMsg}
+                </Text>
+              </View>
+            </View>
+          )}
         </KeyboardAvoidingView>
       </View>
       <UploadMedia
@@ -1276,26 +1526,19 @@ const ChatScreen = ({route, navigation}) => {
                 mediaType = 4;
               }
 
-              let request = {
-                message: inputValue,
-                createdAt: new Date().getTime(),
-                messageType: mediaType,
-                media: item.fileName,
-                user: getUserObject(),
-                isRead: false,
-                isSent: true,
-                replay: {},
-                removedBy: [],
-              };
+              console.log('====================================');
+              console.log('mediaType', mediaType);
+              console.log('====================================');
 
-              setIsSending(true);
-              if (isChatExist === null) {
-                generateSingleChat((chatId) => {
-                  addMessageToThread(chatId);
-                  addObjectToChat(request, chatId);
-                });
+              if (isReplayEditComment) {
+                postUserCommentInThread(inputValue, item.fileName, mediaType);
               } else {
-                addObjectToChat(request, messageThreadId);
+                let request = generateChatObject(
+                  inputValue,
+                  item.fileName,
+                  mediaType,
+                );
+                postMsg(request);
               }
             });
           }
@@ -1305,27 +1548,105 @@ const ChatScreen = ({route, navigation}) => {
       />
       {emojiList()}
       {postComments()}
+
+      {showDocViewer && (
+        <DocViewer
+          mediaContent={documentItem}
+          onClose={() => {
+            setShowDocViewer(false);
+          }}
+        />
+      )}
+
+      <Modal
+        transparent={true}
+        onRequestClose={() => {
+          TrackPlayer.stop().then(() => {
+            setShowPlayer(!showPlayer);
+          });
+        }}
+        visible={showPlayer}>
+        <View style={styles.modalView}>
+          <View style={styles.centeredView}>
+            <View
+              style={{
+                backgroundColor: 'white',
+                borderRadius: 15,
+                shadowColor: '#333333',
+                shadowOffset: {width: 0, height: 2},
+                shadowOpacity: 0.2,
+                shadowRadius: 6,
+                elevation: 5,
+                padding: 8,
+                width: '90%',
+                justifyContent: 'center',
+                alignSelf: 'center',
+                alignItems: 'center',
+                height: scale(130),
+              }}>
+              <TouchableOpacity
+                onPress={() => {
+                  TrackPlayer.stop().then(() => {
+                    setShowPlayer(!showPlayer);
+                  });
+                }}
+                style={{
+                  width: scale(32),
+                  height: scale(32),
+                  justifyContent: 'flex-end',
+                  alignItems: 'flex-end',
+                  alignSelf: 'flex-end',
+                }}>
+                <GlobalInclude.BaseIcon
+                  containerStyle={{height: scale(30), width: scale(30)}}
+                  iconColor={'#000'}
+                  iconName={'close'}
+                  iconSize={scale(30)}
+                  iconType={IconType[8]}
+                />
+              </TouchableOpacity>
+              <View style={{flex: 1}}>
+                <Player onTogglePlayback={togglePlayback} />
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  closeComment: {
+    width: scale(26),
+    height: scale(26),
+    borderRadius: scale(30),
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: scale(5),
+    position: 'absolute',
+    right: -5,
+    top: -3,
+  },
   back: {
     width: scale(30),
     height: scale(30),
     padding: scale(4),
     alignSelf: 'flex-end',
   },
-  inputView: {
+  inputContainer: {
     borderWidth: 0,
     backgroundColor: 'transparent',
     paddingVertical: scale(8),
     paddingHorizontal: scale(12),
     minHeight: scale(40),
     flex: 1,
+    borderRadius: scale(30),
+  },
+  inputView: {
     fontSize: scale(15),
     fontFamily: 'Lato-Regular',
-    borderRadius: scale(10),
   },
   commentButton: {
     height: scale(40),
@@ -1356,6 +1677,23 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: scale(40),
     justifyContent: 'center',
+  },
+  whiteCurvedBox: {
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    flex: 1,
+    borderRadius: scale(30),
+  },
+  replayContainer: {
+    borderRadius: scale(6),
+    backgroundColor: 'rgba(43, 50, 82,0.3)',
+    flexDirection: 'row',
+  },
+  renderBorder: {
+    width: scale(3),
+    borderRadius: 0,
+    borderBottomLeftRadius: scale(10),
+    borderTopLeftRadius: scale(10),
   },
 });
 
