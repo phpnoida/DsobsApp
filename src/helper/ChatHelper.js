@@ -27,8 +27,9 @@ export const getThreadId = () => {
  *
  * @param {*} opponentUser
  * @param {*} callback
+ * @param {*} lastMessage
  */
-export const createSingleChat = (opponentUser, callback) => {
+export const createSingleChat = (opponentUser, lastMessage, callback) => {
   let chatId = getChatId();
 
   let users = [];
@@ -62,12 +63,13 @@ export const createSingleChat = (opponentUser, callback) => {
       {userId: opponentUser._id, status: false},
     ],
     userInfo: users,
-    lastMessage: '',
-    threadId: '',
+    lastMessage: lastMessage,
+    threadId: chatId,
     isGroup: false,
     groupName: '',
     profileImg: '',
     lastMessageTime: new Date().getTime(),
+    lastMessageType: 1,
     createdDate: new Date().getTime(),
     unreadCount: [
       {
@@ -80,6 +82,7 @@ export const createSingleChat = (opponentUser, callback) => {
       },
     ],
     mutedBy: [],
+    latestMessages: [],
   };
   chatCollection
     .doc(chatId)
@@ -504,23 +507,26 @@ export const sendPushNotification = async (opponentUser, message) => {
 };
 
 export const executePushNotification = (to, platform, title, message, data) => {
-  var data = {
+  var notificationPayload = {
     to: to,
     priority: 'high',
     content_available: true,
     mutable_content: true,
     data: data,
-    notification: {
-      body: message,
-      title: title,
-    },
   };
 
-  if (platform === 'android') {
-    data = _.omit(data, 'notification');
+  if (platform === 'ios') {
+    notificationPayload.notification = {
+      body: message,
+      title: title,
+    };
   }
 
-  data = JSON.stringify(data);
+  notificationPayload = JSON.stringify(notificationPayload);
+
+  console.log('====================================');
+  console.log('final Message: ' + notificationPayload);
+  console.log('====================================');
 
   var config = {
     method: 'post',
@@ -529,7 +535,7 @@ export const executePushNotification = (to, platform, title, message, data) => {
       Authorization: PUSH_KEY,
       'Content-Type': 'application/json',
     },
-    data: data,
+    data: notificationPayload,
   };
   axios(config)
     .then(function (response) {

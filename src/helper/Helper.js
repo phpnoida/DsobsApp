@@ -217,6 +217,8 @@ const Helpers = {
         ignoreInForeground: false,
         foreground: true,
         channelId: APP_NAME,
+        group: 'group',
+        groupSummary: false,
       };
       if (icon !== '') {
         notificationObj.largeIconUrl = icon;
@@ -322,9 +324,22 @@ const Helpers = {
     } else {
       phoneNumber = `telprompt:${number}`;
     }
-    Linking.openURL(phoneNumber);
+    Linking.canOpenURL(phoneNumber).then((can) => {
+      if (can) {
+        Linking.openURL(phoneNumber);
+      } else {
+        Alert.alert('Invalid link!');
+      }
+    });
   },
   openEmail: function (email) {
+    // Linking.canOpenURL(email).then((status) => {
+    //   if (status) {
+
+    //   } else {
+    //     Alert.alert('Invalid link!');
+    //   }
+    // });
     Linking.openURL('mailto:' + `${email}` + '?subject= ');
   },
   openLink: function (link) {
@@ -488,6 +503,18 @@ const Helpers = {
     } else {
       return date.format('DD/MM/YYYY');
     }
+  },
+  getFilename: function (url) {
+    if (url) {
+      var m = url.toString().match(/.*\/(.+?)\./);
+      if (m && m.length > 1) {
+        console.log('====================================');
+        console.log('m', m);
+        console.log('====================================');
+        return m[1];
+      }
+    }
+    return '';
   },
 };
 

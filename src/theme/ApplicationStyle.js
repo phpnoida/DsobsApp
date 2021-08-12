@@ -32,6 +32,10 @@ export default StyleSheet.create({
     paddingEnd: scale(15),
     paddingTop: scale(15),
   },
+  contentSpaceHorizonta: {
+    paddingStart: scale(15),
+    paddingEnd: scale(15),
+  },
   buttonSpace: {
     paddingStart: scale(15),
     paddingEnd: scale(15),

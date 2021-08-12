@@ -20,6 +20,7 @@ const SingleSearchWithFilter = ({
   showGoButton,
   onFilterPress,
   onGoPress,
+  hideFilter,
 }) => {
   const showFilter = () => {
     return (
@@ -87,7 +88,7 @@ const SingleSearchWithFilter = ({
               </TouchableOpacity>
             )}
           </View>
-        ) : (
+        ) : hideFilter ? null : (
           showFilter()
         )}
       </View>

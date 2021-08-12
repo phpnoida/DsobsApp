@@ -319,10 +319,16 @@ const UploadMedia = ({
           type: [DocumentPicker.types.pdf],
         });
         if (res !== null) {
+          console.log('====================================');
+          console.log('res', res);
+          console.log('====================================');
           //refRBSheet.current.open();
-          uploadDoc(res, 'utils/imageupload?type=1', 3);
+          uploadDoc(res[0], 'utils/imageupload?type=1', 3);
         }
       } catch (error) {
+        console.log('====================================');
+        console.log('error', error);
+        console.log('====================================');
         onPickMedia(null);
         Alert.alert('User Cancelled Selection!');
       }
@@ -344,7 +350,7 @@ const UploadMedia = ({
         });
         if (res !== null) {
           // refRBSheet.current.open();
-          uploadDoc(res, 'utils/imageupload?type=3', 4);
+          uploadDoc(res[0], 'utils/imageupload?type=3', 4);
         }
       } catch (error) {
         onPickMedia(null);

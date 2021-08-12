@@ -26,7 +26,7 @@ import {renderNoDataComponent, showProgess} from '../../component/Common';
 import UploadMedia from '../../component/UploadMedia';
 import ProgressImage from '../../component/ProgresImage';
 import DocViewer from '../../component/DocViewer';
-import Player from '../../component/Player/Player';
+import AudioPlayer from '../../component/AudioPlayer';
 import {showMediaType, showImageThumb} from './ChatDelegates';
 
 import GlobalInclude from '../../globalInclude/Globalinclude';
@@ -38,7 +38,6 @@ import Helper from '../../helper/Helper';
 import EmojiSelector from 'react-native-emoji-selector';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
 import * as Animatable from 'react-native-animatable';
-import TrackPlayer, {usePlaybackState} from 'react-native-track-player';
 
 // Firestore
 import firestore from '@react-native-firebase/firestore';
@@ -70,7 +69,10 @@ let inEditMode = false;
 let isOpponentMuted = false;
 let documentItem = '';
 let playAudio = '';
-
+let latestMessageArray = [];
+let bottomUnread = 0;
+let newMessageList = [];
+const scrollToBottomOffset = 200;
 const usersCollection = firestore().collection('Users');
 const chatCollection = firestore().collection('Chats');
 const reference = database().ref('Messages');
@@ -81,7 +83,6 @@ const ChatScreen = ({route, navigation}) => {
   const animRef = useRef();
   const chatObjRef = useRef();
   const chatRef = useRef();
-  const playbackState = usePlaybackState();
 
   const transform =
     Platform.OS === 'android'
@@ -106,9 +107,9 @@ const ChatScreen = ({route, navigation}) => {
   const [chatEnabled, setChatEnabled] = useState(true);
   const [showDocViewer, setShowDocViewer] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
-
-  const [animatedWidth] = useState(new Animated.Value(0));
-  const [animatedOpacity] = useState(new Animated.Value(0));
+  const [emojiIconWidth, setEmojiIconWidth] = useState(scale(40));
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [bottomMessages, setBottomMessages] = useState(0);
 
   const [snapshot] = useCollection(
     usersCollection.where('_id', '==', route.params.opponent._id),
@@ -170,6 +171,9 @@ const ChatScreen = ({route, navigation}) => {
       ) {
         let data = snapshot.docs[0].data();
         if (data && data !== null && data !== undefined) {
+          console.log('====================================');
+          console.log('chat_data', data);
+          console.log('====================================');
           setChatEnabled(true);
           setIsOpponentOnline(data.isOnline);
           checkOpponentBlocked(data.blockedUser, data.blockedBy);
@@ -188,6 +192,7 @@ const ChatScreen = ({route, navigation}) => {
       ) {
         let data = isTyping.docs[0].data();
         if (data && data !== null && data !== undefined) {
+          latestMessageArray = data.latestMessages;
           let isMuted = data.mutedBy.filter((item) => global.userId === item);
           isOpponentMuted = isMuted.length > 0 ? true : false;
           let typingUser = data.isTyping;
@@ -224,13 +229,8 @@ const ChatScreen = ({route, navigation}) => {
       if (!newItems || lastPickedMsgId === child.val()._id) {
         return;
       }
-
-      console.log('====================================');
-      console.log('childAdded', child, previousKey);
-      console.log('====================================');
       if (child && child !== null && child !== undefined) {
         let nextMsg = JSON.parse(JSON.stringify(child.val()));
-
         let msgUser = nextMsg.user;
         if (
           msgUser._id !== undefined &&
@@ -240,9 +240,17 @@ const ChatScreen = ({route, navigation}) => {
           nextMsg.isRead = true;
           updateChatMsg(nextMsg, true);
         } else {
-          setMessages((previousMessages) =>
-            append(previousMessages, child.val()),
-          );
+          if (showScrollToBottom) {
+            newMessageList = append(newMessageList, child.val());
+          } else {
+            setMessages((previousMessages) =>
+              append(previousMessages, child.val()),
+            );
+          }
+        }
+        if (showScrollToBottom) {
+          bottomUnread = bottomUnread + 1;
+          setBottomMessages(bottomUnread);
         }
       }
     };
@@ -347,7 +355,7 @@ const ChatScreen = ({route, navigation}) => {
       //mainRef.off('child_changed', childChangedHandler);
       backHandler.remove();
     };
-  }, [messageThreadId, updateChatMsg, updateAllChilds]);
+  }, [messageThreadId, updateChatMsg, updateAllChilds, showScrollToBottom]);
 
   useEffect(() => {
     if (messageThreadId === '') {
@@ -480,13 +488,17 @@ const ChatScreen = ({route, navigation}) => {
         .update(updateObject)
         .then(() => {
           if (appendMsg) {
-            setMessages((previousMessages) =>
-              append(previousMessages, updateObject),
-            );
+            if (showScrollToBottom) {
+              newMessageList = append(newMessageList, updateObject);
+            } else {
+              setMessages((previousMessages) =>
+                append(previousMessages, updateObject),
+              );
+            }
           }
         });
     },
-    [messageThreadId],
+    [messageThreadId, showScrollToBottom],
   );
 
   const append = (currentMessages = [], message) => {
@@ -505,12 +517,90 @@ const ChatScreen = ({route, navigation}) => {
       let isBlocked = blockedList.filter((user) => global.userId === user);
       blockMsg = `${opponent.firstName} has blocked this chat.`;
       setChatEnabled(isBlocked.length === 0);
-    }
-    if (blockedBy !== undefined && blockedBy !== null && blockedBy !== '') {
+    } else if (
+      blockedBy !== undefined &&
+      blockedBy !== null &&
+      blockedBy !== ''
+    ) {
       let isBlocked = blockedBy.filter((user) => global.userId === user);
       blockMsg = `${challenger.firstName} has blocked this chat.`;
       setChatEnabled(isBlocked.length === 0);
     }
+  };
+
+  const scrollToBottom = () => {
+    if (
+      chatRef !== undefined &&
+      chatRef !== null &&
+      chatRef.current !== undefined &&
+      chatRef.current !== null
+    ) {
+      chatRef.current.scrollToOffset({
+        offset: 0,
+        animated: true,
+      });
+    }
+  };
+
+  const handleOnScroll = (event) => {
+    const {
+      nativeEvent: {
+        contentOffset: {y: contentOffsetY},
+      },
+    } = event;
+
+    if (contentOffsetY > scrollToBottomOffset) {
+      setShowScrollToBottom(true);
+    } else {
+      if (contentOffsetY === 0) {
+        newMessageList.forEach((element) => {
+          setMessages((previousMessages) => append(previousMessages, element));
+        });
+      }
+      bottomUnread = 0;
+      setBottomMessages(0);
+      setShowScrollToBottom(false);
+    }
+  };
+
+  const onEndReached = () => {
+    console.log('====================================');
+    console.log('121313');
+    console.log('====================================');
+  };
+
+  const renderScrollToBottomWrapper = () => {
+    return (
+      <View style={[styles.scrollToBottomStyle]}>
+        {bottomMessages > 0 && (
+          <View style={styles.bottomCountContainer}>
+            <Text
+              style={[
+                g.fs16,
+                g.FHNB,
+                g.colorWhite,
+                g.txtCenter,
+                g.txtCenterVertical,
+              ]}
+              numberOfLines={1}>
+              {bottomMessages}
+            </Text>
+          </View>
+        )}
+        <TouchableOpacity
+          style={styles.scrollBottomContainer}
+          onPress={() => scrollToBottom()}
+          hitSlop={{top: 5, left: 5, right: 5, bottom: 5}}>
+          <GlobalInclude.BaseIcon
+            containerStyle={{height: scale(20), width: scale(20)}}
+            iconColor={'#FFF'}
+            iconName={'angle-double-down'}
+            iconSize={scale(20)}
+            iconType={IconType[4]}
+          />
+        </TouchableOpacity>
+      </View>
+    );
   };
 
   const setHeaderBar = useCallback(() => {
@@ -549,8 +639,9 @@ const ChatScreen = ({route, navigation}) => {
     updateChatObject(messageThreadId, request, () => {});
   };
 
-  const generateSingleChat = async (callback) => {
-    createSingleChat(opponent, (chatId) => {
+  const generateSingleChat = async (request, callback) => {
+    let message = userLastMessage(request);
+    createSingleChat(opponent, message, (chatId) => {
       if (chatId !== undefined && chatId !== null) {
         isChatExist = chatId;
         setMessageThreadId(chatId);
@@ -573,6 +664,44 @@ const ChatScreen = ({route, navigation}) => {
     };
   };
 
+  const userLastMessage = (request) => {
+    let message = '';
+    if (request.messageType === 1) {
+      message = request.message;
+    } else if (request.messageType === 2) {
+      message =
+        request.message !== null &&
+        request.message !== undefined &&
+        request.message !== ''
+          ? request.message
+          : 'Photo';
+    } else if (request.messageType === 3) {
+      message =
+        request.message !== null &&
+        request.message !== undefined &&
+        request.message !== ''
+          ? request.message
+          : 'Video';
+    } else if (request.messageType === 4) {
+      message =
+        request.message !== null &&
+        request.message !== undefined &&
+        request.message !== ''
+          ? request.message
+          : 'Audio';
+    } else if (request.messageType === 5) {
+      message =
+        request.message !== null &&
+        request.message !== undefined &&
+        request.message !== ''
+          ? request.message
+          : Helper.getFilename(request.media);
+    } else if (request.messageType === 6) {
+      message = request.message;
+    }
+    return message;
+  };
+
   const addObjectToChat = (request, chatId) => {
     let childRef = reference.child(chatId);
     childRef.push().then((snap) => {
@@ -588,25 +717,18 @@ const ChatScreen = ({route, navigation}) => {
             );
           }
         }
-        setLastMessage(
-          request.message.trim() === '' ? 'Shared Media' : request.message,
-          chatId,
-        );
+
+        let message = userLastMessage(request);
+
+        setLastMessage(message, chatId, request.messageType);
         setIsSending(false);
         setInputValue('');
+        isStickerShowing = false;
+        setEmojiIconWidth(scale(40));
+        animRef.current.slideInLeft().then(() => {});
         //Keyboard.dismiss();
         if (isReplayEditComment) {
-          if (
-            chatRef !== undefined &&
-            chatRef !== null &&
-            chatRef.current !== undefined &&
-            chatRef.current !== null
-          ) {
-            chatRef.current.scrollToOffset({
-              offset: 0,
-              animated: true,
-            });
-          }
+          scrollToBottom();
           setIsReplayEditComment(false);
           setSelectedChatObject(null);
         }
@@ -614,15 +736,26 @@ const ChatScreen = ({route, navigation}) => {
     });
   };
 
-  const setLastMessage = (lastMsg, chatId) => {
+  const setLastMessage = (lastMsg, chatId, mediaType) => {
     const request = {
       lastMessage: lastMsg,
       lastMessageTime: new Date().getTime(),
+      lastMessageType: mediaType,
       isTyping: [
         {userId: global.userId, status: false},
         {userId: opponent._id, status: false},
       ],
     };
+
+    if (mediaType === 1) {
+      if (latestMessageArray.length > 99) {
+        latestMessageArray.splice(0, 1);
+        latestMessageArray.push(lastMsg);
+      } else {
+        latestMessageArray.push(lastMsg);
+      }
+      request.latestMessages = latestMessageArray;
+    }
 
     updateChatObject(chatId, request, () => {});
   };
@@ -640,7 +773,7 @@ const ChatScreen = ({route, navigation}) => {
   const postMsg = (request) => {
     setIsSending(true);
     if (isChatExist === null) {
-      generateSingleChat((chatId) => {
+      generateSingleChat(request, (chatId) => {
         addObjectToChat(request, chatId);
       });
     } else {
@@ -694,66 +827,6 @@ const ChatScreen = ({route, navigation}) => {
     request.replay = reply;
     postMsg(request);
   };
-
-  /**
-   *
-   * Player
-   *
-   */
-  const start = async () => {
-    // Set up the player
-    await TrackPlayer.setupPlayer({});
-    await TrackPlayer.updateOptions({
-      stopWithApp: true,
-      capabilities: [
-        TrackPlayer.CAPABILITY_PLAY,
-        TrackPlayer.CAPABILITY_PAUSE,
-        TrackPlayer.CAPABILITY_SKIP_TO_NEXT,
-        TrackPlayer.CAPABILITY_SKIP_TO_PREVIOUS,
-        TrackPlayer.CAPABILITY_STOP,
-      ],
-      compactCapabilities: [
-        TrackPlayer.CAPABILITY_PLAY,
-        TrackPlayer.CAPABILITY_PAUSE,
-      ],
-    });
-
-    // Add a track to the queue
-    await TrackPlayer.add({
-      id: 'trackId',
-      url: playAudio,
-      title: 'Play Audio',
-      artist: 'Track Artist',
-    });
-
-    // Start playing it
-    await TrackPlayer.play();
-  };
-
-  async function togglePlayback() {
-    const currentTrack = await TrackPlayer.getCurrentTrack();
-    if (currentTrack == null) {
-      await TrackPlayer.reset();
-      await TrackPlayer.add({
-        id: 'trackId',
-        url: playAudio,
-        title: 'Play Audio',
-        artist: 'Track Artist',
-      });
-      await TrackPlayer.play();
-    } else {
-      if (playbackState === TrackPlayer.STATE_PAUSED) {
-        await TrackPlayer.play();
-      } else {
-        await TrackPlayer.pause();
-      }
-    }
-  }
-  /**
-   *
-   * Player
-   *
-   */
 
   const renderHeader = () => {
     return (
@@ -923,17 +996,11 @@ const ChatScreen = ({route, navigation}) => {
         onPress={() => {
           if (!item.delete) {
             if (item.messageType === 5) {
-              documentItem =
-                item.fileName &&
-                item.fileName !== undefined &&
-                item.fileName !== null
-                  ? item.fileName
-                  : item.thumbnail;
+              documentItem = item.media;
               setShowDocViewer(true);
             } else if (item.messageType === 4) {
-              playAudio = item.thumbnail;
+              playAudio = item.media;
               setShowPlayer(!showPlayer);
-              start();
             }
           }
         }}
@@ -1139,9 +1206,8 @@ const ChatScreen = ({route, navigation}) => {
             </Text>
           </TouchableOpacity>
           {selectedChatObject !== null &&
-          selectedChatObject.user._id === global.userId
-            ? showUserPostOptions()
-            : showOtherPostOptions()}
+            selectedChatObject.user._id === global.userId &&
+            showUserPostOptions()}
         </View>
 
         <TouchableOpacity
@@ -1200,20 +1266,11 @@ const ChatScreen = ({route, navigation}) => {
 
   const keyExtractor = (item, index) => index;
 
-  const interpolatedHeight = animatedWidth.interpolate({
-    inputRange: [0, 1],
-    outputRange: [isStickerShowing ? 0 : 45, !isStickerShowing ? 45 : 0],
-  });
-
-  const interpolatedOpacity = animatedOpacity.interpolate({
-    inputRange: [0, 1],
-    outputRange: [!isStickerShowing ? 1.0 : 0.0, isStickerShowing ? 0.0 : 1.0],
-  });
-
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bggray3]}>
       {renderHeader()}
       {showProgess(isFirstLoad)}
+      {showScrollToBottom ? renderScrollToBottomWrapper() : null}
       <View style={[GlobalInclude.AppStyle.fill]}>
         {isFirstLoad ? (
           <View style={[GlobalInclude.AppStyle.fillCenter]}>
@@ -1232,7 +1289,8 @@ const ChatScreen = ({route, navigation}) => {
             showsVerticalScrollIndicator={false}
             keyExtractor={keyExtractor}
             onEndReachedThreshold={0.1}
-            // onEndReached={onEndReached}
+            maintainVisibleContentPosition={true}
+            onEndReached={onEndReached}
             // refreshing={isRefreshing}
             // onRefresh={handleRefresh}
             ListEmptyComponent={emptyComponent}
@@ -1249,6 +1307,7 @@ const ChatScreen = ({route, navigation}) => {
               paddingBottom: scale(20),
             }}
             // style={{transform: [{scaleY: -1}]}}
+            onScroll={handleOnScroll}
           />
         )}
 
@@ -1338,20 +1397,19 @@ const ChatScreen = ({route, navigation}) => {
                   )}
 
                   {/* row two */}
-                  <View style={[g.pb5, grid.rowdir]}>
-                    <Animated.View
+                  <View style={[grid.rowdir]}>
+                    <Animatable.View
+                      ref={animRef}
                       useNativeDriver={true}
-                      style={[
-                        {
-                          width: interpolatedHeight,
-                          opacity: interpolatedOpacity,
-                          height: scale(40),
-                          borderRadius: scale(10),
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          alignSelf: 'center',
-                        },
-                      ]}>
+                      style={{
+                        width: emojiIconWidth,
+                        height: scale(40),
+                        borderRadius: scale(10),
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        alignSelf: 'center',
+                      }}
+                      easing={'linear'}>
                       <TouchableOpacity
                         onPress={() => {
                           if (emojiRef !== undefined && emojiRef !== null) {
@@ -1367,7 +1425,7 @@ const ChatScreen = ({route, navigation}) => {
                           iconType={IconType[1]}
                         />
                       </TouchableOpacity>
-                    </Animated.View>
+                    </Animatable.View>
                     <TextInput
                       autoCapitalize="none"
                       underlineColorAndroid="transparent"
@@ -1381,40 +1439,12 @@ const ChatScreen = ({route, navigation}) => {
 
                         if (input.length > 0 && !isStickerShowing) {
                           isStickerShowing = true;
-                          //animRef.current.slideOutLeft().then(() => {});
-                          Animated.parallel(
-                            [
-                              Animated.timing(animatedWidth, {
-                                toValue: 1,
-                                duration: 1000,
-                              }),
-                              Animated.timing(animatedOpacity, {
-                                toValue: 1,
-                                duration: 500,
-                              }),
-                            ],
-                            {
-                              stopTogether: false,
-                            },
-                          ).start();
+                          setEmojiIconWidth(0);
+                          animRef.current.slideOutLeft().then(() => {});
                         } else if (input.length === 0 && isStickerShowing) {
                           isStickerShowing = false;
-                          //animRef.current.slideInLeft().then(() => {});
-                          Animated.parallel(
-                            [
-                              Animated.timing(animatedWidth, {
-                                toValue: 0,
-                                duration: 500,
-                              }),
-                              Animated.timing(animatedOpacity, {
-                                toValue: 0,
-                                duration: 500,
-                              }),
-                            ],
-                            {
-                              stopTogether: false,
-                            },
-                          ).start();
+                          setEmojiIconWidth(scale(40));
+                          animRef.current.slideInLeft().then(() => {});
                         }
                       }}
                       placeholderTextColor={'#b2b2b2'}
@@ -1557,61 +1587,14 @@ const ChatScreen = ({route, navigation}) => {
           }}
         />
       )}
-
-      <Modal
-        transparent={true}
-        onRequestClose={() => {
-          TrackPlayer.stop().then(() => {
-            setShowPlayer(!showPlayer);
-          });
-        }}
-        visible={showPlayer}>
-        <View style={styles.modalView}>
-          <View style={styles.centeredView}>
-            <View
-              style={{
-                backgroundColor: 'white',
-                borderRadius: 15,
-                shadowColor: '#333333',
-                shadowOffset: {width: 0, height: 2},
-                shadowOpacity: 0.2,
-                shadowRadius: 6,
-                elevation: 5,
-                padding: 8,
-                width: '90%',
-                justifyContent: 'center',
-                alignSelf: 'center',
-                alignItems: 'center',
-                height: scale(130),
-              }}>
-              <TouchableOpacity
-                onPress={() => {
-                  TrackPlayer.stop().then(() => {
-                    setShowPlayer(!showPlayer);
-                  });
-                }}
-                style={{
-                  width: scale(32),
-                  height: scale(32),
-                  justifyContent: 'flex-end',
-                  alignItems: 'flex-end',
-                  alignSelf: 'flex-end',
-                }}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={{height: scale(30), width: scale(30)}}
-                  iconColor={'#000'}
-                  iconName={'close'}
-                  iconSize={scale(30)}
-                  iconType={IconType[8]}
-                />
-              </TouchableOpacity>
-              <View style={{flex: 1}}>
-                <Player onTogglePlayback={togglePlayback} />
-              </View>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      {showPlayer && (
+        <AudioPlayer
+          mediaContent={playAudio}
+          onClose={() => {
+            setShowPlayer(false);
+          }}
+        />
+      )}
     </View>
   );
 };
@@ -1694,6 +1677,38 @@ const styles = StyleSheet.create({
     borderRadius: 0,
     borderBottomLeftRadius: scale(10),
     borderTopLeftRadius: scale(10),
+  },
+  scrollToBottomStyle: {
+    opacity: 0.9,
+    position: 'absolute',
+    left: 10,
+    bottom: scale(60),
+    zIndex: 998,
+    shadowColor: '#000',
+    shadowOpacity: 1,
+    shadowOffset: {width: 0, height: 0},
+    shadowRadius: 1,
+    elevation: 3,
+  },
+  scrollBottomContainer: {
+    height: scale(30),
+    width: scale(30),
+    borderRadius: 20,
+    backgroundColor: GlobalInclude.Color.ColorPrimary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bottomCountContainer: {
+    position: 'absolute',
+    top: -6,
+    left: -6,
+    backgroundColor: 'green',
+    height: scale(20),
+    width: scale(20),
+    zIndex: 999,
+    borderRadius: scale(30),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

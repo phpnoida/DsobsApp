@@ -16,6 +16,9 @@ messaging().setBackgroundMessageHandler(async (remoteMessage) => {
   if (remoteMessage) {
     global.notification = remoteMessage;
     global.isNotificationTap = true;
+    console.log('====================================');
+    console.log('remoteMessage', remoteMessage);
+    console.log('====================================');
     Helper.presentNotification('background-16', remoteMessage);
   }
 });

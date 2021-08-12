@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Dimensions,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
@@ -13,7 +14,7 @@ import GlobalInclude from '../../globalInclude/Globalinclude';
 import ProgressImage from '../../component/ProgresImage';
 import YoutubeView from '../../component/YoutubeView';
 import moment from 'moment';
-import Pdf from 'react-native-pdf';
+import ParsedText from 'react-native-parsed-text';
 import Helper from '../../helper/Helper';
 
 import {isSameUser, isSameDay} from '../../helper/ChatHelper';
@@ -42,14 +43,13 @@ class ChatItem extends PureComponent {
       (currentMessage.isSent || currentMessage.isRead || currentMessage.pending)
     ) {
       let tickIcon = '',
-        iconColor = '#bababa';
+        iconColor = '#FFF';
 
       if (currentMessage.isSent) {
         tickIcon = 'md-checkmark-outline';
-        iconColor = '#bababa';
-      } else if (currentMessage.isRead) {
+      }
+      if (currentMessage.isRead) {
         tickIcon = 'md-checkmark-done-outline';
-        iconColor = GlobalInclude.Color.ColorPrimary;
       }
       return (
         <View style={styles.tickView}>
@@ -66,10 +66,29 @@ class ChatItem extends PureComponent {
     return null;
   }
 
+  handleEmailPress(email, matchIndex /*: number*/) {
+    Helper.openEmail(email);
+  }
+
+  handleUrlPress(url, matchIndex /*: number*/) {
+    Helper.openLink(url);
+  }
+
+  handlePhonePress(phone, matchIndex /*: number*/) {
+    Helper.openDialler(phone);
+  }
+
   renderTextComponent(source, isLeft) {
     const {customFont} = this.props;
     return (
-      <Text
+      <ParsedText
+        parse={[
+          {type: 'url', style: styles.url, onPress: this.handleUrlPress},
+          {type: 'phone', style: styles.phone, onPress: this.handlePhonePress},
+          {type: 'email', style: styles.email, onPress: this.handleEmailPress},
+          {pattern: /#(\w+)/, style: styles.hashTag},
+        ]}
+        childrenProps={{allowFontScaling: false}}
         style={[
           customFont,
           g.FHNR,
@@ -78,7 +97,7 @@ class ChatItem extends PureComponent {
           {textAlign: 'justify'},
         ]}>
         {source}
-      </Text>
+      </ParsedText>
     );
   }
 
@@ -275,9 +294,9 @@ class ChatItem extends PureComponent {
 
   renderItem(currentMessage, isLeft) {
     let style = {
-      paddingHorizontal: scale(2),
-      paddingTop: scale(5),
-      paddingBottom: scale(5),
+      paddingHorizontal: scale(0.5),
+      paddingTop: scale(3),
+      paddingBottom: scale(3),
     };
     let messageContent = '';
     let mediaContent = '';
@@ -304,21 +323,40 @@ class ChatItem extends PureComponent {
           this.renderReplyMessage(currentMessage, isLeft)}
         {currentMessage.delete ? (
           <View style={style}>{this.renderRemovedMsg(isLeft)}</View>
-        ) : messageType === 1 ? (
-          <View style={style}>
-            {this.renderTextComponent(messageContent, isLeft)}
+        ) : (
+          <View>
+            {messageType === 2 ? (
+              <View style={style}>
+                {this.renderImageComponent(mediaContent)}
+              </View>
+            ) : messageType === 3 ? (
+              <View style={style}>
+                {this.renderVideoComponent(mediaContent)}
+              </View>
+            ) : messageType === 4 ? (
+              <View style={style}>
+                {this.renderAudioComponent(mediaContent)}
+              </View>
+            ) : messageType === 5 ? (
+              <View style={style}>{this.renderPdfComponent(mediaContent)}</View>
+            ) : messageType === 6 ? (
+              <View style={style}>
+                {this.renderEmojiComponent(messageContent)}
+              </View>
+            ) : null}
+            {messageContent !== null &&
+              messageContent !== undefined &&
+              messageContent.trim().length > 0 &&
+              messageType !== 6 && (
+                <View
+                  style={[
+                    mediaContent !== '' ? {paddingHorizontal: scale(4)} : style,
+                  ]}>
+                  {this.renderTextComponent(messageContent, isLeft)}
+                </View>
+              )}
           </View>
-        ) : messageType === 2 ? (
-          <View style={style}>{this.renderImageComponent(mediaContent)}</View>
-        ) : messageType === 3 ? (
-          <View style={style}>{this.renderVideoComponent(mediaContent)}</View>
-        ) : messageType === 4 ? (
-          <View style={style}>{this.renderAudioComponent(mediaContent)}</View>
-        ) : messageType === 5 ? (
-          <View style={style}>{this.renderPdfComponent(mediaContent)}</View>
-        ) : messageType === 6 ? (
-          <View style={style}>{this.renderEmojiComponent(messageContent)}</View>
-        ) : null}
+        )}
 
         <View
           style={[grid.rowrow, isLeft ? styles.viewLeft : styles.viewRight]}>
@@ -545,6 +583,15 @@ const styles = StyleSheet.create({
     paddingVertical: scale(3),
     paddingEnd: scale(3),
     width: '100%',
+  },
+  url: {
+    textDecorationLine: 'underline',
+  },
+  email: {
+    textDecorationLine: 'underline',
+  },
+  hashTag: {
+    fontStyle: 'italic',
   },
 });
 

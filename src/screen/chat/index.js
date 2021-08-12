@@ -23,21 +23,14 @@ import {
 } from '../../component/Common';
 import {IconType, APP_NAME} from '../../helper/Constants';
 import Helper from '../../helper/Helper';
-import moment from 'moment';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
 // Firestore
-import {
-  useCollection,
-  useCollectionDataOnce,
-} from 'react-firebase-hooks/firestore';
+import {useCollection} from 'react-firebase-hooks/firestore';
 import firestore from '@react-native-firebase/firestore';
-import {
-  checkUserExist,
-  setUserLastSeen,
-  addUserToBlockList,
-} from '../../helper/ChatHelper';
+import {setUserLastSeen, addUserToBlockList} from '../../helper/ChatHelper';
 
 const chatCollection = firestore().collection('Chats');
+const usersCollection = firestore().collection('Users');
 
 const PaginationStatus = {
   firstLoad: 0,
@@ -46,8 +39,8 @@ const PaginationStatus = {
   fetching: 3,
 };
 
+let finalItemsArray = [];
 let tmpArray = [];
-let allUsersArray = [];
 let selectedIndex = -1;
 let challengerUser = null;
 
@@ -60,9 +53,14 @@ const ChatUserList = ({navigation}) => {
     PaginationStatus.allLoaded,
   );
   const [selectedItem, setSelectedItem] = useState(null);
+  const [filterQuery, setFilterQuery] = useState('');
+  const [blockedUser, setBlockedUser] = useState([]);
   // const [snapshot, loading, error] = useCollection(
   //   chatCollection.where('users', 'array-contains', global.userId),
   // );
+  const [snapshot] = useCollection(
+    usersCollection.where('_id', '==', global.userId),
+  );
 
   useEffect(() => {
     /**
@@ -71,19 +69,29 @@ const ChatUserList = ({navigation}) => {
      */
     setUserLastSeen(true, new Date().getTime(), () => {});
 
+    tmpArray = [];
+    setChatList([]);
+  }, []);
+
+  useEffect(() => {
     /**
      * We get user own details also
      */
-    checkUserExist(global.userId).then((result) => {
-      if (result !== undefined && result !== null) {
-        challengerUser = result;
+    if (snapshot !== undefined && snapshot !== null) {
+      if (
+        snapshot.docs !== undefined &&
+        snapshot.docs !== null &&
+        snapshot.docs.length > 0
+      ) {
+        let data = snapshot.docs[0].data();
+        if (data && data !== null && data !== undefined) {
+          challengerUser = data;
+          setBlockedUser(data.blockedUser);
+        }
       }
-    });
-
-    tmpArray = [];
-    allUsersArray = [];
-    setChatList([]);
-  }, []);
+    }
+    return () => {};
+  }, [snapshot]);
 
   useEffect(() => {
     let subscriber;
@@ -122,6 +130,8 @@ const ChatUserList = ({navigation}) => {
               }
               return 0;
             });
+
+            finalItemsArray = tmpArray;
             setChatList(tmpArray);
             setPaginationStatus(PaginationStatus.waiting);
 
@@ -181,6 +191,62 @@ const ChatUserList = ({navigation}) => {
     };
   }, [navigation]);
 
+  const inArray = (needle, haystack) => {
+    var length = haystack.length;
+    for (var i = 0; i < length; i++) {
+      if (haystack[i].toLocaleLowerCase().includes(needle)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const filterResult = (searchText) => {
+    setPaginationStatus(PaginationStatus.fetching);
+    let oldData = finalItemsArray;
+
+    if (searchText.trim().length === 0) {
+      setChatList([...finalItemsArray]);
+      setPaginationStatus(PaginationStatus.waiting);
+    } else {
+      let tempArray = [];
+      oldData.forEach((element) => {
+        let userInfo = element.userInfo;
+        let latestMessages = element.latestMessages;
+
+        let filteredX = userInfo.filter((itemX) => itemX._id !== global.userId);
+
+        if (
+          filteredX.length > 0 &&
+          Helper.concatName(filteredX)
+            .toLocaleLowerCase()
+            .includes(searchText.toLocaleLowerCase())
+        ) {
+          tempArray.push(element);
+        } else if (
+          element.lastMessage
+            .toLocaleLowerCase()
+            .includes(searchText.toLocaleLowerCase())
+        ) {
+          tempArray.push(element);
+        } else if (inArray(searchText.toLocaleLowerCase(), latestMessages)) {
+          console.log('====================================');
+          console.log('236');
+          console.log('====================================');
+          tempArray.push(element);
+        }
+      });
+
+      if (tempArray.length > 0) {
+        setChatList([...tempArray]);
+        setPaginationStatus(PaginationStatus.waiting);
+      } else {
+        setChatList([]);
+        setPaginationStatus(PaginationStatus.waiting);
+      }
+    }
+  };
+
   const markAllRead = () => {
     if (selectedItem !== undefined && selectedItem !== null) {
       let refId = selectedItem._id;
@@ -226,13 +292,14 @@ const ChatUserList = ({navigation}) => {
     }
   };
 
-  const blockUser = () => {
+  const blockUser = (wantBlock) => {
     if (selectedItem !== undefined && selectedItem !== null) {
+      let opponentUser = getOpponentInfo(selectedItem.userInfo);
       Alert.alert(
-        'Block User',
-        `Are you sure you want to block ${Helper.concatName(
-          getOpponentInfo(selectedItem.userInfo),
-        )}?`,
+        wantBlock ? 'Block User' : 'UnBlock User',
+        `Are you sure you want to ${
+          wantBlock ? 'Block' : 'UnBlock'
+        } ${Helper.concatName(opponentUser)}?`,
         [
           {
             text: 'Cancel',
@@ -242,12 +309,13 @@ const ChatUserList = ({navigation}) => {
           {
             text: 'Yes',
             onPress: () => {
-              let opponentUser = getOpponentInfo(selectedItem.userInfo);
               addUserToBlockList(opponentUser._id, (status) => {
                 Alert.alert(
                   status
-                    ? 'User Blocked successfully'
-                    : 'Erorr while blocking user',
+                    ? `User ${wantBlock ? 'Blocked' : 'UnBlock'} successfully`
+                    : `Erorr while ${
+                        wantBlock ? 'blocking' : 'unblocking'
+                      } user`,
                 );
               });
             },
@@ -294,6 +362,16 @@ const ChatUserList = ({navigation}) => {
     return null;
   };
 
+  const isUserBlocked = (userInfo) => {
+    let opponentUser = getOpponentInfo(userInfo);
+
+    if (opponentUser !== undefined && opponentUser !== null) {
+      let isExist = blockedUser.filter((user) => opponentUser._id === user);
+      return isExist.length > 0;
+    }
+    return false;
+  };
+
   const renderItem = ({index, item}) => {
     let itemImage = '';
     let headerTitle = APP_NAME;
@@ -327,6 +405,17 @@ const ChatUserList = ({navigation}) => {
       }
       headerTitle = item.groupName;
       emptyPicMsg = item.groupName.charAt(0);
+    }
+
+    let mediaIcon = null;
+    if (item.lastMessageType === 2) {
+      mediaIcon = 'file-photo-o';
+    } else if (item.lastMessageType === 3) {
+      mediaIcon = 'file-movie-o';
+    } else if (item.lastMessageType === 4) {
+      mediaIcon = 'file-sound-o';
+    } else if (item.lastMessageType === 5) {
+      mediaIcon = 'file-pdf-o';
     }
 
     return (
@@ -431,34 +520,45 @@ const ChatUserList = ({navigation}) => {
             )}
           </View>
           <View style={grid.rowdir}>
-            <View style={grid.col}>
-              {item.lastMessage !== undefined &&
-              item.lastMessage !== null &&
-              item.lastMessage !== '' ? (
-                <Text
-                  style={[
-                    g.fs12,
-                    g.FHNR,
-                    g.colorBlack,
-                    g.txtCenterVertical,
-                    g.mt5,
-                    g.textJustify,
-                  ]}>
-                  {item.lastMessage}
-                </Text>
-              ) : (
-                <Text
-                  style={[
-                    g.fs12,
-                    g.FHNR,
-                    g.colorBlack,
-                    g.txtCenterVertical,
-                    g.mt5,
-                    g.textJustify,
-                  ]}>
-                  No Messages yet!
-                </Text>
-              )}
+            <View style={[grid.col, g.mt5]}>
+              <View style={[grid.rowdir]}>
+                {mediaIcon !== null && (
+                  <View style={[g.mr5]}>
+                    <GlobalInclude.BaseIcon
+                      containerStyle={{height: scale(14), width: scale(14)}}
+                      iconColor={GlobalInclude.Color.ColorPrimary}
+                      iconName={mediaIcon}
+                      iconSize={scale(14)}
+                      iconType={IconType[4]}
+                    />
+                  </View>
+                )}
+                {item.lastMessage !== undefined &&
+                item.lastMessage !== null &&
+                item.lastMessage !== '' ? (
+                  <Text
+                    style={[
+                      g.fs12,
+                      g.FHNR,
+                      g.colorBlack,
+                      g.txtCenterVertical,
+                      g.textJustify,
+                    ]}>
+                    {item.lastMessage}
+                  </Text>
+                ) : (
+                  <Text
+                    style={[
+                      g.fs12,
+                      g.FHNR,
+                      g.colorBlack,
+                      g.txtCenterVertical,
+                      g.textJustify,
+                    ]}>
+                    No Messages yet!
+                  </Text>
+                )}
+              </View>
             </View>
             <View
               style={[
@@ -472,9 +572,9 @@ const ChatUserList = ({navigation}) => {
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(18), width: scale(18)}}
                     iconColor={GlobalInclude.Color.ColorPrimary}
-                    iconName={'sound-mute'}
+                    iconName={'volume-mute'}
                     iconSize={scale(18)}
-                    iconType={IconType[9]}
+                    iconType={IconType[1]}
                   />
                 </View>
               )}
@@ -590,17 +690,32 @@ const ChatUserList = ({navigation}) => {
 
           {selectedItem !== null &&
             selectedItem !== undefined &&
-            !selectedItem.isGroup &&
-            generateMenuOption(
-              'Block This Sender',
-              'exclamationcircleo',
-              10,
-              () => {
-                refPostOptions.current.close();
-                setTimeout(() => {
-                  blockUser();
-                }, 205);
-              },
+            !selectedItem.isGroup && (
+              <View>
+                {isUserBlocked(selectedItem.userInfo)
+                  ? generateMenuOption(
+                      'UnBlock This Sender',
+                      'exclamationcircleo',
+                      10,
+                      () => {
+                        refPostOptions.current.close();
+                        setTimeout(() => {
+                          blockUser(false);
+                        }, 205);
+                      },
+                    )
+                  : generateMenuOption(
+                      'Block This Sender',
+                      'exclamationcircleo',
+                      10,
+                      () => {
+                        refPostOptions.current.close();
+                        setTimeout(() => {
+                          blockUser(true);
+                        }, 205);
+                      },
+                    )}
+              </View>
             )}
         </View>
       </OptionsSheet>
@@ -638,12 +753,17 @@ const ChatUserList = ({navigation}) => {
                 />
               </View>
             ) : (
-              <View>
+              <View style={[GlobalInclude.AppStyle.contentSpaceHorizonta]}>
                 <SingleSearchWithFilter
-                  placeholder={'Search By Keyword'}
-                  changeText={(text) => {}}
+                  placeholder={'Search'}
+                  filterQuery={filterQuery}
+                  changeText={(text) => {
+                    setFilterQuery(text);
+                    filterResult(text);
+                  }}
                   showGoButton={false}
                   onFilterPress={() => {}}
+                  hideFilter={true}
                 />
                 <FlatList
                   showsVerticalScrollIndicator={false}
@@ -655,8 +775,7 @@ const ChatUserList = ({navigation}) => {
                   ListEmptyComponent={renderNoDataComponent}
                   contentContainerStyle={{
                     paddingBottom: scale(70),
-                    paddingTop: scale(25),
-                    paddingHorizontal: scale(10),
+                    paddingTop: scale(10),
                   }}
                 />
               </View>
