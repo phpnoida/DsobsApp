@@ -315,9 +315,15 @@ const StartChatWith = ({navigation}) => {
             <AutoSuggestUser
               searchedUser={searchedUser}
               onPress={(row, index) => {
-                let oldData = selectedUser;
-                oldData.push(row);
-                setSelectedUser([...oldData]);
+                if (chatType === 1) {
+                  let itemArray = [];
+                  itemArray.push(row);
+                  setSelectedUser([...itemArray]);
+                } else {
+                  let oldData = selectedUser;
+                  oldData.push(row);
+                  setSelectedUser([...oldData]);
+                }
                 setSearchedUser([]);
                 setSearchUserName('');
                 Keyboard.dismiss();

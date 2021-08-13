@@ -34,6 +34,7 @@ const UploadMedia = ({
   videoData,
   onPickMedia,
   supportMultiple,
+  hideTagInVideo,
 }) => {
   const videoRef = useRef();
 
@@ -360,33 +361,42 @@ const UploadMedia = ({
   };
 
   const addToVideo = () => {
-    if (selectedLink.trim() === '') {
-      setErrorMessage({link: 'This field is required!'});
-    } else if (selectedLinkTags.trim() === '') {
-      setErrorMessage({tag: 'This field is required!'});
+    if (hideTagInVideo) {
+      if (selectedLink.trim() === '') {
+        setErrorMessage({link: 'This field is required!'});
+        return;
+      }
     } else {
-      setErrorMessage({});
-      videoRef.current.close();
-      const thumbnail =
-        selectedLink.includes('youtube') || selectedLink.includes('youtu.be')
-          ? selectedLink.replace('watch?v=', 'embed/')
-          : selectedLink.includes('vimeo')
-          ? selectedLink.replace(
-              'https://vimeo.com/',
-              'https://player.vimeo.com/video/',
-            )
-          : '';
-      const obj = {
-        fileName: selectedLink,
-        thumbnail: thumbnail,
-        type: 2,
-        tags: selectedLinkTags,
-      };
-
-      let tmpArray = [];
-      tmpArray.push(obj);
-      onPickMedia(tmpArray);
+      if (selectedLink.trim() === '') {
+        setErrorMessage({link: 'This field is required!'});
+        return;
+      } else if (selectedLinkTags.trim() === '') {
+        setErrorMessage({tag: 'This field is required!'});
+        return;
+      }
     }
+
+    setErrorMessage({});
+    videoRef.current.close();
+    const thumbnail =
+      selectedLink.includes('youtube') || selectedLink.includes('youtu.be')
+        ? selectedLink.replace('watch?v=', 'embed/')
+        : selectedLink.includes('vimeo')
+        ? selectedLink.replace(
+            'https://vimeo.com/',
+            'https://player.vimeo.com/video/',
+          )
+        : '';
+    const obj = {
+      fileName: selectedLink,
+      thumbnail: thumbnail,
+      type: 2,
+      tags: selectedLinkTags,
+    };
+
+    let tmpArray = [];
+    tmpArray.push(obj);
+    onPickMedia(tmpArray);
   };
 
   const handleInput = (key, value) => {
@@ -537,26 +547,33 @@ const UploadMedia = ({
             ) : null}
           </View>
 
-          <View style={[grid.row, g.mb10]}>
-            <View style={grid.col}>
-              <TextInput
-                placeholder={
-                  'Tag this photo, seperate tags by comma (Required)'
-                }
-                onChangeText={(tags) => handleInput('tags', tags)}
-                underlineColorAndroid="transparent"
-                style={[g.inputWhite]}
-                value={selectedLinkTags}
-              />
-              {errorMessage.tag && errorMessage.tag !== '' ? (
-                <Text style={g.errorMsg}>{errorMessage.tag}</Text>
-              ) : null}
+          {hideTagInVideo ? null : (
+            <View style={[grid.row, g.mb10]}>
+              <View style={grid.col}>
+                <TextInput
+                  placeholder={
+                    'Tag this photo, seperate tags by comma (Required)'
+                  }
+                  onChangeText={(tags) => handleInput('tags', tags)}
+                  underlineColorAndroid="transparent"
+                  style={[g.inputWhite]}
+                  value={selectedLinkTags}
+                />
+                {errorMessage.tag && errorMessage.tag !== '' ? (
+                  <Text style={g.errorMsg}>{errorMessage.tag}</Text>
+                ) : null}
+              </View>
             </View>
-          </View>
+          )}
+
           <CommonButton
             showLoader={false}
             title={
-              videoData !== undefined && videoData !== null ? 'Update' : 'Save'
+              videoData !== undefined && videoData !== null
+                ? 'Update'
+                : hideTagInVideo
+                ? 'Send'
+                : 'Save'
             }
             onPress={() => addToVideo()}
           />

@@ -21,39 +21,63 @@ import {showProgess} from '../../component/Common';
 import {checkUserExist, updateUserObject} from '../../helper/ChatHelper';
 import Helpers from '../../helper/Helper';
 import moment from 'moment';
+import {useCollection} from 'react-firebase-hooks/firestore';
+import firestore from '@react-native-firebase/firestore';
 
 const {width} = Dimensions.get('window');
+const usersCollection = firestore().collection('Users');
 
 const ChatUserProfile = ({route, navigation}) => {
   const [isLoading, setIsLoading] = useState(true);
   const [profileData, setProfileData] = useState(null);
+  const [snapshot] = useCollection(
+    usersCollection.where('_id', '==', route.params.userId),
+  );
+
+  // useEffect(() => {
+  //   /**
+  //    * We get user own details also
+  //    */
+
+  //   if (route !== undefined && route !== null) {
+  //     if (route.params !== undefined && route.params !== null) {
+  //       let userId = route.params.userId;
+  //       checkUserExist(userId).then((result) => {
+  //         setIsLoading(false);
+  //         if (result !== undefined && result !== null) {
+  //         }
+  //       });
+  //     }
+  //   }
+
+  //   return () => {};
+  // }, [route]);
 
   useEffect(() => {
-    /**
-     * We get user own details also
-     */
-
-    if (route !== undefined && route !== null) {
-      if (route.params !== undefined && route.params !== null) {
-        let userId = route.params.userId;
-        checkUserExist(userId).then((result) => {
+    if (snapshot !== undefined && snapshot !== null) {
+      if (
+        snapshot.docs !== undefined &&
+        snapshot.docs !== null &&
+        snapshot.docs.length > 0
+      ) {
+        let data = snapshot.docs[0].data();
+        if (data && data !== null && data !== undefined) {
           setIsLoading(false);
-          if (result !== undefined && result !== null) {
-            setProfileData(result);
-          }
-        });
+          setProfileData(data);
+        }
       }
     }
-
     return () => {};
-  }, [route]);
+  }, [snapshot]);
 
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
       <HeaderBar
         title={
           profileData !== null
-            ? `${Helpers.concatName(profileData)} - ${profileData.batch}`
+            ? `${Helpers.capitalize(Helpers.concatName(profileData))} - ${
+                profileData.batch
+              }`
             : APP_NAME
         }
         navigation={navigation}
@@ -64,27 +88,60 @@ const ChatUserProfile = ({route, navigation}) => {
         {profileData !== null ? (
           <View style={[grid.flex1, g.pl10, g.pr10]}>
             <View style={styles.headerContainer}>
-              <ProgressImage
-                source={{uri: profileData.profileImg}}
-                containerStyle={{
-                  aspectRatio: 1 / 1,
-                  height: scale(90),
-                  width: scale(90),
-                  borderRadius: scale(90),
-                }}
-                imageStyle={{
-                  aspectRatio: 1 / 1,
-                  height: scale(90),
-                  width: scale(90),
-                  borderRadius: scale(90),
-                }}
-                mode={'cover'}
-              />
+              <View
+                style={[
+                  {
+                    height: scale(90),
+                    width: scale(90),
+                    borderRadius: scale(90),
+                  },
+                  g.bggray,
+                  g.oh,
+                  grid.alignItems,
+                  grid.justifyContentCenter,
+                ]}>
+                {profileData.profileImg !== null &&
+                profileData.profileImg !== undefined &&
+                profileData.profileImg !== '' ? (
+                  <ProgressImage
+                    source={{uri: profileData.profileImg}}
+                    containerStyle={{
+                      aspectRatio: 1 / 1,
+                      height: scale(90),
+                      width: scale(90),
+                      borderRadius: scale(90),
+                    }}
+                    imageStyle={{
+                      aspectRatio: 1 / 1,
+                      height: scale(90),
+                      width: scale(90),
+                      borderRadius: scale(90),
+                    }}
+                    mode={'cover'}
+                  />
+                ) : (
+                  <Text
+                    style={[
+                      g.fs36,
+                      g.FHNM,
+                      g.colorWhite,
+                      GlobalInclude.AppStyle.transform,
+                    ]}>
+                    {profileData.firstName.charAt(0)}
+                  </Text>
+                )}
+              </View>
+
               <View style={[g.ml15, grid.col]}>
                 <View style={[grid.rowrow, grid.justifyContent]}>
                   <View style={[g.pr10, grid.col]}>
                     <Text
-                      style={[g.colordarkGray, g.fs18, g.FHNB]}
+                      style={[
+                        g.colordarkGray,
+                        g.fs18,
+                        g.FHNB,
+                        GlobalInclude.AppStyle.transform,
+                      ]}
                       onPress={() => {}}>
                       {Helpers.concatName(profileData)}
                     </Text>
@@ -109,12 +166,15 @@ const ChatUserProfile = ({route, navigation}) => {
                     g.fs14,
                     g.FHNR,
                     g.mt5,
-                    {textTransform: 'capitalize'},
+                    GlobalInclude.AppStyle.transform,
                   ]}>
                   {profileData.city}
                 </Text>
                 <Text style={[g.colorLightGray, g.fs14, g.FHNR, g.mt5]}>
-                  LastSeen: {moment(profileData.lastseen).fromNow()}
+                  LastSeen:{' '}
+                  {profileData.isOnline
+                    ? 'Online'
+                    : moment(profileData.lastseen).fromNow()}
                 </Text>
               </View>
             </View>
@@ -130,8 +190,18 @@ const ChatUserProfile = ({route, navigation}) => {
                   grid.justifyContentCenter,
                   {minHeight: scale(65)},
                 ]}>
-                <Text style={[g.colordarkGray, g.fs16, g.FHNR, g.txtCenter]}>
-                  {Helpers.concatName(profileData)} has blocked
+                <Text
+                  style={[
+                    g.colordarkGray,
+                    g.fs16,
+                    g.FHNR,
+                    g.txtCenter,
+                    GlobalInclude.AppStyle.transform,
+                  ]}>
+                  {Helpers.concatName(profileData)}{' '}
+                  <Text style={[g.colordarkGray, g.fs16, g.FHNR, g.txtCenter]}>
+                    has blocked
+                  </Text>
                   <Text style={[g.colorBlue, g.fs24, g.FHNB]}>
                     {' '}
                     {profileData.blockedUser.length}{' '}
@@ -152,8 +222,18 @@ const ChatUserProfile = ({route, navigation}) => {
                   grid.justifyContentCenter,
                   {minHeight: scale(65)},
                 ]}>
-                <Text style={[g.colordarkGray, g.fs15, g.FHNR, g.txtCenter]}>
-                  {Helpers.concatName(profileData)} has been blocked by
+                <Text
+                  style={[
+                    g.colordarkGray,
+                    g.fs15,
+                    g.FHNR,
+                    g.txtCenter,
+                    GlobalInclude.AppStyle.transform,
+                  ]}>
+                  {Helpers.concatName(profileData)}{' '}
+                  <Text style={[g.colordarkGray, g.fs15, g.FHNR, g.txtCenter]}>
+                    has been blocked by
+                  </Text>
                   <Text style={[g.colorBlue, g.fs24, g.FHNB]}>
                     {' '}
                     {profileData.blockedBy.length}{' '}

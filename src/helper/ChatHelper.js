@@ -33,7 +33,6 @@ export const createSingleChat = (opponentUser, lastMessage, callback) => {
   let chatId = getChatId();
 
   let users = [];
-
   let detail = {};
   detail._id = global.userDetails._id;
   detail.profileImg = global.userDetails.profileImg;
@@ -41,9 +40,10 @@ export const createSingleChat = (opponentUser, lastMessage, callback) => {
   detail.batch = global.userDetails.batch;
   detail.firstName = global.userDetails.firstName;
   detail.profession = global.userDetails.profession;
-
+  detail.isOnline = true;
   users.push(detail);
 
+  // Second User
   detail = {};
 
   detail._id = opponentUser._id;
@@ -52,6 +52,8 @@ export const createSingleChat = (opponentUser, lastMessage, callback) => {
   detail.batch = opponentUser.batch;
   detail.firstName = opponentUser.firstName;
   detail.profession = opponentUser.profession;
+  //detail.isOnline = opponentUser.isOnline;
+  detail.isOnline = false;
 
   users.push(detail);
 
@@ -88,7 +90,7 @@ export const createSingleChat = (opponentUser, lastMessage, callback) => {
     .doc(chatId)
     .set(chatObject)
     .then(() => {
-      callback(chatId);
+      callback(chatObject);
     })
     .catch(() => {
       callback(null);

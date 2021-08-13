@@ -43,13 +43,19 @@ class ChatItem extends PureComponent {
       (currentMessage.isSent || currentMessage.isRead || currentMessage.pending)
     ) {
       let tickIcon = '',
-        iconColor = '#FFF';
+        iconColor = '#323232';
 
       if (currentMessage.isSent) {
         tickIcon = 'md-checkmark-outline';
+        iconColor = '#cccccc';
+      }
+      if (currentMessage.isDelivered) {
+        tickIcon = 'md-checkmark-done-outline';
+        iconColor = '#cccccc';
       }
       if (currentMessage.isRead) {
         tickIcon = 'md-checkmark-done-outline';
+        iconColor = GlobalInclude.Color.ColorPrimary;
       }
       return (
         <View style={styles.tickView}>
@@ -92,7 +98,7 @@ class ChatItem extends PureComponent {
         style={[
           customFont,
           g.FHNR,
-          isLeft ? g.colorBlack : g.colorWhite,
+          g.colorBlack,
           g.txtCenterVertical,
           {textAlign: 'justify'},
         ]}>
@@ -106,7 +112,7 @@ class ChatItem extends PureComponent {
       <Text
         style={[
           g.FHNR,
-          isLeft ? g.colorBlack : g.colorWhite,
+          g.colorBlack,
           g.txtCenterVertical,
           {textAlign: 'justify', fontSize: scale(54)},
         ]}>
@@ -181,7 +187,7 @@ class ChatItem extends PureComponent {
           style={[
             customFont,
             g.FHNM,
-            isLeft ? g.colorBlue : g.colorWhite,
+            g.colorBlue,
             isLeft ? grid.justifyContentLeft : grid.justifyContentRight,
             isLeft ? grid.alignSelf : grid.alignItemsBottom,
             g.txtCenterVertical,
@@ -222,9 +228,7 @@ class ChatItem extends PureComponent {
           style={[
             styles.renderBorder,
             {
-              backgroundColor: isLeft
-                ? GlobalInclude.Color.ColorPrimary
-                : '#FFF',
+              backgroundColor: GlobalInclude.Color.ColorPrimary,
             },
           ]}
         />
@@ -238,19 +242,15 @@ class ChatItem extends PureComponent {
             style={[
               customFont,
               g.FHNB,
-              isLeft ? g.colorBlack : g.colorWhite,
+              g.colorBlack,
               g.p3,
+              GlobalInclude.AppStyle.transform,
             ]}>
             {Helper.concatName(currentMessage.replay.user)}
           </Text>
           <Text
             numberOfLines={2}
-            style={[
-              customFont,
-              g.FHNR,
-              isLeft ? g.colorBlack : g.colorWhite,
-              g.p3,
-            ]}>
+            style={[customFont, g.FHNR, g.colorBlack, g.p3]}>
             {currentMessage.messageType === 1
               ? currentMessage.message
               : showMediaType(currentMessage.messageType)}
@@ -285,7 +285,7 @@ class ChatItem extends PureComponent {
   renderRightSide(currentMessage) {
     return (
       <View style={[grid.rowdir, styles.viewRight]}>
-        <View style={[g.bgBlue, styles.bubbleRight]}>
+        <View style={[g.bgGreenLight, styles.bubbleRight]}>
           {this.renderItem(currentMessage, false)}
         </View>
       </View>
@@ -396,7 +396,7 @@ class ChatItem extends PureComponent {
             customFont,
             g.FHNR,
             g.ml5,
-            isLeft ? g.colorBlack : g.colorWhite,
+            g.colorBlack,
             g.txtCenterVertical,
             {textAlign: 'justify'},
           ]}>

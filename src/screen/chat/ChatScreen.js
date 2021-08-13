@@ -72,6 +72,9 @@ let playAudio = '';
 let latestMessageArray = [];
 let bottomUnread = 0;
 let newMessageList = [];
+let inMessageThread = false;
+let threadId = '';
+
 const scrollToBottomOffset = 200;
 const usersCollection = firestore().collection('Users');
 const chatCollection = firestore().collection('Chats');
@@ -91,7 +94,7 @@ const ChatScreen = ({route, navigation}) => {
 
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [messages, setMessages] = useState([]);
-  const [fontSize, setFontSize] = useState(scale(12));
+  const [fontSize, setFontSize] = useState(scale(14));
   const [inputValue, setInputValue] = useState('');
   const [header, setHeader] = useState(APP_NAME);
   const [subHeader, setSubHeader] = useState(APP_NAME);
@@ -143,6 +146,23 @@ const ChatScreen = ({route, navigation}) => {
       isChatExist = await checkChatExist(opponent._id, 1);
 
       if (isChatExist !== null) {
+        threadId = isChatExist._id;
+        offlineSelf(true, () => {
+          let userInfo = isChatExist.userInfo.filter(
+            (user) => user._id !== global.userId,
+          );
+
+          console.log('====================================');
+          console.log('userInfo', userInfo);
+          console.log('====================================');
+          if (
+            userInfo !== undefined &&
+            userInfo !== null &&
+            userInfo.length > 0
+          ) {
+            inMessageThread = userInfo[0].isOnline;
+          }
+        });
         setMessageThreadId(isChatExist._id);
       } else {
         setIsFirstLoad(false);
@@ -153,7 +173,9 @@ const ChatScreen = ({route, navigation}) => {
     const backAction = () => {
       if (navigation.isFocused()) {
         setUserLastSeen(false, new Date().getTime(), () => {
-          navigation.replace('ChatUserList');
+          offlineSelf(false, () => {
+            navigation.replace('ChatUserList');
+          });
         });
         return true;
       }
@@ -171,12 +193,21 @@ const ChatScreen = ({route, navigation}) => {
       ) {
         let data = snapshot.docs[0].data();
         if (data && data !== null && data !== undefined) {
-          console.log('====================================');
-          console.log('chat_data', data);
-          console.log('====================================');
-          setChatEnabled(true);
+          opponent = data;
+          // console.log('====================================');
+          // console.log('userObject', data);
+          // console.log('====================================');
           setIsOpponentOnline(data.isOnline);
-          checkOpponentBlocked(data.blockedUser, data.blockedBy);
+          if (data.isOnline) {
+            updateOwnMessages(messages);
+          }
+          if (!data.chatEnabled) {
+            blockMsg = `${data.firstName} has disabled chat.`;
+            setChatEnabled(false);
+          } else {
+            setChatEnabled(true);
+            checkOpponentBlocked(data.blockedUser, data.blockedBy);
+          }
         }
       }
     }
@@ -193,29 +224,60 @@ const ChatScreen = ({route, navigation}) => {
         let data = isTyping.docs[0].data();
         if (data && data !== null && data !== undefined) {
           latestMessageArray = data.latestMessages;
-          let isMuted = data.mutedBy.filter((item) => global.userId === item);
+          let isMuted = data.mutedBy.filter((item) => global.userId !== item);
           isOpponentMuted = isMuted.length > 0 ? true : false;
+
           let typingUser = data.isTyping;
-          for (let i = 0; i < typingUser.length; i++) {
-            const element = typingUser[i];
-            if (element.userId !== global.userId) {
-              setIsOpponentTyping(element.status);
-              break;
+          let usersList = data.userInfo;
+
+          let whoTyping = typingUser.filter(
+            (element) => element.userId !== global.userId,
+          );
+
+          if (
+            whoTyping !== undefined &&
+            whoTyping !== null &&
+            whoTyping.length > 0
+          ) {
+            setIsOpponentTyping(whoTyping[0].status);
+          }
+
+          let isUserAvailable = usersList.filter(
+            (element) => element._id !== global.userId,
+          );
+
+          if (
+            isUserAvailable !== undefined &&
+            isUserAvailable !== null &&
+            isUserAvailable.length > 0
+          ) {
+            //console.log('isUserAvailable', isUserAvailable);
+            inMessageThread = isUserAvailable[0].isOnline;
+
+            if (inMessageThread) {
+              updateAllChilds(messages, false);
             }
           }
         }
       }
     }
     return () => {};
-  }, [isTyping]);
+  }, [isTyping, updateAllChilds, messages]);
 
   useEffect(() => {
+    /*********************
+     *
+     * THis will call for all firebase functions
+     *
+     */
+
     if (messageThreadId === '') {
       return;
     }
-    console.log('====================================');
-    console.log('useEffect-129', messageThreadId);
-    console.log('====================================');
+    // console.log('====================================');
+    // console.log('useEffect-129', messageThreadId);
+    // console.log('====================================');
+
     const mainRef = reference.child(messageThreadId).ref;
     let childAddedHandler;
 
@@ -237,6 +299,7 @@ const ChatScreen = ({route, navigation}) => {
           msgUser._id !== null &&
           msgUser._id !== global.userId
         ) {
+          console.log('301');
           nextMsg.isRead = true;
           updateChatMsg(nextMsg, true);
         } else {
@@ -257,9 +320,9 @@ const ChatScreen = ({route, navigation}) => {
 
     const onValue = (snapshots) => {
       if (snapshots && snapshots !== undefined) {
-        console.log('====================================');
-        console.log('onValue');
-        console.log('====================================');
+        // console.log('====================================');
+        // console.log('onValue');
+        // console.log('====================================');
         let msgList = snapshots.reverse();
         setMessages([...msgList]);
         setIsFirstLoad(false);
@@ -303,17 +366,28 @@ const ChatScreen = ({route, navigation}) => {
         const children = [];
         let unreadPosition = -1;
         let unreadCount = 0;
-
+        let needsToUpdate = false;
         try {
           objectValue.forEach((item, index, array) => {
             const element = item.val();
             childrenToProcess--;
             if (!isGroup) {
-              if (!element.isRead && element.user._id !== global.userId) {
-                unreadCount++;
-                if (unreadPosition === -1) {
-                  unreadPosition = index;
+              if (element.user._id !== global.userId) {
+                if (element.isRead === undefined || !element.isRead) {
+                  // console.log('====================================');
+                  // console.log('element.isRead', element.isRead);
+                  // console.log('====================================');
+                  needsToUpdate = true;
+                  unreadCount++;
+                  if (unreadPosition === -1) {
+                    unreadPosition = index;
+                  }
                 }
+                element.isSent = true;
+                element.isDelivered = true;
+                element.isRead = true;
+              } else {
+                element.isDelivered = true;
               }
             }
 
@@ -328,8 +402,9 @@ const ChatScreen = ({route, navigation}) => {
                 messageType: 1,
                 media: '',
                 user: getUserObject(),
-                isRead: true,
                 isSent: true,
+                isDelivered: true,
+                isRead: true,
                 replay: {},
                 removedBy: [],
               };
@@ -337,13 +412,24 @@ const ChatScreen = ({route, navigation}) => {
                 children.splice(unreadPosition, 0, systemMsg);
               }
               onValue(children);
-              updateAllChilds(children, messageThreadId);
+              children.shift();
+              console.log('====================================');
+              console.log('needsToUpdate', children);
+              console.log('====================================');
+
+              // if (needsToUpdate && isOpponentOnline) {
+              //   updateCombineMessages(children);
+              // } else if (needsToUpdate) {
+              //   updateAllChilds(children, true);
+              // } else if (isOpponentOnline) {
+              //   updateOwnMessages(children);
+              // }
             }
           });
         } catch (error) {
-          console.log('====================================');
-          console.log('error', error);
-          console.log('====================================');
+          // console.log('====================================');
+          // console.log('error', error);
+          // console.log('====================================');
         }
       }
     };
@@ -355,39 +441,56 @@ const ChatScreen = ({route, navigation}) => {
       //mainRef.off('child_changed', childChangedHandler);
       backHandler.remove();
     };
-  }, [messageThreadId, updateChatMsg, updateAllChilds, showScrollToBottom]);
+  }, [
+    messageThreadId,
+    updateChatMsg,
+    updateAllChilds,
+    updateOwnMessages,
+    showScrollToBottom,
+    isOpponentOnline,
+    updateCombineMessages,
+  ]);
 
   useEffect(() => {
+    /*********************
+     *
+     * THis will call on child changed on firebase realtime
+     *
+     */
+
     if (messageThreadId === '') {
       return;
     }
 
+    // console.log('====================================');
+    // console.log('messageThreadId-433', messageThreadId);
+    // console.log('====================================');
     const mainRef = reference.child(messageThreadId).ref;
 
     const onError = (error) => {
-      console.log('====================================');
-      console.log('firebase error', error);
-      console.log('====================================');
+      // console.log('====================================');
+      // console.log('firebase error', error);
+      // console.log('====================================');
     };
 
     const onChildChanged = (childChanged) => {
-      console.log('====================================');
-      console.log('snapshots-onChildChanged', childChanged);
-      console.log('====================================');
-      if (childChanged && childChanged !== null && childChanged !== undefined) {
-        let nextMsg = JSON.parse(JSON.stringify(childChanged.val()));
-        let msgUser = nextMsg.user;
-        if (
-          msgUser._id !== undefined &&
-          msgUser._id !== null &&
-          msgUser._id === global.userId
-        ) {
-          nextMsg.isRead = true;
-          setTimeout(() => {
-            refreshChildrens(nextMsg);
-          }, 200);
-        }
-      }
+      // console.log('====================================');
+      // console.log('snapshots-onChildChanged', childChanged);
+      // console.log('====================================');
+      // if (childChanged && childChanged !== null && childChanged !== undefined) {
+      //   let nextMsg = JSON.parse(JSON.stringify(childChanged.val()));
+      //   let msgUser = nextMsg.user;
+      //   if (
+      //     msgUser._id !== undefined &&
+      //     msgUser._id !== null &&
+      //     msgUser._id === global.userId
+      //   ) {
+      //     nextMsg.isRead = true;
+      //     setTimeout(() => {
+      //       refreshChildrens(nextMsg);
+      //     }, 200);
+      //   }
+      // }
     };
 
     const childChangedHandler = mainRef.on(
@@ -421,29 +524,77 @@ const ChatScreen = ({route, navigation}) => {
     [messages, updateChatMsg],
   );
 
-  const updateAllChilds = useCallback((childs, messageId) => {
+  const updateOwnMessages = useCallback((childs) => {
+    // console.log('====================================');
+    // console.log('updateOwnMessages-487');
+    // console.log('====================================');
     let updateArray = [];
     let isFound = false;
     var rv = {};
     for (var i = 0; i < childs.length; ++i) {
       const element = childs[i];
-      if (element.user._id !== global.userId) {
-        if (!element.isRead || !element.isSent) {
+      if (element.user._id === global.userId) {
+        if (
+          element.isSent !== undefined ||
+          !element.isSent ||
+          element.isDelivered !== undefined ||
+          !element.isDelivered
+        ) {
           isFound = true;
-          element.isRead = true;
           element.isSent = true;
+          element.isDelivered = true;
           updateArray.push(element);
           rv[element._id] = element;
         }
       }
     }
 
-    if (isFound) {
+    // console.log('====================================');
+    // console.log('isFound,threadId', isFound, threadId);
+    // console.log('====================================');
+    if (isFound && threadId !== '') {
+      reference.child(threadId).update(rv);
+    }
+  }, []);
+
+  const updateAllChilds = useCallback((childs, readDone) => {
+    // console.log('====================================');
+    // console.log('updateAllChilds-522');
+    // console.log('====================================');
+    let updateArray = [];
+    let isFound = false;
+    var rv = {};
+    for (var i = 0; i < childs.length; ++i) {
+      const element = childs[i];
+      if (element.user._id !== global.userId) {
+        if (
+          element.isSent !== undefined ||
+          !element.isSent ||
+          element.isDelivered !== undefined ||
+          !element.isDelivered ||
+          element.isRead !== undefined ||
+          !element.isRead
+        ) {
+          isFound = true;
+          element.isSent = true;
+          element.isDelivered = true;
+          element.isRead = readDone;
+          console.log('updateAllChilds-558', readDone);
+          updateArray.push(element);
+          rv[element._id] = element;
+        }
+      }
+    }
+
+    // console.log('====================================');
+    // console.log('isFound,threadId', isFound, threadId);
+    // console.log('====================================');
+    if (isFound && threadId !== '') {
       reference
-        .child(messageId)
+        .child(threadId)
         .update(rv)
         .then(() => {
-          getChatObject(messageId, (response) => {
+          getChatObject(threadId, (response) => {
             if (response && response !== null && response !== undefined) {
               let unreadCount = response.unreadCount;
               unreadCount.forEach((element) => {
@@ -454,7 +605,61 @@ const ChatScreen = ({route, navigation}) => {
               const request = {
                 unreadCount: unreadCount,
               };
-              updateChatObject(messageId, request, () => {});
+              updateChatObject(threadId, request, () => {});
+            }
+          });
+        });
+    }
+  }, []);
+
+  const updateCombineMessages = useCallback((childs, readDone) => {
+    console.log('====================================');
+    console.log('updateAllChilds-582');
+    console.log('====================================');
+
+    let updateArray = [];
+    let isFound = false;
+    var rv = {};
+    for (var i = 0; i < childs.length; ++i) {
+      const element = childs[i];
+      if (
+        element.isSent !== undefined ||
+        !element.isSent ||
+        element.isDelivered !== undefined ||
+        !element.isDelivered ||
+        element.isRead !== undefined ||
+        !element.isRead
+      ) {
+        isFound = true;
+        element.isSent = true;
+        element.isDelivered = true;
+        element.isRead = readDone;
+        console.log('updateCombineMessages-612', readDone);
+        updateArray.push(element);
+        rv[element._id] = element;
+      }
+    }
+
+    // console.log('====================================');
+    // console.log('isFound,threadId', isFound, threadId);
+    // console.log('====================================');
+    if (isFound && threadId !== '') {
+      reference
+        .child(threadId)
+        .update(rv)
+        .then(() => {
+          getChatObject(threadId, (response) => {
+            if (response && response !== null && response !== undefined) {
+              let unreadCount = response.unreadCount;
+              unreadCount.forEach((element) => {
+                if (element.userId === global.userId) {
+                  element.count = 0;
+                }
+              });
+              const request = {
+                unreadCount: unreadCount,
+              };
+              updateChatObject(threadId, request, () => {});
             }
           });
         });
@@ -482,8 +687,11 @@ const ChatScreen = ({route, navigation}) => {
 
   const updateChatMsg = useCallback(
     (updateObject, appendMsg) => {
+      // console.log('====================================');
+      // console.log('messageThreadId-655', threadId);
+      // console.log('====================================');
       reference
-        .child(messageThreadId)
+        .child(threadId)
         .child(updateObject._id)
         .update(updateObject)
         .then(() => {
@@ -498,7 +706,7 @@ const ChatScreen = ({route, navigation}) => {
           }
         });
     },
-    [messageThreadId, showScrollToBottom],
+    [showScrollToBottom],
   );
 
   const append = (currentMessages = [], message) => {
@@ -564,9 +772,9 @@ const ChatScreen = ({route, navigation}) => {
   };
 
   const onEndReached = () => {
-    console.log('====================================');
-    console.log('121313');
-    console.log('====================================');
+    // console.log('====================================');
+    // console.log('121313');
+    // console.log('====================================');
   };
 
   const renderScrollToBottomWrapper = () => {
@@ -641,11 +849,12 @@ const ChatScreen = ({route, navigation}) => {
 
   const generateSingleChat = async (request, callback) => {
     let message = userLastMessage(request);
-    createSingleChat(opponent, message, (chatId) => {
-      if (chatId !== undefined && chatId !== null) {
-        isChatExist = chatId;
-        setMessageThreadId(chatId);
-        callback(chatId);
+    createSingleChat(opponent, message, (chatObject) => {
+      if (chatObject !== undefined && chatObject !== null) {
+        isChatExist = chatObject;
+        threadId = chatObject._id;
+        setMessageThreadId(chatObject._id);
+        callback(chatObject._id);
       }
     });
   };
@@ -657,7 +866,8 @@ const ChatScreen = ({route, navigation}) => {
       messageType: mediaType,
       media: media,
       user: getUserObject(),
-      isRead: isOpponentOnline,
+      isRead: inMessageThread,
+      isDelivered: isOpponentOnline,
       isSent: true,
       replay: {},
       removedBy: [],
@@ -703,12 +913,15 @@ const ChatScreen = ({route, navigation}) => {
   };
 
   const addObjectToChat = (request, chatId) => {
+    console.log('====================================');
+    console.log('addObjectToChat');
+    console.log('====================================');
     let childRef = reference.child(chatId);
     childRef.push().then((snap) => {
       const _id = snap.key;
       request._id = _id;
       snap.set(request).then(() => {
-        if (!isGroup && !isOpponentOnline) {
+        if (!isGroup && !inMessageThread) {
           setUnreadCount();
           if (!isOpponentMuted) {
             sendPushNotification(
@@ -771,6 +984,9 @@ const ChatScreen = ({route, navigation}) => {
   };
 
   const postMsg = (request) => {
+    console.log('====================================');
+    console.log('postMessage', request);
+    console.log('====================================');
     setIsSending(true);
     if (isChatExist === null) {
       generateSingleChat(request, (chatId) => {
@@ -828,6 +1044,35 @@ const ChatScreen = ({route, navigation}) => {
     postMsg(request);
   };
 
+  const offlineSelf = useCallback((status, callback) => {
+    if (isChatExist !== null && isChatExist !== undefined) {
+      let userInfo = isChatExist.userInfo;
+      let found = false;
+      if (userInfo !== undefined && userInfo !== null) {
+        for (let i = 0; i < userInfo.length; i++) {
+          const user = userInfo[i];
+          if (global.userId === user._id) {
+            user.isOnline = status;
+            found = true;
+            break;
+          }
+        }
+      }
+      if (found) {
+        const request = {
+          userInfo: userInfo,
+        };
+        updateChatObject(threadId, request, () => {
+          callback(true);
+        });
+      } else {
+        callback(false);
+      }
+    } else {
+      callback(false);
+    }
+  }, []);
+
   const renderHeader = () => {
     return (
       <View style={headerStyle.headerContainer}>
@@ -837,7 +1082,9 @@ const ChatScreen = ({route, navigation}) => {
             <TouchableOpacity
               onPress={() => {
                 setUserLastSeen(false, new Date().getTime(), () => {
-                  navigation.replace('ChatUserList');
+                  offlineSelf(false, () => {
+                    navigation.replace('ChatUserList');
+                  });
                 });
               }}
               style={[grid.alignItems, grid.justifyContentCenter]}>
@@ -883,7 +1130,13 @@ const ChatScreen = ({route, navigation}) => {
               }}
               style={[grid.col, g.ml5, g.mr5]}>
               <Text
-                style={[g.fs14, g.FHNB, g.colordarkGray, g.txtLeft]}
+                style={[
+                  g.fs14,
+                  g.FHNB,
+                  g.colordarkGray,
+                  g.txtLeft,
+                  GlobalInclude.AppStyle.transform,
+                ]}
                 numberOfLines={1}>
                 {header}
               </Text>
@@ -917,7 +1170,7 @@ const ChatScreen = ({route, navigation}) => {
             <TouchableOpacity
               activeOpacity={1}
               onPress={() => {
-                setFontSize(scale(12));
+                setFontSize(scale(14));
                 selectedFontSize = 1;
               }}>
               <Text
@@ -937,7 +1190,7 @@ const ChatScreen = ({route, navigation}) => {
             <TouchableOpacity
               activeOpacity={1}
               onPress={() => {
-                setFontSize(scale(16));
+                setFontSize(scale(18));
                 selectedFontSize = 2;
               }}>
               <Text
@@ -954,7 +1207,7 @@ const ChatScreen = ({route, navigation}) => {
             <TouchableOpacity
               activeOpacity={1}
               onPress={() => {
-                setFontSize(scale(20));
+                setFontSize(scale(22));
                 selectedFontSize = 3;
               }}>
               <Text
@@ -1523,8 +1776,8 @@ const ChatScreen = ({route, navigation}) => {
                 <Text
                   style={[
                     g.colorBlue,
-                    g.fs16,
-                    g.FHNB,
+                    g.fs12,
+                    g.FHNR,
                     g.txtCenter,
                     g.txtCenterVertical,
                   ]}>
@@ -1536,6 +1789,7 @@ const ChatScreen = ({route, navigation}) => {
         </KeyboardAvoidingView>
       </View>
       <UploadMedia
+        hideTagInVideo={true}
         refRBSheet={uploadRef}
         media={{image: false, video: false, document: false, audio: false}}
         supportMultiple={false}
@@ -1556,9 +1810,9 @@ const ChatScreen = ({route, navigation}) => {
                 mediaType = 4;
               }
 
-              console.log('====================================');
-              console.log('mediaType', mediaType);
-              console.log('====================================');
+              // console.log('====================================');
+              // console.log('mediaType', mediaType);
+              // console.log('====================================');
 
               if (isReplayEditComment) {
                 postUserCommentInThread(inputValue, item.fileName, mediaType);

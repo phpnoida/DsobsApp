@@ -39,6 +39,7 @@ const TopHeaderView = ({
   onLabelPress,
   customIcon,
   customIconPress,
+  customDelegate,
 }) => {
   const [openDropDown, setOpenDropDown] = useState(false);
   const [selectedTab] = useState(menuOptions[index].label);
@@ -80,6 +81,9 @@ const TopHeaderView = ({
                       setOpenDropDown(false);
                       if (item.screen !== '') {
                         if (index !== item.value) {
+                          if (customDelegate) {
+                            customDelegate(); //this will help to take callback from where we call header
+                          }
                           navigation.navigate(item.screen);
                         }
                       }
@@ -111,6 +115,9 @@ const TopHeaderView = ({
                     <TouchableOpacity
                       style={{}}
                       onPress={() => {
+                        if (customDelegate) {
+                          customDelegate(); //this will help to take callback from where we call header
+                        }
                         navigation.dispatch(
                           CommonActions.reset({
                             index: 0,
@@ -149,6 +156,10 @@ const TopHeaderView = ({
                     }}
                     activeOpacity={1}
                     onPress={() => {
+                      if (customDelegate) {
+                        customDelegate(); //this will help to take callback from where we call header
+                      }
+
                       navigation.goBack();
                     }}>
                     <Image
@@ -202,7 +213,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
-    flex:1,
+    flex: 1,
   },
   triangleShape: {
     width: 0,

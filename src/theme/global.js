@@ -373,6 +373,9 @@ export default {
   bgBlue: {
     backgroundColor: Color.ColorPrimary,
   },
+  bgGreenLight: {
+    backgroundColor: '#DCF8C6',
+  },
   mh100: {
     minHeight: Platform.OS === 'ios' ? deviceHeight - 75 : deviceHeight - 75,
   },

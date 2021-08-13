@@ -8,6 +8,7 @@ import {
   FlatList,
   SafeAreaView,
   Alert,
+  BackHandler,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
@@ -43,6 +44,7 @@ let finalItemsArray = [];
 let tmpArray = [];
 let selectedIndex = -1;
 let challengerUser = null;
+let backHandler = null;
 
 const ChatUserList = ({navigation}) => {
   const refOptions = useRef();
@@ -71,7 +73,7 @@ const ChatUserList = ({navigation}) => {
 
     tmpArray = [];
     setChatList([]);
-  }, []);
+  }, [navigation]);
 
   useEffect(() => {
     /**
@@ -90,6 +92,7 @@ const ChatUserList = ({navigation}) => {
         }
       }
     }
+
     return () => {};
   }, [snapshot]);
 
@@ -118,17 +121,8 @@ const ChatUserList = ({navigation}) => {
             });
             setFirstTimeLoad(false);
 
-            tmpArray.sort(function (a, b) {
-              let unreadOne = a.unreadCount;
-              let unreadTwo = b.unreadCount;
-
-              if (getChatCount(unreadOne) < getChatCount(unreadTwo)) {
-                return -1;
-              }
-              if (getChatCount(unreadOne) > getChatCount(unreadTwo)) {
-                return 1;
-              }
-              return 0;
+            tmpArray.sort(function (x, y) {
+              return y.lastMessageTime - x.lastMessageTime;
             });
 
             finalItemsArray = tmpArray;
@@ -184,9 +178,22 @@ const ChatUserList = ({navigation}) => {
         });
     };
 
+    const backAction = () => {
+      if (navigation.isFocused()) {
+        setUserLastSeen(false, new Date().getTime(), () => {
+          navigation.goBack();
+        });
+        return true;
+      }
+    };
+    backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+
     return () => {
       if (subscriber !== undefined && subscriber !== null) {
         subscriber();
+      }
+      if (backHandler !== undefined && backHandler !== null) {
+        backHandler();
       }
     };
   }, [navigation]);
@@ -296,9 +303,9 @@ const ChatUserList = ({navigation}) => {
     if (selectedItem !== undefined && selectedItem !== null) {
       let opponentUser = getOpponentInfo(selectedItem.userInfo);
       Alert.alert(
-        wantBlock ? 'Block User' : 'UnBlock User',
+        wantBlock ? 'Block User' : 'Unblock User',
         `Are you sure you want to ${
-          wantBlock ? 'Block' : 'UnBlock'
+          wantBlock ? 'Block' : 'Unblock'
         } ${Helper.concatName(opponentUser)}?`,
         [
           {
@@ -312,7 +319,7 @@ const ChatUserList = ({navigation}) => {
               addUserToBlockList(opponentUser._id, (status) => {
                 Alert.alert(
                   status
-                    ? `User ${wantBlock ? 'Blocked' : 'UnBlock'} successfully`
+                    ? `User ${wantBlock ? 'Blocked' : 'Unblocked'} successfully`
                     : `Erorr while ${
                         wantBlock ? 'blocking' : 'unblocking'
                       } user`,
@@ -512,7 +519,7 @@ const ChatUserList = ({navigation}) => {
               <Text
                 style={[
                   g.fs13,
-                  g.FHNR,
+                  g.FHNM,
                   unreadCount > 0 ? g.colorBlue : g.colordarkGray,
                 ]}>
                 {Helper.getChatDate(item.lastMessageTime)}
@@ -694,7 +701,7 @@ const ChatUserList = ({navigation}) => {
               <View>
                 {isUserBlocked(selectedItem.userInfo)
                   ? generateMenuOption(
-                      'UnBlock This Sender',
+                      'Unblock This Sender',
                       'exclamationcircleo',
                       10,
                       () => {
@@ -740,6 +747,9 @@ const ChatUserList = ({navigation}) => {
           if (refOptions.current !== undefined && refOptions.current !== null) {
             refOptions.current.open();
           }
+        }}
+        customDelegate={() => {
+          setUserLastSeen(false, new Date().getTime(), () => {});
         }}
       />
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
@@ -821,7 +831,8 @@ const styles = StyleSheet.create({
     backgroundColor: GlobalInclude.Color.ColorPrimary,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: scale(5),
+    paddingHorizontal: scale(10),
+    paddingVertical: scale(6),
   },
   chatIcon: {
     position: 'absolute',
