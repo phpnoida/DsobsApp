@@ -2,33 +2,30 @@ import React, {useState, useCallback, useEffect, useRef} from 'react';
 import {
   View,
   StyleSheet,
-  Alert,
-  SafeAreaView,
   Text,
   TouchableOpacity,
   Image,
   Platform,
   TextInput,
   KeyboardAvoidingView,
-  StatusBar,
+ 
   FlatList,
   ActivityIndicator,
   Keyboard,
   BackHandler,
-  Animated,
+ 
   Dimensions,
-  Modal,
+ 
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
-import {renderNoDataComponent, showProgess} from '../../component/Common';
+import { showProgess} from '../../component/Common';
 import UploadMedia from '../../component/UploadMedia';
 import ProgressImage from '../../component/ProgresImage';
 import DocViewer from '../../component/DocViewer';
 import AudioPlayer from '../../component/AudioPlayer';
 import {showMediaType, showImageThumb} from './ChatDelegates';
-
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {getStatusBarHeight} from 'react-native-iphone-x-helper';
 import {IconType, APP_NAME} from '../../helper/Constants';
@@ -199,6 +196,7 @@ const ChatScreen = ({route, navigation}) => {
           // console.log('====================================');
           setIsOpponentOnline(data.isOnline);
           if (data.isOnline) {
+            console.log('202');
             updateOwnMessages(messages);
           }
           if (!data.chatEnabled) {
@@ -364,6 +362,7 @@ const ChatScreen = ({route, navigation}) => {
          * 
          */
         const children = [];
+        let arrayItems = [];
         let unreadPosition = -1;
         let unreadCount = 0;
         let needsToUpdate = false;
@@ -392,6 +391,8 @@ const ChatScreen = ({route, navigation}) => {
             }
 
             children.push(element);
+            arrayItems.push(element);
+
             if (childrenToProcess === 0) {
               lastPickedMsgId = element._id;
 
@@ -412,18 +413,21 @@ const ChatScreen = ({route, navigation}) => {
                 children.splice(unreadPosition, 0, systemMsg);
               }
               onValue(children);
-              children.shift();
-              console.log('====================================');
-              console.log('needsToUpdate', children);
-              console.log('====================================');
 
-              // if (needsToUpdate && isOpponentOnline) {
-              //   updateCombineMessages(children);
-              // } else if (needsToUpdate) {
-              //   updateAllChilds(children, true);
-              // } else if (isOpponentOnline) {
-              //   updateOwnMessages(children);
-              // }
+              if (needsToUpdate && isOpponentOnline) {
+                updateCombineMessages(arrayItems, true);
+              } else if (needsToUpdate) {
+                updateAllChilds(arrayItems, true);
+              }
+
+              /**
+               * 
+               * else if (isOpponentOnline) {
+                console.log('426');
+                updateOwnMessages(arrayItems);
+              }
+               * 
+               */
             }
           });
         } catch (error) {
@@ -549,9 +553,9 @@ const ChatScreen = ({route, navigation}) => {
       }
     }
 
-    // console.log('====================================');
-    // console.log('isFound,threadId', isFound, threadId);
-    // console.log('====================================');
+    console.log('====================================');
+    console.log('552', isFound, threadId, rv);
+    console.log('====================================');
     if (isFound && threadId !== '') {
       reference.child(threadId).update(rv);
     }
@@ -586,30 +590,30 @@ const ChatScreen = ({route, navigation}) => {
       }
     }
 
-    // console.log('====================================');
-    // console.log('isFound,threadId', isFound, threadId);
-    // console.log('====================================');
-    if (isFound && threadId !== '') {
-      reference
-        .child(threadId)
-        .update(rv)
-        .then(() => {
-          getChatObject(threadId, (response) => {
-            if (response && response !== null && response !== undefined) {
-              let unreadCount = response.unreadCount;
-              unreadCount.forEach((element) => {
-                if (element.userId === global.userId) {
-                  element.count = 0;
-                }
-              });
-              const request = {
-                unreadCount: unreadCount,
-              };
-              updateChatObject(threadId, request, () => {});
-            }
-          });
-        });
-    }
+    console.log('====================================');
+    console.log('589', isFound, threadId, rv);
+    console.log('====================================');
+    // if (isFound && threadId !== '') {
+    //   reference
+    //     .child(threadId)
+    //     .update(rv)
+    //     .then(() => {
+    //       getChatObject(threadId, (response) => {
+    //         if (response && response !== null && response !== undefined) {
+    //           let unreadCount = response.unreadCount;
+    //           unreadCount.forEach((element) => {
+    //             if (element.userId === global.userId) {
+    //               element.count = 0;
+    //             }
+    //           });
+    //           const request = {
+    //             unreadCount: unreadCount,
+    //           };
+    //           updateChatObject(threadId, request, () => {});
+    //         }
+    //       });
+    //     });
+    // }
   }, []);
 
   const updateCombineMessages = useCallback((childs, readDone) => {
@@ -640,30 +644,30 @@ const ChatScreen = ({route, navigation}) => {
       }
     }
 
-    // console.log('====================================');
-    // console.log('isFound,threadId', isFound, threadId);
-    // console.log('====================================');
-    if (isFound && threadId !== '') {
-      reference
-        .child(threadId)
-        .update(rv)
-        .then(() => {
-          getChatObject(threadId, (response) => {
-            if (response && response !== null && response !== undefined) {
-              let unreadCount = response.unreadCount;
-              unreadCount.forEach((element) => {
-                if (element.userId === global.userId) {
-                  element.count = 0;
-                }
-              });
-              const request = {
-                unreadCount: unreadCount,
-              };
-              updateChatObject(threadId, request, () => {});
-            }
-          });
-        });
-    }
+    console.log('====================================');
+    console.log('643', isFound, threadId, rv);
+    console.log('====================================');
+    // if (isFound && threadId !== '') {
+    //   reference
+    //     .child(threadId)
+    //     .update(rv)
+    //     .then(() => {
+    //       getChatObject(threadId, (response) => {
+    //         if (response && response !== null && response !== undefined) {
+    //           let unreadCount = response.unreadCount;
+    //           unreadCount.forEach((element) => {
+    //             if (element.userId === global.userId) {
+    //               element.count = 0;
+    //             }
+    //           });
+    //           const request = {
+    //             unreadCount: unreadCount,
+    //           };
+    //           updateChatObject(threadId, request, () => {});
+    //         }
+    //       });
+    //     });
+    // }
   }, []);
 
   const setUnreadCount = () => {
