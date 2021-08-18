@@ -8,19 +8,17 @@ import {
   Platform,
   TextInput,
   KeyboardAvoidingView,
- 
   FlatList,
   ActivityIndicator,
   Keyboard,
   BackHandler,
- 
   Dimensions,
- 
+  Alert,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
-import { showProgess} from '../../component/Common';
+import {showProgess} from '../../component/Common';
 import UploadMedia from '../../component/UploadMedia';
 import ProgressImage from '../../component/ProgresImage';
 import DocViewer from '../../component/DocViewer';
@@ -35,6 +33,12 @@ import Helper from '../../helper/Helper';
 import EmojiSelector from 'react-native-emoji-selector';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
 import * as Animatable from 'react-native-animatable';
+import {
+  StackActions,
+  CommonActions,
+  useNavigation,
+} from '@react-navigation/native';
+import _ from 'lodash';
 
 // Firestore
 import firestore from '@react-native-firebase/firestore';
@@ -46,11 +50,15 @@ import {
   checkChatExist,
   updateChatObject,
   getChatObject,
-  setUserLastSeen,
+  setLatestUnread,
   sendPushNotification,
+  checkUserExist,
+  addUserToBlockList,
+  setUserLastSeen,
 } from '../../helper/ChatHelper';
 
 const {height} = Dimensions.get('window');
+
 let selectedFontSize = 1;
 let challenger = null,
   opponent = null,
@@ -71,30 +79,38 @@ let bottomUnread = 0;
 let newMessageList = [];
 let inMessageThread = false;
 let threadId = '';
+let previousStatusOfTyping = false;
+let wantsUpdateChilds = [];
+let pendingChilds = [];
+let lastOnlineStatus = false;
 
 const scrollToBottomOffset = 200;
 const usersCollection = firestore().collection('Users');
 const chatCollection = firestore().collection('Chats');
 const reference = database().ref('Messages');
 
-const ChatScreen = ({route, navigation}) => {
+const ChatScreen = ({route}) => {
   const uploadRef = useRef();
   const emojiRef = useRef();
   const animRef = useRef();
   const chatObjRef = useRef();
   const chatRef = useRef();
+  const navigation = useNavigation();
 
   const transform =
     Platform.OS === 'android'
       ? [{scaleY: -1}, {perspective: 1280}]
       : [{scaleY: -1}];
 
+  const [opponentId, setOpponentId] = useState('');
   const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const [isSenderBlocked, setIsSenderBlocked] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [messages, setMessages] = useState([]);
   const [fontSize, setFontSize] = useState(scale(14));
   const [inputValue, setInputValue] = useState('');
-  const [header, setHeader] = useState(APP_NAME);
-  const [subHeader, setSubHeader] = useState(APP_NAME);
+  const [header, setHeader] = useState('');
+  const [subHeader, setSubHeader] = useState('');
   const [isOpponentTyping, setIsOpponentTyping] = useState(false);
   const [headerImage, setHeaderImage] = useState(
     GlobalInclude.Assets.DefaultProfile,
@@ -111,12 +127,19 @@ const ChatScreen = ({route, navigation}) => {
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [bottomMessages, setBottomMessages] = useState(0);
 
-  const [snapshot] = useCollection(
-    usersCollection.where('_id', '==', route.params.opponent._id),
+  const [opponentSnapshot] = useCollection(
+    opponentId !== '' ? usersCollection.where('_id', '==', opponentId) : null,
   );
-  const [isTyping] = useCollection(
-    chatCollection.where('_id', '==', messageThreadId),
+  const [chatObjectSnapshot] = useCollection(
+    messageThreadId !== ''
+      ? chatCollection.where('_id', '==', messageThreadId)
+      : null,
   );
+
+  /**
+   *
+   * General
+   */
 
   useEffect(() => {
     if (
@@ -124,104 +147,167 @@ const ChatScreen = ({route, navigation}) => {
       route.params !== undefined &&
       route.params !== null
     ) {
-      challenger =
-        route.params.challenger !== undefined &&
-        route.params.challenger !== null
-          ? route.params.challenger
+      threadId =
+        route.params.threadId !== undefined && route.params.threadId !== null
+          ? route.params.threadId
           : null;
-      opponent =
-        route.params.opponent !== undefined && route.params.opponent !== null
-          ? route.params.opponent
-          : null;
-      isGroup =
-        route.params.isGroup !== undefined && route.params.isGroup !== null
-          ? route.params.isGroup
-          : null;
-    }
-    setHeaderBar();
-    const appFunction = async () => {
-      isChatExist = await checkChatExist(opponent._id, 1);
 
-      if (isChatExist !== null) {
-        threadId = isChatExist._id;
-        offlineSelf(true, () => {
-          let userInfo = isChatExist.userInfo.filter(
-            (user) => user._id !== global.userId,
-          );
-
-          console.log('====================================');
-          console.log('userInfo', userInfo);
-          console.log('====================================');
-          if (
-            userInfo !== undefined &&
-            userInfo !== null &&
-            userInfo.length > 0
-          ) {
-            inMessageThread = userInfo[0].isOnline;
-          }
-        });
-        setMessageThreadId(isChatExist._id);
+      if (threadId !== null) {
+        validateChatScreen();
       } else {
+        challenger =
+          route.params.challenger !== undefined &&
+          route.params.challenger !== null
+            ? route.params.challenger
+            : null;
+        opponent =
+          route.params.opponent !== undefined && route.params.opponent !== null
+            ? route.params.opponent
+            : null;
+        isGroup =
+          route.params.isGroup !== undefined && route.params.isGroup !== null
+            ? route.params.isGroup
+            : null;
+
+        setOpponentId(opponent._id);
+        setIsOpponentOnline(opponent.isOnline);
+        lastOnlineStatus = opponent.isOnline;
         setIsFirstLoad(false);
       }
-    };
-    appFunction();
+    }
 
     const backAction = () => {
       if (navigation.isFocused()) {
-        setUserLastSeen(false, new Date().getTime(), () => {
-          offlineSelf(false, () => {
-            navigation.replace('ChatUserList');
-          });
-        });
+        setUserLastSeenAndMakeOffline();
         return true;
       }
     };
 
     backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-  }, [route, navigation, setHeaderBar]);
+
+    //return () => {};
+  }, [route, navigation, validateChatScreen, setUserLastSeenAndMakeOffline]);
+
+  const validateChatScreen = useCallback(() => {
+    getChatObject(threadId, (response) => {
+      if (response && response !== null && response !== undefined) {
+        isChatExist = response;
+        offlineSelf(true, () => {
+          isGroup =
+            response.isGroup !== undefined && response.isGroup !== null
+              ? response.isGroup
+              : null;
+
+          checkUserExist(global.userId).then((result) => {
+            if (result !== undefined && result !== null) {
+              let blockedList = result.blockedUser;
+
+              isChatExist.userInfo.forEach((element) => {
+                if (element._id === global.userId) {
+                  challenger = element;
+                } else {
+                  opponent = element;
+
+                  let inBlocked = blockedList.filter(
+                    (item) => item === element._id,
+                  );
+
+                  if (
+                    inBlocked !== undefined &&
+                    inBlocked !== null &&
+                    inBlocked.length > 0
+                  ) {
+                    setIsSenderBlocked(true);
+                  }
+
+                  setOpponentId(element._id);
+                  setIsOpponentOnline(element.isOnline);
+                  inMessageThread = element.isOnline;
+                  lastOnlineStatus = element.isOnline;
+                }
+              });
+            }
+          });
+
+          setMessageThreadId(threadId);
+        });
+      }
+    });
+  }, []);
+
+  /**
+   *
+   * General
+   */
+
+  /**
+   *
+   * @UseEffects
+   */
 
   useEffect(() => {
-    if (snapshot !== undefined && snapshot !== null) {
+    if (opponentSnapshot !== undefined && opponentSnapshot !== null) {
       if (
-        snapshot.docs !== undefined &&
-        snapshot.docs !== null &&
-        snapshot.docs.length > 0
+        opponentSnapshot.docs !== undefined &&
+        opponentSnapshot.docs !== null &&
+        opponentSnapshot.docs.length > 0
       ) {
-        let data = snapshot.docs[0].data();
+        let data = opponentSnapshot.docs[0].data();
+
+        console.log('global.currentScreen', global.currentScreen);
         if (data && data !== null && data !== undefined) {
           opponent = data;
-          // console.log('====================================');
-          // console.log('userObject', data);
-          // console.log('====================================');
-          setIsOpponentOnline(data.isOnline);
-          if (data.isOnline) {
-            console.log('202');
-            updateOwnMessages(messages);
+
+          setHeader(Helper.concatName(opponent) + ' - ' + opponent.batch);
+
+          if (data.isOnline !== lastOnlineStatus && data.isOnline) {
+            refreshChatItems(false);
           }
+          lastOnlineStatus = data.isOnline;
+          setIsOpponentOnline(data.isOnline);
+
+          if (
+            opponent.profileImg !== undefined &&
+            opponent.profileImg !== null &&
+            opponent.profileImg !== ''
+          ) {
+            setHeaderImage({uri: opponent.profileImg});
+          }
+          setSubHeader(opponent.profession);
+
           if (!data.chatEnabled) {
             blockMsg = `${data.firstName} has disabled chat.`;
             setChatEnabled(false);
           } else {
-            setChatEnabled(true);
-            checkOpponentBlocked(data.blockedUser, data.blockedBy);
+            if (isSenderBlocked) {
+              blockMsg = 'You blocked this chat. Tap to unblock';
+              setChatEnabled(false);
+            } else {
+              setChatEnabled(true);
+              checkOpponentBlocked(data.blockedUser, data.blockedBy);
+            }
           }
+          setProfileLoading(false);
         }
       }
     }
-    return () => {};
-  }, [snapshot]);
+  }, [opponentSnapshot, isSenderBlocked, refreshChatItems]);
 
   useEffect(() => {
-    if (isTyping !== undefined && isTyping !== null) {
+    if (chatObjectSnapshot !== undefined && chatObjectSnapshot !== null) {
       if (
-        isTyping.docs !== undefined &&
-        isTyping.docs !== null &&
-        isTyping.docs.length > 0
+        chatObjectSnapshot.docs !== undefined &&
+        chatObjectSnapshot.docs !== null &&
+        chatObjectSnapshot.docs.length > 0
       ) {
-        let data = isTyping.docs[0].data();
+        let data = chatObjectSnapshot.docs[0].data();
+        console.log('310');
+
         if (data && data !== null && data !== undefined) {
-          latestMessageArray = data.latestMessages;
+          latestMessageArray =
+            data.latestMessages !== undefined && data.latestMessages !== null
+              ? data.latestMessages
+              : [];
           let isMuted = data.mutedBy.filter((item) => global.userId !== item);
           isOpponentMuted = isMuted.length > 0 ? true : false;
 
@@ -249,41 +335,101 @@ const ChatScreen = ({route, navigation}) => {
             isUserAvailable !== null &&
             isUserAvailable.length > 0
           ) {
-            //console.log('isUserAvailable', isUserAvailable);
+            let lastOnline = isUserAvailable[0].isOnline;
+
+            if (lastOnline !== inMessageThread && lastOnline) {
+              refreshChatItems(true);
+            }
             inMessageThread = isUserAvailable[0].isOnline;
 
-            if (inMessageThread) {
-              updateAllChilds(messages, false);
-            }
+            //console.log('inMessageThread', inMessageThread);
           }
         }
       }
     }
-    return () => {};
-  }, [isTyping, updateAllChilds, messages]);
+    // return () => {
+    //   setMessageThreadId(null);
+    // };
+  }, [chatObjectSnapshot, refreshChatItems]);
 
+  const refreshChatItems = useCallback(
+    (isOnline) => {
+      console.log('219');
+      if (pendingChilds.length > 0) {
+        let cloneArray = _.cloneDeep(pendingChilds);
+        console.log('221');
+        let isAnyChildFound = false;
+        let oldData = messages;
+
+        cloneArray.forEach((element) => {
+          if (!isGroup) {
+            if (element.user._id === global.userId) {
+              if (isOnline) {
+                if (
+                  element.isDelivered === undefined ||
+                  !element.isDelivered ||
+                  element.isRead === undefined ||
+                  !element.isRead
+                ) {
+                  isAnyChildFound = true;
+                  element.isRead = true;
+                  element.isDelivered = true;
+                }
+              } else {
+                if (element.isDelivered === undefined || !element.isDelivered) {
+                  isAnyChildFound = true;
+                  element.isDelivered = true;
+                }
+              }
+              oldData[oldData.findIndex((el) => el._id === element._id)] =
+                element;
+            }
+          }
+        });
+        if (isAnyChildFound) {
+          if (oldData.length > 0) {
+            setMessages([...oldData]);
+          }
+          updateChatMessages(cloneArray, isOnline);
+        } else {
+          let unreadCount = isChatExist.unreadCount;
+          unreadCount.forEach((element) => {
+            if (element.userId === global.userId) {
+              element.count = 0;
+            }
+          });
+          const request = {
+            unreadCount: unreadCount,
+          };
+          updateChatObject(threadId, request, () => {});
+        }
+      }
+    },
+    [messages],
+  );
+
+  /**FirebaseFunction */
+  const onError = (error) => {
+    console.log('====================================');
+    console.log('firebase error', error);
+    console.log('====================================');
+  };
+
+  /**FirebaseFunction */
+
+  /**Firebase All functions Hook**/
   useEffect(() => {
-    /*********************
-     *
-     * THis will call for all firebase functions
-     *
-     */
-
-    if (messageThreadId === '') {
+    //console.log('messageThreadId', messageThreadId);
+    if (
+      messageThreadId === '' ||
+      messageThreadId === null ||
+      messageThreadId === undefined
+    ) {
       return;
     }
-    // console.log('====================================');
-    // console.log('useEffect-129', messageThreadId);
-    // console.log('====================================');
 
-    const mainRef = reference.child(messageThreadId).ref;
+    const mainRef = reference.child(threadId).ref;
     let childAddedHandler;
-
-    const onError = (error) => {
-      console.log('====================================');
-      console.log('firebase error', error);
-      console.log('====================================');
-    };
 
     const onChildAdded = (child, previousKey) => {
       if (!newItems || lastPickedMsgId === child.val()._id) {
@@ -297,10 +443,6 @@ const ChatScreen = ({route, navigation}) => {
           msgUser._id !== null &&
           msgUser._id !== global.userId
         ) {
-          console.log('301');
-          nextMsg.isRead = true;
-          updateChatMsg(nextMsg, true);
-        } else {
           if (showScrollToBottom) {
             newMessageList = append(newMessageList, child.val());
           } else {
@@ -308,19 +450,16 @@ const ChatScreen = ({route, navigation}) => {
               append(previousMessages, child.val()),
             );
           }
-        }
-        if (showScrollToBottom) {
-          bottomUnread = bottomUnread + 1;
-          setBottomMessages(bottomUnread);
+        } else {
+          setMessages((previousMessages) =>
+            append(previousMessages, child.val()),
+          );
         }
       }
     };
 
     const onValue = (snapshots) => {
       if (snapshots && snapshots !== undefined) {
-        // console.log('====================================');
-        // console.log('onValue');
-        // console.log('====================================');
         let msgList = snapshots.reverse();
         setMessages([...msgList]);
         setIsFirstLoad(false);
@@ -340,53 +479,69 @@ const ChatScreen = ({route, navigation}) => {
       if (childrenToProcess === 0) {
         onValue([]);
       } else {
-        /**
-         * 
-         * const children = [];
-        const onChildAddedWithoutInitialLoad = (addedChild, previousKey) => {
-          if (childrenToProcess > 0) {
-            childrenToProcess--;
-            children.push(addedChild.val());
-            if (childrenToProcess === 0) {
-              onValue(children);
-              updateAllChilds(children);
-              setIsFirstLoad(false);
-            }
-            return;
-          }
-          onChildAdded(addedChild, previousKey);
-        };
-        childAddedHandler = mainRef
-          .limitToLast(1)
-          .on('child_added', onChildAddedWithoutInitialLoad, onError);
-         * 
-         */
         const children = [];
         let arrayItems = [];
+        wantsUpdateChilds = [];
+        pendingChilds = [];
         let unreadPosition = -1;
         let unreadCount = 0;
-        let needsToUpdate = false;
+        let isAnyChildFound = false;
         try {
           objectValue.forEach((item, index, array) => {
-            const element = item.val();
+            let element = item.val();
             childrenToProcess--;
             if (!isGroup) {
-              if (element.user._id !== global.userId) {
-                if (element.isRead === undefined || !element.isRead) {
-                  // console.log('====================================');
-                  // console.log('element.isRead', element.isRead);
-                  // console.log('====================================');
-                  needsToUpdate = true;
+              if (element.user._id === global.userId) {
+                if (inMessageThread) {
+                  if (
+                    element.isDelivered === undefined ||
+                    !element.isDelivered ||
+                    element.isRead === undefined ||
+                    !element.isRead
+                  ) {
+                    isAnyChildFound = true;
+                    wantsUpdateChilds.push(element);
+
+                    element.isRead = true;
+                    element.isDelivered = true;
+
+                    unreadCount++;
+                    if (unreadPosition === -1) {
+                      unreadPosition = index;
+                    }
+                  }
+                } else if (opponent.isOnline) {
+                  if (
+                    element.isDelivered === undefined ||
+                    !element.isDelivered
+                  ) {
+                    isAnyChildFound = true;
+                    element.isDelivered = true;
+                    wantsUpdateChilds.push(element);
+                  }
+                } else {
+                  pendingChilds.push(element);
+                }
+              } else if (element.user._id !== global.userId) {
+                if (
+                  element.isDelivered === undefined ||
+                  !element.isDelivered ||
+                  element.isRead === undefined ||
+                  !element.isRead
+                ) {
+                  isAnyChildFound = true;
+                  wantsUpdateChilds.push(element);
+
+                  element.isRead = true;
+                  element.isDelivered = true;
+
                   unreadCount++;
                   if (unreadPosition === -1) {
                     unreadPosition = index;
                   }
+                } else {
+                  pendingChilds.push(element);
                 }
-                element.isSent = true;
-                element.isDelivered = true;
-                element.isRead = true;
-              } else {
-                element.isDelivered = true;
               }
             }
 
@@ -395,7 +550,6 @@ const ChatScreen = ({route, navigation}) => {
 
             if (childrenToProcess === 0) {
               lastPickedMsgId = element._id;
-
               let systemMsg = {
                 system: true,
                 message: `(${unreadCount}) Unread Messages`,
@@ -414,27 +568,12 @@ const ChatScreen = ({route, navigation}) => {
               }
               onValue(children);
 
-              if (needsToUpdate && isOpponentOnline) {
-                updateCombineMessages(arrayItems, true);
-              } else if (needsToUpdate) {
-                updateAllChilds(arrayItems, true);
+              if (isAnyChildFound && wantsUpdateChilds.length > 0) {
+                updateChatMessages(wantsUpdateChilds, inMessageThread);
               }
-
-              /**
-               * 
-               * else if (isOpponentOnline) {
-                console.log('426');
-                updateOwnMessages(arrayItems);
-              }
-               * 
-               */
             }
           });
-        } catch (error) {
-          // console.log('====================================');
-          // console.log('error', error);
-          // console.log('====================================');
-        }
+        } catch (error) {}
       }
     };
 
@@ -442,59 +581,40 @@ const ChatScreen = ({route, navigation}) => {
 
     return () => {
       mainRef.off('child_added', childAddedHandler);
-      //mainRef.off('child_changed', childChangedHandler);
       backHandler.remove();
     };
-  }, [
-    messageThreadId,
-    updateChatMsg,
-    updateAllChilds,
-    updateOwnMessages,
-    showScrollToBottom,
-    isOpponentOnline,
-    updateCombineMessages,
-  ]);
+  }, [messageThreadId, showScrollToBottom]);
+  /**Firebase All functions Hook**/
 
+  /**Firebase child change Hook**/
   useEffect(() => {
-    /*********************
-     *
-     * THis will call on child changed on firebase realtime
-     *
-     */
-
-    if (messageThreadId === '') {
+    //console.log('messageThreadId', messageThreadId);
+    if (
+      messageThreadId === '' ||
+      messageThreadId === undefined ||
+      messageThreadId === null
+    ) {
       return;
     }
-
-    // console.log('====================================');
-    // console.log('messageThreadId-433', messageThreadId);
-    // console.log('====================================');
     const mainRef = reference.child(messageThreadId).ref;
 
-    const onError = (error) => {
-      // console.log('====================================');
-      // console.log('firebase error', error);
-      // console.log('====================================');
-    };
-
     const onChildChanged = (childChanged) => {
-      // console.log('====================================');
-      // console.log('snapshots-onChildChanged', childChanged);
-      // console.log('====================================');
-      // if (childChanged && childChanged !== null && childChanged !== undefined) {
-      //   let nextMsg = JSON.parse(JSON.stringify(childChanged.val()));
-      //   let msgUser = nextMsg.user;
-      //   if (
-      //     msgUser._id !== undefined &&
-      //     msgUser._id !== null &&
-      //     msgUser._id === global.userId
-      //   ) {
-      //     nextMsg.isRead = true;
-      //     setTimeout(() => {
-      //       refreshChildrens(nextMsg);
-      //     }, 200);
-      //   }
-      // }
+      if (childChanged && childChanged !== null && childChanged !== undefined) {
+        //console.log('childChanged', JSON.stringify(childChanged.val()));
+        let nextMsg = JSON.parse(JSON.stringify(childChanged.val()));
+        let msgUser = nextMsg.user;
+        if (
+          msgUser._id !== undefined &&
+          msgUser._id !== null &&
+          msgUser._id !== global.userId
+        ) {
+          let oldData = messages;
+          oldData[oldData.findIndex((el) => el._id === nextMsg._id)] = nextMsg;
+          if (oldData.length > 0) {
+            setMessages([...oldData]);
+          }
+        }
+      }
     };
 
     const childChangedHandler = mainRef.on(
@@ -505,213 +625,22 @@ const ChatScreen = ({route, navigation}) => {
     return () => {
       mainRef.off('child_changed', childChangedHandler);
     };
-  }, [messages, messageThreadId, refreshChildrens]);
+  }, [messageThreadId, messages]);
 
-  const refreshChildrens = useCallback(
-    (child) => {
-      let oldData = messages;
-      let isFound = false;
+  /**Firebase child change Hook**/
 
-      for (let i = 0; i < oldData.length; i++) {
-        const item = oldData[i];
-        if (item._id === child._id) {
-          oldData[i] = child;
-          isFound = true;
-          break;
-        }
-      }
-      if (isFound) {
-        updateChatMsg(child, false);
-        setMessages([...oldData]);
-      }
-    },
-    [messages, updateChatMsg],
-  );
+  /**
+   *
+   * @param {*} currentMessages
+   * @param {*} message
+   * @UseEffects
+   */
 
-  const updateOwnMessages = useCallback((childs) => {
-    // console.log('====================================');
-    // console.log('updateOwnMessages-487');
-    // console.log('====================================');
-    let updateArray = [];
-    let isFound = false;
-    var rv = {};
-    for (var i = 0; i < childs.length; ++i) {
-      const element = childs[i];
-      if (element.user._id === global.userId) {
-        if (
-          element.isSent !== undefined ||
-          !element.isSent ||
-          element.isDelivered !== undefined ||
-          !element.isDelivered
-        ) {
-          isFound = true;
-          element.isSent = true;
-          element.isDelivered = true;
-          updateArray.push(element);
-          rv[element._id] = element;
-        }
-      }
-    }
-
-    console.log('====================================');
-    console.log('552', isFound, threadId, rv);
-    console.log('====================================');
-    if (isFound && threadId !== '') {
-      reference.child(threadId).update(rv);
-    }
-  }, []);
-
-  const updateAllChilds = useCallback((childs, readDone) => {
-    // console.log('====================================');
-    // console.log('updateAllChilds-522');
-    // console.log('====================================');
-    let updateArray = [];
-    let isFound = false;
-    var rv = {};
-    for (var i = 0; i < childs.length; ++i) {
-      const element = childs[i];
-      if (element.user._id !== global.userId) {
-        if (
-          element.isSent !== undefined ||
-          !element.isSent ||
-          element.isDelivered !== undefined ||
-          !element.isDelivered ||
-          element.isRead !== undefined ||
-          !element.isRead
-        ) {
-          isFound = true;
-          element.isSent = true;
-          element.isDelivered = true;
-          element.isRead = readDone;
-          console.log('updateAllChilds-558', readDone);
-          updateArray.push(element);
-          rv[element._id] = element;
-        }
-      }
-    }
-
-    console.log('====================================');
-    console.log('589', isFound, threadId, rv);
-    console.log('====================================');
-    // if (isFound && threadId !== '') {
-    //   reference
-    //     .child(threadId)
-    //     .update(rv)
-    //     .then(() => {
-    //       getChatObject(threadId, (response) => {
-    //         if (response && response !== null && response !== undefined) {
-    //           let unreadCount = response.unreadCount;
-    //           unreadCount.forEach((element) => {
-    //             if (element.userId === global.userId) {
-    //               element.count = 0;
-    //             }
-    //           });
-    //           const request = {
-    //             unreadCount: unreadCount,
-    //           };
-    //           updateChatObject(threadId, request, () => {});
-    //         }
-    //       });
-    //     });
-    // }
-  }, []);
-
-  const updateCombineMessages = useCallback((childs, readDone) => {
-    console.log('====================================');
-    console.log('updateAllChilds-582');
-    console.log('====================================');
-
-    let updateArray = [];
-    let isFound = false;
-    var rv = {};
-    for (var i = 0; i < childs.length; ++i) {
-      const element = childs[i];
-      if (
-        element.isSent !== undefined ||
-        !element.isSent ||
-        element.isDelivered !== undefined ||
-        !element.isDelivered ||
-        element.isRead !== undefined ||
-        !element.isRead
-      ) {
-        isFound = true;
-        element.isSent = true;
-        element.isDelivered = true;
-        element.isRead = readDone;
-        console.log('updateCombineMessages-612', readDone);
-        updateArray.push(element);
-        rv[element._id] = element;
-      }
-    }
-
-    console.log('====================================');
-    console.log('643', isFound, threadId, rv);
-    console.log('====================================');
-    // if (isFound && threadId !== '') {
-    //   reference
-    //     .child(threadId)
-    //     .update(rv)
-    //     .then(() => {
-    //       getChatObject(threadId, (response) => {
-    //         if (response && response !== null && response !== undefined) {
-    //           let unreadCount = response.unreadCount;
-    //           unreadCount.forEach((element) => {
-    //             if (element.userId === global.userId) {
-    //               element.count = 0;
-    //             }
-    //           });
-    //           const request = {
-    //             unreadCount: unreadCount,
-    //           };
-    //           updateChatObject(threadId, request, () => {});
-    //         }
-    //       });
-    //     });
-    // }
-  }, []);
-
-  const setUnreadCount = () => {
-    getChatObject(messageThreadId, (response) => {
-      if (response && response !== null && response !== undefined) {
-        let unreadCount = response.unreadCount;
-
-        unreadCount.forEach((element) => {
-          if (element.userId !== global.userId) {
-            element.count = element.count + 1;
-          }
-        });
-
-        const request = {
-          unreadCount: unreadCount,
-        };
-        updateChatObject(messageThreadId, request, () => {});
-      }
-    });
-  };
-
-  const updateChatMsg = useCallback(
-    (updateObject, appendMsg) => {
-      // console.log('====================================');
-      // console.log('messageThreadId-655', threadId);
-      // console.log('====================================');
-      reference
-        .child(threadId)
-        .child(updateObject._id)
-        .update(updateObject)
-        .then(() => {
-          if (appendMsg) {
-            if (showScrollToBottom) {
-              newMessageList = append(newMessageList, updateObject);
-            } else {
-              setMessages((previousMessages) =>
-                append(previousMessages, updateObject),
-              );
-            }
-          }
-        });
-    },
-    [showScrollToBottom],
-  );
+  /**
+   *
+   * @ChatMethod
+   *
+   */
 
   const append = (currentMessages = [], message) => {
     if (!Array.isArray(message)) {
@@ -720,163 +649,100 @@ const ChatScreen = ({route, navigation}) => {
     return message.concat(currentMessages);
   };
 
-  const checkOpponentBlocked = (blockedList, blockedBy) => {
-    if (
-      blockedList !== undefined &&
-      blockedList !== null &&
-      blockedList !== ''
-    ) {
-      let isBlocked = blockedList.filter((user) => global.userId === user);
-      blockMsg = `${opponent.firstName} has blocked this chat.`;
-      setChatEnabled(isBlocked.length === 0);
-    } else if (
-      blockedBy !== undefined &&
-      blockedBy !== null &&
-      blockedBy !== ''
-    ) {
-      let isBlocked = blockedBy.filter((user) => global.userId === user);
-      blockMsg = `${challenger.firstName} has blocked this chat.`;
-      setChatEnabled(isBlocked.length === 0);
+  const sendUserTyping = (typing) => {
+    if (previousStatusOfTyping !== typing) {
+      previousStatusOfTyping = typing;
+      const request = {
+        isTyping: [
+          {userId: global.userId, status: typing},
+          {userId: opponent._id, status: false},
+        ],
+      };
+      updateChatObject(threadId, request, () => {});
     }
   };
 
-  const scrollToBottom = () => {
-    if (
-      chatRef !== undefined &&
-      chatRef !== null &&
-      chatRef.current !== undefined &&
-      chatRef.current !== null
-    ) {
-      chatRef.current.scrollToOffset({
-        offset: 0,
-        animated: true,
-      });
-    }
-  };
+  const offlineSelf = (status, callback) => {
+    if (isChatExist !== null && isChatExist !== undefined) {
+      let userInfo = isChatExist.userInfo;
+      let unreadCount = isChatExist.unreadCount;
+      let found = false;
+      if (userInfo !== undefined && userInfo !== null) {
+        for (let i = 0; i < userInfo.length; i++) {
+          const user = userInfo[i];
+          if (global.userId === user._id) {
+            user.isOnline = status;
+            found = true;
+            break;
+          }
+        }
+      }
 
-  const handleOnScroll = (event) => {
-    const {
-      nativeEvent: {
-        contentOffset: {y: contentOffsetY},
-      },
-    } = event;
-
-    if (contentOffsetY > scrollToBottomOffset) {
-      setShowScrollToBottom(true);
-    } else {
-      if (contentOffsetY === 0) {
-        newMessageList.forEach((element) => {
-          setMessages((previousMessages) => append(previousMessages, element));
+      if (status) {
+        unreadCount.forEach((element) => {
+          if (element.userId === global.userId) {
+            element.count = 0;
+          }
         });
       }
-      bottomUnread = 0;
-      setBottomMessages(0);
-      setShowScrollToBottom(false);
-    }
-  };
 
-  const onEndReached = () => {
-    // console.log('====================================');
-    // console.log('121313');
-    // console.log('====================================');
-  };
-
-  const renderScrollToBottomWrapper = () => {
-    return (
-      <View style={[styles.scrollToBottomStyle]}>
-        {bottomMessages > 0 && (
-          <View style={styles.bottomCountContainer}>
-            <Text
-              style={[
-                g.fs16,
-                g.FHNB,
-                g.colorWhite,
-                g.txtCenter,
-                g.txtCenterVertical,
-              ]}
-              numberOfLines={1}>
-              {bottomMessages}
-            </Text>
-          </View>
-        )}
-        <TouchableOpacity
-          style={styles.scrollBottomContainer}
-          onPress={() => scrollToBottom()}
-          hitSlop={{top: 5, left: 5, right: 5, bottom: 5}}>
-          <GlobalInclude.BaseIcon
-            containerStyle={{height: scale(20), width: scale(20)}}
-            iconColor={'#FFF'}
-            iconName={'angle-double-down'}
-            iconSize={scale(20)}
-            iconType={IconType[4]}
-          />
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
-  const setHeaderBar = useCallback(() => {
-    if (!isGroup) {
-      if (opponent !== undefined && opponent !== null) {
-        if (
-          opponent.profileImg !== undefined &&
-          opponent.profileImg !== null &&
-          opponent.profileImg !== ''
-        ) {
-          setHeaderImage({uri: opponent.profileImg});
-        }
-        setHeader(Helper.concatName(opponent) + ' - ' + opponent.batch);
-        setSubHeader(opponent.profession);
-        checkOpponentBlocked(opponent.blockedUser, opponent.blockedBy);
+      if (found) {
+        const request = {
+          userInfo: userInfo,
+          unreadCount: unreadCount,
+        };
+        updateChatObject(threadId, request, () => {
+          callback(true);
+        });
+      } else {
+        callback(false);
       }
     } else {
-      // if (
-      //   chatDetail.profileImg !== undefined &&
-      //   chatDetail.profileImg !== null &&
-      //   chatDetail.profileImg !== ''
-      // ) {
-      //   itemImage = {uri: chatDetail.profileImg};
-      // }
-      // setHeader(chatDetail.groupName);
+      callback(false);
     }
-  }, []);
-
-  const sendUserTyping = (typing) => {
-    const request = {
-      isTyping: [
-        {userId: global.userId, status: typing},
-        {userId: opponent._id, status: false},
-      ],
-    };
-    updateChatObject(messageThreadId, request, () => {});
   };
 
-  const generateSingleChat = async (request, callback) => {
-    let message = userLastMessage(request);
-    createSingleChat(opponent, message, (chatObject) => {
-      if (chatObject !== undefined && chatObject !== null) {
-        isChatExist = chatObject;
-        threadId = chatObject._id;
-        setMessageThreadId(chatObject._id);
-        callback(chatObject._id);
-      }
+  const updateChatMessages = (messageArray, clearArray) => {
+    var rv = {};
+
+    messageArray.forEach((element) => {
+      rv[element._id] = element;
     });
+
+    if (threadId !== '') {
+      reference
+        .child(threadId)
+        .update(rv)
+        .then(() => {
+          if (clearArray) {
+            wantsUpdateChilds = [];
+            pendingChilds = [];
+
+            let unreadCount = isChatExist.unreadCount;
+            unreadCount.forEach((element) => {
+              if (element.userId === global.userId) {
+                element.count = 0;
+              }
+            });
+            const request = {
+              unreadCount: unreadCount,
+            };
+            updateChatObject(threadId, request, () => {});
+          }
+        });
+    }
   };
 
-  const generateChatObject = (message, media, mediaType) => {
-    return {
-      message: message,
-      createdAt: new Date().getTime(),
-      messageType: mediaType,
-      media: media,
-      user: getUserObject(),
-      isRead: inMessageThread,
-      isDelivered: isOpponentOnline,
-      isSent: true,
-      replay: {},
-      removedBy: [],
-    };
-  };
+  /**
+   *
+   * @ChatMethod
+   *
+   */
+  /**
+   *
+   * @ChatMethodAddObject
+   *
+   */
 
   const userLastMessage = (request) => {
     let message = '';
@@ -916,29 +782,47 @@ const ChatScreen = ({route, navigation}) => {
     return message;
   };
 
+  const generateSingleChat = async (request, callback) => {
+    let message = userLastMessage(request);
+    createSingleChat(opponent, message, (chatObject) => {
+      if (chatObject !== undefined && chatObject !== null) {
+        isChatExist = chatObject;
+        threadId = chatObject._id;
+        setMessageThreadId(chatObject._id);
+        callback(chatObject._id);
+      }
+    });
+  };
+
   const addObjectToChat = (request, chatId) => {
-    console.log('====================================');
-    console.log('addObjectToChat');
-    console.log('====================================');
     let childRef = reference.child(chatId);
     childRef.push().then((snap) => {
       const _id = snap.key;
       request._id = _id;
       snap.set(request).then(() => {
+        setIsSending(false);
+        let message = userLastMessage(request);
         if (!isGroup && !inMessageThread) {
-          setUnreadCount();
+          pendingChilds.push(JSON.parse(JSON.stringify(request)));
+          let itemObject = setLastMessage(message, chatId, request.messageType);
+          setUnreadCount(itemObject);
           if (!isOpponentMuted) {
             sendPushNotification(
               opponent,
               request.message.trim() === '' ? 'Shared Media' : request.message,
+              threadId,
             );
           }
+        } else {
+          let itemObject = setLastMessage(message, chatId, request.messageType);
+          updateChatObject(chatId, itemObject, () => {});
         }
 
-        let message = userLastMessage(request);
+        if (!inMessageThread || !isOpponentOnline) {
+          setLatestUnread(true, opponent._id, () => {});
+        }
 
-        setLastMessage(message, chatId, request.messageType);
-        setIsSending(false);
+        previousStatusOfTyping = false;
         setInputValue('');
         isStickerShowing = false;
         setEmojiIconWidth(scale(40));
@@ -967,55 +851,91 @@ const ChatScreen = ({route, navigation}) => {
     if (mediaType === 1) {
       if (latestMessageArray.length > 99) {
         latestMessageArray.splice(0, 1);
-        latestMessageArray.push(lastMsg);
+        let item = {
+          userName: Helper.concatName(challenger),
+          message: lastMsg,
+        };
+        latestMessageArray.push(item);
       } else {
-        latestMessageArray.push(lastMsg);
+        let item = {
+          userName: Helper.concatName(challenger),
+          message: lastMsg,
+        };
+        latestMessageArray.push(item);
       }
       request.latestMessages = latestMessageArray;
     }
 
-    updateChatObject(chatId, request, () => {});
+    return request;
   };
 
-  const getUserObject = () => {
-    return {
-      _id: challenger._id,
-      profileImg: challenger.profileImg,
-      prefix: challenger.prefix,
-      firstName: challenger.firstName,
-      lastName: challenger.lastName,
-    };
+  const setUnreadCount = (requestObject) => {
+    getChatObject(threadId, (response) => {
+      if (response && response !== null && response !== undefined) {
+        let unreadCount = response.unreadCount;
+
+        unreadCount.forEach((element) => {
+          if (element.userId !== global.userId) {
+            element.count = element.count + 1;
+          }
+        });
+
+        const request = {
+          unreadCount: unreadCount,
+        };
+
+        let finalRequest = _.merge(request, requestObject);
+
+        updateChatObject(threadId, finalRequest, () => {});
+      }
+    });
   };
 
   const postMsg = (request) => {
     console.log('====================================');
     console.log('postMessage', request);
     console.log('====================================');
+
     setIsSending(true);
     if (isChatExist === null) {
       generateSingleChat(request, (chatId) => {
         addObjectToChat(request, chatId);
       });
     } else {
-      addObjectToChat(request, messageThreadId);
+      addObjectToChat(request, threadId);
     }
   };
 
+  /**
+   *
+   * @ChatMethodAddObject
+   *
+   */
+
+  /**
+   *
+   * @PostMessage
+   */
+
   const editMessageInThread = () => {
+    setIsSending(true);
     let selectedMsg = selectedChatObject;
     selectedMsg.message = inputValue;
+    selectedMsg.isEdited = true;
     reference
-      .child(messageThreadId)
+      .child(threadId)
       .child(selectedMsg._id)
       .update(selectedMsg)
       .then(() => {
+        inEditMode = false;
         let oldData = messages;
         oldData[lastPickIndex] = selectedMsg;
+        previousStatusOfTyping = false;
         setMessages([...oldData]);
         setIsSending(false);
         setInputValue('');
+        sendUserTyping(false);
         Keyboard.dismiss();
-
         if (
           chatRef !== undefined &&
           chatRef !== null &&
@@ -1048,188 +968,190 @@ const ChatScreen = ({route, navigation}) => {
     postMsg(request);
   };
 
-  const offlineSelf = useCallback((status, callback) => {
-    if (isChatExist !== null && isChatExist !== undefined) {
-      let userInfo = isChatExist.userInfo;
-      let found = false;
-      if (userInfo !== undefined && userInfo !== null) {
-        for (let i = 0; i < userInfo.length; i++) {
-          const user = userInfo[i];
-          if (global.userId === user._id) {
-            user.isOnline = status;
-            found = true;
-            break;
-          }
-        }
-      }
-      if (found) {
-        const request = {
-          userInfo: userInfo,
-        };
-        updateChatObject(threadId, request, () => {
-          callback(true);
-        });
-      } else {
-        callback(false);
-      }
-    } else {
-      callback(false);
-    }
-  }, []);
+  const getUserObject = () => {
+    return {
+      _id: challenger._id,
+      profileImg: challenger.profileImg,
+      prefix: challenger.prefix,
+      firstName: challenger.firstName,
+      lastName: challenger.lastName,
+    };
+  };
 
-  const renderHeader = () => {
-    return (
-      <View style={headerStyle.headerContainer}>
-        <View style={headerStyle.topContainer} />
-        <View style={headerStyle.container}>
-          <View style={[grid.alignItems, grid.justifyContentCenter]}>
-            <TouchableOpacity
-              onPress={() => {
-                setUserLastSeen(false, new Date().getTime(), () => {
-                  offlineSelf(false, () => {
-                    navigation.replace('ChatUserList');
-                  });
-                });
-              }}
-              style={[grid.alignItems, grid.justifyContentCenter]}>
-              <Image
-                source={GlobalInclude.Assets.Back}
-                style={headerStyle.back}
-              />
-            </TouchableOpacity>
-          </View>
-          <View style={[grid.col, grid.rowdir, g.ml5, g.mr5]}>
-            <View
-              style={[
-                grid.alignItems,
-                grid.justifyContentCenter,
-                {
-                  width: scale(35),
-                  height: scale(35),
-                  borderRadius: scale(50),
-                },
-              ]}>
-              <View style={[g.bggray, g.oh, {borderRadius: scale(50)}]}>
-                <ProgressImage
-                  source={headerImage}
-                  containerStyle={styles.imageStyle}
-                  mode={'cover'}
-                />
-              </View>
-              <View
-                style={{
-                  backgroundColor: isOpponentOnline ? 'green' : 'gray',
-                  height: scale(12),
-                  width: scale(12),
-                  borderRadius: scale(100),
-                  position: 'absolute',
-                  bottom: 3,
-                  right: -3,
-                }}
-              />
-            </View>
-            <TouchableOpacity
-              onPress={() => {
-                navigation.navigate('ChatUserProfile', {userId: opponent._id});
-              }}
-              style={[grid.col, g.ml5, g.mr5]}>
-              <Text
-                style={[
-                  g.fs14,
-                  g.FHNB,
-                  g.colordarkGray,
-                  g.txtLeft,
-                  GlobalInclude.AppStyle.transform,
-                ]}
-                numberOfLines={1}>
-                {header}
-              </Text>
-              <Text
-                style={[g.fs11, g.FHNB, g.colordarkGray, g.txtLeft, g.mt2]}
-                numberOfLines={1}>
-                {isOpponentTyping ? 'typing...' : subHeader}
-              </Text>
-              {/* {isOpponentOnline ? (
-                <Text
-                  style={[g.fs11, g.FHNB, g.colordarkGray, g.txtLeft, g.mt1]}
-                  numberOfLines={1}>
-                  {isOpponentTyping ? 'typing...' : subHeader}
-                </Text>
-              ) : (
-                <Text
-                  style={[g.fs11, g.FHNB, g.colordarkGray, g.txtLeft, g.mt1]}
-                  numberOfLines={1}>
-                  LastSeen: {moment(lastSeen).fromNow()}
-                </Text>
-              )} */}
-            </TouchableOpacity>
-          </View>
-          <View
-            style={[
-              grid.rowrow,
-              grid.alignItems,
-              grid.justifyContent,
-              {height: 30},
-            ]}>
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={() => {
-                setFontSize(scale(14));
-                selectedFontSize = 1;
-              }}>
-              <Text
-                style={[
-                  selectedFontSize === 1 ? g.colorBlue : g.colordarkGray,
-                  selectedFontSize === 1 ? g.textunderline : null,
+  const generateChatObject = (message, media, mediaType) => {
+    return {
+      message: message,
+      createdAt: new Date().getTime(),
+      messageType: mediaType,
+      media: media,
+      user: getUserObject(),
+      isRead: inMessageThread,
+      isDelivered: isOpponentOnline,
+      isSent: true,
+      replay: {},
+      removedBy: [],
+    };
+  };
+
+  const handleInputChat = (type, input, mediaType, media) => {
+    if (inEditMode) {
+      editMessageInThread();
+    } else if (isReplayEditComment) {
+      postUserCommentInThread(input, media, mediaType);
+    } else {
+      let request = generateChatObject(input, media, mediaType);
+      postMsg(request);
+    }
+  };
+  /**
+   *
+   * @PostMessage
+   */
+
+  /**
+   *
+   * @CommonFunctions
+   */
+
+  const blockUser = (wantBlock) => {
+    Alert.alert(
+      wantBlock ? 'Block User' : 'Unblock User',
+      `Are you sure you want to ${
+        wantBlock ? 'Block' : 'Unblock'
+      } ${Helper.capitalize(Helper.concatName(opponent))}?`,
+      [
+        {
+          text: 'Cancel',
+          onPress: () => {},
+          style: 'cancel',
+        },
+        {
+          text: 'Yes',
+          onPress: () => {
+            addUserToBlockList(opponent._id, (status) => {
+              Alert.alert(
+                '',
+                status
+                  ? `User ${wantBlock ? 'Blocked' : 'Unblocked'} successfully`
+                  : `Erorr while ${wantBlock ? 'blocking' : 'unblocking'} user`,
+                [
                   {
-                    lineHeight: 18,
-                    fontSize: 12,
+                    text: 'Okay',
+                    onPress: () => {
+                      setIsSenderBlocked(false);
+                      validateChatScreen();
+                    },
                   },
-                  g.FHNB,
-                ]}>
-                A
-              </Text>
-            </TouchableOpacity>
-            <View style={{marginHorizontal: scale(4)}} />
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={() => {
-                setFontSize(scale(18));
-                selectedFontSize = 2;
-              }}>
-              <Text
-                style={[
-                  selectedFontSize === 2 ? g.colorBlue : g.colordarkGray,
-                  selectedFontSize === 2 ? g.textunderline : null,
-                  {lineHeight: 20, fontSize: 15},
-                  g.FHNB,
-                ]}>
-                A
-              </Text>
-            </TouchableOpacity>
-            <View style={{marginHorizontal: scale(3)}} />
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={() => {
-                setFontSize(scale(22));
-                selectedFontSize = 3;
-              }}>
-              <Text
-                style={[
-                  selectedFontSize === 3 ? g.colorBlue : g.colordarkGray,
-                  selectedFontSize === 3 ? g.textunderline : null,
-                  {lineHeight: 20, fontSize: 20},
-                  g.FHNB,
-                ]}>
-                A
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View style={headerStyle.shadowView} />
-      </View>
+                ],
+              );
+            });
+          },
+        },
+      ],
     );
   };
+
+  const checkOpponentBlocked = (blockedList, blockedBy) => {
+    if (
+      blockedList !== undefined &&
+      blockedList !== null &&
+      blockedList !== ''
+    ) {
+      let isBlocked = blockedList.filter((user) => global.userId === user);
+      blockMsg = `${opponent.firstName} has blocked this chat.`;
+      setChatEnabled(isBlocked.length === 0);
+    } else if (
+      blockedBy !== undefined &&
+      blockedBy !== null &&
+      blockedBy !== ''
+    ) {
+      let isBlocked = blockedBy.filter((user) => global.userId === user);
+      blockMsg = `${challenger.firstName} has blocked this chat.`;
+      setChatEnabled(isBlocked.length === 0);
+    }
+  };
+
+  const setUserLastSeenAndMakeOffline = useCallback(() => {
+    // setUserLastSeen(false, new Date().getTime(), () => {
+
+    // });
+
+    offlineSelf(false, () => {
+      navigation.reset({
+        routes: [{name: 'ChatUserList'}],
+      });
+
+      //navigation.goBack();
+      //navigation.replace('ChatUserList');
+      //navigation.pop('ChatUserList');
+      //navigation.dispatch(popAction);
+      // setOpponentId(null);
+      // setMessageThreadId(null);
+      // navigation.dispatch(
+      //   ...CommonActions.reset({
+      //     index: 0,
+      //     routes: [{name: 'ChatUserList'}],
+      //   }),
+      // );
+
+      // setUserLastSeen(false, new Date().getTime(), () => {
+      //   navigation.dispatch(
+      //     CommonActions.reset({
+      //       index: 0,
+      //       routes: [{name: 'Dashboard'}, {name: 'ChatUserList'}],
+      //     }),
+      //   );
+      // });
+    });
+  }, [navigation]);
+
+  const handleOnScroll = (event) => {
+    const {
+      nativeEvent: {
+        contentOffset: {y: contentOffsetY},
+      },
+    } = event;
+
+    if (contentOffsetY > scrollToBottomOffset) {
+      setShowScrollToBottom(true);
+    } else {
+      if (contentOffsetY === 0) {
+        newMessageList.forEach((element) => {
+          setMessages((previousMessages) => append(previousMessages, element));
+        });
+      }
+      bottomUnread = 0;
+      setBottomMessages(0);
+      setShowScrollToBottom(false);
+    }
+  };
+
+  const scrollToBottom = () => {
+    if (
+      chatRef !== undefined &&
+      chatRef !== null &&
+      chatRef.current !== undefined &&
+      chatRef.current !== null
+    ) {
+      chatRef.current.scrollToOffset({
+        offset: 0,
+        animated: true,
+      });
+    }
+  };
+
+  const keyExtractor = (item, index) => index;
+
+  /**
+   *
+   * @CommonFunctions
+   */
+
+  /**
+   *
+   * @UIMethods
+   *
+   */
 
   const renderChatItem = ({item, index}) => {
     const previousMessage = messages[index + 1] || {};
@@ -1279,6 +1201,40 @@ const ChatScreen = ({route, navigation}) => {
     );
   };
 
+  const renderScrollToBottomWrapper = () => {
+    return (
+      <View style={[styles.scrollToBottomStyle]}>
+        {bottomMessages > 0 && (
+          <View style={styles.bottomCountContainer}>
+            <Text
+              style={[
+                g.fs16,
+                g.FHNB,
+                g.colorWhite,
+                g.txtCenter,
+                g.txtCenterVertical,
+              ]}
+              numberOfLines={1}>
+              {bottomMessages}
+            </Text>
+          </View>
+        )}
+        <TouchableOpacity
+          style={styles.scrollBottomContainer}
+          onPress={() => scrollToBottom()}
+          hitSlop={{top: 5, left: 5, right: 5, bottom: 5}}>
+          <GlobalInclude.BaseIcon
+            containerStyle={{height: scale(20), width: scale(20)}}
+            iconColor={'#FFF'}
+            iconName={'angle-double-down'}
+            iconSize={scale(20)}
+            iconType={IconType[4]}
+          />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   const emojiList = () => {
     return (
       <OptionsSheet
@@ -1293,11 +1249,162 @@ const ChatScreen = ({route, navigation}) => {
         <EmojiSelector
           onEmojiSelected={(emoji) => {
             emojiRef.current.close();
-            let request = generateChatObject(emoji, '', 6);
-            postMsg(request);
+            handleInputChat(1, emoji, 6, '');
           }}
         />
       </OptionsSheet>
+    );
+  };
+
+  const renderHeader = () => {
+    return (
+      <View style={headerStyle.headerContainer}>
+        <View style={headerStyle.topContainer} />
+        <View style={headerStyle.container}>
+          {profileLoading ? null : (
+            <View style={GlobalInclude.AppStyle.fillRow}>
+              <View style={[grid.alignItems, grid.justifyContentCenter]}>
+                <TouchableOpacity
+                  onPress={() => setUserLastSeenAndMakeOffline()}
+                  style={[grid.alignItems, grid.justifyContentCenter]}>
+                  <Image
+                    source={GlobalInclude.Assets.Back}
+                    style={headerStyle.back}
+                  />
+                </TouchableOpacity>
+              </View>
+              <View style={[grid.col, grid.rowdir, g.ml5, g.mr5]}>
+                <View
+                  style={[
+                    grid.alignItems,
+                    grid.justifyContentCenter,
+                    {
+                      width: scale(35),
+                      height: scale(35),
+                      borderRadius: scale(50),
+                    },
+                  ]}>
+                  <View style={[g.bggray, g.oh, {borderRadius: scale(50)}]}>
+                    <ProgressImage
+                      source={headerImage}
+                      containerStyle={styles.imageStyle}
+                      mode={'cover'}
+                    />
+                  </View>
+                  <View
+                    style={{
+                      backgroundColor: isOpponentOnline ? 'green' : 'gray',
+                      height: scale(12),
+                      width: scale(12),
+                      borderRadius: scale(100),
+                      position: 'absolute',
+                      bottom: 3,
+                      right: -3,
+                    }}
+                  />
+                </View>
+                <TouchableOpacity
+                  onPress={() => {
+                    navigation.navigate('ChatUserProfile', {
+                      userId: opponent._id,
+                    });
+                  }}
+                  style={[grid.col, g.ml5, g.mr5]}>
+                  {header !== null && header !== '' && (
+                    <Text
+                      style={[
+                        g.fs14,
+                        g.FHNB,
+                        g.colordarkGray,
+                        g.txtLeft,
+                        GlobalInclude.AppStyle.transform,
+                      ]}
+                      numberOfLines={1}>
+                      {header}
+                    </Text>
+                  )}
+
+                  {subHeader !== null && subHeader !== '' && (
+                    <Text
+                      style={[
+                        g.fs11,
+                        g.FHNB,
+                        g.colordarkGray,
+                        g.txtLeft,
+                        g.mt2,
+                      ]}
+                      numberOfLines={1}>
+                      {isOpponentTyping ? 'typing...' : subHeader}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+              <View
+                style={[
+                  grid.rowrow,
+                  grid.alignItems,
+                  grid.justifyContent,
+                  {height: 30},
+                ]}>
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPress={() => {
+                    setFontSize(scale(14));
+                    selectedFontSize = 1;
+                  }}>
+                  <Text
+                    style={[
+                      selectedFontSize === 1 ? g.colorBlue : g.colordarkGray,
+                      selectedFontSize === 1 ? g.textunderline : null,
+                      {
+                        lineHeight: 18,
+                        fontSize: 12,
+                      },
+                      g.FHNB,
+                    ]}>
+                    A
+                  </Text>
+                </TouchableOpacity>
+                <View style={{marginHorizontal: scale(4)}} />
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPress={() => {
+                    setFontSize(scale(18));
+                    selectedFontSize = 2;
+                  }}>
+                  <Text
+                    style={[
+                      selectedFontSize === 2 ? g.colorBlue : g.colordarkGray,
+                      selectedFontSize === 2 ? g.textunderline : null,
+                      {lineHeight: 20, fontSize: 15},
+                      g.FHNB,
+                    ]}>
+                    A
+                  </Text>
+                </TouchableOpacity>
+                <View style={{marginHorizontal: scale(3)}} />
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPress={() => {
+                    setFontSize(scale(22));
+                    selectedFontSize = 3;
+                  }}>
+                  <Text
+                    style={[
+                      selectedFontSize === 3 ? g.colorBlue : g.colordarkGray,
+                      selectedFontSize === 3 ? g.textunderline : null,
+                      {lineHeight: 20, fontSize: 20},
+                      g.FHNB,
+                    ]}>
+                    A
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
+        <View style={headerStyle.shadowView} />
+      </View>
     );
   };
 
@@ -1353,7 +1460,7 @@ const ChatScreen = ({route, navigation}) => {
               selectedMsg.delete = true;
 
               reference
-                .child(messageThreadId)
+                .child(threadId)
                 .child(selectedMsg._id)
                 .update(selectedMsg)
                 .then(() => {
@@ -1380,46 +1487,17 @@ const ChatScreen = ({route, navigation}) => {
     );
   };
 
-  const showOtherPostOptions = () => {
-    return (
-      <View>
-        <TouchableOpacity
-          onPress={() => {
-            if (
-              chatObjRef.current !== undefined &&
-              chatObjRef.current !== null
-            ) {
-              chatObjRef.current.close();
-            }
-          }}
-          style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
-          <Text
-            style={[
-              g.fs18,
-              g.FHNM,
-              g.colorBlue,
-              grid.justifyContentCenter,
-              grid.alignItems,
-              g.txtCenterVertical,
-            ]}>
-            Report Comment
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
-  const postComments = () => {
+  const chatOptions = () => {
     return (
       <OptionsSheet
         ref={chatObjRef}
         minClosingHeight={50}
-        height={
-          selectedChatObject !== null &&
-          selectedChatObject.user._id === global.userId
-            ? 260
-            : 210
-        }
+        // height={
+        //   selectedChatObject !== null &&
+        //   selectedChatObject.user._id === global.userId
+        //     ? 280
+        //     : 180
+        // }
         duration={200}
         closeOnDragDown={false}
         keyboardAvoidingViewEnabled={false}
@@ -1448,7 +1526,10 @@ const ChatScreen = ({route, navigation}) => {
               grid.justifyContentCenter,
               grid.alignItems,
               g.p15,
-              {borderBottomWidth: 2, borderBottomColor: '#ebebe4'},
+              selectedChatObject !== null &&
+              selectedChatObject.user._id === global.userId
+                ? {borderBottomWidth: 2, borderBottomColor: '#ebebe4'}
+                : {},
             ]}>
             <Text
               style={[
@@ -1521,7 +1602,11 @@ const ChatScreen = ({route, navigation}) => {
     );
   };
 
-  const keyExtractor = (item, index) => index;
+  /**
+   *
+   * UI Methods
+   *
+   */
 
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bggray3]}>
@@ -1547,9 +1632,6 @@ const ChatScreen = ({route, navigation}) => {
             keyExtractor={keyExtractor}
             onEndReachedThreshold={0.1}
             maintainVisibleContentPosition={true}
-            onEndReached={onEndReached}
-            // refreshing={isRefreshing}
-            // onRefresh={handleRefresh}
             ListEmptyComponent={emptyComponent}
             scrollEventThrottle={16}
             bounces={false}
@@ -1563,234 +1645,239 @@ const ChatScreen = ({route, navigation}) => {
               paddingTop: scale(15),
               paddingBottom: scale(20),
             }}
-            // style={{transform: [{scaleY: -1}]}}
             onScroll={handleOnScroll}
           />
         )}
 
-        <KeyboardAvoidingView
-          behavior={Platform.select({android: 'height', ios: 'padding'})}
-          style={{marginBottom: scale(10)}}>
-          {chatEnabled ? (
-            <View style={styles.footer}>
-              <View
-                style={{
-                  backgroundColor: '#fff',
-                  flexDirection: 'row',
-                  flex: 1,
-                  borderRadius: isReplayEditComment ? scale(10) : scale(30),
-                }}>
+        {profileLoading ? null : (
+          <KeyboardAvoidingView
+            behavior={Platform.select({android: 'height', ios: 'padding'})}
+            style={{marginBottom: scale(10)}}>
+            {chatEnabled ? (
+              <View style={styles.footer}>
                 <View
-                  style={[grid.flex1, isReplayEditComment && [g.pt5, g.pb5]]}>
-                  {isReplayEditComment && (
-                    <View style={grid.rowdir}>
-                      <View
-                        style={[
-                          styles.replayContainer,
-                          g.ml10,
-                          g.mr10,
-                          grid.col,
-                        ]}>
+                  style={{
+                    backgroundColor: '#fff',
+                    flexDirection: 'row',
+                    flex: 1,
+                    borderRadius: isReplayEditComment ? scale(10) : scale(30),
+                  }}>
+                  <View
+                    style={[grid.flex1, isReplayEditComment && [g.pt5, g.pb5]]}>
+                    {isReplayEditComment && (
+                      <View style={grid.rowdir}>
                         <View
                           style={[
-                            styles.renderBorder,
-                            {
-                              backgroundColor: GlobalInclude.Color.ColorPrimary,
-                            },
-                          ]}
-                        />
-                        <View style={[g.pl10, g.pt3, g.pr10, g.pb3]}>
-                          <Text
+                            styles.replayContainer,
+                            g.ml10,
+                            g.mr10,
+                            grid.col,
+                          ]}>
+                          <View
                             style={[
-                              g.fs12,
-                              g.FHNB,
-                              g.colorBlue,
-                              grid.justifyContentCenter,
-                              grid.alignItems,
-                              g.txtCenterVertical,
-                              g.mb5,
-                            ]}>
-                            {'Replying To:'}
-                          </Text>
-                          <Text style={[g.fs14, g.FHNB, g.colorBlack]}>
-                            {Helper.concatName(selectedChatObject.user)}
-                          </Text>
-                          <View style={[g.mt2, g.mb2]} />
-                          <Text
-                            numberOfLines={1}
-                            style={[g.fs12, g.FHNR, g.colorBlack]}>
-                            {selectedChatObject.messageType === 1
-                              ? selectedChatObject.message
-                              : showMediaType(selectedChatObject.messageType)}
-                          </Text>
+                              styles.renderBorder,
+                              {
+                                backgroundColor:
+                                  GlobalInclude.Color.ColorPrimary,
+                              },
+                            ]}
+                          />
+                          <View style={[g.pl10, g.pt3, g.pr10, g.pb3]}>
+                            <Text
+                              style={[
+                                g.fs12,
+                                g.FHNB,
+                                g.colorBlue,
+                                grid.justifyContentCenter,
+                                grid.alignItems,
+                                g.txtCenterVertical,
+                                g.mb5,
+                              ]}>
+                              {'Replying To:'}
+                            </Text>
+                            <Text style={[g.fs14, g.FHNB, g.colorBlack]}>
+                              {Helper.capitalize(
+                                Helper.concatName(selectedChatObject.user),
+                              )}
+                            </Text>
+                            <View style={[g.mt2, g.mb2]} />
+                            <Text
+                              numberOfLines={1}
+                              style={[g.fs12, g.FHNR, g.colorBlack]}>
+                              {selectedChatObject.messageType === 1
+                                ? selectedChatObject.message
+                                : showMediaType(selectedChatObject.messageType)}
+                            </Text>
+                          </View>
                         </View>
-                      </View>
-                      <View style={[g.mt2, g.mr5]}>
-                        {showImageThumb(
-                          selectedChatObject.media,
-                          selectedChatObject.messageType,
-                        )}
-                      </View>
+                        <View style={[g.mt2, g.mr5]}>
+                          {showImageThumb(
+                            selectedChatObject.media,
+                            selectedChatObject.messageType,
+                          )}
+                        </View>
 
-                      {/* part two */}
-                      <TouchableOpacity
-                        onPress={() => {
-                          setIsReplayEditComment(false);
-                          setSelectedChatObject(null);
-                        }}
-                        style={styles.closeComment}>
-                        <GlobalInclude.BaseIcon
-                          containerStyle={{
-                            height: scale(14),
-                            width: scale(14),
+                        {/* part two */}
+                        <TouchableOpacity
+                          onPress={() => {
+                            setIsReplayEditComment(false);
+                            setSelectedChatObject(null);
                           }}
-                          iconColor={'#fff'}
-                          iconName={'close'}
-                          iconSize={scale(14)}
-                          iconType={IconType[6]}
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  )}
+                          style={styles.closeComment}>
+                          <GlobalInclude.BaseIcon
+                            containerStyle={{
+                              height: scale(14),
+                              width: scale(14),
+                            }}
+                            iconColor={'#fff'}
+                            iconName={'close'}
+                            iconSize={scale(14)}
+                            iconType={IconType[6]}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    )}
 
-                  {/* row two */}
-                  <View style={[grid.rowdir]}>
-                    <Animatable.View
-                      ref={animRef}
-                      useNativeDriver={true}
-                      style={{
-                        width: emojiIconWidth,
-                        height: scale(40),
-                        borderRadius: scale(10),
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        alignSelf: 'center',
-                      }}
-                      easing={'linear'}>
+                    {/* row two */}
+                    <View style={[grid.rowdir]}>
+                      <Animatable.View
+                        ref={animRef}
+                        useNativeDriver={true}
+                        style={{
+                          width: emojiIconWidth,
+                          height: scale(40),
+                          borderRadius: scale(10),
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          alignSelf: 'center',
+                        }}
+                        easing={'linear'}>
+                        <TouchableOpacity
+                          onPress={() => {
+                            if (emojiRef !== undefined && emojiRef !== null) {
+                              emojiRef.current.open();
+                            }
+                          }}
+                          style={[styles.commentButton]}>
+                          <GlobalInclude.BaseIcon
+                            containerStyle={{
+                              height: scale(20),
+                              width: scale(20),
+                            }}
+                            iconColor={GlobalInclude.Color.ColorPrimary}
+                            iconName={'sticker-emoji'}
+                            iconSize={scale(20)}
+                            iconType={IconType[1]}
+                          />
+                        </TouchableOpacity>
+                      </Animatable.View>
+                      <TextInput
+                        autoCapitalize="none"
+                        underlineColorAndroid="transparent"
+                        style={[styles.inputContainer, styles.inputView]}
+                        keyboardType="default"
+                        value={inputValue}
+                        multiline={true}
+                        placeholder="Enter text here"
+                        onChangeText={(input) => {
+                          setInputValue(input);
+                          sendUserTyping(input.length > 0 ? true : false);
+
+                          if (input.length > 0 && !isStickerShowing) {
+                            isStickerShowing = true;
+                            setEmojiIconWidth(0);
+                            animRef.current.slideOutLeft().then(() => {});
+                          } else if (input.length === 0 && isStickerShowing) {
+                            inEditMode = false;
+                            isStickerShowing = false;
+                            setEmojiIconWidth(scale(40));
+
+                            animRef.current.slideInLeft().then(() => {});
+                          }
+                        }}
+                        placeholderTextColor={'#b2b2b2'}
+                      />
                       <TouchableOpacity
                         onPress={() => {
-                          if (emojiRef !== undefined && emojiRef !== null) {
-                            emojiRef.current.open();
+                          if (uploadRef.current !== null) {
+                            uploadRef.current.open();
                           }
                         }}
                         style={[styles.commentButton]}>
                         <GlobalInclude.BaseIcon
                           containerStyle={{height: scale(20), width: scale(20)}}
                           iconColor={GlobalInclude.Color.ColorPrimary}
-                          iconName={'sticker-emoji'}
+                          iconName={'attach-file'}
                           iconSize={scale(20)}
-                          iconType={IconType[1]}
+                          iconType={IconType[0]}
                         />
                       </TouchableOpacity>
-                    </Animatable.View>
-                    <TextInput
-                      autoCapitalize="none"
-                      underlineColorAndroid="transparent"
-                      style={[styles.inputContainer, styles.inputView]}
-                      keyboardType="default"
-                      value={inputValue}
-                      placeholder="Enter text here"
-                      onChangeText={(input) => {
-                        setInputValue(input);
-                        sendUserTyping(input.length > 0 ? true : false);
-
-                        if (input.length > 0 && !isStickerShowing) {
-                          isStickerShowing = true;
-                          setEmojiIconWidth(0);
-                          animRef.current.slideOutLeft().then(() => {});
-                        } else if (input.length === 0 && isStickerShowing) {
-                          isStickerShowing = false;
-                          setEmojiIconWidth(scale(40));
-                          animRef.current.slideInLeft().then(() => {});
-                        }
-                      }}
-                      placeholderTextColor={'#b2b2b2'}
-                    />
-                    <TouchableOpacity
-                      onPress={() => {
-                        if (uploadRef.current !== null) {
-                          uploadRef.current.open();
-                        }
-                      }}
-                      style={[styles.commentButton]}>
-                      <GlobalInclude.BaseIcon
-                        containerStyle={{height: scale(20), width: scale(20)}}
-                        iconColor={GlobalInclude.Color.ColorPrimary}
-                        iconName={'attach-file'}
-                        iconSize={scale(20)}
-                        iconType={IconType[0]}
-                      />
-                    </TouchableOpacity>
+                    </View>
+                    {/* row two */}
                   </View>
-                  {/* row two */}
                 </View>
+                {inputValue.trim().length > 0 && (
+                  <Animatable.View
+                    useNativeDriver={true}
+                    animation={'slideInRight'}
+                    style={[
+                      g.ml5,
+                      styles.commentButton,
+                      inputValue.trim().length > 0
+                        ? styles.enableButton
+                        : styles.disbleButton,
+                    ]}>
+                    <TouchableOpacity
+                      style={[styles.commentButton, styles.enableButton]}
+                      onPress={() => {
+                        handleInputChat(1, inputValue, 1, '');
+                      }}>
+                      {isSending ? (
+                        <ActivityIndicator size={'small'} color={'#fff'} />
+                      ) : (
+                        <GlobalInclude.BaseIcon
+                          containerStyle={{height: scale(20), width: scale(20)}}
+                          iconColor={
+                            inputValue.trim().length > 0 ? '#fff' : '#b2b2b2'
+                          }
+                          iconName={'send-o'}
+                          iconSize={scale(20)}
+                          iconType={IconType[4]}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  </Animatable.View>
+                )}
               </View>
-              {inputValue.trim().length > 0 && (
-                <Animatable.View
-                  useNativeDriver={true}
-                  animation={'slideInRight'}
+            ) : (
+              <View style={styles.footer}>
+                <TouchableOpacity
+                  onPress={() => blockUser(false)}
+                  activeOpacity={1}
+                  disabled={!isSenderBlocked}
                   style={[
-                    g.ml5,
-                    styles.commentButton,
-                    inputValue.trim().length > 0
-                      ? styles.enableButton
-                      : styles.disbleButton,
+                    styles.whiteCurvedBox,
+                    g.p10,
+                    grid.alignItems,
+                    grid.justifyContentCenter,
+                    g.ml15,
+                    g.mr15,
                   ]}>
-                  <TouchableOpacity
-                    style={[styles.commentButton, styles.enableButton]}
-                    onPress={() => {
-                      setIsSending(true);
-                      if (inEditMode) {
-                        editMessageInThread();
-                      } else if (isReplayEditComment) {
-                        postUserCommentInThread(inputValue, '', 1);
-                      } else {
-                        let request = generateChatObject(inputValue, '', 1);
-                        postMsg(request);
-                      }
-                    }}>
-                    {isSending ? (
-                      <ActivityIndicator size={'small'} color={'#fff'} />
-                    ) : (
-                      <GlobalInclude.BaseIcon
-                        containerStyle={{height: scale(20), width: scale(20)}}
-                        iconColor={
-                          inputValue.trim().length > 0 ? '#fff' : '#b2b2b2'
-                        }
-                        iconName={'send-o'}
-                        iconSize={scale(20)}
-                        iconType={IconType[4]}
-                      />
-                    )}
-                  </TouchableOpacity>
-                </Animatable.View>
-              )}
-            </View>
-          ) : (
-            <View style={styles.footer}>
-              <View
-                style={[
-                  styles.whiteCurvedBox,
-                  g.p10,
-                  grid.alignItems,
-                  grid.justifyContentCenter,
-                  g.ml15,
-                  g.mr15,
-                ]}>
-                <Text
-                  style={[
-                    g.colorBlue,
-                    g.fs12,
-                    g.FHNR,
-                    g.txtCenter,
-                    g.txtCenterVertical,
-                  ]}>
-                  {blockMsg === '' ? 'This chat has been blocked' : blockMsg}
-                </Text>
+                  <Text
+                    style={[
+                      g.colorBlue,
+                      g.fs12,
+                      g.FHNR,
+                      g.txtCenter,
+                      g.txtCenterVertical,
+                    ]}>
+                    {blockMsg === '' ? 'This chat has been blocked' : blockMsg}
+                  </Text>
+                </TouchableOpacity>
               </View>
-            </View>
-          )}
-        </KeyboardAvoidingView>
+            )}
+          </KeyboardAvoidingView>
+        )}
       </View>
       <UploadMedia
         hideTagInVideo={true}
@@ -1813,21 +1900,7 @@ const ChatScreen = ({route, navigation}) => {
               if (item.type === 4) {
                 mediaType = 4;
               }
-
-              // console.log('====================================');
-              // console.log('mediaType', mediaType);
-              // console.log('====================================');
-
-              if (isReplayEditComment) {
-                postUserCommentInThread(inputValue, item.fileName, mediaType);
-              } else {
-                let request = generateChatObject(
-                  inputValue,
-                  item.fileName,
-                  mediaType,
-                );
-                postMsg(request);
-              }
+              handleInputChat(2, inputValue, mediaType, item.fileName);
             });
           }
 
@@ -1835,7 +1908,7 @@ const ChatScreen = ({route, navigation}) => {
         }}
       />
       {emojiList()}
-      {postComments()}
+      {chatOptions()}
 
       {showDocViewer && (
         <DocViewer

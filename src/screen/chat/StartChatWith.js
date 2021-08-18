@@ -96,8 +96,8 @@ const StartChatWith = ({navigation}) => {
       opponent: opponentUser || {},
       isGroup: false,
     };
-    //navigation.navigate('ChatScreen', payload);
-    navigation.replace('ChatScreen', payload);
+    navigation.navigate('ChatScreen', payload);
+    //navigation.replace('ChatScreen', payload);
   };
 
   // Filter section
@@ -381,7 +381,7 @@ const StartChatWith = ({navigation}) => {
                           g.mt8,
                         ]}
                         numberOfLines={2}>
-                        {Helper.concatName(item)}
+                        {Helper.capitalize(Helper.concatName(item))}
                       </Text>
 
                       <Text

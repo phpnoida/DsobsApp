@@ -521,7 +521,7 @@ const UploadMedia = ({
       {/* Video */}
       <RBSheet
         ref={videoRef}
-        height={260}
+        height={hideTagInVideo ? 200 : 260}
         minClosingHeight={50}
         duration={350}
         closeOnDragDown={true}

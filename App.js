@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   AppState,
@@ -34,6 +34,7 @@ const appVersion = DeviceInfo.getVersion();
 let appStateValue = '';
 
 const App = ({navigation}) => {
+  const routeNameRef = useRef();
   const [loadingComplete, setLoadingComplete] = useState(false);
   const [currentState, setCurrentState] = useState(AppState.currentState);
   const [isConnected, setIsConnected] = useState(true);
@@ -241,9 +242,31 @@ const App = ({navigation}) => {
 
   const handleNotification = (from, data) => {
     //console.log('currentState', currentState);
+
     global.notification = data;
+    /**********************
+ * if (routeNameRef.current !== undefined && routeNameRef.current !== null) {
+      if (
+        routeNameRef.current === 'ChatUserList' ||
+        routeNameRef.current === 'ChatScreen'
+      ) {
+        global.notification = null;
+        global.isNotificationTap = false;
+      }
+    } else
+ */
+
+    if (data !== undefined && data !== null) {
+      let eventType = data.data.eventType.toString();
+      if (eventType && eventType !== null && eventType !== '') {
+        if (parseInt(eventType, 10) === 1002) {
+          global.notification = null;
+          global.isNotificationTap = false;
+        }
+      }
+    }
     console.log('====================================');
-    console.log('Notifciation', data);
+    console.log('Notifciation-Current Screen', data, routeNameRef.current);
     console.log('====================================');
     Helper.presentNotification(from, data);
   };
@@ -261,6 +284,29 @@ const App = ({navigation}) => {
       {isConnected ? (
         <NavigationContainer
           ref={navigationRef}
+          onStateChange={() => {
+            const previousRouteName = routeNameRef.current;
+            const currentRouteName =
+              navigationRef.current.getCurrentRoute().name;
+
+            console.log('====================================');
+            console.log('previousRouteName', previousRouteName);
+            console.log('currentRouteName', currentRouteName);
+            console.log('====================================');
+
+            if (previousRouteName !== currentRouteName) {
+              global.currentScreen = currentRouteName;
+              if (currentRouteName === 'ChatScreen') {
+                global.inChatScreen = true;
+              } else {
+                console.log('false');
+                global.inChatScreen = false;
+              }
+              // Do something here with it
+            }
+            // Save the current route name for later comparision
+            routeNameRef.current = currentRouteName;
+          }}
           onReady={() => {
             isReadyRef.current = true;
             global.navigationRef = navigationRef;

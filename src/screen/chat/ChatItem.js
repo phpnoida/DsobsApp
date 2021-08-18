@@ -186,7 +186,7 @@ class ChatItem extends PureComponent {
         <Text
           style={[
             customFont,
-            g.FHNM,
+            g.FHNR,
             g.colorBlue,
             isLeft ? grid.justifyContentLeft : grid.justifyContentRight,
             isLeft ? grid.alignSelf : grid.alignItemsBottom,
@@ -246,7 +246,10 @@ class ChatItem extends PureComponent {
               g.p3,
               GlobalInclude.AppStyle.transform,
             ]}>
-            {Helper.concatName(currentMessage.replay.user)}
+            {currentMessage.replay.user._id === global.userId &&
+            currentMessage.user._id === global.userId
+              ? 'You'
+              : Helper.concatName(currentMessage.replay.user)}
           </Text>
           <Text
             numberOfLines={2}
@@ -271,6 +274,20 @@ class ChatItem extends PureComponent {
     );
   }
 
+  renderEditView() {
+    return (
+      <View style={[styles.tickView, grid.alignItemsBottom, g.mb5]}>
+        <GlobalInclude.BaseIcon
+          containerStyle={{height: scale(16), width: scale(16)}}
+          iconColor={GlobalInclude.Color.ColorPrimary}
+          iconName={'edit'}
+          iconSize={scale(16)}
+          iconType={IconType[0]}
+        />
+      </View>
+    );
+  }
+
   renderLeftSide(currentMessage) {
     return (
       <View style={[grid.rowdir]}>
@@ -278,6 +295,9 @@ class ChatItem extends PureComponent {
         <View style={[g.ml5, g.bgWhite, styles.bubbleLeft]}>
           {this.renderItem(currentMessage, true)}
         </View>
+        {currentMessage.isEdited &&
+          !currentMessage.delete &&
+          this.renderEditView()}
       </View>
     );
   }
@@ -285,6 +305,9 @@ class ChatItem extends PureComponent {
   renderRightSide(currentMessage) {
     return (
       <View style={[grid.rowdir, styles.viewRight]}>
+        {currentMessage.isEdited &&
+          !currentMessage.delete &&
+          this.renderEditView()}
         <View style={[g.bgGreenLight, styles.bubbleRight]}>
           {this.renderItem(currentMessage, false)}
         </View>
@@ -385,10 +408,10 @@ class ChatItem extends PureComponent {
     return (
       <View style={[grid.rowrow, grid.alignItems, grid.justifyContentCenter]}>
         <GlobalInclude.BaseIcon
-          containerStyle={{height: scale(16), width: scale(16)}}
-          iconColor={'#FFF'}
+          containerStyle={{height: scale(13), width: scale(13)}}
+          iconColor={GlobalInclude.Color.ColorPrimary}
           iconName={'block'}
-          iconSize={scale(16)}
+          iconSize={scale(12)}
           iconType={IconType[9]}
         />
         <Text

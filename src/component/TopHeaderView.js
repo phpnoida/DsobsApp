@@ -117,13 +117,14 @@ const TopHeaderView = ({
                       onPress={() => {
                         if (customDelegate) {
                           customDelegate(); //this will help to take callback from where we call header
+                        } else {
+                          navigation.dispatch(
+                            CommonActions.reset({
+                              index: 0,
+                              routes: [{name: 'Dashboard'}],
+                            }),
+                          );
                         }
-                        navigation.dispatch(
-                          CommonActions.reset({
-                            index: 0,
-                            routes: [{name: 'Dashboard'}],
-                          }),
-                        );
                       }}>
                       <Image
                         source={GlobalInclude.Assets.AppLogo}
@@ -158,9 +159,9 @@ const TopHeaderView = ({
                     onPress={() => {
                       if (customDelegate) {
                         customDelegate(); //this will help to take callback from where we call header
+                      } else {
+                        navigation.goBack();
                       }
-
-                      navigation.goBack();
                     }}>
                     <Image
                       source={GlobalInclude.Assets.Back}

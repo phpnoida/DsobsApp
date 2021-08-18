@@ -191,7 +191,7 @@ const Helpers = {
       return this.stripParameters(str.match(attrreg)[1]);
     }
 
-    return undefined;
+     return undefined;
   },
   presentNotification: function (from, notification) {
     console.log('from', from);

@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   Alert,
   BackHandler,
+  ScrollView,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
@@ -25,10 +26,17 @@ import {
 import {IconType, APP_NAME} from '../../helper/Constants';
 import Helper from '../../helper/Helper';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
+import Highlighter from '../../component/HighlightWord';
+import {CommonActions} from '@react-navigation/native';
+
 // Firestore
 import {useCollection} from 'react-firebase-hooks/firestore';
 import firestore from '@react-native-firebase/firestore';
-import {setUserLastSeen, addUserToBlockList} from '../../helper/ChatHelper';
+import {
+  setUserLastSeen,
+  addUserToBlockList,
+  setLatestUnread,
+} from '../../helper/ChatHelper';
 
 const chatCollection = firestore().collection('Chats');
 const usersCollection = firestore().collection('Users');
@@ -45,12 +53,15 @@ let tmpArray = [];
 let selectedIndex = -1;
 let challengerUser = null;
 let backHandler = null;
+let pendingUnreads = false;
 
 const ChatUserList = ({navigation}) => {
   const refOptions = useRef();
   const refPostOptions = useRef();
   const [firstTimeLoad, setFirstTimeLoad] = useState(true);
   const [chatList, setChatList] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [isFiltering, setIsFiltering] = useState(false);
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.allLoaded,
   );
@@ -105,6 +116,7 @@ const ChatUserList = ({navigation}) => {
     navigation.addListener('blur', () => {
       if (subscriber !== undefined && subscriber !== null) {
         subscriber();
+        subscriber = null;
       }
     });
 
@@ -119,15 +131,33 @@ const ChatUserList = ({navigation}) => {
               let data = item.data();
               tmpArray.push(data);
             });
-            setFirstTimeLoad(false);
 
             tmpArray.sort(function (x, y) {
               return y.lastMessageTime - x.lastMessageTime;
             });
 
             finalItemsArray = tmpArray;
-            setChatList(tmpArray);
-            setPaginationStatus(PaginationStatus.waiting);
+            pendingUnreads = false;
+            for (let i = 0; i < tmpArray.length; i++) {
+              const element = tmpArray[i];
+              let unreadCount = getChatCount(element.unreadCount);
+              if (unreadCount > 0) {
+                pendingUnreads = true;
+                break;
+              }
+            }
+
+            if (!pendingUnreads) {
+              setLatestUnread(false, global.userId, () => {
+                setChatList(tmpArray);
+                setPaginationStatus(PaginationStatus.waiting);
+                setFirstTimeLoad(false);
+              });
+            } else {
+              setFirstTimeLoad(false);
+              setChatList(tmpArray);
+              setPaginationStatus(PaginationStatus.waiting);
+            }
 
             // var allComplete = new Promise((resolve, reject) => {
             //   tmpArray.forEach((element, index, array) => {
@@ -181,11 +211,18 @@ const ChatUserList = ({navigation}) => {
     const backAction = () => {
       if (navigation.isFocused()) {
         setUserLastSeen(false, new Date().getTime(), () => {
-          navigation.goBack();
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{name: 'Dashboard'}],
+            }),
+          );
         });
+
         return true;
       }
     };
+
     backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
 
     return () => {
@@ -213,44 +250,73 @@ const ChatUserList = ({navigation}) => {
     let oldData = finalItemsArray;
 
     if (searchText.trim().length === 0) {
+      setIsFiltering(false);
       setChatList([...finalItemsArray]);
       setPaginationStatus(PaginationStatus.waiting);
     } else {
+      setIsFiltering(true);
       let tempArray = [];
-      oldData.forEach((element) => {
-        let userInfo = element.userInfo;
-        let latestMessages = element.latestMessages;
+      var anotherArray = [];
+      var itemOne = new Promise((resolve, reject) => {
+        oldData.forEach((element, index, array) => {
+          let userInfo = element.userInfo;
+          let filteredX = userInfo.filter(
+            (itemX) => itemX._id !== global.userId,
+          );
 
-        let filteredX = userInfo.filter((itemX) => itemX._id !== global.userId);
-
-        if (
-          filteredX.length > 0 &&
-          Helper.concatName(filteredX)
-            .toLocaleLowerCase()
-            .includes(searchText.toLocaleLowerCase())
-        ) {
-          tempArray.push(element);
-        } else if (
-          element.lastMessage
-            .toLocaleLowerCase()
-            .includes(searchText.toLocaleLowerCase())
-        ) {
-          tempArray.push(element);
-        } else if (inArray(searchText.toLocaleLowerCase(), latestMessages)) {
-          console.log('====================================');
-          console.log('236');
-          console.log('====================================');
-          tempArray.push(element);
-        }
+          if (
+            filteredX.length > 0 &&
+            Helper.concatName(filteredX[0])
+              .toLocaleLowerCase()
+              .includes(searchText.toLocaleLowerCase())
+          ) {
+            tempArray.push(element);
+          }
+          if (index === array.length - 1) {
+            resolve();
+          }
+        });
       });
 
-      if (tempArray.length > 0) {
+      itemOne.then(() => {
         setChatList([...tempArray]);
-        setPaginationStatus(PaginationStatus.waiting);
-      } else {
-        setChatList([]);
-        setPaginationStatus(PaginationStatus.waiting);
-      }
+        var itemTwo = new Promise((resolve, reject) => {
+          oldData.forEach((element, index, array) => {
+            let latestMessages = element.latestMessages;
+            let filteredX = latestMessages.filter((itemX) =>
+              itemX.message
+                .toLocaleLowerCase()
+                .includes(searchText.toLocaleLowerCase()),
+            );
+            if (filteredX.length > 0) {
+              filteredX.forEach((child) => {
+                let item = {
+                  type: '2',
+                  element: child,
+                  threadId: element._id,
+                };
+                anotherArray.push(item);
+              });
+            }
+            if (index === array.length - 1) {
+              resolve();
+            }
+          });
+        });
+
+        itemTwo.then(() => {
+          setMessages([...anotherArray]);
+          setPaginationStatus(PaginationStatus.waiting);
+        });
+      });
+
+      // if (tempArray.length > 0) {
+      //   setChatList([...tempArray]);
+      //   setPaginationStatus(PaginationStatus.waiting);
+      // } else {
+      //   setChatList([]);
+      //   setPaginationStatus(PaginationStatus.waiting);
+      // }
     }
   };
 
@@ -306,7 +372,7 @@ const ChatUserList = ({navigation}) => {
         wantBlock ? 'Block User' : 'Unblock User',
         `Are you sure you want to ${
           wantBlock ? 'Block' : 'Unblock'
-        } ${Helper.concatName(opponentUser)}?`,
+        } ${Helper.capitalize(Helper.concatName(opponentUser))}?`,
         [
           {
             text: 'Cancel',
@@ -379,7 +445,7 @@ const ChatUserList = ({navigation}) => {
     return false;
   };
 
-  const renderItem = ({index, item}) => {
+  const showItem = (item, index) => {
     let itemImage = '';
     let headerTitle = APP_NAME;
     let subHeader = '';
@@ -429,13 +495,18 @@ const ChatUserList = ({navigation}) => {
       <TouchableOpacity
         activeOpacity={0.9}
         onPress={() => {
-          let payload = {
-            challenger: challengerUser,
-            opponent: opponentUser || {},
-            chatDetail: item,
-          };
-          //navigation.navigate('ChatScreen', payload);
-          navigation.replace('ChatScreen', payload);
+          if (challengerUser.chatEnabled) {
+            let payload = {
+              challenger: challengerUser,
+              opponent: opponentUser || {},
+              chatDetail: item,
+              threadId: item._id,
+            };
+            navigation.navigate('ChatScreen', payload);
+            //navigation.replace('ChatScreen', payload);
+          } else {
+            Alert.alert('Chat Disabled', 'You disabled chat from settings.');
+          }
         }}
         onLongPress={() => {
           if (
@@ -544,6 +615,7 @@ const ChatUserList = ({navigation}) => {
                 item.lastMessage !== null &&
                 item.lastMessage !== '' ? (
                   <Text
+                    numberOfLines={2}
                     style={[
                       g.fs12,
                       g.FHNR,
@@ -606,6 +678,63 @@ const ChatUserList = ({navigation}) => {
     );
   };
 
+  const renderItem = ({index, item}) => {
+    return showItem(item, index);
+  };
+
+  const renderFilterItem = (item, index) => {
+    return (
+      <TouchableOpacity
+        key={index}
+        onPress={() => {
+          if (challengerUser.chatEnabled) {
+            let payload = {
+              threadId: item.threadId,
+            };
+            //navigation.replace('ChatScreen', payload);
+            navigation.navigate('ChatScreen', payload);
+          } else {
+            Alert.alert('Chat Disabled', 'You disabled chat from settings.');
+          }
+        }}>
+        <View
+          style={[
+            g.mb10,
+            {
+              paddingHorizontal: scale(6),
+              paddingTop: scale(8),
+              paddingBottom: scale(8),
+              borderBottomWidth: 0.5,
+              borderBottomColor: '#cccccc',
+            },
+          ]}>
+          <Text
+            style={[
+              g.fs13,
+              g.FHNB,
+              g.colorBlue,
+              GlobalInclude.AppStyle.transform,
+              g.mb5,
+            ]}>
+            {item.element.userName}
+          </Text>
+          <Highlighter
+            highlightStyle={{backgroundColor: 'yellow'}}
+            searchWords={[filterQuery]}
+            textToHighlight={item.element.message}
+            style={[
+              g.fs12,
+              g.FHNR,
+              g.colorBlack,
+              g.txtCenterVertical,
+              g.textJustify,
+            ]}
+          />
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   const userOptions = () => {
     return (
       <OptionsSheet
@@ -624,9 +753,16 @@ const ChatUserList = ({navigation}) => {
             9,
             () => {
               refOptions.current.close();
-              setTimeout(() => {
-                navigation.navigate('StartChatWith');
-              }, 220);
+              if (challengerUser.chatEnabled) {
+                setTimeout(() => {
+                  navigation.navigate('StartChatWith');
+                }, 220);
+              } else {
+                Alert.alert(
+                  'Chat Disabled',
+                  'You disabled chat from settings.',
+                );
+              }
             },
           )}
 
@@ -749,7 +885,14 @@ const ChatUserList = ({navigation}) => {
           }
         }}
         customDelegate={() => {
-          setUserLastSeen(false, new Date().getTime(), () => {});
+          setUserLastSeen(false, new Date().getTime(), () => {
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{name: 'Dashboard'}],
+              }),
+            );
+          });
         }}
       />
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
@@ -775,19 +918,66 @@ const ChatUserList = ({navigation}) => {
                   onFilterPress={() => {}}
                   hideFilter={true}
                 />
-                <FlatList
-                  showsVerticalScrollIndicator={false}
-                  extraData={chatList}
-                  data={chatList}
-                  renderItem={renderItem}
-                  keyExtractor={(item, index) => index.toString()}
-                  onEndReachedThreshold={0.1}
-                  ListEmptyComponent={renderNoDataComponent}
-                  contentContainerStyle={{
-                    paddingBottom: scale(70),
-                    paddingTop: scale(10),
-                  }}
-                />
+                {!isFiltering ? (
+                  <FlatList
+                    showsVerticalScrollIndicator={false}
+                    extraData={chatList}
+                    data={chatList}
+                    renderItem={renderItem}
+                    keyExtractor={(item, index) => index.toString()}
+                    onEndReachedThreshold={0.1}
+                    ListEmptyComponent={renderNoDataComponent}
+                    contentContainerStyle={{
+                      paddingBottom: scale(70),
+                      paddingTop: scale(10),
+                    }}
+                  />
+                ) : (
+                  <View>
+                    {chatList.length === 0 && messages.length === 0 ? (
+                      renderNoDataComponent()
+                    ) : (
+                      <View>
+                        <ScrollView
+                          showsVerticalScrollIndicator={false}
+                          contentContainerStyle={{flexGrow: 1}}>
+                          {chatList.length > 0 && (
+                            <View>
+                              <Text
+                                style={[
+                                  g.fs20,
+                                  g.FHNB,
+                                  g.colorBlue,
+                                  GlobalInclude.AppStyle.transform,
+                                ]}>
+                                Chats
+                              </Text>
+                              {chatList.map((item, index) => {
+                                return showItem(item, index);
+                              })}
+                            </View>
+                          )}
+                          {messages.length > 0 && (
+                            <View>
+                              <Text
+                                style={[
+                                  g.fs20,
+                                  g.FHNB,
+                                  g.colorBlue,
+                                  GlobalInclude.AppStyle.transform,
+                                ]}>
+                                Messages
+                              </Text>
+                              {messages.map((item, index) => {
+                                return renderFilterItem(item, index);
+                              })}
+                            </View>
+                          )}
+                        </ScrollView>
+                      </View>
+                    )}
+                  </View>
+                )}
               </View>
             )}
           </View>
@@ -800,9 +990,16 @@ const ChatUserList = ({navigation}) => {
           <TouchableOpacity
             activeOpacity={1}
             onPress={() => {
-              setTimeout(() => {
-                navigation.navigate('StartChatWith');
-              }, 220);
+              if (challengerUser.chatEnabled) {
+                setTimeout(() => {
+                  navigation.navigate('StartChatWith');
+                }, 220);
+              } else {
+                Alert.alert(
+                  'Chat Disabled',
+                  'You disabled chat from settings.',
+                );
+              }
             }}
             style={[grid.alignItems, grid.justifyContentCenter]}>
             <GlobalInclude.BaseIcon

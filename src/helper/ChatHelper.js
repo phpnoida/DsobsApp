@@ -1,5 +1,6 @@
 import {Platform} from 'react-native';
 import firestore from '@react-native-firebase/firestore';
+import database from '@react-native-firebase/database';
 import moment from 'moment';
 import _ from 'lodash';
 import axios from 'axios';
@@ -9,6 +10,7 @@ import {PUSH_KEY} from '../../config';
 const usersCollection = firestore().collection('Users');
 const chatCollection = firestore().collection('Chats');
 const messageCollection = firestore().collection('Messages');
+
 
 export const getChatId = () => {
   return chatCollection.doc().id;
@@ -40,6 +42,7 @@ export const createSingleChat = (opponentUser, lastMessage, callback) => {
   detail.batch = global.userDetails.batch;
   detail.firstName = global.userDetails.firstName;
   detail.profession = global.userDetails.profession;
+  detail.prefix = global.userDetails.prefix;
   detail.isOnline = true;
   users.push(detail);
 
@@ -52,6 +55,7 @@ export const createSingleChat = (opponentUser, lastMessage, callback) => {
   detail.batch = opponentUser.batch;
   detail.firstName = opponentUser.firstName;
   detail.profession = opponentUser.profession;
+  detail.prefix = opponentUser.prefix;
   //detail.isOnline = opponentUser.isOnline;
   detail.isOnline = false;
 
@@ -278,6 +282,13 @@ export const addUser = async (userId, opponentUser, callback) => {
  * @param {*} lastseen
  * Set Last Seen
  */
+export const setLatestUnread = (status, userId, callback) => {
+  let chatObject = {
+    isLatestMessages: status,
+  };
+  updateUserObject(chatObject, userId, callback);
+};
+
 export const setUserLastSeen = (isOnline, lastseen, callback) => {
   let chatObject = {
     lastseen: lastseen,
@@ -392,7 +403,7 @@ export function isSameUser(currentMessage = {}, diffMessage = {}) {
 /**
  * Push notification
  */
-export const sendPushNotification = async (opponentUser, message) => {
+export const sendPushNotification = async (opponentUser, message, threadId) => {
   const result = await checkUserExist(opponentUser._id);
 
   if (result !== undefined && result !== null) {
@@ -407,9 +418,9 @@ export const sendPushNotification = async (opponentUser, message) => {
     let platform = result.platform;
     let userId = result._id;
     let topic = `/topics/fcm-${userId}`;
-    let fullname = Helpers.concatName(result);
+    let fullname = Helpers.concatName(global.userDetails);
 
-    let title = `Message from :${fullname}`;
+    let title = fullname;
 
     let data = {
       title: title,
@@ -418,6 +429,7 @@ export const sendPushNotification = async (opponentUser, message) => {
       extra: '',
       linkUrl: '',
       icon: '',
+      threadId: threadId,
     };
 
     // 1-send notification on all new post 2-twice a day 3-one a day 4-every hour 5-every two hour
@@ -526,9 +538,9 @@ export const executePushNotification = (to, platform, title, message, data) => {
 
   notificationPayload = JSON.stringify(notificationPayload);
 
-  console.log('====================================');
-  console.log('final Message: ' + notificationPayload);
-  console.log('====================================');
+  // console.log('====================================');
+  // console.log('final Message: ' + notificationPayload);
+  // console.log('====================================');
 
   var config = {
     method: 'post',

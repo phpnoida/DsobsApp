@@ -131,7 +131,9 @@ const YoutubeView = (props) => {
           ) : (
             <TouchableOpacity
               onPress={() => {
-                playYoutubeVideo();
+                if (youtubeId !== undefined && youtubeId !== null) {
+                  playYoutubeVideo();
+                }
               }}
               activeOpacity={1}>
               {thumbnail !== undefined &&
@@ -164,7 +166,9 @@ const YoutubeView = (props) => {
                       }>
                       <TouchableOpacity
                         onPress={() => {
-                          playYoutubeVideo();
+                          if (youtubeId !== undefined && youtubeId !== null) {
+                            playYoutubeVideo();
+                          }
                         }}
                         activeOpacity={1}>
                         <GlobalInclude.BaseIcon

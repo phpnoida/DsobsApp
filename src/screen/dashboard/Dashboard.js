@@ -33,6 +33,9 @@ import {clearState} from '../../reducer/NotificationReducer';
 import messaging from '@react-native-firebase/messaging';
 import {IconType} from '../../helper/Constants';
 import {setUserLastSeen, addUser} from '../../helper/ChatHelper';
+import {useDocumentDataOnce} from 'react-firebase-hooks/firestore';
+import firestore from '@react-native-firebase/firestore';
+
 let deviceHeight = Dimensions.get('screen').height;
 let deviceWidth = Dimensions.get('screen').width;
 let bottomSheet = null;
@@ -66,6 +69,12 @@ const Dashboard = ({props, navigation}) => {
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [showPopNotification, setShowPopNotification] = useState(false);
   const [notificationList, setNotificationList] = useState([]);
+  const [userData, loading, error] = useDocumentDataOnce(
+    firestore().collection('Users').doc(global.userId),
+    {
+      snapshotListenOptions: {includeMetadataChanges: true},
+    },
+  );
 
   const dispatch = useDispatch();
 
@@ -178,8 +187,6 @@ const Dashboard = ({props, navigation}) => {
   };
 
   const validatePushNotification = () => {
-    console.log('global.isNotificationTap', global.isNotificationTap);
-    console.log('global.notification', global.notification);
     dispatch(clearState());
     if (global.notification !== undefined && global.notification !== null) {
       let data = global.notification.data;
@@ -271,6 +278,20 @@ const Dashboard = ({props, navigation}) => {
           });
         }
 
+        break;
+      case 1002:
+        if (
+          data.threadId !== undefined &&
+          data.threadId !== null &&
+          data.threadId !== ''
+        ) {
+          setUserLastSeen(true, new Date().getTime(), () => {
+            let payload = {
+              threadId: data.threadId,
+            };
+            navigation.navigate('ChatScreen', payload);
+          });
+        }
         break;
       default:
         break;
@@ -447,6 +468,22 @@ const Dashboard = ({props, navigation}) => {
                 style={styles.headIcon}
                 resizeMode={'contain'}
               />
+
+              {userData &&
+                userData.isLatestMessages !== undefined &&
+                userData.isLatestMessages && (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      height: scale(10),
+                      width: scale(10),
+                      borderRadius: scale(30),
+                      backgroundColor: 'green',
+                      top: 9,
+                      right: 9,
+                    }}
+                  />
+                )}
             </TouchableOpacity>
             <View style={styles.headerIconSpacer} />
             <TouchableOpacity
