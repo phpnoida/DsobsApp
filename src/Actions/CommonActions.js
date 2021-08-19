@@ -81,8 +81,6 @@ export function sendPresenceStatus(callback, errCallback) {
   }
   let requestPath = `${SERVER_PATH}utils/users/online?deviceType=${deviceType}&deviceModelNumber=${modelNumber}`;
 
-  console.log('requestPath', requestPath);
-
   let object = {
     platform: Platform.OS,
   };

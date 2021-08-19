@@ -230,7 +230,7 @@ const ChatUserList = ({navigation}) => {
         subscriber();
       }
       if (backHandler !== undefined && backHandler !== null) {
-        backHandler();
+        backHandler.remove();
       }
     };
   }, [navigation]);
@@ -481,14 +481,19 @@ const ChatUserList = ({navigation}) => {
     }
 
     let mediaIcon = null;
+    let mediaIconType = null;
     if (item.lastMessageType === 2) {
-      mediaIcon = 'file-photo-o';
+      mediaIcon = 'camera';
+      mediaIconType = 'feather';
     } else if (item.lastMessageType === 3) {
-      mediaIcon = 'file-movie-o';
+      mediaIcon = 'video';
+      mediaIconType = 'feather';
     } else if (item.lastMessageType === 4) {
-      mediaIcon = 'file-sound-o';
+      mediaIcon = 'audiotrack';
+      mediaIconType = 'material-icon';
     } else if (item.lastMessageType === 5) {
       mediaIcon = 'file-pdf-o';
+      mediaIconType = 'font-awesome';
     }
 
     return (
@@ -502,10 +507,13 @@ const ChatUserList = ({navigation}) => {
               chatDetail: item,
               threadId: item._id,
             };
-            navigation.navigate('ChatScreen', payload);
-            //navigation.replace('ChatScreen', payload);
+            //navigation.navigate('ChatScreen', payload);
+            navigation.replace('ChatScreen', payload);
           } else {
-            Alert.alert('Chat Disabled', 'You disabled chat from settings.');
+            Alert.alert(
+              'Chat Disabled',
+              'Your chat has been disabled from settings.You can no longer send and receive messages.',
+            );
           }
         }}
         onLongPress={() => {
@@ -603,11 +611,11 @@ const ChatUserList = ({navigation}) => {
                 {mediaIcon !== null && (
                   <View style={[g.mr5]}>
                     <GlobalInclude.BaseIcon
-                      containerStyle={{height: scale(14), width: scale(14)}}
-                      iconColor={GlobalInclude.Color.ColorPrimary}
+                      containerStyle={{height: scale(16), width: scale(16)}}
+                      iconColor={'#A9A9A9'}
                       iconName={mediaIcon}
                       iconSize={scale(14)}
-                      iconType={IconType[4]}
+                      iconType={mediaIconType}
                     />
                   </View>
                 )}
@@ -694,7 +702,10 @@ const ChatUserList = ({navigation}) => {
             //navigation.replace('ChatScreen', payload);
             navigation.navigate('ChatScreen', payload);
           } else {
-            Alert.alert('Chat Disabled', 'You disabled chat from settings.');
+            Alert.alert(
+              'Chat Disabled',
+              'Your chat has been disabled from settings.You can no longer send and receive messages.',
+            );
           }
         }}>
         <View
@@ -760,7 +771,7 @@ const ChatUserList = ({navigation}) => {
               } else {
                 Alert.alert(
                   'Chat Disabled',
-                  'You disabled chat from settings.',
+                  'Your chat has been disabled from settings.You can no longer send and receive messages.',
                 );
               }
             },
@@ -894,6 +905,11 @@ const ChatUserList = ({navigation}) => {
             );
           });
         }}
+        openNewPage={(page) => {
+          setUserLastSeen(false, new Date().getTime(), () => {
+            navigation.navigate(page);
+          });
+        }}
       />
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.fill}>
@@ -982,7 +998,7 @@ const ChatUserList = ({navigation}) => {
             )}
           </View>
         </View>
-        {showProgess(paginationStatus === PaginationStatus.fetching)}
+        {/* {showProgess(paginationStatus === PaginationStatus.fetching)} */}
         {userOptions()}
         {postOptions()}
 
@@ -997,7 +1013,7 @@ const ChatUserList = ({navigation}) => {
               } else {
                 Alert.alert(
                   'Chat Disabled',
-                  'You disabled chat from settings.',
+                  'Your chat has been disabled from settings.You can no longer send and receive messages.',
                 );
               }
             }}

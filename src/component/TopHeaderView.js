@@ -40,6 +40,7 @@ const TopHeaderView = ({
   customIcon,
   customIconPress,
   customDelegate,
+  openNewPage,
 }) => {
   const [openDropDown, setOpenDropDown] = useState(false);
   const [selectedTab] = useState(menuOptions[index].label);
@@ -81,10 +82,14 @@ const TopHeaderView = ({
                       setOpenDropDown(false);
                       if (item.screen !== '') {
                         if (index !== item.value) {
-                          if (customDelegate) {
-                            customDelegate(); //this will help to take callback from where we call header
+                          if (openNewPage) {
+                            openNewPage(item.screen);
+                          } else {
+                            navigation.navigate(item.screen);
                           }
-                          navigation.navigate(item.screen);
+                          // if (customDelegate) {
+                          //   customDelegate(); //this will help to take callback from where we call header
+                          // }
                         }
                       }
                     }}>

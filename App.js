@@ -89,10 +89,17 @@ const App = ({navigation}) => {
       });
     }
 
+    console.log('App.js-92');
     const onMessage = messaging().onMessage(async (remoteMessage) => {
       global.isNotificationTap = true;
       console.log('83');
-      handleNotification('messaging().onMessage', remoteMessage);
+      if (Platform.OS === 'android') {
+        let duplicateClone = remoteMessage;
+        delete duplicateClone.notification;
+        handleNotification('messaging().onMessage', duplicateClone);
+      } else {
+        handleNotification('messaging().onMessage', remoteMessage);
+      }
     });
 
     messaging().onNotificationOpenedApp((remoteMessage) => {
@@ -123,7 +130,7 @@ const App = ({navigation}) => {
 
     return () => {
       unsubscribe();
-      onMessage;
+      onMessage();
       AppState.removeEventListener('change', _handleAppStateChange);
     };
   }, []);
@@ -241,21 +248,7 @@ const App = ({navigation}) => {
   }
 
   const handleNotification = (from, data) => {
-    //console.log('currentState', currentState);
-
     global.notification = data;
-    /**********************
- * if (routeNameRef.current !== undefined && routeNameRef.current !== null) {
-      if (
-        routeNameRef.current === 'ChatUserList' ||
-        routeNameRef.current === 'ChatScreen'
-      ) {
-        global.notification = null;
-        global.isNotificationTap = false;
-      }
-    } else
- */
-
     if (data !== undefined && data !== null) {
       let eventType = data.data.eventType.toString();
       if (eventType && eventType !== null && eventType !== '') {
@@ -265,9 +258,6 @@ const App = ({navigation}) => {
         }
       }
     }
-    console.log('====================================');
-    console.log('Notifciation-Current Screen', data, routeNameRef.current);
-    console.log('====================================');
     Helper.presentNotification(from, data);
   };
 
@@ -297,6 +287,7 @@ const App = ({navigation}) => {
             if (previousRouteName !== currentRouteName) {
               global.currentScreen = currentRouteName;
               if (currentRouteName === 'ChatScreen') {
+                console.log('true');
                 global.inChatScreen = true;
               } else {
                 console.log('false');
