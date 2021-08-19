@@ -1,6 +1,7 @@
 import {Platform} from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import database from '@react-native-firebase/database';
+import messaging from '@react-native-firebase/messaging';
 import moment from 'moment';
 import _ from 'lodash';
 import axios from 'axios';
@@ -10,7 +11,6 @@ import {PUSH_KEY} from '../../config';
 const usersCollection = firestore().collection('Users');
 const chatCollection = firestore().collection('Chats');
 const messageCollection = firestore().collection('Messages');
-
 
 export const getChatId = () => {
   return chatCollection.doc().id;
@@ -327,10 +327,10 @@ export const addUserToBlockList = async (opponentId, callback) => {
     } else {
       blockedUser.push(opponentId);
     }
-
     let chatObject = {
       blockedUser: blockedUser,
     };
+
     usersCollection
       .doc(global.userId)
       .update(chatObject)
@@ -347,17 +347,16 @@ export const updateOpponentBlocking = async (opponentId, callback) => {
   const result = await checkUserExist(opponentId);
 
   if (result !== undefined && result !== null) {
-    let blockedUser = result.blockedUser;
-
-    const index = blockedUser.indexOf(global.userId);
+    let blockedByArray = result.blockedBy;
+    const index = blockedByArray.indexOf(global.userId);
     if (index > -1) {
-      blockedUser.splice(index, 1);
+      blockedByArray.splice(index, 1);
     } else {
-      blockedUser.push(global.userId);
+      blockedByArray.push(global.userId);
     }
 
     let chatObject = {
-      blockedBy: blockedUser,
+      blockedBy: blockedByArray,
     };
     usersCollection
       .doc(opponentId)
@@ -418,7 +417,7 @@ export const sendPushNotification = async (opponentUser, message, threadId) => {
     let platform = result.platform;
     let userId = result._id;
     let topic = `/topics/fcm-${userId}`;
-    let fullname = Helpers.concatName(global.userDetails);
+    let fullname = Helpers.capitalize(Helpers.concatName(global.userDetails));
 
     let title = fullname;
 
@@ -520,10 +519,15 @@ export const sendPushNotification = async (opponentUser, message, threadId) => {
   }
 };
 
-export const executePushNotification = (to, platform, title, message, data) => {
+export const executePushNotification = async (
+  to,
+  platform,
+  title,
+  message,
+  data,
+) => {
   var notificationPayload = {
     to: to,
-    priority: 'high',
     content_available: true,
     mutable_content: true,
     data: data,
@@ -534,6 +538,7 @@ export const executePushNotification = (to, platform, title, message, data) => {
       body: message,
       title: title,
     };
+    notificationPayload.priority = 'high';
   }
 
   notificationPayload = JSON.stringify(notificationPayload);
@@ -551,6 +556,7 @@ export const executePushNotification = (to, platform, title, message, data) => {
     },
     data: notificationPayload,
   };
+
   axios(config)
     .then(function (response) {
       console.log(JSON.stringify(response.data));

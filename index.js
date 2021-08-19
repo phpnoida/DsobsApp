@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import {AppRegistry, LogBox} from 'react-native';
+import {AppRegistry, LogBox, Platform} from 'react-native';
 import AppWrapper from './AppWrapper';
 //import AppWrapper from './src/ImageDemo';
 import messaging from '@react-native-firebase/messaging';
@@ -16,10 +16,23 @@ messaging().setBackgroundMessageHandler(async (remoteMessage) => {
   if (remoteMessage) {
     global.notification = remoteMessage;
     global.isNotificationTap = true;
-    console.log('====================================');
-    console.log('remoteMessage', remoteMessage);
-    console.log('====================================');
-    Helper.presentNotification('background-16', remoteMessage);
+    if (remoteMessage !== undefined && remoteMessage !== null) {
+      let eventType = remoteMessage.data.eventType.toString();
+      if (eventType && eventType !== null && eventType !== '') {
+        if (parseInt(eventType, 10) === 1002) {
+          global.notification = null;
+          global.isNotificationTap = false;
+        }
+      }
+    }
+
+    if (Platform.OS === 'android') {
+      let duplicateClone = remoteMessage;
+      delete duplicateClone.notification;
+      Helper.presentNotification('background-16-android', duplicateClone);
+    } else {
+      Helper.presentNotification('background-16', remoteMessage);
+    }
   }
 });
 

@@ -191,7 +191,7 @@ const Helpers = {
       return this.stripParameters(str.match(attrreg)[1]);
     }
 
-     return undefined;
+    return undefined;
   },
   presentNotification: function (from, notification) {
     console.log('from', from);
@@ -226,16 +226,22 @@ const Helpers = {
         notificationObj.largeIcon = 'ic_launcher';
       }
       PushNotification.channelExists(APP_NAME, (status) => {
-        console.log('status', status);
         if (status) {
           PushNotification.presentLocalNotification(notificationObj);
         } else {
         }
       });
     } else if (Platform.OS === 'ios') {
+      // let details = {
+      //   alertBody: body,
+      //   alertTitle: title,
+      //   alertAction: 'view',
+      //   userInfo: notification.data,
+      // };
       let details = {
-        alertBody: body,
-        alertTitle: title,
+        id: new Date().getTime().toString(),
+        body: body,
+        title: title,
         alertAction: 'view',
         userInfo: notification.data,
       };
@@ -243,7 +249,7 @@ const Helpers = {
       console.log('isNotificationTap', global.isNotificationTap);
 
       if (global.nextAppState === 'active' && !global.isNotificationTap) {
-        PushNotificationIOS.presentLocalNotification(details);
+        PushNotificationIOS.addNotificationRequest(details);
       }
     }
     return Promise.resolve();

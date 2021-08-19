@@ -46,16 +46,17 @@ class ChatItem extends PureComponent {
         iconColor = '#323232';
 
       if (currentMessage.isSent) {
-        tickIcon = 'md-checkmark-outline';
+        tickIcon = 'ios-checkmark-sharp';
         iconColor = '#cccccc';
       }
       if (currentMessage.isDelivered) {
-        tickIcon = 'md-checkmark-done-outline';
+        tickIcon = 'checkmark-done-sharp';
         iconColor = '#cccccc';
       }
       if (currentMessage.isRead) {
-        tickIcon = 'md-checkmark-done-outline';
-        iconColor = GlobalInclude.Color.ColorPrimary;
+        tickIcon = 'checkmark-done-sharp';
+        //iconColor = GlobalInclude.Color.ColorPrimary;
+        iconColor = '#34b7f1';
       }
       return (
         <View style={styles.tickView}>
@@ -146,12 +147,17 @@ class ChatItem extends PureComponent {
   }
   renderAudioComponent(source) {
     return (
-      <View style={[styles.youtubeView, grid.alignItems]}>
+      <View
+        style={[
+          {aspectRatio: 1 / 1, height: scale(90)},
+          grid.alignItems,
+          grid.justifyContentCenter,
+        ]}>
         <GlobalInclude.BaseIcon
-          containerStyle={{height: scale(64), width: scale(64)}}
+          containerStyle={{height: scale(48), width: scale(48)}}
           iconColor={'#E61A2D'}
           iconName={'file-audio-o'}
-          iconSize={scale(64)}
+          iconSize={scale(38)}
           iconType={IconType[4]}
         />
       </View>

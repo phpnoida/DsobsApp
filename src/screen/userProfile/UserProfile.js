@@ -69,7 +69,7 @@ const UserProfile = ({route, navigation}) => {
   const [step, setStep] = useState(1);
   const [profileData, setProfileData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [chatObject, setChatObject] = useState(null);
+  const [userObject, setUserObject] = useState(null);
 
   useEffect(() => {
     if (route !== null) {
@@ -154,42 +154,46 @@ const UserProfile = ({route, navigation}) => {
     getUserProfileFromDirectory(
       userId,
       (response) => {
-        checkUserExist(userId).then((result) => {
-          if (result !== undefined && result !== null) {
-            setChatObject(result);
-          }
-
-          setIsLoading(false);
-          if (response && response !== null) {
-            if (
-              response.data &&
-              response.data !== undefined &&
-              response.data !== null
-            ) {
-              let data = response.data;
-
-              if (data.status) {
-                let profile =
-                  Array.isArray(data.data) && data.data.length > 0
-                    ? data.data[0]
-                    : null;
-
-               // console.log('otherProfile', profile);
-
-                profileSheetMenu.splice(0, 1);
-                profileSheetMenu.splice(3, 1);
-
-                manageProfile(profile);
-              }
-            }
-          }
-        });
+        checkUserChat(response);
       },
       (error) => {
         setIsLoading(false);
         console.log('error', error);
       },
     );
+  };
+
+  const checkUserChat = async (profileResponse) => {
+    checkUserExist(userId).then((result) => {
+      if (result !== undefined && result !== null) {
+        setUserObject(result);
+      }
+
+      if (profileResponse && profileResponse !== null) {
+        if (
+          profileResponse.data &&
+          profileResponse.data !== undefined &&
+          profileResponse.data !== null
+        ) {
+          let data = profileResponse.data;
+
+          if (data.status) {
+            let profile =
+              Array.isArray(data.data) && data.data.length > 0
+                ? data.data[0]
+                : null;
+
+            // console.log('otherProfile', profile);
+
+            profileSheetMenu.splice(0, 1);
+            profileSheetMenu.splice(3, 1);
+
+            manageProfile(profile);
+          }
+        }
+      }
+      setIsLoading(false);
+    });
   };
 
   const manageProfile = (profile) => {
@@ -366,7 +370,7 @@ const UserProfile = ({route, navigation}) => {
 
                     <UserProfileHeader
                       navigation={navigation}
-                      chatObject={chatObject}
+                      userObject={userObject}
                       challengerUser={challengerUser}
                       profileImg={profileData.profileImg}
                       firstName={profileData.firstName}

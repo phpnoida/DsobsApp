@@ -1,7 +1,6 @@
 import React from 'react';
 import {Dimensions, Platform} from 'react-native';
 import {scale} from '../theme/Scalling';
-import GlobalInclude from '../globalInclude/Globalinclude';
 import Color from '../theme/Colors';
 
 const deviceHeight = Dimensions.get('window').height;

@@ -23,21 +23,18 @@ import UploadMedia from '../../component/UploadMedia';
 import ProgressImage from '../../component/ProgresImage';
 import DocViewer from '../../component/DocViewer';
 import AudioPlayer from '../../component/AudioPlayer';
+import ImageViewer from '../../component/ImageViewer';
 import {showMediaType, showImageThumb} from './ChatDelegates';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {getStatusBarHeight} from 'react-native-iphone-x-helper';
-import {IconType, APP_NAME} from '../../helper/Constants';
+import {IconType} from '../../helper/Constants';
 import ThreeDotsLoader from '../../helper/ThreeDotsLoader';
 import ChatItem from './ChatItem';
 import Helper from '../../helper/Helper';
 import EmojiSelector from 'react-native-emoji-selector';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
 import * as Animatable from 'react-native-animatable';
-import {
-  StackActions,
-  CommonActions,
-  useNavigation,
-} from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import _ from 'lodash';
 
 // Firestore
@@ -47,14 +44,12 @@ import {useCollection} from 'react-firebase-hooks/firestore';
 
 import {
   createSingleChat,
-  checkChatExist,
   updateChatObject,
   getChatObject,
   setLatestUnread,
   sendPushNotification,
   checkUserExist,
   addUserToBlockList,
-  setUserLastSeen,
 } from '../../helper/ChatHelper';
 
 const {height} = Dimensions.get('window');
@@ -63,7 +58,7 @@ let selectedFontSize = 1;
 let challenger = null,
   opponent = null,
   isGroup = null;
-let isChatExist = null;
+var isChatExist = null;
 let newItems = false;
 let lastPickedMsgId = '';
 let backHandler = null;
@@ -83,6 +78,7 @@ let previousStatusOfTyping = false;
 let wantsUpdateChilds = [];
 let pendingChilds = [];
 let lastOnlineStatus = false;
+let imageArray = [];
 
 const scrollToBottomOffset = 200;
 const usersCollection = firestore().collection('Users');
@@ -95,6 +91,7 @@ const ChatScreen = ({route}) => {
   const animRef = useRef();
   const chatObjRef = useRef();
   const chatRef = useRef();
+
   const navigation = useNavigation();
 
   const transform =
@@ -126,6 +123,7 @@ const ChatScreen = ({route}) => {
   const [emojiIconWidth, setEmojiIconWidth] = useState(scale(40));
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [bottomMessages, setBottomMessages] = useState(0);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   const [opponentSnapshot] = useCollection(
     opponentId !== '' ? usersCollection.where('_id', '==', opponentId) : null,
@@ -142,6 +140,8 @@ const ChatScreen = ({route}) => {
    */
 
   useEffect(() => {
+    resetOldData();
+
     if (
       route !== undefined &&
       route.params !== undefined &&
@@ -198,38 +198,39 @@ const ChatScreen = ({route}) => {
               ? response.isGroup
               : null;
 
-          checkUserExist(global.userId).then((result) => {
-            if (result !== undefined && result !== null) {
-              let blockedList = result.blockedUser;
+          checkUserExist(global.userId)
+            .then((result) => {
+              if (result !== undefined && result !== null) {
+                let blockedList = result.blockedUser;
+                isChatExist.userInfo.forEach((element) => {
+                  if (element._id === global.userId) {
+                    challenger = element;
+                  } else {
+                    opponent = element;
 
-              isChatExist.userInfo.forEach((element) => {
-                if (element._id === global.userId) {
-                  challenger = element;
-                } else {
-                  opponent = element;
+                    let inBlocked = blockedList.filter(
+                      (item) => item === element._id,
+                    );
 
-                  let inBlocked = blockedList.filter(
-                    (item) => item === element._id,
-                  );
+                    if (
+                      inBlocked !== undefined &&
+                      inBlocked !== null &&
+                      inBlocked.length > 0
+                    ) {
+                      setIsSenderBlocked(true);
+                    }
 
-                  if (
-                    inBlocked !== undefined &&
-                    inBlocked !== null &&
-                    inBlocked.length > 0
-                  ) {
-                    setIsSenderBlocked(true);
+                    setOpponentId(element._id);
+                    setIsOpponentOnline(element.isOnline);
+                    inMessageThread = element.isOnline;
+                    lastOnlineStatus = element.isOnline;
                   }
-
-                  setOpponentId(element._id);
-                  setIsOpponentOnline(element.isOnline);
-                  inMessageThread = element.isOnline;
-                  lastOnlineStatus = element.isOnline;
-                }
-              });
-            }
-          });
-
-          setMessageThreadId(threadId);
+                });
+              }
+            })
+            .finally(() => {
+              setMessageThreadId(threadId);
+            });
         });
       }
     });
@@ -254,15 +255,19 @@ const ChatScreen = ({route}) => {
       ) {
         let data = opponentSnapshot.docs[0].data();
 
-        console.log('global.currentScreen', global.currentScreen);
         if (data && data !== null && data !== undefined) {
           opponent = data;
 
-          setHeader(Helper.concatName(opponent) + ' - ' + opponent.batch);
+          setHeader(
+            Helper.capitalize(Helper.concatName(opponent)) +
+              ' - ' +
+              opponent.batch,
+          );
 
           if (data.isOnline !== lastOnlineStatus && data.isOnline) {
             refreshChatItems(false);
           }
+
           lastOnlineStatus = data.isOnline;
           setIsOpponentOnline(data.isOnline);
 
@@ -276,7 +281,9 @@ const ChatScreen = ({route}) => {
           setSubHeader(opponent.profession);
 
           if (!data.chatEnabled) {
-            blockMsg = `${data.firstName} has disabled chat.`;
+            blockMsg = `${Helper.capitalize(
+              Helper.concatName(data),
+            )} has disabled chat.`;
             setChatEnabled(false);
           } else {
             if (isSenderBlocked) {
@@ -291,7 +298,7 @@ const ChatScreen = ({route}) => {
         }
       }
     }
-  }, [opponentSnapshot, isSenderBlocked, refreshChatItems]);
+  }, [opponentSnapshot, isSenderBlocked, refreshChatItems, route]);
 
   useEffect(() => {
     if (chatObjectSnapshot !== undefined && chatObjectSnapshot !== null) {
@@ -301,9 +308,9 @@ const ChatScreen = ({route}) => {
         chatObjectSnapshot.docs.length > 0
       ) {
         let data = chatObjectSnapshot.docs[0].data();
-        console.log('310');
-
         if (data && data !== null && data !== undefined) {
+          isChatExist = data;
+
           latestMessageArray =
             data.latestMessages !== undefined && data.latestMessages !== null
               ? data.latestMessages
@@ -336,28 +343,20 @@ const ChatScreen = ({route}) => {
             isUserAvailable.length > 0
           ) {
             let lastOnline = isUserAvailable[0].isOnline;
-
             if (lastOnline !== inMessageThread && lastOnline) {
               refreshChatItems(true);
             }
             inMessageThread = isUserAvailable[0].isOnline;
-
-            //console.log('inMessageThread', inMessageThread);
           }
         }
       }
     }
-    // return () => {
-    //   setMessageThreadId(null);
-    // };
   }, [chatObjectSnapshot, refreshChatItems]);
 
   const refreshChatItems = useCallback(
     (isOnline) => {
-      console.log('219');
       if (pendingChilds.length > 0) {
         let cloneArray = _.cloneDeep(pendingChilds);
-        console.log('221');
         let isAnyChildFound = false;
         let oldData = messages;
 
@@ -386,22 +385,39 @@ const ChatScreen = ({route}) => {
             }
           }
         });
+
         if (isAnyChildFound) {
           if (oldData.length > 0) {
             setMessages([...oldData]);
           }
-          updateChatMessages(cloneArray, isOnline);
+          setTimeout(() => {
+            updateChatMessages(cloneArray, isOnline);
+          }, 200);
         } else {
-          let unreadCount = isChatExist.unreadCount;
-          unreadCount.forEach((element) => {
-            if (element.userId === global.userId) {
-              element.count = 0;
+          if (
+            isChatExist !== undefined &&
+            isChatExist !== null &&
+            inMessageThread
+          ) {
+            let isFound = false;
+            let unreadCount = isChatExist.unreadCount;
+            unreadCount.forEach((element) => {
+              if (element.userId === global.userId) {
+                if (element.count > 0) {
+                  isFound = true;
+                  element.count = 0;
+                }
+              }
+            });
+
+            if (isFound) {
+              const request = {
+                unreadCount: unreadCount,
+              };
+              console.log('427', isChatExist);
+              updateChatObject(threadId, request, () => {});
             }
-          });
-          const request = {
-            unreadCount: unreadCount,
-          };
-          updateChatObject(threadId, request, () => {});
+          }
         }
       }
     },
@@ -419,7 +435,6 @@ const ChatScreen = ({route}) => {
 
   /**Firebase All functions Hook**/
   useEffect(() => {
-    //console.log('messageThreadId', messageThreadId);
     if (
       messageThreadId === '' ||
       messageThreadId === null ||
@@ -454,6 +469,10 @@ const ChatScreen = ({route}) => {
           setMessages((previousMessages) =>
             append(previousMessages, child.val()),
           );
+        }
+        if (showScrollToBottom) {
+          bottomUnread = bottomUnread + 1;
+          setBottomMessages(bottomUnread);
         }
       }
     };
@@ -600,7 +619,6 @@ const ChatScreen = ({route}) => {
 
     const onChildChanged = (childChanged) => {
       if (childChanged && childChanged !== null && childChanged !== undefined) {
-        //console.log('childChanged', JSON.stringify(childChanged.val()));
         let nextMsg = JSON.parse(JSON.stringify(childChanged.val()));
         let msgUser = nextMsg.user;
         if (
@@ -652,51 +670,80 @@ const ChatScreen = ({route}) => {
   const sendUserTyping = (typing) => {
     if (previousStatusOfTyping !== typing) {
       previousStatusOfTyping = typing;
-      const request = {
-        isTyping: [
-          {userId: global.userId, status: typing},
-          {userId: opponent._id, status: false},
-        ],
-      };
-      updateChatObject(threadId, request, () => {});
+
+      if (isChatExist !== undefined && isChatExist !== null) {
+        let isTyping = isChatExist.isTyping;
+        if (isTyping !== undefined && isTyping !== null) {
+          let element = {userId: global.userId, status: typing};
+          isTyping[isTyping.findIndex((el) => el.userId === global.userId)] =
+            element;
+        }
+
+        const request = {
+          isTyping: isTyping,
+        };
+        updateChatObject(threadId, request, () => {});
+      }
     }
   };
 
   const offlineSelf = (status, callback) => {
-    if (isChatExist !== null && isChatExist !== undefined) {
-      let userInfo = isChatExist.userInfo;
-      let unreadCount = isChatExist.unreadCount;
-      let found = false;
-      if (userInfo !== undefined && userInfo !== null) {
-        for (let i = 0; i < userInfo.length; i++) {
-          const user = userInfo[i];
-          if (global.userId === user._id) {
-            user.isOnline = status;
-            found = true;
-            break;
+    if (threadId !== undefined && threadId !== null && threadId !== '') {
+      getChatObject(threadId, (response) => {
+        if (response && response !== null && response !== undefined) {
+          let userInfo = response.userInfo;
+          let unreadCount = response.unreadCount;
+          let isTyping = response.isTyping;
+          let found = false;
+          if (userInfo !== undefined && userInfo !== null) {
+            for (let i = 0; i < userInfo.length; i++) {
+              const user = userInfo[i];
+              if (global.userId === user._id) {
+                user.isOnline = status;
+                found = true;
+                break;
+              }
+            }
           }
+
+          if (isTyping !== undefined && isTyping !== null) {
+            let element = {userId: global.userId, status: false};
+            isTyping[isTyping.findIndex((el) => el.userId === global.userId)] =
+              element;
+          }
+
+          let request = {};
+          if (found) {
+            request = {
+              userInfo: userInfo,
+              isTyping: isTyping,
+            };
+          }
+          if (status) {
+            var isFound = false;
+            unreadCount.forEach((element) => {
+              if (element.userId === global.userId) {
+                if (element.count > 0) {
+                  isFound = true;
+                  element.count = 0;
+                }
+              }
+            });
+            if (isFound) {
+              request.unreadCount = unreadCount;
+            }
+          }
+          if (found) {
+            updateChatObject(threadId, request, () => {
+              callback(true);
+            });
+          } else {
+            callback(false);
+          }
+        } else {
+          callback(false);
         }
-      }
-
-      if (status) {
-        unreadCount.forEach((element) => {
-          if (element.userId === global.userId) {
-            element.count = 0;
-          }
-        });
-      }
-
-      if (found) {
-        const request = {
-          userInfo: userInfo,
-          unreadCount: unreadCount,
-        };
-        updateChatObject(threadId, request, () => {
-          callback(true);
-        });
-      } else {
-        callback(false);
-      }
+      });
     } else {
       callback(false);
     }
@@ -717,17 +764,28 @@ const ChatScreen = ({route}) => {
           if (clearArray) {
             wantsUpdateChilds = [];
             pendingChilds = [];
-
-            let unreadCount = isChatExist.unreadCount;
-            unreadCount.forEach((element) => {
-              if (element.userId === global.userId) {
-                element.count = 0;
-              }
-            });
-            const request = {
-              unreadCount: unreadCount,
-            };
-            updateChatObject(threadId, request, () => {});
+            if (inMessageThread) {
+              let foundData = false;
+              getChatObject(threadId, (response) => {
+                if (response && response !== null && response !== undefined) {
+                  let unreadCount = response.unreadCount;
+                  unreadCount.forEach((element) => {
+                    if (element.userId === global.userId) {
+                      if (element.count > 0) {
+                        element.count = 0;
+                        foundData = true;
+                      }
+                    }
+                  });
+                  if (foundData) {
+                    const request = {
+                      unreadCount: unreadCount,
+                    };
+                    updateChatObject(threadId, request, () => {});
+                  }
+                }
+              });
+            }
           }
         });
     }
@@ -838,27 +896,36 @@ const ChatScreen = ({route}) => {
   };
 
   const setLastMessage = (lastMsg, chatId, mediaType) => {
+    let isTyping = isChatExist.isTyping;
+    if (isTyping !== undefined && isTyping !== null) {
+      let element = {userId: global.userId, status: false};
+      isTyping[isTyping.findIndex((el) => el.userId === global.userId)] =
+        element;
+    } else {
+      isTyping = [
+        {userId: global.userId, status: false},
+        {userId: opponent._id, status: false},
+      ];
+    }
+
     const request = {
       lastMessage: lastMsg,
       lastMessageTime: new Date().getTime(),
       lastMessageType: mediaType,
-      isTyping: [
-        {userId: global.userId, status: false},
-        {userId: opponent._id, status: false},
-      ],
+      isTyping: isTyping,
     };
 
     if (mediaType === 1) {
       if (latestMessageArray.length > 99) {
         latestMessageArray.splice(0, 1);
         let item = {
-          userName: Helper.concatName(challenger),
+          userName: Helper.capitalize(Helper.concatName(challenger)),
           message: lastMsg,
         };
         latestMessageArray.push(item);
       } else {
         let item = {
-          userName: Helper.concatName(challenger),
+          userName: Helper.capitalize(Helper.concatName(challenger)),
           message: lastMsg,
         };
         latestMessageArray.push(item);
@@ -886,16 +953,13 @@ const ChatScreen = ({route}) => {
 
         let finalRequest = _.merge(request, requestObject);
 
+        console.log('916');
         updateChatObject(threadId, finalRequest, () => {});
       }
     });
   };
 
   const postMsg = (request) => {
-    console.log('====================================');
-    console.log('postMessage', request);
-    console.log('====================================');
-
     setIsSending(true);
     if (isChatExist === null) {
       generateSingleChat(request, (chatId) => {
@@ -986,7 +1050,8 @@ const ChatScreen = ({route}) => {
       media: media,
       user: getUserObject(),
       isRead: inMessageThread,
-      isDelivered: isOpponentOnline,
+      //isDelivered: isOpponentOnline,
+      isDelivered: true,
       isSent: true,
       replay: {},
       removedBy: [],
@@ -1058,7 +1123,10 @@ const ChatScreen = ({route}) => {
       blockedList !== ''
     ) {
       let isBlocked = blockedList.filter((user) => global.userId === user);
-      blockMsg = `${opponent.firstName} has blocked this chat.`;
+
+      blockMsg = `${Helper.capitalize(
+        Helper.concatName(opponent),
+      )} has blocked this chat.`;
       setChatEnabled(isBlocked.length === 0);
     } else if (
       blockedBy !== undefined &&
@@ -1066,42 +1134,21 @@ const ChatScreen = ({route}) => {
       blockedBy !== ''
     ) {
       let isBlocked = blockedBy.filter((user) => global.userId === user);
-      blockMsg = `${challenger.firstName} has blocked this chat.`;
+      blockMsg = `${Helper.capitalize(
+        Helper.concatName(challenger),
+      )} has blocked this chat.`;
       setChatEnabled(isBlocked.length === 0);
     }
   };
 
   const setUserLastSeenAndMakeOffline = useCallback(() => {
-    // setUserLastSeen(false, new Date().getTime(), () => {
-
-    // });
-
     offlineSelf(false, () => {
-      navigation.reset({
-        routes: [{name: 'ChatUserList'}],
-      });
-
-      //navigation.goBack();
-      //navigation.replace('ChatUserList');
-      //navigation.pop('ChatUserList');
-      //navigation.dispatch(popAction);
-      // setOpponentId(null);
-      // setMessageThreadId(null);
-      // navigation.dispatch(
-      //   ...CommonActions.reset({
-      //     index: 0,
-      //     routes: [{name: 'ChatUserList'}],
-      //   }),
-      // );
-
-      // setUserLastSeen(false, new Date().getTime(), () => {
-      //   navigation.dispatch(
-      //     CommonActions.reset({
-      //       index: 0,
-      //       routes: [{name: 'Dashboard'}, {name: 'ChatUserList'}],
-      //     }),
-      //   );
-      // });
+      resetOldData();
+      setTimeout(() => {
+        navigation.reset({
+          routes: [{name: 'Dashboard'}, {name: 'ChatUserList'}],
+        });
+      }, 200);
     });
   }, [navigation]);
 
@@ -1142,6 +1189,34 @@ const ChatScreen = ({route}) => {
 
   const keyExtractor = (item, index) => index;
 
+  const resetOldData = () => {
+    selectedFontSize = 1;
+    challenger = null;
+    opponent = null;
+    isGroup = null;
+    isChatExist = null;
+    newItems = false;
+    lastPickedMsgId = '';
+    backHandler = null;
+    isStickerShowing = false;
+    lastPickIndex = -1;
+    blockMsg = '';
+    inEditMode = false;
+    isOpponentMuted = false;
+    documentItem = '';
+    playAudio = '';
+    latestMessageArray = [];
+    bottomUnread = 0;
+    newMessageList = [];
+    inMessageThread = false;
+    threadId = '';
+    previousStatusOfTyping = false;
+    wantsUpdateChilds = [];
+    pendingChilds = [];
+    lastOnlineStatus = false;
+    imageArray = [];
+  };
+
   /**
    *
    * @CommonFunctions
@@ -1174,12 +1249,19 @@ const ChatScreen = ({route}) => {
         {...messageProps}
         onPress={() => {
           if (!item.delete) {
+            console.log(item.messageType);
             if (item.messageType === 5) {
               documentItem = item.media;
               setShowDocViewer(true);
             } else if (item.messageType === 4) {
               playAudio = item.media;
               setShowPlayer(!showPlayer);
+            } else if (item.messageType === 2) {
+              imageArray = [];
+              imageArray.push({
+                url: item.media,
+              });
+              setShowImageModal(true);
             }
           }
         }}
@@ -1293,13 +1375,14 @@ const ChatScreen = ({route}) => {
                   </View>
                   <View
                     style={{
+                      //backgroundColor: isOpponentOnline ? '#4CD663' : 'gray',
                       backgroundColor: isOpponentOnline ? 'green' : 'gray',
-                      height: scale(12),
-                      width: scale(12),
+                      height: scale(10),
+                      width: scale(10),
                       borderRadius: scale(100),
                       position: 'absolute',
-                      bottom: 3,
-                      right: -3,
+                      bottom: 0,
+                      right: -5,
                     }}
                   />
                 </View>
@@ -1923,6 +2006,14 @@ const ChatScreen = ({route}) => {
           mediaContent={playAudio}
           onClose={() => {
             setShowPlayer(false);
+          }}
+        />
+      )}
+      {showImageModal && (
+        <ImageViewer
+          imageViewerArray={imageArray}
+          onClose={() => {
+            setShowImageModal(false);
           }}
         />
       )}

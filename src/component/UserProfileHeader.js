@@ -11,7 +11,7 @@ import GlobalInclude from '../globalInclude/Globalinclude';
 import g from '../theme/global';
 import grid from '../theme/grid';
 import {scale} from '../theme/Scalling';
-import Helper from '../helper/Helper';
+import {checkChatExist} from '../helper/ChatHelper';
 
 const UserProfileHeader = (props) => {
   const showLastSeen = (timestamp) => {
@@ -47,6 +47,51 @@ const UserProfileHeader = (props) => {
       return `Last seen: ${month_names[month]} ${date}, ${year}`;
     } else {
       return 'Not Logged In Yet';
+    }
+  };
+
+  const openChat = async () => {
+    let userObject = props.userObject;
+    let challengerUser = props.challengerUser;
+    if (userObject !== undefined && userObject !== null) {
+      if (
+        userObject.chatEnabled &&
+        userObject.chatEnabled !== undefined &&
+        userObject.chatEnabled !== null &&
+        userObject.chatEnabled
+      ) {
+        let blockedUser = userObject.blockedUser;
+        let blockedBy = userObject.blockedBy;
+
+        if (blockedBy.indexOf(global.userId) > -1) {
+          Alert.alert(
+            'You blocked this user',
+            'You blocked this user on chat!',
+          );
+        } else if (blockedUser.indexOf(global.userId) > -1) {
+          Alert.alert('You have been blocked', 'user has blocked you on chat.');
+        } else {
+          const result = await checkChatExist(props.userId, 1);
+          if (result !== undefined && result !== null) {
+            let threadId = result._id;
+            let payload = {
+              isGroup: false,
+              threadId: threadId,
+            };
+            props.navigation.navigate('ChatScreen', payload);
+            //props.navigation.replace('ChatScreen', payload);
+          } else {
+            let payload = {
+              challenger: challengerUser,
+              opponent: userObject || {},
+              isGroup: false,
+            };
+            props.navigation.navigate('ChatScreen', payload);
+          }
+        }
+      } else {
+        Alert.alert('Feature not available', 'user has disabled this feature.');
+      }
     }
   };
 
@@ -91,46 +136,7 @@ const UserProfileHeader = (props) => {
             <TouchableOpacity
               style={{height: scale(24), width: scale(24)}}
               activeOpacity={0.8}
-              onPress={() => {
-                let chatObject = props.chatObject;
-                let challengerUser = props.challengerUser;
-
-                if (chatObject !== undefined && chatObject !== null) {
-                  if (
-                    chatObject.chatEnabled &&
-                    chatObject.chatEnabled !== undefined &&
-                    chatObject.chatEnabled !== null &&
-                    chatObject.chatEnabled
-                  ) {
-                    let blockedUser = chatObject.blockedUser;
-
-                    if (blockedUser.indexOf(global.userId) > -1) {
-                      Alert.alert(
-                        'You have been blocked',
-                        'user has blocked you on chat.',
-                      );
-                    } else {
-                      let payload = {
-                        challenger: challengerUser,
-                        opponent: chatObject || {},
-                        isGroup: false,
-                      };
-                      props.navigation.navigate('ChatScreen', payload);
-                      //props.navigation.replace('ChatScreen', payload);
-                    }
-                  } else {
-                    Alert.alert(
-                      'Feature not available',
-                      'user has disabled this feature.',
-                    );
-                  }
-                } else {
-                  Alert.alert(
-                    'Feature not available',
-                    'user has disabled this feature.',
-                  );
-                }
-              }}>
+              onPress={() => openChat()}>
               <Image
                 source={GlobalInclude.Assets.ChatBlue}
                 resizeMode="contain"
