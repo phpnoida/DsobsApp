@@ -91,7 +91,7 @@ const PostTicker = ({route, navigation}) => {
     return () => {};
   }, [route.params]);
 
-  const setupDefaultData = (defaultData) => {
+  const setupDefaultData = defaultData => {
     if (defaultData && defaultData !== undefined && defaultData !== null) {
       setCategoryId(defaultData.categoryId);
       setSelectedCategory(Helper.capitalize(defaultData.categoryMsg));
@@ -113,7 +113,7 @@ const PostTicker = ({route, navigation}) => {
         let altArray = defaultData.links;
         altArray.reverse();
 
-        altArray.map((child) => {
+        altArray.map(child => {
           switch (child.type) {
             case 1:
               isImage = true;
@@ -162,7 +162,7 @@ const PostTicker = ({route, navigation}) => {
    */
   const getCategory = () => {
     getCategories(
-      (response) => {
+      response => {
         setLoading(false);
         if (response && response !== null) {
           if (
@@ -187,16 +187,16 @@ const PostTicker = ({route, navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         setLoading(false);
       },
     );
   };
 
-  const doScrapping = (onDone) => {
+  const doScrapping = onDone => {
     getScrappedData(
       youtubeLink,
-      (response) => {
+      response => {
         if (
           response &&
           response !== null &&
@@ -266,7 +266,7 @@ const PostTicker = ({route, navigation}) => {
     }
 
     if (categoryId !== 4) {
-      mediaData.map((child) => {
+      mediaData.map(child => {
         links.push({file: child.thumbnail, type: child.type});
       });
     } else {
@@ -325,10 +325,10 @@ const PostTicker = ({route, navigation}) => {
     }
   };
 
-  const uploadPostData = (requestObject) => {
+  const uploadPostData = requestObject => {
     addPost(
       requestObject,
-      (response) => {
+      response => {
         setSubmitting(false);
         if (response && response !== null) {
           if (
@@ -358,12 +358,12 @@ const PostTicker = ({route, navigation}) => {
     );
   };
 
-  const editPostData = (requestObject) => {
+  const editPostData = requestObject => {
     setSubmitting(true);
     editPost(
       requestObject,
       postId,
-      (response) => {
+      response => {
         setSubmitting(false);
         if (response && response !== null) {
           if (
@@ -443,7 +443,7 @@ const PostTicker = ({route, navigation}) => {
     }
   };
 
-  const showColourButton = (code) => {
+  const showColourButton = code => {
     return (
       <TouchableOpacity
         activeOpacity={1}
@@ -529,7 +529,7 @@ const PostTicker = ({route, navigation}) => {
           }}
           returnKeyType="done"
           placeholder={'Write text here'}
-          onChangeText={(value) => {
+          onChangeText={value => {
             setErrorMessage({});
             setInputValue(value);
           }}
@@ -541,7 +541,7 @@ const PostTicker = ({route, navigation}) => {
     );
   };
 
-  const removeIndex = (index) => {
+  const removeIndex = index => {
     Alert.alert(
       'Are you sure you want to delete it?',
       '',
@@ -695,7 +695,7 @@ const PostTicker = ({route, navigation}) => {
           autoCapitalize={'none'}
           returnKeyType={'done'}
           placeholder={placeholder}
-          onChangeText={(value) => {
+          onChangeText={value => {
             setYoutubeLink(value);
           }}
         />
@@ -721,7 +721,7 @@ const PostTicker = ({route, navigation}) => {
             Keyboard.dismiss();
           }}
           placeholder={"My comment - (Why I'm posting this)"}
-          onChangeText={(comment) => {
+          onChangeText={comment => {
             setMyComment(comment);
           }}
         />
@@ -744,7 +744,7 @@ const PostTicker = ({route, navigation}) => {
                 style={g.inputWhite}
                 value={tag}
                 placeholder={'Add Tag'}
-                onChangeText={(value) => setTag(value)}
+                onChangeText={value => setTag(value)}
               />
             </View>
             <TouchableOpacity
@@ -810,7 +810,7 @@ const PostTicker = ({route, navigation}) => {
     }
   };
 
-  const onRemoveTag = (index) => {
+  const onRemoveTag = index => {
     let oldData = selectedTags;
     oldData.splice(index, 1);
     setSelectedTags([...oldData]);
@@ -1046,7 +1046,7 @@ const PostTicker = ({route, navigation}) => {
           audio: true,
         }}
         supportMultiple={true}
-        onPickMedia={(media) => {
+        onPickMedia={media => {
           uploadRef.current.close();
           if (media !== undefined && media !== null) {
             let oldData = mediaData;

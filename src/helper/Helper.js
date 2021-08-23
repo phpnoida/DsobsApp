@@ -41,7 +41,7 @@ const Helpers = {
     console.log('phone', phone);
     let url = `whatsapp://send?text=${message}&phone=${phone}`;
     Linking.canOpenURL(url)
-      .then((supported) => {
+      .then(supported => {
         if (!supported) {
           Alert.alert('Please install Whatsapp App first');
         } else {
@@ -225,7 +225,7 @@ const Helpers = {
       } else {
         notificationObj.largeIcon = 'ic_launcher';
       }
-      PushNotification.channelExists(APP_NAME, (status) => {
+      PushNotification.channelExists(APP_NAME, status => {
         if (status) {
           PushNotification.presentLocalNotification(notificationObj);
         } else {
@@ -246,9 +246,8 @@ const Helpers = {
         userInfo: notification.data,
       };
       console.log('nextAppState', global.nextAppState);
-      console.log('isNotificationTap', global.isNotificationTap);
 
-      if (global.nextAppState === 'active' && !global.isNotificationTap) {
+      if (global.nextAppState === 'active') {
         PushNotificationIOS.addNotificationRequest(details);
       }
     }
@@ -330,7 +329,7 @@ const Helpers = {
     } else {
       phoneNumber = `telprompt:${number}`;
     }
-    Linking.canOpenURL(phoneNumber).then((can) => {
+    Linking.canOpenURL(phoneNumber).then(can => {
       if (can) {
         Linking.openURL(phoneNumber);
       } else {
@@ -349,7 +348,7 @@ const Helpers = {
     Linking.openURL('mailto:' + `${email}` + '?subject= ');
   },
   openLink: function (link) {
-    Linking.canOpenURL(link).then((status) => {
+    Linking.canOpenURL(link).then(status => {
       if (status) {
         Linking.openURL(link).catch(() => {
           Alert.alert('Unable to open link!');
@@ -479,6 +478,11 @@ const Helpers = {
     var yiq = (r * 299 + g * 587 + b * 114) / 1000;
     return yiq >= 128 ? 'black' : 'white';
   },
+  ytVidId: function (url) {
+    var p =
+      /^(?:https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})(?:\S+)?$/;
+    return url.match(p) ? true : false;
+  },
   checkVideoUrl: function (url) {
     url.match(
       /(http:\/\/|https:\/\/|)(player.|www.)?(vimeo\.com|youtu(be\.com|\.be|be\.googleapis\.com))\/(video\/|embed\/|watch\?v=|v\/)?([A-Za-z0-9._%-]*)(\&\S+)?/,
@@ -512,15 +516,45 @@ const Helpers = {
   },
   getFilename: function (url) {
     if (url) {
-      var m = url.toString().match(/.*\/(.+?)\./);
-      if (m && m.length > 1) {
-        console.log('====================================');
-        console.log('m', m);
-        console.log('====================================');
-        return m[1];
-      }
+      var getFilename = url.split('/');
+      return getFilename[getFilename.length - 1];
+
+      // var m = url.toString().match(/.*\/(.+?)\./);
+      // if (m && m.length > 1) {
+      //   console.log('====================================');
+      //   console.log('m', m);
+      //   console.log('====================================');
+      //   return m[1];
+      // }
     }
     return '';
+  },
+  humanFileSize: function (bytes, si = false, dp = 1) {
+    const thresh = si ? 1000 : 1024;
+
+    if (Math.abs(bytes) < thresh) {
+      return bytes + ' B';
+    }
+
+    const units = si
+      ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+      : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+    let u = -1;
+    const r = 10 ** dp;
+
+    do {
+      bytes /= thresh;
+      ++u;
+    } while (
+      Math.round(Math.abs(bytes) * r) / r >= thresh &&
+      u < units.length - 1
+    );
+    return bytes.toFixed(dp) + ' ' + units[u];
+  },
+  getExtention: function (fileName) {
+    var re = /(?:\.([^.]+))?$/;
+
+    return re.exec(fileName)[1];
   },
 };
 

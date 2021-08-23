@@ -123,11 +123,11 @@ const ChatUserList = ({navigation}) => {
     const executeFunctions = () => {
       subscriber = chatCollection
         .where('users', 'array-contains', global.userId)
-        .onSnapshot((query) => {
+        .onSnapshot(query => {
           setPaginationStatus(PaginationStatus.fetching);
           if (!query.empty) {
             tmpArray = [];
-            query.docs.forEach((item) => {
+            query.docs.forEach(item => {
               let data = item.data();
               tmpArray.push(data);
             });
@@ -154,9 +154,9 @@ const ChatUserList = ({navigation}) => {
                 setFirstTimeLoad(false);
               });
             } else {
-              setFirstTimeLoad(false);
               setChatList(tmpArray);
               setPaginationStatus(PaginationStatus.waiting);
+              setFirstTimeLoad(false);
             }
 
             // var allComplete = new Promise((resolve, reject) => {
@@ -245,7 +245,7 @@ const ChatUserList = ({navigation}) => {
     return false;
   };
 
-  const filterResult = (searchText) => {
+  const filterResult = searchText => {
     setPaginationStatus(PaginationStatus.fetching);
     let oldData = finalItemsArray;
 
@@ -260,9 +260,7 @@ const ChatUserList = ({navigation}) => {
       var itemOne = new Promise((resolve, reject) => {
         oldData.forEach((element, index, array) => {
           let userInfo = element.userInfo;
-          let filteredX = userInfo.filter(
-            (itemX) => itemX._id !== global.userId,
-          );
+          let filteredX = userInfo.filter(itemX => itemX._id !== global.userId);
 
           if (
             filteredX.length > 0 &&
@@ -283,13 +281,13 @@ const ChatUserList = ({navigation}) => {
         var itemTwo = new Promise((resolve, reject) => {
           oldData.forEach((element, index, array) => {
             let latestMessages = element.latestMessages;
-            let filteredX = latestMessages.filter((itemX) =>
+            let filteredX = latestMessages.filter(itemX =>
               itemX.message
                 .toLocaleLowerCase()
                 .includes(searchText.toLocaleLowerCase()),
             );
             if (filteredX.length > 0) {
-              filteredX.forEach((child) => {
+              filteredX.forEach(child => {
                 let item = {
                   type: '2',
                   element: child,
@@ -325,7 +323,7 @@ const ChatUserList = ({navigation}) => {
       let refId = selectedItem._id;
       let unreadCount = selectedItem.unreadCount;
 
-      unreadCount.forEach((element) => {
+      unreadCount.forEach(element => {
         if (element.userId === global.userId) {
           element.count = 0;
         }
@@ -365,7 +363,7 @@ const ChatUserList = ({navigation}) => {
     }
   };
 
-  const blockUser = (wantBlock) => {
+  const blockUser = wantBlock => {
     if (selectedItem !== undefined && selectedItem !== null) {
       let opponentUser = getOpponentInfo(selectedItem.userInfo);
       Alert.alert(
@@ -382,7 +380,7 @@ const ChatUserList = ({navigation}) => {
           {
             text: 'Yes',
             onPress: () => {
-              addUserToBlockList(opponentUser._id, (status) => {
+              addUserToBlockList(opponentUser._id, status => {
                 Alert.alert(
                   status
                     ? `User ${wantBlock ? 'Blocked' : 'Unblocked'} successfully`
@@ -398,8 +396,8 @@ const ChatUserList = ({navigation}) => {
     }
   };
 
-  const getChatCount = (unreadCount) => {
-    let countData = unreadCount.filter((user) => global.userId === user.userId);
+  const getChatCount = unreadCount => {
+    let countData = unreadCount.filter(user => global.userId === user.userId);
 
     if (
       countData.length === 0 ||
@@ -412,8 +410,8 @@ const ChatUserList = ({navigation}) => {
     }
   };
 
-  const isConversionMuted = (mutedBy) => {
-    let isMuted = mutedBy.filter((user) => global.userId === user);
+  const isConversionMuted = mutedBy => {
+    let isMuted = mutedBy.filter(user => global.userId === user);
 
     if (isMuted.length > 0) {
       return true;
@@ -422,7 +420,7 @@ const ChatUserList = ({navigation}) => {
     }
   };
 
-  const getOpponentInfo = (userList) => {
+  const getOpponentInfo = userList => {
     if (userList !== undefined && userList !== null && userList !== '') {
       for (let i = 0; i < userList.length; i++) {
         const element = userList[i];
@@ -435,11 +433,11 @@ const ChatUserList = ({navigation}) => {
     return null;
   };
 
-  const isUserBlocked = (userInfo) => {
+  const isUserBlocked = userInfo => {
     let opponentUser = getOpponentInfo(userInfo);
 
     if (opponentUser !== undefined && opponentUser !== null) {
-      let isExist = blockedUser.filter((user) => opponentUser._id === user);
+      let isExist = blockedUser.filter(user => opponentUser._id === user);
       return isExist.length > 0;
     }
     return false;
@@ -662,6 +660,17 @@ const ChatUserList = ({navigation}) => {
                     iconName={'volume-mute'}
                     iconSize={scale(18)}
                     iconType={IconType[1]}
+                  />
+                </View>
+              )}
+              {isUserBlocked(item.userInfo) && (
+                <View style={[g.ml5, g.mr5]}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(18), width: scale(18)}}
+                    iconColor={'red'}
+                    iconName={'block'}
+                    iconSize={scale(18)}
+                    iconType={IconType[0]}
                   />
                 </View>
               )}
@@ -905,7 +914,7 @@ const ChatUserList = ({navigation}) => {
             );
           });
         }}
-        openNewPage={(page) => {
+        openNewPage={page => {
           setUserLastSeen(false, new Date().getTime(), () => {
             navigation.navigate(page);
           });
@@ -926,7 +935,7 @@ const ChatUserList = ({navigation}) => {
                 <SingleSearchWithFilter
                   placeholder={'Search'}
                   filterQuery={filterQuery}
-                  changeText={(text) => {
+                  changeText={text => {
                     setFilterQuery(text);
                     filterResult(text);
                   }}

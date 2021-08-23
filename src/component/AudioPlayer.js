@@ -1,40 +1,59 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect, useCallback, useRef} from 'react';
 import {
   View,
-  Modal,
   StyleSheet,
   TouchableOpacity,
-  TouchableNativeFeedback,
-  Platform,
   Text,
-  PermissionsAndroid,
   Dimensions,
 } from 'react-native';
-import Player from './Player/Player';
 import {scale} from '../theme/Scalling';
 import GlobalInclude from '../globalInclude/Globalinclude';
+import g from '../theme/global';
+import grid from '../theme/grid';
 import {IconType} from '../helper/Constants';
 import Orientation from 'react-native-orientation-locker';
-import TrackPlayer, {usePlaybackState} from 'react-native-track-player';
+import TrackPlayer, {
+  useTrackPlayerProgress,
+  useTrackPlayerEvents,
+} from 'react-native-track-player';
+import OptionsSheet from 'react-native-raw-bottom-sheet';
+import Slider from '@react-native-community/slider';
+
 const {width} = Dimensions.get('window');
 
-let currentOriantation = '';
-const DocViewer = (props) => {
-  const playbackState = usePlaybackState();
+const AudioPlayer = props => {
+  const emojiRef = useRef();
+  const progress = useTrackPlayerProgress();
   const [showModal, setShowModal] = useState(true);
+  const [isPlaying, setPlaying] = useState(false);
+
+  useTrackPlayerEvents(
+    ['playback-state', 'remote-play', 'remote-pause', 'remote-stop'],
+    async event => {
+      console.log('event', event);
+      if (event.type === TrackPlayer.TrackPlayerEvents.PLAYBACK_STATE) {
+        if (event.state === TrackPlayer.STATE_STOPPED) {
+          setPlaying(false);
+        } else if (event.state === TrackPlayer.STATE_PLAYING) {
+          setPlaying(true);
+        }
+      } else if (event.type === TrackPlayer.TrackPlayerEvents.REMOTE_PLAY) {
+        TrackPlayer.play();
+        setPlaying(true);
+      } else if (event.type === TrackPlayer.TrackPlayerEvents.REMOTE_STOP) {
+        stopPlaying();
+      } else if (event.type === TrackPlayer.TrackPlayerEvents.REMOTE_PAUSE) {
+        TrackPlayer.pause();
+        setPlaying(false);
+      }
+    },
+  );
 
   useEffect(() => {
-    currentOriantation = Orientation.getInitialOrientation();
-    Orientation.addOrientationListener(_orientationDidChange);
+    emojiRef.current.open();
     start();
-    return () => {
-      Orientation.removeOrientationListener(_orientationDidChange);
-    };
+    return () => {};
   }, [start]);
-
-  const _orientationDidChange = (orientation) => {
-    currentOriantation = orientation;
-  };
 
   /**
    *
@@ -43,20 +62,25 @@ const DocViewer = (props) => {
    */
   const start = useCallback(async () => {
     // Set up the player
-    await TrackPlayer.setupPlayer({});
+    await TrackPlayer.setupPlayer({
+      waitForBuffer: true,
+    });
     await TrackPlayer.updateOptions({
       stopWithApp: true,
       capabilities: [
         TrackPlayer.CAPABILITY_PLAY,
         TrackPlayer.CAPABILITY_PAUSE,
-        TrackPlayer.CAPABILITY_SKIP_TO_NEXT,
-        TrackPlayer.CAPABILITY_SKIP_TO_PREVIOUS,
         TrackPlayer.CAPABILITY_STOP,
+        TrackPlayer.CAPABILITY_SEEK_TO,
       ],
-      compactCapabilities: [
-        TrackPlayer.CAPABILITY_PLAY,
-        TrackPlayer.CAPABILITY_PAUSE,
-      ],
+      // compactCapabilities: [
+      //   TrackPlayer.CAPABILITY_PLAY,
+      //   TrackPlayer.CAPABILITY_PAUSE,
+      // ],
+      // notificationCapabilities: [
+      //   TrackPlayer.CAPABPLILITY_PLAY,
+      //   TrackPlayer.CAPABILITY_PAUSE,
+      // ],
     });
 
     // Add a track to the queue
@@ -66,14 +90,24 @@ const DocViewer = (props) => {
       title: 'Play Audio',
       artist: 'Track Artist',
     });
-
     // Start playing it
     await TrackPlayer.play();
   }, [props.mediaContent]);
 
-  async function togglePlayback() {
-    const currentTrack = await TrackPlayer.getCurrentTrack();
-    if (currentTrack == null) {
+  const onPlayPausePress = async () => {
+    const state = await TrackPlayer.getState();
+
+    if (state === TrackPlayer.STATE_PLAYING) {
+      TrackPlayer.pause();
+      setPlaying(false);
+    }
+
+    if (state === TrackPlayer.STATE_PAUSED) {
+      TrackPlayer.play();
+      setPlaying(true);
+    }
+
+    if (state === TrackPlayer.STATE_STOPPED) {
       await TrackPlayer.reset();
       await TrackPlayer.add({
         id: 'trackId',
@@ -82,14 +116,31 @@ const DocViewer = (props) => {
         artist: 'Track Artist',
       });
       await TrackPlayer.play();
-    } else {
-      if (playbackState === TrackPlayer.STATE_PAUSED) {
-        await TrackPlayer.play();
-      } else {
-        await TrackPlayer.pause();
-      }
+      setPlaying(true);
     }
-  }
+  };
+
+  const stopPlaying = async () => {
+    TrackPlayer.stop().then(() => {
+      setShowModal(!showModal);
+      Orientation.lockToPortrait();
+      props.onClose();
+    });
+  };
+
+  const secondsToHHMMSS = seconds => {
+    // credits - https://stackoverflow.com/a/37096512
+    seconds = Number(seconds);
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor((seconds % 3600) % 60);
+
+    const hrs = h > 0 ? (h < 10 ? `0${h}:` : `${h}:`) : '';
+    const mins = m > 0 ? (m < 10 ? `0${m}:` : `${m}:`) : '00:';
+    const scnds = s > 0 ? (s < 10 ? `0${s}` : s) : '00';
+    return `${hrs}${mins}${scnds}`;
+  };
+
   /**
    *
    * Player
@@ -97,70 +148,140 @@ const DocViewer = (props) => {
    */
 
   return (
-    <View style={GlobalInclude.AppStyle.fill}>
-      {/* image slider modal */}
-
-      <Modal
-        supportedOrientations={['landscape', 'portrait']}
-        transparent={true}
-        onRequestClose={() => {
-          TrackPlayer.stop().then(() => {
-            setShowModal(!showModal);
-            Orientation.lockToPortrait();
-            props.onClose();
-          });
-        }}
-        visible={showModal}>
-        <View style={styles.modalView}>
-          <View style={styles.centeredView}>
-            <View
-              style={{
-                backgroundColor: 'white',
-                borderRadius: 15,
-                shadowColor: '#333333',
-                shadowOffset: {width: 0, height: 2},
-                shadowOpacity: 0.2,
-                shadowRadius: 6,
-                elevation: 5,
-                padding: 8,
-                width: '90%',
+    <OptionsSheet
+      ref={emojiRef}
+      minClosingHeight={50}
+      height={300}
+      duration={200}
+      closeOnDragDown={false}
+      customStyles={{
+        container: GlobalInclude.AppStyle.sheetContainer,
+        draggableIcon: {},
+      }}>
+      <View style={GlobalInclude.AppStyle.fill}>
+        <TouchableOpacity
+          onPress={() => {
+            stopPlaying();
+          }}
+          style={{
+            width: scale(32),
+            height: scale(32),
+            justifyContent: 'flex-end',
+            alignItems: 'flex-end',
+            alignSelf: 'flex-end',
+          }}>
+          <GlobalInclude.BaseIcon
+            containerStyle={{height: scale(30), width: scale(30)}}
+            iconColor={'#000'}
+            iconName={'close'}
+            iconSize={scale(30)}
+            iconType={IconType[8]}
+          />
+        </TouchableOpacity>
+        <View style={GlobalInclude.AppStyle.center}>
+          <View
+            style={{
+              height: scale(64),
+              width: scale(64),
+              borderRadius: scale(42),
+              backgroundColor: 'rgba(62,62,62,0.25)',
+              margin: scale(3),
+              marginHorizontal: scale(5),
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <GlobalInclude.BaseIcon
+              containerStyle={{
+                height: scale(58),
+                width: scale(58),
                 justifyContent: 'center',
-                alignSelf: 'center',
                 alignItems: 'center',
-                height: scale(130),
-              }}>
-              <TouchableOpacity
-                onPress={() => {
-                  TrackPlayer.stop().then(() => {
-                    setShowModal(!showModal);
-                    Orientation.lockToPortrait();
-                    props.onClose();
-                  });
-                }}
-                style={{
-                  width: scale(32),
-                  height: scale(32),
-                  justifyContent: 'flex-end',
-                  alignItems: 'flex-end',
-                  alignSelf: 'flex-end',
-                }}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={{height: scale(30), width: scale(30)}}
-                  iconColor={'#000'}
-                  iconName={'close'}
-                  iconSize={scale(30)}
-                  iconType={IconType[8]}
-                />
-              </TouchableOpacity>
-              <View style={{flex: 1}}>
-                <Player onTogglePlayback={togglePlayback} />
-              </View>
-            </View>
+                alignContent: 'center',
+              }}
+              iconColor={GlobalInclude.Color.ColorPrimary}
+              iconName={'headset'}
+              iconSize={scale(52)}
+              iconType={IconType[6]}
+            />
           </View>
         </View>
-      </Modal>
-    </View>
+        {props.extraObjects !== undefined && props.extraObject !== null && (
+          <View style={[grid.alignItems, g.mb5, g.mt5]}>
+            <Text
+              numberOfLines={1}
+              style={[
+                g.FHNR,
+                g.colorBlue,
+                g.txtCenterVertical,
+                g.txtCenter,
+                g.fs12,
+              ]}>
+              {props.extraObjects.fileName}
+            </Text>
+          </View>
+        )}
+        <View style={styles.progrsBarSection}>
+          <Text>{secondsToHHMMSS(Math.floor(progress.position || 0))}</Text>
+          {/* <View style={{width: '70%', marginHorizontal: scale(5)}}>
+            <View style={styles.progress}>
+              <View
+                style={{
+                  flex: progress.position,
+                  backgroundColor: GlobalInclude.Color.ColorPrimary,
+                }}
+              />
+              <View
+                style={{
+                  flex: progress.duration - progress.position,
+                  backgroundColor: 'grey',
+                }}
+              />
+            </View>
+          </View> */}
+
+          <Slider
+            style={{width: '70%', height: 60}}
+            minimumValue={1}
+            tapToSeek={false}
+            accessible={false}
+            maximumValue={progress.duration}
+            minimumTrackTintColor="#52527a"
+            maximumTrackTintColor="#52527a"
+            thumbTintColor="#52527a"
+            value={progress.position}
+          />
+          <Text>{secondsToHHMMSS(progress.duration || 0)}</Text>
+        </View>
+
+        <View style={styles.buttonsSection}>
+          <View style={[styles.buttonsCol, {alignItems: 'flex-end'}]} />
+          <View style={styles.buttonsCol}>
+            <TouchableOpacity
+              onPress={onPlayPausePress}
+              style={styles.playPauseButton}>
+              <GlobalInclude.BaseIcon
+                containerStyle={{height: scale(36), width: scale(36)}}
+                iconColor={'white'}
+                iconName={isPlaying ? 'pausecircleo' : 'playcircleo'}
+                iconSize={scale(30)}
+                iconType={IconType[10]}
+              />
+            </TouchableOpacity>
+          </View>
+          <View style={[styles.buttonsCol, {alignItems: 'flex-start'}]} />
+        </View>
+
+        {/* <Player onTogglePlayback={togglePlayback} /> */}
+      </View>
+    </OptionsSheet>
   );
+};
+
+const flexStyles = {
+  display: 'flex',
+  flex: 1,
+  justifyContent: 'space-around',
+  alignItems: 'stretch',
 };
 
 const styles = StyleSheet.create({
@@ -200,6 +321,69 @@ const styles = StyleSheet.create({
     minHeight: scale(60),
     alignContent: 'center',
   },
+  card: {
+    width: '90%',
+    alignSelf: 'center',
+    alignItems: 'center',
+  },
+  cover: {
+    width: 70,
+    height: 70,
+  },
+  progress: {
+    height: 3,
+    width: '100%',
+    marginTop: 10,
+    marginBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  title: {
+    marginTop: 10,
+  },
+  artist: {
+    fontWeight: 'bold',
+  },
+  controls: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  controlButtonContainer: {
+    flex: 1,
+  },
+  controlButtonText: {
+    fontSize: 18,
+    textAlign: 'center',
+  },
+  progrsBarSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    display: 'flex',
+    flexDirection: 'row',
+  },
+  buttonsSection: {
+    ...flexStyles,
+    flex: 2,
+    flexDirection: 'row',
+  },
+  buttonsCol: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: scale(10),
+  },
+  playPauseButton: {
+    borderRadius: scale(96),
+    width: scale(48),
+    height: scale(48),
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#52527a',
+  },
+  playPauseIcon: {
+    color: '#fff',
+  },
 });
 
-export default DocViewer;
+export default AudioPlayer;

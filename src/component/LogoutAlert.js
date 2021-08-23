@@ -11,7 +11,7 @@ import {
 import g from '../theme/global';
 import {scale} from '../theme/Scalling';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import messaging from '@react-native-firebase/messaging';
+import PushNotification from 'react-native-push-notification';
 import {CommonActions} from '@react-navigation/native';
 import GlobalInclude from '../globalInclude/Globalinclude';
 const windowWidth = Dimensions.get('window').width;
@@ -82,9 +82,8 @@ class LogoutAlert extends Component {
                           fcmTopic !== null &&
                           fcmTopic !== ''
                         ) {
-                          messaging()
-                            .unsubscribeFromTopic(fcmTopic)
-                            .then(() => {
+                          PushNotification.unsubscribeFromTopic(fcmTopic).then(
+                            () => {
                               this.setState({is_loading: false}, () => {
                                 global.navigationRef.current.dispatch(
                                   CommonActions.reset({
@@ -93,7 +92,8 @@ class LogoutAlert extends Component {
                                   }),
                                 );
                               });
-                            });
+                            },
+                          );
                         } else {
                           this.setState({is_loading: false}, () => {
                             global.navigationRef.current.dispatch(

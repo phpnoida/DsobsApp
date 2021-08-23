@@ -167,8 +167,6 @@ const NotificationListing = ({navigation}) => {
 
   const openSpecificPage = (type) => {
     global.notification = null;
-    global.isNotificationTap = false;
-
     switch (parseInt(type, 10)) {
       case 0:
         navigation.navigate('SearchDirectory');

@@ -114,7 +114,7 @@ const ImageList = ({route, navigation}) => {
     };
   }, [route]);
 
-  const refreshState = useSelector((state) => {
+  const refreshState = useSelector(state => {
     if (state.notification && state.notification !== undefined) {
       let notification = state.notification;
       if (notification.update && notification.update !== undefined) {
@@ -152,7 +152,7 @@ const ImageList = ({route, navigation}) => {
     imageArray = [];
   };
 
-  const _orientationDidChange = (orientation) => {
+  const _orientationDidChange = orientation => {
     currentOriantation = orientation;
   };
 
@@ -165,7 +165,7 @@ const ImageList = ({route, navigation}) => {
   const getGalleryData = () => {
     doFilterGallery(
       filterObject,
-      (response) => {
+      response => {
         if (
           response &&
           response !== null &&
@@ -224,7 +224,7 @@ const ImageList = ({route, navigation}) => {
     });
   };
 
-  const _processImages = async (arrayItems) => {
+  const _processImages = async arrayItems => {
     let results = arrayItems.data;
 
     let arrayList = [];
@@ -233,7 +233,7 @@ const ImageList = ({route, navigation}) => {
       arrayList.push(getSize(element.imagesLink, element));
     }
     Promise.all(arrayList)
-      .then((finalList) => {
+      .then(finalList => {
         if (filterObject.index === 0) {
           filterObject.size = 10;
           totalCount = arrayItems.totalCount;
@@ -256,11 +256,11 @@ const ImageList = ({route, navigation}) => {
       });
   };
 
-  const getImageDetail = (itemId) => {
+  const getImageDetail = itemId => {
     global.loader_ref.show_loader(1);
     getSingleImageFromAlbum(
       {id: itemId},
-      (response) => {
+      response => {
         global.loader_ref.show_loader(0);
         if (response && response !== null) {
           if (
@@ -319,7 +319,7 @@ const ImageList = ({route, navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         global.loader_ref.show_loader(0);
         setImageDetail(null);
         console.log('error', error);
@@ -356,7 +356,7 @@ const ImageList = ({route, navigation}) => {
       doUpdateImageInformation(
         imageDetail._id,
         requestData,
-        (response) => {
+        response => {
           setIsReporting(false);
           if (response && response !== null) {
             if (
@@ -383,7 +383,7 @@ const ImageList = ({route, navigation}) => {
             }
           }
         },
-        (error) => {
+        error => {
           responseMessage = 'Error while reporting!';
           setShowModal(true);
           setIsReporting(false);
@@ -464,7 +464,7 @@ const ImageList = ({route, navigation}) => {
     }
   };
 
-  const showTaggedUsers = (userTag) => {
+  const showTaggedUsers = userTag => {
     let componentArray = [];
     for (let i = 0; i < userTag.length; i++) {
       let item = userTag[i];
@@ -867,7 +867,7 @@ const ImageList = ({route, navigation}) => {
     setShowImageModal(false);
   };
 
-  const openAboutPhoto = (screenName) => {
+  const openAboutPhoto = screenName => {
     closeImageViewer();
     setTimeout(() => {
       let payload = {
@@ -1006,7 +1006,7 @@ const ImageList = ({route, navigation}) => {
                   g.textareaStyle,
                   {minHeight: 100, maxHeight: 100, height: 100},
                 ]}
-                onChangeText={(comment) => {
+                onChangeText={comment => {
                   reportText = comment;
                 }}
               />

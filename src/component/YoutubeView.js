@@ -24,7 +24,7 @@ import {
 } from 'react-native-youtube';
 
 let _youTubeRef = React.createRef();
-const YoutubeView = (props) => {
+const YoutubeView = props => {
   const [playVideo, setPlayVideo] = useState(
     props.autoPlay ? props.autoPlay : false,
   );
@@ -39,7 +39,7 @@ const YoutubeView = (props) => {
       if (videoObj.type === 'vimeo') {
         axios
           .get(`https://player.vimeo.com/video/${videoObj.id}/config`)
-          .then((data) => {
+          .then(data => {
             if (data.status) {
               if (data.data !== null && data.data !== undefined) {
                 let postData = data.data;
@@ -92,7 +92,7 @@ const YoutubeView = (props) => {
           startTime: 0,
         })
           .then(() => console.log('Standalone Player Exited'))
-          .catch((errorMessage) => console.error(errorMessage));
+          .catch(errorMessage => console.error(errorMessage));
       }
     }
   };
@@ -108,10 +108,10 @@ const YoutubeView = (props) => {
           videoId={youtubeId}
           play={true}
           fullscreen={true}
-          onChangeFullscreen={(e) => {
+          onChangeFullscreen={e => {
             setPlayVideo(e.isFullscreen);
           }}
-          onError={(e) => {
+          onError={e => {
             console.log('error', e);
           }}
           style={props.containerStyle ? props.containerStyle : style.container}

@@ -8,6 +8,7 @@ import {
   Image,
   Platform,
   TextInput,
+  NativeModules,
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import g from '../theme/global';
@@ -22,6 +23,7 @@ import CommonButton from './CommonButton';
 import getPath from '@flyerhq/react-native-android-uri-path';
 import {hasPermission} from '../helper/mediaHelper';
 import ShowPickedImages from '../component/ShowPickedImages';
+import Helper from '../helper/Helper';
 
 var re = /(?:\.([^.]+))?$/;
 
@@ -54,7 +56,7 @@ const UploadMedia = ({
       uploadMedia(
         childPath,
         body,
-        (response) => {
+        response => {
           global.loader_ref.show_loader(0);
           if (response && response !== undefined && response !== null) {
             if (response.status && response.data && response.data !== null) {
@@ -92,7 +94,7 @@ const UploadMedia = ({
       mediaType: 'photo',
       multiple: supportMultiple ? supportMultiple : false,
     })
-      .then((images) => {
+      .then(images => {
         if (images !== null) {
           console.log('images', images);
           uploadTmpImages = [];
@@ -106,7 +108,7 @@ const UploadMedia = ({
           cropSingleImage();
         }
       })
-      .catch((err) => {
+      .catch(err => {
         if (err.code === 'E_PICKER_CANCELLED') {
           onPickMedia(null);
           Alert.alert('Cancel Selection', 'User Cancelled Selection!');
@@ -138,10 +140,10 @@ const UploadMedia = ({
     }
 
     ImagePicker.openCropper(options)
-      .then((image) => {
+      .then(image => {
         uploadFinalImages.push(image);
       })
-      .catch((err) => {})
+      .catch(err => {})
       .finally(() => {
         imageIndex = imageIndex + 1;
         cropSingleImage();
@@ -165,16 +167,16 @@ const UploadMedia = ({
     }
   };
 
-  const uploadMultipleImages = (tmpData) => {
+  const uploadMultipleImages = tmpData => {
     var promises = [];
     global.loader_ref.show_loader(1);
 
-    tmpData.forEach((element) => {
+    tmpData.forEach(element => {
       promises.push(uploadImage(element, 'utils/imageupload', 1));
     });
 
     Promise.all(promises)
-      .then((arrList) => {
+      .then(arrList => {
         onPickMedia(arrList);
       })
       .finally(() => {
@@ -213,14 +215,14 @@ const UploadMedia = ({
 
         return new Promise(function (resolve, reject) {
           uploadMediaContent(body, childPath, mediaType)
-            .then((data) => {
+            .then(data => {
               if (data !== undefined && data !== null) {
                 resolve(data);
               } else {
                 reject(null);
               }
             })
-            .catch((error) => {
+            .catch(error => {
               reject(null);
             });
         });
@@ -242,7 +244,12 @@ const UploadMedia = ({
       if (pickFile !== null) {
         let path = '';
         if (Platform.OS === 'android') {
+          //const RealPathModule = NativeModules.RealPathModule;
           path = getPath(pickFile.uri);
+          // RealPathModule(pickFile.uri).then(filePath => {
+          //   console.log('filePath', filePath);
+          //   path = filePath;
+          // });
         } else {
           path = pickFile.uri;
         }
@@ -264,8 +271,13 @@ const UploadMedia = ({
 
           global.loader_ref.show_loader(1);
           uploadMediaContent(body, childPath, mediaType)
-            .then((data) => {
+            .then(data => {
               if (data !== undefined && data !== null) {
+                let requestObject = {
+                  fileName: pickFile.name,
+                  fileSize: pickFile.size,
+                };
+                data.requestObject = requestObject;
                 let tmpArray = [];
                 tmpArray.push(data);
                 onPickMedia(tmpArray);
@@ -273,7 +285,7 @@ const UploadMedia = ({
                 onPickMedia(null);
               }
             })
-            .catch((error) => {
+            .catch(error => {
               onPickMedia(null);
               Alert.alert('Uploading Failed');
             })
@@ -350,6 +362,7 @@ const UploadMedia = ({
           type: [DocumentPicker.types.audio],
         });
         if (res !== null) {
+          console.log('audio', res[0]);
           // refRBSheet.current.open();
           uploadDoc(res[0], 'utils/imageupload?type=3', 4);
         }
@@ -364,6 +377,9 @@ const UploadMedia = ({
     if (hideTagInVideo) {
       if (selectedLink.trim() === '') {
         setErrorMessage({link: 'This field is required!'});
+        return;
+      } else if (!Helper.ytVidId(selectedLink)) {
+        setErrorMessage({link: 'Link is not valid'});
         return;
       }
     } else {
@@ -537,7 +553,7 @@ const UploadMedia = ({
           <View style={[grid.col, g.mb10]}>
             <TextInput
               placeholder={'Paste Youtube link here (Required)'}
-              onChangeText={(link) => handleInput('link', link)}
+              onChangeText={link => handleInput('link', link)}
               underlineColorAndroid="transparent"
               style={g.inputWhite}
               value={selectedLink}
@@ -554,7 +570,7 @@ const UploadMedia = ({
                   placeholder={
                     'Tag this photo, seperate tags by comma (Required)'
                   }
-                  onChangeText={(tags) => handleInput('tags', tags)}
+                  onChangeText={tags => handleInput('tags', tags)}
                   underlineColorAndroid="transparent"
                   style={[g.inputWhite]}
                   value={selectedLinkTags}
@@ -586,7 +602,7 @@ const UploadMedia = ({
           onClose={() => {
             setShowPickedImages(false);
           }}
-          uplodFinalImages={(finalImages) => {
+          uplodFinalImages={finalImages => {
             setShowPickedImages(false);
             uploadMultipleImages(finalImages);
           }}

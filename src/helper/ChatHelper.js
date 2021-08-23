@@ -1,7 +1,5 @@
 import {Platform} from 'react-native';
 import firestore from '@react-native-firebase/firestore';
-import database from '@react-native-firebase/database';
-import messaging from '@react-native-firebase/messaging';
 import moment from 'moment';
 import _ from 'lodash';
 import axios from 'axios';
@@ -531,15 +529,12 @@ export const executePushNotification = async (
     content_available: true,
     mutable_content: true,
     data: data,
-  };
-
-  if (platform === 'ios') {
-    notificationPayload.notification = {
+    notification: {
       body: message,
       title: title,
-    };
-    notificationPayload.priority = 'high';
-  }
+    },
+    priority: 'high',
+  };
 
   notificationPayload = JSON.stringify(notificationPayload);
 

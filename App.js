@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   AppState,
@@ -8,42 +8,42 @@ import {
   Dimensions,
   Platform,
 } from 'react-native';
-import {RootNavigators} from './src/route/Route';
-import {NavigationContainer} from '@react-navigation/native';
+
 import SplashScreen from 'react-native-splash-screen';
 import NetInfo from '@react-native-community/netinfo';
-import {navigationRef, isReadyRef} from './src/helper/NavigationService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {sendPresenceStatus} from './src/Actions/CommonActions';
-import Offline from './src/component/Offline';
 import DeviceInfo from 'react-native-device-info';
+
 import grid from './src/theme/grid';
 import g from './src/theme/global';
 import GlobalInclude from './src/globalInclude/Globalinclude';
-import messaging from '@react-native-firebase/messaging';
 import Helper from './src/helper/Helper';
-import {useDispatch} from 'react-redux';
-import {refreshScreen} from './src/reducer/NotificationReducer';
-import PushNotificationIOS from '@react-native-community/push-notification-ios';
 import LogoutAlert from './src/component/LogoutAlert';
-import Toast from './src/component/Toast';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import PushNotificationIOS from '@react-native-community/push-notification-ios';
+import PushNotification from 'react-native-push-notification';
+
+import {navigationRef, isReadyRef} from './src/helper/NavigationService';
+import {RootNavigators} from './src/route/Route';
+import {NavigationContainer} from '@react-navigation/native';
+
+import {sendPresenceStatus} from './src/Actions/CommonActions';
+import Offline from './src/component/Offline';
 
 let baseRoute = 'AppTour';
 const deviceWidth = Dimensions.get('window').width;
 const appVersion = DeviceInfo.getVersion();
 let appStateValue = '';
 
-const App = ({navigation}) => {
-  const routeNameRef = useRef();
+const App = () => {
   const [loadingComplete, setLoadingComplete] = useState(false);
-  const [currentState, setCurrentState] = useState(AppState.currentState);
   const [isConnected, setIsConnected] = useState(true);
-  const dispatch = useDispatch();
+
   useEffect(() => {
     SplashScreen.hide();
     global.commentDraft = [];
     global.isLoggedIn = false;
-    const unsubscribe = NetInfo.addEventListener((state) => {
+    const unsubscribe = NetInfo.addEventListener(state => {
       global.isConnected = state.isConnected;
       setIsConnected(state.isConnected);
     });
@@ -51,7 +51,7 @@ const App = ({navigation}) => {
 
     validateUser(() => {
       NetInfo.fetch()
-        .then((state) => {
+        .then(state => {
           global.isConnected = state.isConnected;
           setIsConnected(state.isConnected);
         })
@@ -65,16 +65,16 @@ const App = ({navigation}) => {
             }
           }, 300);
         });
-    }); // we check this as first priority
+    });
 
     /**
      *
      * Notification start
      *
      */
-
     if (Platform.OS === 'ios') {
-      PushNotificationIOS.addEventListener('notification', (notification) => {
+      requestUserPermission();
+      PushNotificationIOS.addEventListener('notification', notification => {
         console.log('PushNotificationIOS', notification.getData());
         if (
           notification.getData() !== undefined &&
@@ -83,45 +83,15 @@ const App = ({navigation}) => {
           let data = notification.getData();
           let notificationObj = {};
           notificationObj.data = data;
-          global.isNotificationTap = false;
           handleNotification('PushNotificationIOS', notificationObj);
         }
       });
-    }
-
-    console.log('App.js-92');
-    const onMessage = messaging().onMessage(async (remoteMessage) => {
-      global.isNotificationTap = true;
-      console.log('83');
-      if (Platform.OS === 'android') {
-        let duplicateClone = remoteMessage;
-        delete duplicateClone.notification;
-        handleNotification('messaging().onMessage', duplicateClone);
-      } else {
-        handleNotification('messaging().onMessage', remoteMessage);
-      }
-    });
-
-    messaging().onNotificationOpenedApp((remoteMessage) => {
-      console.log('app to open from background state:', remoteMessage);
-      global.isNotificationTap = true;
-    });
-
-    // Check whether an initial notification is available
-    messaging()
-      .getInitialNotification()
-      .then((remoteMessage) => {
-        if (remoteMessage) {
-          console.log(
-            'app to open from quit state:',
-            remoteMessage.notification,
-          );
-        }
-        global.isNotificationTap = true;
+    } else {
+      PushNotification.popInitialNotification(notification => {
+        console.log('Initial Notification', notification);
+        global.notification = notification;
       });
-
-    requestUserPermission();
-
+    }
     /**
      *
      * Notification end
@@ -130,20 +100,18 @@ const App = ({navigation}) => {
 
     return () => {
       unsubscribe();
-      onMessage();
       AppState.removeEventListener('change', _handleAppStateChange);
     };
+  }, [_handleAppStateChange, _sendPresenceStatus]);
+
+  const _handleAppStateChange = useCallback(nextState => {
+    appStateValue = nextState;
+    global.nextAppState = nextState;
   }, []);
 
-  const completeLogin = () => {
-    setTimeout(() => {
-      setLoadingComplete(true);
-    }, 1000);
-  };
-
-  const validateUser = (callback) => {
+  const validateUser = callback => {
     AsyncStorage.getItem('loggedIn')
-      .then((value) => {
+      .then(value => {
         if (value && value !== null && value !== '') {
           if (value === '1') {
             global.isLoggedIn = true;
@@ -155,7 +123,7 @@ const App = ({navigation}) => {
       })
       .then(() => {
         AsyncStorage.getItem('userDetails')
-          .then((details) => {
+          .then(details => {
             if (details && details !== null && details !== '') {
               var userDetails = JSON.parse(details);
               global.userDetails = userDetails;
@@ -165,7 +133,7 @@ const App = ({navigation}) => {
             }
           })
           .then(() => {
-            AsyncStorage.getItem('tokens').then((details) => {
+            AsyncStorage.getItem('tokens').then(details => {
               if (details && details !== null && details !== '') {
                 let tokens = JSON.parse(details);
                 global.accessToken = tokens.accessToken;
@@ -178,73 +146,46 @@ const App = ({navigation}) => {
       });
   };
 
-  const _handleAppStateChange = (nextState) => {
-    appStateValue = nextState;
-    global.nextAppState = nextState;
-    if (global.isLoggedIn) {
-      if (Platform.OS === 'android') {
-        if (nextState === 'active' && currentState === 'active') {
-          if (
-            global.notification !== undefined &&
-            global.notification !== null
-          ) {
-            dispatch(refreshScreen());
-          }
-        }
-      } else {
-        if (nextState === 'active') {
-          if (
-            global.notification !== undefined &&
-            global.notification !== null
-          ) {
-            dispatch(refreshScreen());
-          }
-        }
-      }
-    }
-
-    setCurrentState(nextState);
-  };
-
-  const _sendPresenceStatus = () => {
+  const _sendPresenceStatus = useCallback(() => {
     sendPresenceStatus(
-      (response) => {
+      response => {
         completeLogin();
       },
       (statusCode, error) => {
         if (statusCode === 401) {
           let fcmTopic = global.userDetails.fcmTopic;
-
           AsyncStorage.clear().then(() => {
             global.userDetails = null;
             global.accessToken = null;
             global.userId = null;
             global.firstName = null;
             global.lastName = null;
-            messaging()
-              .unsubscribeFromTopic(fcmTopic)
-              .then(() => {
-                validateUser(() => {
-                  completeLogin();
-                });
+
+            PushNotification.unsubscribeFromTopic(fcmTopic).then(() => {
+              validateUser(() => {
+                completeLogin();
               });
+            });
           });
         } else {
           completeLogin();
         }
       },
     );
+  }, []);
+
+  const completeLogin = () => {
+    setTimeout(() => {
+      setLoadingComplete(true);
+    }, 1000);
   };
 
   async function requestUserPermission() {
-    const authStatus = await messaging().requestPermission();
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-    if (enabled) {
-      // console.log('Authorization status:', authStatus);
-    }
+    PushNotificationIOS.checkPermissions(status => {
+      console.log('====================================');
+      console.log(status.authorizationStatus);
+      console.log('====================================');
+    });
   }
 
   const handleNotification = (from, data) => {
@@ -254,7 +195,6 @@ const App = ({navigation}) => {
       if (eventType && eventType !== null && eventType !== '') {
         if (parseInt(eventType, 10) === 1002) {
           global.notification = null;
-          global.isNotificationTap = false;
         }
       }
     }
@@ -262,42 +202,10 @@ const App = ({navigation}) => {
   };
 
   return (
-    <View style={{flex: 1}}>
-      <Toast
-        ref={(c) => {
-          if (c) {
-            Toast.toastInstance = c;
-          }
-        }}
-      />
-
+    <View style={GlobalInclude.AppStyle.fill}>
       {isConnected ? (
         <NavigationContainer
           ref={navigationRef}
-          onStateChange={() => {
-            const previousRouteName = routeNameRef.current;
-            const currentRouteName =
-              navigationRef.current.getCurrentRoute().name;
-
-            console.log('====================================');
-            console.log('previousRouteName', previousRouteName);
-            console.log('currentRouteName', currentRouteName);
-            console.log('====================================');
-
-            if (previousRouteName !== currentRouteName) {
-              global.currentScreen = currentRouteName;
-              if (currentRouteName === 'ChatScreen') {
-                console.log('true');
-                global.inChatScreen = true;
-              } else {
-                console.log('false');
-                global.inChatScreen = false;
-              }
-              // Do something here with it
-            }
-            // Save the current route name for later comparision
-            routeNameRef.current = currentRouteName;
-          }}
           onReady={() => {
             isReadyRef.current = true;
             global.navigationRef = navigationRef;
@@ -343,11 +251,11 @@ const App = ({navigation}) => {
       )}
 
       <LogoutAlert
-        ref={(ref) => (global.logoutAlert = ref)}
+        ref={ref => (global.logoutAlert = ref)}
         navigation={navigationRef}
       />
 
-      <GlobalInclude.Loader ref={(ref) => (global.loader_ref = ref)} />
+      <GlobalInclude.Loader ref={ref => (global.loader_ref = ref)} />
     </View>
   );
 };
