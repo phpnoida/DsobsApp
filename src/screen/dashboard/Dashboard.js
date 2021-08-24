@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   Text,
   View,
@@ -29,8 +29,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import ShowPopNotification from '../../component/ShowPopNotification';
 import {getPopNotification} from '../../Actions/CommonActions';
 import {useDispatch, useSelector, shallowEqual} from 'react-redux';
-import {clearState} from '../../reducer/NotificationReducer';
-import messaging from '@react-native-firebase/messaging';
+import {clearNotifications} from '../../reducer/NotificationReducer';
+import PushNotification from 'react-native-push-notification';
+
 import {IconType} from '../../helper/Constants';
 import {setUserLastSeen, addUser} from '../../helper/ChatHelper';
 import {useDocumentDataOnce} from 'react-firebase-hooks/firestore';
@@ -118,7 +119,6 @@ const Dashboard = ({props, navigation}) => {
     AppState.addEventListener('change', _handleAppStateChange);
 
     const unsubscribe = navigation.addListener('focus', () => {
-      console.log('focus');
       getPopNotifications();
       /**
        *
@@ -133,6 +133,7 @@ const Dashboard = ({props, navigation}) => {
     addUser(global.userId, global.userDetails, () => {});
 
     if (refreshState) {
+      dispatch(clearNotifications());
       setTimeout(() => {
         console.log('78');
         validatePushNotification();
@@ -144,16 +145,22 @@ const Dashboard = ({props, navigation}) => {
       backHandler.remove();
       AppState.removeEventListener('change', _handleAppStateChange);
     };
-  }, [navigation, refreshState]);
+  }, [
+    navigation,
+    refreshState,
+    _handleAppStateChange,
+    dispatch,
+    validatePushNotification,
+  ]);
 
-  const _handleAppStateChange = (nextState) => {
+  const _handleAppStateChange = useCallback((nextState) => {
     console.log('nextState-128', nextState);
     if (nextState === 'active') {
       if (global.isLoggedIn) {
         getPopNotifications();
       }
     }
-  };
+  }, []);
 
   const getPopNotifications = () => {
     if (global.isConnected) {
@@ -186,30 +193,21 @@ const Dashboard = ({props, navigation}) => {
     }
   };
 
-  const validatePushNotification = () => {
-    dispatch(clearState());
+  const validatePushNotification = useCallback(() => {
     if (global.notification !== undefined && global.notification !== null) {
       let data = global.notification.data;
       console.log('validatePushNotification', data);
       let linkUrl = data.linkUrl;
-      if (global.isNotificationTap) {
-        if (linkUrl && linkUrl !== null && linkUrl !== '') {
-          global.notification = null;
-          global.isNotificationTap = false;
-          navigation.navigate('CommonWebPage', {
-            link: linkUrl,
-          });
-        } else {
-          openSpecificPage(data.eventType, data);
-        }
+      if (linkUrl && linkUrl !== null && linkUrl !== '') {
+        global.notification = null;
+        navigation.navigate('CommonWebPage', {
+          link: linkUrl,
+        });
       } else {
-        //global.notification = null;
-        //global.isNotificationTap = false;
+        openSpecificPage(data.eventType, data);
       }
-    } else {
-      global.isNotificationTap = false;
     }
-  };
+  }, [navigation]);
 
   const openNotification = (notification) => {
     if (
@@ -230,7 +228,6 @@ const Dashboard = ({props, navigation}) => {
 
   const openSpecificPage = (type, data) => {
     global.notification = null;
-    global.isNotificationTap = false;
     switch (parseInt(type, 10)) {
       case 0:
         navigation.navigate('SearchDirectory');
@@ -323,41 +320,13 @@ const Dashboard = ({props, navigation}) => {
               ) {
                 let fcmTopic = global.userDetails.fcmTopic;
                 AsyncStorage.clear().then(() => {
-                  messaging()
-                    .unsubscribeFromTopic(fcmTopic)
-                    .then(() => {
-                      global.userDetails = null;
-                      global.accessToken = null;
-                      global.userId = null;
-                      global.firstName = null;
-                      global.lastName = null;
-                      global.isLoggedIn = false;
-                      global.notification = null;
-                      global.isNotificationTap = false;
-                      navigation.dispatch(
-                        CommonActions.reset({
-                          index: 0,
-                          routes: [{name: 'Login'}],
-                        }),
-                      );
-                    });
+                  PushNotification.unsubscribeFromTopic(fcmTopic).then(() => {
+                    resetToHome();
+                  });
                 });
               } else {
                 AsyncStorage.clear().then(() => {
-                  global.userDetails = null;
-                  global.accessToken = null;
-                  global.userId = null;
-                  global.firstName = null;
-                  global.lastName = null;
-                  global.isLoggedIn = false;
-                  global.notification = null;
-                  global.isNotificationTap = false;
-                  navigation.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [{name: 'Login'}],
-                    }),
-                  );
+                  resetToHome();
                 });
               }
             } else {
@@ -386,6 +355,22 @@ const Dashboard = ({props, navigation}) => {
           </Text>
         </TouchableOpacity>
       </View>
+    );
+  };
+
+  const resetToHome = () => {
+    global.userDetails = null;
+    global.accessToken = null;
+    global.userId = null;
+    global.firstName = null;
+    global.lastName = null;
+    global.isLoggedIn = false;
+    global.notification = null;
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{name: 'Login'}],
+      }),
     );
   };
 

@@ -1,12 +1,12 @@
 {
-  "name": "dsobs",
+  "name": "DSOBS",
   "version": "0.0.1",
   "private": true,
   "scripts": {
     "postinstall": "npx jetify",
-    "run:a": "react-native run-android",
+    "run:a": "node init && react-native run-android",
     "ios": "react-native run-ios",
-    "start": "react-native start",
+    "start": "node init && react-native start",
     "test": "jest",
     "lint": "eslint .",
     "open": "npm start --reset-cache",
@@ -15,7 +15,7 @@
     "clean:ios": "cd ios && xcodebuild clean && cd -",
     "copy:android": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res",
     "assemble:android": "cd android && ./gradlew clean && ./gradlew assembledebug",
-    "build:ios": "react-native bundle --entry-file='index.js' --bundle-output='./ios/main.jsbundle' --dev=false --platform='ios'",
+    "build:ios": "node init && react-native bundle --entry-file='index.js' --bundle-output='./ios/main.jsbundle' --dev=false --platform='ios'",
     "update:a": "cd android && ./gradlew cleanBuildCache && ./gradlew clean && react-native bundle --platform android --dev false --entry-file index.js --bundle-output app/src/main/assets/index.android.bundle --assets-dest app/src/main/res && ./gradlew clean && ./gradlew assembledebug && cd -"
   },
   "dependencies": {
@@ -31,11 +31,11 @@
     "@react-native-community/progress-bar-android": "^1.0.4",
     "@react-native-community/progress-view": "^1.3.1",
     "@react-native-community/push-notification-ios": "^1.8.0",
+    "@react-native-community/slider": "^4.1.1",
     "@react-native-community/viewpager": "^4.2.2",
     "@react-native-firebase/app": "^12.4.0",
     "@react-native-firebase/database": "^12.4.0",
     "@react-native-firebase/firestore": "^12.4.0",
-    "@react-native-firebase/messaging": "^12.4.0",
     "@react-navigation/native": "^5.9.4",
     "@react-navigation/stack": "^5.14.5",
     "add": "^2.0.6",
@@ -62,7 +62,6 @@
     "react-native-emoji-selector": "^0.2.0",
     "react-native-fast-image": "^8.3.4",
     "react-native-gesture-handler": "^1.10.3",
-    "react-native-gifted-chat": "^0.16.3",
     "react-native-image-crop-picker": "^0.36.2",
     "react-native-image-progress": "^1.1.1",
     "react-native-image-zoom-viewer": "^3.0.1",
@@ -83,6 +82,7 @@
     "react-native-share": "^6.2.1",
     "react-native-sms-retriever": "^1.1.1",
     "react-native-splash-screen": "^3.2.0",
+    "react-native-svg": "^12.1.1",
     "react-native-swipe-gestures": "^1.0.5",
     "react-native-text-size": "^4.0.0-rc.1",
     "react-native-track-player": "^1.2.7",
@@ -100,16 +100,14 @@
     "yarn": "^1.22.10"
   },
   "devDependencies": {
-    "@babel/core": "^7.14.5",
-    "@babel/runtime": "^7.14.5",
-    "@react-native-community/eslint-config": "^2.0.0",
-    "babel-jest": "^27.0.2",
-    "eslint": "^7.28.0",
-    "jest": "^27.0.4",
-    "jetifier": "^2.0.0",
-    "metro-react-native-babel-preset": "^0.66.0",
-    "react-native-bundle-visualizer": "^2.2.1",
-    "react-test-renderer": "17.0.2"
+    "@babel/core": "^7.15.0",
+    "@babel/runtime": "^7.15.3",
+    "@react-native-community/eslint-config": "^3.0.0",
+    "babel-jest": "^27.0.6",
+    "eslint": "^7.32.0",
+    "jest": "^27.0.6",
+    "metro-react-native-babel-preset": "^0.66.2",
+    "react-test-renderer": "17.0.1"
   },
   "jest": {
     "preset": "react-native"

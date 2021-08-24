@@ -42,7 +42,7 @@ const StartChatWith = ({navigation}) => {
     /**
      * We get user own details also
      */
-    checkUserExist(global.userId).then((result) => {
+    checkUserExist(global.userId).then(result => {
       if (result !== undefined && result !== null) {
         challengerUser = result;
       }
@@ -89,7 +89,7 @@ const StartChatWith = ({navigation}) => {
     }
   };
 
-  const createChatUser = async (opponentUser) => {
+  const createChatUser = async opponentUser => {
     setIsLoading(false);
     let payload = {
       challenger: challengerUser,
@@ -101,22 +101,22 @@ const StartChatWith = ({navigation}) => {
   };
 
   // Filter section
-  const changeText = (text) => {
+  const changeText = text => {
     setSearchUserName(text);
     searchVal = text;
-    if (text.length > 3) {
+    if (text.length > 2) {
       setSearchedUser([]);
       doSearchUser(text);
-    } else if (text.length < 4) {
+    } else if (text.length < 2) {
       setSearchedUser([]);
     }
   };
 
-  const doSearchUser = (query) => {
+  const doSearchUser = query => {
     getDirectory(
       '1',
       query,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -126,6 +126,13 @@ const StartChatWith = ({navigation}) => {
             let data = response.data;
 
             if (searchVal.length > 0) {
+              for (var i = data.data.length - 1; i >= 0; i--) {
+                const element = data.data[i];
+                if (element._id === global.userId) {
+                  data.data.splice(i, 1);
+                  break;
+                }
+              }
               setSearchedUser([...data.data]);
             } else {
               setSearchedUser([]);
@@ -133,7 +140,7 @@ const StartChatWith = ({navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         setSearchedUser([]);
         console.log('error', error);
       },
@@ -157,7 +164,7 @@ const StartChatWith = ({navigation}) => {
             style={[g.pl0, g.fs14, grid.col, grid.justifyContentCenter]}
             keyboardType={'default'}
             placeholder={'Type more than 3 characters'}
-            onChangeText={(text) => {
+            onChangeText={text => {
               changeText(text);
             }}
           />
@@ -205,7 +212,7 @@ const StartChatWith = ({navigation}) => {
                 }}>
                 <Text
                   style={{
-                    fontSize: scale(18),
+                    fontSize: scale(14),
                     color:
                       chatType === 1
                         ? '#ffffff'
@@ -241,7 +248,7 @@ const StartChatWith = ({navigation}) => {
                 }}>
                 <Text
                   style={{
-                    fontSize: scale(18),
+                    fontSize: scale(14),
                     color:
                       chatType === 2
                         ? '#ffffff'
@@ -249,7 +256,7 @@ const StartChatWith = ({navigation}) => {
                     fontFamily: 'Lato-Regular',
                     textAlign: 'center',
                   }}>
-                  GROUP
+                  MULTI USER
                 </Text>
               </TouchableOpacity>
             </View>
@@ -291,7 +298,7 @@ const StartChatWith = ({navigation}) => {
                   autoCapitalize={'words'}
                   returnKeyType={'done'}
                   placeholder={'Enter your text here'}
-                  onChangeText={(value) => {}}
+                  onChangeText={value => {}}
                 />
               </View>
 

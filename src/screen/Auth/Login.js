@@ -28,14 +28,12 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Constants from '../../helper/Constants';
 import {URL_REGX, APP_NAME} from '../../helper/Constants';
 import {CommonActions} from '@react-navigation/native';
-import messaging from '@react-native-firebase/messaging';
+import PushNotification from 'react-native-push-notification';
 import CommonButton from '../../component/CommonButton';
 import SmsRetriever from 'react-native-sms-retriever';
 import parsePhoneNumber, {AsYouType} from 'libphonenumber-js';
 
-const {emailRegex, phoneRegex} = URL_REGX;
-
-const phoneModule = NativeModules.PhoneModule;
+const {emailRegex} = URL_REGX;
 
 let deviceNumber = '';
 let bottomSheet = null;
@@ -143,7 +141,7 @@ const Login = ({navigation}) => {
     setShowPhoneModal(!showPhoneModal);
   };
 
-  const validateLogin = (selectedNumber) => {
+  const validateLogin = selectedNumber => {
     closePhoneModal();
     if (selectedNumber.startsWith('+1')) {
       setCountryCode('+1');
@@ -207,7 +205,7 @@ const Login = ({navigation}) => {
     }
   };
 
-  const _onReceiveSms = (event) => {
+  const _onReceiveSms = event => {
     if (event && event !== undefined && event !== null) {
       if (
         event.message &&
@@ -226,11 +224,11 @@ const Login = ({navigation}) => {
     SmsRetriever.removeSmsListener();
   };
 
-  const getAuthCode = (requestString) => {
+  const getAuthCode = requestString => {
     setIsLoading(true);
     requestAuthCode(
       requestString,
-      (response) => {
+      response => {
         setIsLoading(false);
         //console.log('requestAuthCode', response);
         if (response && response !== null) {
@@ -278,7 +276,7 @@ const Login = ({navigation}) => {
       setIsLoading(true);
       verifyAuthCode(
         requestData,
-        (response) => {
+        response => {
           setIsLoading(false);
           //console.log('verifyAuthCode', response);
           if (response && response !== null) {
@@ -315,19 +313,19 @@ const Login = ({navigation}) => {
     }
   };
 
-  const sendUserPresence = (userDetails) => {
+  const sendUserPresence = userDetails => {
     sendPresenceStatus(
-      (response) => {
+      response => {
         console.log('details');
         completeLogin(userDetails);
       },
       (statusCode, error) => {
-        console.log('error');
+        console.log('error', error, statusCode);
       },
     );
   };
 
-  const completeLogin = (userDetails) => {
+  const completeLogin = userDetails => {
     let tokens = userDetails.tokens;
     let fcmTopic = userDetails.fcmTopic;
     global.userDetails = userDetails;
@@ -337,31 +335,24 @@ const Login = ({navigation}) => {
     global.lastName = userDetails.lastName;
     clearInterval(timerInterval);
 
-    messaging()
-      .subscribeToTopic(fcmTopic)
-      .then(() => {
-        AsyncStorage.setItem('loggedIn', '1').then(() => {
-          AsyncStorage.setItem('tokens', JSON.stringify(tokens)).then(() => {
-            AsyncStorage.setItem(
-              'userDetails',
-              JSON.stringify(userDetails),
-            ).then(() => {
-              AsyncStorage.setItem('accessToken', tokens.accessToken).then(
+    PushNotification.subscribeToTopic(fcmTopic);
+    AsyncStorage.setItem('loggedIn', '1').then(() => {
+      AsyncStorage.setItem('tokens', JSON.stringify(tokens)).then(() => {
+        AsyncStorage.setItem('userDetails', JSON.stringify(userDetails)).then(
+          () => {
+            AsyncStorage.setItem('accessToken', tokens.accessToken).then(() => {
+              AsyncStorage.setItem('refreshToken', tokens.refreshToken).then(
                 () => {
-                  AsyncStorage.setItem(
-                    'refreshToken',
-                    tokens.refreshToken,
-                  ).then(() => {
-                    AsyncStorage.setItem('fcmTopic', fcmTopic).then(() => {
-                      openHome();
-                    });
+                  AsyncStorage.setItem('fcmTopic', fcmTopic).then(() => {
+                    openHome();
                   });
                 },
               );
             });
-          });
-        });
+          },
+        );
       });
+    });
   };
 
   const openHome = () => {
@@ -413,7 +404,7 @@ const Login = ({navigation}) => {
     setShowCodePicker(!showCodePicker);
   };
 
-  const onSelectCountry = (country) => {
+  const onSelectCountry = country => {
     setShowCodePicker(!showCodePicker);
     let code = '+' + country.callingCode[0];
     setCountryCode(code);
@@ -423,7 +414,7 @@ const Login = ({navigation}) => {
     bottomSheet.close();
     setTimeout(() => {
       let url = `whatsapp://send?text=${''}&phone=${Constants.WHATSAPP_NO}`;
-      Linking.canOpenURL(url).then((supported) => {
+      Linking.canOpenURL(url).then(supported => {
         if (!supported) {
           // eslint-disable-next-line no-alert
           alert('Please install Whatsapp App first');
@@ -498,9 +489,7 @@ const Login = ({navigation}) => {
         Keyboard.dismiss();
       }}>
       <SafeAreaView style={GlobalInclude.AppStyle.parentStyle}>
-        <GlobalInclude.Loader
-          ref={(ref) => (global.global_loader_reff = ref)}
-        />
+        <GlobalInclude.Loader ref={ref => (global.global_loader_reff = ref)} />
         <View
           style={[
             GlobalInclude.AppStyle.fill,
@@ -518,7 +507,7 @@ const Login = ({navigation}) => {
               onClose={() => {
                 closeCodePicker();
               }}
-              onSelect={(country) => {
+              onSelect={country => {
                 onSelectCountry(country);
               }}
             />
@@ -561,7 +550,7 @@ const Login = ({navigation}) => {
                       keyboardType="phone-pad"
                       value={phone}
                       placeholder="Enter your Phone number"
-                      onChangeText={(value) => setPhone(value)}
+                      onChangeText={value => setPhone(value)}
                       placeholderTextColor={'#ddd'}
                     />
                   </View>
@@ -595,7 +584,7 @@ const Login = ({navigation}) => {
                       keyboardType="email-address"
                       value={email}
                       placeholder="Enter your email address"
-                      onChangeText={(value) => setEmail(value)}
+                      onChangeText={value => setEmail(value)}
                       placeholderTextColor={'#ddd'}
                     />
                   </View>
@@ -615,7 +604,7 @@ const Login = ({navigation}) => {
                   keyboardType="numeric"
                   maxLength={6}
                   value={authCode}
-                  onChangeText={(otp) => {
+                  onChangeText={otp => {
                     setAuthCode(otp);
                   }}
                   placeholder="Enter OTP here"
@@ -765,7 +754,7 @@ const Login = ({navigation}) => {
 
       {/* need help sheet */}
       <RBSheet
-        ref={(ref) => {
+        ref={ref => {
           bottomSheet = ref;
         }}
         height={375}

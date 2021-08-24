@@ -7,6 +7,7 @@ import {
   Text,
   Dimensions,
   Modal,
+  TouchableOpacity,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
@@ -33,25 +34,6 @@ const ChatUserProfile = ({route, navigation}) => {
   const [snapshot] = useCollection(
     usersCollection.where('_id', '==', route.params.userId),
   );
-
-  // useEffect(() => {
-  //   /**
-  //    * We get user own details also
-  //    */
-
-  //   if (route !== undefined && route !== null) {
-  //     if (route.params !== undefined && route.params !== null) {
-  //       let userId = route.params.userId;
-  //       checkUserExist(userId).then((result) => {
-  //         setIsLoading(false);
-  //         if (result !== undefined && result !== null) {
-  //         }
-  //       });
-  //     }
-  //   }
-
-  //   return () => {};
-  // }, [route]);
 
   useEffect(() => {
     if (snapshot !== undefined && snapshot !== null) {
@@ -171,7 +153,7 @@ const ChatUserProfile = ({route, navigation}) => {
                   {profileData.city}
                 </Text>
                 <Text style={[g.colorLightGray, g.fs14, g.FHNR, g.mt5]}>
-                  LastSeen:{' '}
+                  Last Seen:{' '}
                   {profileData.isOnline
                     ? 'Online'
                     : moment(profileData.lastseen).fromNow()}
@@ -190,23 +172,16 @@ const ChatUserProfile = ({route, navigation}) => {
                   grid.justifyContentCenter,
                   {minHeight: scale(65)},
                 ]}>
-                <Text
-                  style={[
-                    g.colordarkGray,
-                    g.fs16,
-                    g.FHNR,
-                    g.txtCenter,
-                    GlobalInclude.AppStyle.transform,
-                  ]}>
-                  {Helpers.concatName(profileData)}{' '}
-                  <Text style={[g.colordarkGray, g.fs16, g.FHNR, g.txtCenter]}>
+                <Text style={[g.colordarkGray, g.fs15, g.FHNR, g.txtLeft]}>
+                  {Helpers.capitalize(Helpers.concatName(profileData))}{' '}
+                  <Text style={[g.colordarkGray, g.fs15, g.FHNR, g.txtLeft]}>
                     has blocked
                   </Text>
-                  <Text style={[g.colorBlue, g.fs24, g.FHNB]}>
+                  <Text style={[g.colordarkGray, g.fs15, g.FHNR]}>
                     {' '}
                     {profileData.blockedUser.length}{' '}
                   </Text>
-                  <Text style={[g.colordarkGray, g.fs16, g.FHNR]}>
+                  <Text style={[g.colordarkGray, g.fs15, g.FHNR]}>
                     users on chat.
                   </Text>
                 </Text>
@@ -222,19 +197,12 @@ const ChatUserProfile = ({route, navigation}) => {
                   grid.justifyContentCenter,
                   {minHeight: scale(65)},
                 ]}>
-                <Text
-                  style={[
-                    g.colordarkGray,
-                    g.fs15,
-                    g.FHNR,
-                    g.txtCenter,
-                    GlobalInclude.AppStyle.transform,
-                  ]}>
-                  {Helpers.concatName(profileData)}{' '}
-                  <Text style={[g.colordarkGray, g.fs15, g.FHNR, g.txtCenter]}>
+                <Text style={[g.colordarkGray, g.fs15, g.FHNR, g.txtLeft]}>
+                  {Helpers.capitalize(Helpers.concatName(profileData))}{' '}
+                  <Text style={[g.colordarkGray, g.fs15, g.FHNR, g.txtLeft]}>
                     has been blocked by
                   </Text>
-                  <Text style={[g.colorBlue, g.fs24, g.FHNB]}>
+                  <Text style={[g.colordarkGray, g.fs15, g.FHNR]}>
                     {' '}
                     {profileData.blockedBy.length}{' '}
                   </Text>
@@ -264,11 +232,19 @@ const ChatUserProfile = ({route, navigation}) => {
                 <Text style={[g.colordarkGray, g.fs18, g.FHNM, g.txtLeft]}>
                   Email Address:
                 </Text>
-                <Text style={[g.colorBlack, g.fs16, g.FHNR, g.mt3]}>
-                  {profileData.emailScope === 0
-                    ? 'Set to Private'
-                    : profileData.email}
-                </Text>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    if (profileData.emailScope !== 0) {
+                      Helpers.openEmail(profileData.email);
+                    }
+                  }}>
+                  <Text style={[g.colorBlack, g.fs16, g.FHNR, g.mt3]}>
+                    {profileData.emailScope === 0
+                      ? 'Set to Private'
+                      : profileData.email}
+                  </Text>
+                </TouchableOpacity>
               </View>
               <View
                 style={[
@@ -283,11 +259,18 @@ const ChatUserProfile = ({route, navigation}) => {
                 <Text style={[g.colordarkGray, g.fs18, g.FHNM, g.txtLeft]}>
                   Phone Number:
                 </Text>
-                <Text style={[g.colorBlack, g.fs16, g.FHNR, g.mt3]}>
-                  {profileData.phoneScope === 0
-                    ? 'Set to Private'
-                    : profileData.phone}
-                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (profileData.phoneScope !== 0) {
+                      Helpers.openDialler(profileData.phone);
+                    }
+                  }}>
+                  <Text style={[g.colorBlack, g.fs16, g.FHNR, g.mt3]}>
+                    {profileData.phoneScope === 0
+                      ? 'Set to Private'
+                      : profileData.phone}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
             {/* section three */}

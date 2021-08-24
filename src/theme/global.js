@@ -54,6 +54,9 @@ export default {
   colorBlack: {
     color: '#000000',
   },
+  colorCherryRed: {
+    color: '#990f02',
+  },
   colorGray: {
     color: '#6e6e6e',
   },
@@ -71,6 +74,9 @@ export default {
   },
   colordarkGray: {
     color: '#333333',
+  },
+  colorSkyBlue: {
+    color: '#34b7f1',
   },
   colorDisabled: {
     color: '#ebebe4',

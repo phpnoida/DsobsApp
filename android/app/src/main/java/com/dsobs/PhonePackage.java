@@ -9,7 +9,7 @@ import com.facebook.react.uimanager.ViewManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
- 
+
 public class PhonePackage implements ReactPackage {
 
   public List<Class<? extends JavaScriptModule>> createJSModules() {

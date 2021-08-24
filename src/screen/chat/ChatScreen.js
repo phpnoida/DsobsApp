@@ -35,6 +35,7 @@ import EmojiSelector from 'react-native-emoji-selector';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
 import * as Animatable from 'react-native-animatable';
 import {useNavigation} from '@react-navigation/native';
+import {getScrappedData} from '../../Actions/CommonActions';
 import _ from 'lodash';
 
 // Firestore
@@ -52,7 +53,7 @@ import {
   addUserToBlockList,
 } from '../../helper/ChatHelper';
 
-const {height} = Dimensions.get('window');
+const {height, width} = Dimensions.get('window');
 
 let selectedFontSize = 1;
 let challenger = null,
@@ -61,7 +62,6 @@ let challenger = null,
 var isChatExist = null;
 let newItems = false;
 let lastPickedMsgId = '';
-let backHandler = null;
 let isStickerShowing = false;
 let lastPickIndex = -1;
 let blockMsg = '';
@@ -69,6 +69,7 @@ let inEditMode = false;
 let isOpponentMuted = false;
 let documentItem = '';
 let playAudio = '';
+let extraObjects = null;
 let latestMessageArray = [];
 let bottomUnread = 0;
 let newMessageList = [];
@@ -79,6 +80,7 @@ let wantsUpdateChilds = [];
 let pendingChilds = [];
 let lastOnlineStatus = false;
 let imageArray = [];
+let isBackTap = false;
 
 const scrollToBottomOffset = 200;
 const usersCollection = firestore().collection('Users');
@@ -176,20 +178,11 @@ const ChatScreen = ({route}) => {
       }
     }
 
-    const backAction = () => {
-      if (navigation.isFocused()) {
-        setUserLastSeenAndMakeOffline();
-        return true;
-      }
-    };
-
-    backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-
     //return () => {};
-  }, [route, navigation, validateChatScreen, setUserLastSeenAndMakeOffline]);
+  }, [route, navigation, validateChatScreen]);
 
   const validateChatScreen = useCallback(() => {
-    getChatObject(threadId, (response) => {
+    getChatObject(threadId, response => {
       if (response && response !== null && response !== undefined) {
         isChatExist = response;
         offlineSelf(true, () => {
@@ -199,17 +192,17 @@ const ChatScreen = ({route}) => {
               : null;
 
           checkUserExist(global.userId)
-            .then((result) => {
+            .then(result => {
               if (result !== undefined && result !== null) {
                 let blockedList = result.blockedUser;
-                isChatExist.userInfo.forEach((element) => {
+                isChatExist.userInfo.forEach(element => {
                   if (element._id === global.userId) {
                     challenger = element;
                   } else {
                     opponent = element;
 
                     let inBlocked = blockedList.filter(
-                      (item) => item === element._id,
+                      item => item === element._id,
                     );
 
                     if (
@@ -315,14 +308,14 @@ const ChatScreen = ({route}) => {
             data.latestMessages !== undefined && data.latestMessages !== null
               ? data.latestMessages
               : [];
-          let isMuted = data.mutedBy.filter((item) => global.userId !== item);
+          let isMuted = data.mutedBy.filter(item => global.userId !== item);
           isOpponentMuted = isMuted.length > 0 ? true : false;
 
           let typingUser = data.isTyping;
           let usersList = data.userInfo;
 
           let whoTyping = typingUser.filter(
-            (element) => element.userId !== global.userId,
+            element => element.userId !== global.userId,
           );
 
           if (
@@ -334,7 +327,7 @@ const ChatScreen = ({route}) => {
           }
 
           let isUserAvailable = usersList.filter(
-            (element) => element._id !== global.userId,
+            element => element._id !== global.userId,
           );
 
           if (
@@ -354,13 +347,13 @@ const ChatScreen = ({route}) => {
   }, [chatObjectSnapshot, refreshChatItems]);
 
   const refreshChatItems = useCallback(
-    (isOnline) => {
+    isOnline => {
       if (pendingChilds.length > 0) {
         let cloneArray = _.cloneDeep(pendingChilds);
         let isAnyChildFound = false;
         let oldData = messages;
 
-        cloneArray.forEach((element) => {
+        cloneArray.forEach(element => {
           if (!isGroup) {
             if (element.user._id === global.userId) {
               if (isOnline) {
@@ -380,7 +373,7 @@ const ChatScreen = ({route}) => {
                   element.isDelivered = true;
                 }
               }
-              oldData[oldData.findIndex((el) => el._id === element._id)] =
+              oldData[oldData.findIndex(el => el._id === element._id)] =
                 element;
             }
           }
@@ -401,7 +394,7 @@ const ChatScreen = ({route}) => {
           ) {
             let isFound = false;
             let unreadCount = isChatExist.unreadCount;
-            unreadCount.forEach((element) => {
+            unreadCount.forEach(element => {
               if (element.userId === global.userId) {
                 if (element.count > 0) {
                   isFound = true;
@@ -425,7 +418,7 @@ const ChatScreen = ({route}) => {
   );
 
   /**FirebaseFunction */
-  const onError = (error) => {
+  const onError = error => {
     console.log('====================================');
     console.log('firebase error', error);
     console.log('====================================');
@@ -461,12 +454,12 @@ const ChatScreen = ({route}) => {
           if (showScrollToBottom) {
             newMessageList = append(newMessageList, child.val());
           } else {
-            setMessages((previousMessages) =>
+            setMessages(previousMessages =>
               append(previousMessages, child.val()),
             );
           }
         } else {
-          setMessages((previousMessages) =>
+          setMessages(previousMessages =>
             append(previousMessages, child.val()),
           );
         }
@@ -477,7 +470,7 @@ const ChatScreen = ({route}) => {
       }
     };
 
-    const onValue = (snapshots) => {
+    const onValue = snapshots => {
       if (snapshots && snapshots !== undefined) {
         let msgList = snapshots.reverse();
         setMessages([...msgList]);
@@ -489,7 +482,7 @@ const ChatScreen = ({route}) => {
       }
     };
 
-    const onInitialLoad = (objectValue) => {
+    const onInitialLoad = objectValue => {
       const snapshotVal = objectValue.val();
       let childrenToProcess = snapshotVal
         ? Object.keys(objectValue.val()).length
@@ -598,11 +591,28 @@ const ChatScreen = ({route}) => {
 
     mainRef.once('value', onInitialLoad, onError);
 
+    const backAction = () => {
+      console.log('backAction');
+      // if (navigation.isFocused()) {
+      //   setUserLastSeenAndMakeOffline();
+      //   return true;
+      // }
+      setUserLastSeenAndMakeOffline();
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
     return () => {
       mainRef.off('child_added', childAddedHandler);
-      backHandler.remove();
+      if (backHandler !== undefined && backHandler !== null) {
+        backHandler.remove();
+      }
     };
-  }, [messageThreadId, showScrollToBottom]);
+  }, [messageThreadId, showScrollToBottom, setUserLastSeenAndMakeOffline]);
   /**Firebase All functions Hook**/
 
   /**Firebase child change Hook**/
@@ -617,7 +627,7 @@ const ChatScreen = ({route}) => {
     }
     const mainRef = reference.child(messageThreadId).ref;
 
-    const onChildChanged = (childChanged) => {
+    const onChildChanged = childChanged => {
       if (childChanged && childChanged !== null && childChanged !== undefined) {
         let nextMsg = JSON.parse(JSON.stringify(childChanged.val()));
         let msgUser = nextMsg.user;
@@ -627,7 +637,7 @@ const ChatScreen = ({route}) => {
           msgUser._id !== global.userId
         ) {
           let oldData = messages;
-          oldData[oldData.findIndex((el) => el._id === nextMsg._id)] = nextMsg;
+          oldData[oldData.findIndex(el => el._id === nextMsg._id)] = nextMsg;
           if (oldData.length > 0) {
             setMessages([...oldData]);
           }
@@ -667,7 +677,7 @@ const ChatScreen = ({route}) => {
     return message.concat(currentMessages);
   };
 
-  const sendUserTyping = (typing) => {
+  const sendUserTyping = typing => {
     if (previousStatusOfTyping !== typing) {
       previousStatusOfTyping = typing;
 
@@ -675,7 +685,7 @@ const ChatScreen = ({route}) => {
         let isTyping = isChatExist.isTyping;
         if (isTyping !== undefined && isTyping !== null) {
           let element = {userId: global.userId, status: typing};
-          isTyping[isTyping.findIndex((el) => el.userId === global.userId)] =
+          isTyping[isTyping.findIndex(el => el.userId === global.userId)] =
             element;
         }
 
@@ -689,7 +699,7 @@ const ChatScreen = ({route}) => {
 
   const offlineSelf = (status, callback) => {
     if (threadId !== undefined && threadId !== null && threadId !== '') {
-      getChatObject(threadId, (response) => {
+      getChatObject(threadId, response => {
         if (response && response !== null && response !== undefined) {
           let userInfo = response.userInfo;
           let unreadCount = response.unreadCount;
@@ -708,7 +718,7 @@ const ChatScreen = ({route}) => {
 
           if (isTyping !== undefined && isTyping !== null) {
             let element = {userId: global.userId, status: false};
-            isTyping[isTyping.findIndex((el) => el.userId === global.userId)] =
+            isTyping[isTyping.findIndex(el => el.userId === global.userId)] =
               element;
           }
 
@@ -721,7 +731,7 @@ const ChatScreen = ({route}) => {
           }
           if (status) {
             var isFound = false;
-            unreadCount.forEach((element) => {
+            unreadCount.forEach(element => {
               if (element.userId === global.userId) {
                 if (element.count > 0) {
                   isFound = true;
@@ -752,7 +762,7 @@ const ChatScreen = ({route}) => {
   const updateChatMessages = (messageArray, clearArray) => {
     var rv = {};
 
-    messageArray.forEach((element) => {
+    messageArray.forEach(element => {
       rv[element._id] = element;
     });
 
@@ -766,10 +776,10 @@ const ChatScreen = ({route}) => {
             pendingChilds = [];
             if (inMessageThread) {
               let foundData = false;
-              getChatObject(threadId, (response) => {
+              getChatObject(threadId, response => {
                 if (response && response !== null && response !== undefined) {
                   let unreadCount = response.unreadCount;
-                  unreadCount.forEach((element) => {
+                  unreadCount.forEach(element => {
                     if (element.userId === global.userId) {
                       if (element.count > 0) {
                         element.count = 0;
@@ -802,7 +812,7 @@ const ChatScreen = ({route}) => {
    *
    */
 
-  const userLastMessage = (request) => {
+  const userLastMessage = request => {
     let message = '';
     if (request.messageType === 1) {
       message = request.message;
@@ -833,7 +843,7 @@ const ChatScreen = ({route}) => {
         request.message !== undefined &&
         request.message !== ''
           ? request.message
-          : Helper.getFilename(request.media);
+          : request.extraObjects.fileName;
     } else if (request.messageType === 6) {
       message = request.message;
     }
@@ -842,7 +852,7 @@ const ChatScreen = ({route}) => {
 
   const generateSingleChat = async (request, callback) => {
     let message = userLastMessage(request);
-    createSingleChat(opponent, message, (chatObject) => {
+    createSingleChat(opponent, message, chatObject => {
       if (chatObject !== undefined && chatObject !== null) {
         isChatExist = chatObject;
         threadId = chatObject._id;
@@ -854,7 +864,7 @@ const ChatScreen = ({route}) => {
 
   const addObjectToChat = (request, chatId) => {
     let childRef = reference.child(chatId);
-    childRef.push().then((snap) => {
+    childRef.push().then(snap => {
       const _id = snap.key;
       request._id = _id;
       snap.set(request).then(() => {
@@ -899,8 +909,7 @@ const ChatScreen = ({route}) => {
     let isTyping = isChatExist.isTyping;
     if (isTyping !== undefined && isTyping !== null) {
       let element = {userId: global.userId, status: false};
-      isTyping[isTyping.findIndex((el) => el.userId === global.userId)] =
-        element;
+      isTyping[isTyping.findIndex(el => el.userId === global.userId)] = element;
     } else {
       isTyping = [
         {userId: global.userId, status: false},
@@ -936,12 +945,12 @@ const ChatScreen = ({route}) => {
     return request;
   };
 
-  const setUnreadCount = (requestObject) => {
-    getChatObject(threadId, (response) => {
+  const setUnreadCount = requestObject => {
+    getChatObject(threadId, response => {
       if (response && response !== null && response !== undefined) {
         let unreadCount = response.unreadCount;
 
-        unreadCount.forEach((element) => {
+        unreadCount.forEach(element => {
           if (element.userId !== global.userId) {
             element.count = element.count + 1;
           }
@@ -959,10 +968,10 @@ const ChatScreen = ({route}) => {
     });
   };
 
-  const postMsg = (request) => {
+  const postMsg = request => {
     setIsSending(true);
     if (isChatExist === null) {
-      generateSingleChat(request, (chatId) => {
+      generateSingleChat(request, chatId => {
         addObjectToChat(request, chatId);
       });
     } else {
@@ -981,7 +990,7 @@ const ChatScreen = ({route}) => {
    * @PostMessage
    */
 
-  const editMessageInThread = () => {
+  const editMessageInThread = extraObjects => {
     setIsSending(true);
     let selectedMsg = selectedChatObject;
     selectedMsg.message = inputValue;
@@ -1018,6 +1027,7 @@ const ChatScreen = ({route}) => {
     replayInput,
     replayMedia,
     replayMediaType,
+    extraObjects,
   ) => {
     let selectedMsg = selectedChatObject;
     let request = generateChatObject(
@@ -1058,13 +1068,14 @@ const ChatScreen = ({route}) => {
     };
   };
 
-  const handleInputChat = (type, input, mediaType, media) => {
+  const handleInputChat = (type, input, mediaType, media, extraItem) => {
     if (inEditMode) {
-      editMessageInThread();
+      editMessageInThread(extraItem);
     } else if (isReplayEditComment) {
-      postUserCommentInThread(input, media, mediaType);
+      postUserCommentInThread(input, media, mediaType, extraItem);
     } else {
       let request = generateChatObject(input, media, mediaType);
+      request.extraObjects = extraItem;
       postMsg(request);
     }
   };
@@ -1078,7 +1089,7 @@ const ChatScreen = ({route}) => {
    * @CommonFunctions
    */
 
-  const blockUser = (wantBlock) => {
+  const blockUser = wantBlock => {
     Alert.alert(
       wantBlock ? 'Block User' : 'Unblock User',
       `Are you sure you want to ${
@@ -1093,7 +1104,7 @@ const ChatScreen = ({route}) => {
         {
           text: 'Yes',
           onPress: () => {
-            addUserToBlockList(opponent._id, (status) => {
+            addUserToBlockList(opponent._id, status => {
               Alert.alert(
                 '',
                 status
@@ -1122,7 +1133,7 @@ const ChatScreen = ({route}) => {
       blockedList !== null &&
       blockedList !== ''
     ) {
-      let isBlocked = blockedList.filter((user) => global.userId === user);
+      let isBlocked = blockedList.filter(user => global.userId === user);
 
       blockMsg = `${Helper.capitalize(
         Helper.concatName(opponent),
@@ -1133,7 +1144,7 @@ const ChatScreen = ({route}) => {
       blockedBy !== null &&
       blockedBy !== ''
     ) {
-      let isBlocked = blockedBy.filter((user) => global.userId === user);
+      let isBlocked = blockedBy.filter(user => global.userId === user);
       blockMsg = `${Helper.capitalize(
         Helper.concatName(challenger),
       )} has blocked this chat.`;
@@ -1142,17 +1153,20 @@ const ChatScreen = ({route}) => {
   };
 
   const setUserLastSeenAndMakeOffline = useCallback(() => {
-    offlineSelf(false, () => {
-      resetOldData();
-      setTimeout(() => {
+    if (!isBackTap) {
+      isBackTap = true;
+      global.loader_ref.show_loader(1);
+      offlineSelf(false, () => {
+        global.loader_ref.show_loader(0);
+        resetOldData();
         navigation.reset({
           routes: [{name: 'Dashboard'}, {name: 'ChatUserList'}],
         });
-      }, 200);
-    });
+      });
+    }
   }, [navigation]);
 
-  const handleOnScroll = (event) => {
+  const handleOnScroll = event => {
     const {
       nativeEvent: {
         contentOffset: {y: contentOffsetY},
@@ -1163,8 +1177,8 @@ const ChatScreen = ({route}) => {
       setShowScrollToBottom(true);
     } else {
       if (contentOffsetY === 0) {
-        newMessageList.forEach((element) => {
-          setMessages((previousMessages) => append(previousMessages, element));
+        newMessageList.forEach(element => {
+          setMessages(previousMessages => append(previousMessages, element));
         });
       }
       bottomUnread = 0;
@@ -1190,6 +1204,7 @@ const ChatScreen = ({route}) => {
   const keyExtractor = (item, index) => index;
 
   const resetOldData = () => {
+    isBackTap = false;
     selectedFontSize = 1;
     challenger = null;
     opponent = null;
@@ -1197,7 +1212,6 @@ const ChatScreen = ({route}) => {
     isChatExist = null;
     newItems = false;
     lastPickedMsgId = '';
-    backHandler = null;
     isStickerShowing = false;
     lastPickIndex = -1;
     blockMsg = '';
@@ -1215,6 +1229,35 @@ const ChatScreen = ({route}) => {
     pendingChilds = [];
     lastOnlineStatus = false;
     imageArray = [];
+  };
+
+  const doScrapping = (link, onDone) => {
+    getScrappedData(
+      link,
+      response => {
+        if (
+          response &&
+          response !== null &&
+          response.data &&
+          response.data !== undefined &&
+          response.data !== null
+        ) {
+          let data = response.data;
+          if (data.status) {
+            let child = data.data;
+            onDone(child);
+          } else {
+            onDone(null);
+          }
+        } else {
+          onDone(null);
+        }
+      },
+      (error, code) => {
+        console.log('error', error, code);
+        onDone(null);
+      },
+    );
   };
 
   /**
@@ -1255,6 +1298,7 @@ const ChatScreen = ({route}) => {
               setShowDocViewer(true);
             } else if (item.messageType === 4) {
               playAudio = item.media;
+              extraObjects = item.extraObjects;
               setShowPlayer(!showPlayer);
             } else if (item.messageType === 2) {
               imageArray = [];
@@ -1329,9 +1373,9 @@ const ChatScreen = ({route}) => {
           container: GlobalInclude.AppStyle.sheetContainer,
         }}>
         <EmojiSelector
-          onEmojiSelected={(emoji) => {
+          onEmojiSelected={emoji => {
             emojiRef.current.close();
-            handleInputChat(1, emoji, 6, '');
+            handleInputChat(1, emoji, 6, '', null);
           }}
         />
       </OptionsSheet>
@@ -1855,14 +1899,14 @@ const ChatScreen = ({route}) => {
                         </TouchableOpacity>
                       </Animatable.View>
                       <TextInput
-                        autoCapitalize="none"
+                        autoCapitalize={'sentences'}
                         underlineColorAndroid="transparent"
                         style={[styles.inputContainer, styles.inputView]}
-                        keyboardType="default"
+                        keyboardType={'default'}
                         value={inputValue}
                         multiline={true}
                         placeholder="Enter text here"
-                        onChangeText={(input) => {
+                        onChangeText={input => {
                           setInputValue(input);
                           sendUserTyping(input.length > 0 ? true : false);
 
@@ -1913,7 +1957,7 @@ const ChatScreen = ({route}) => {
                     <TouchableOpacity
                       style={[styles.commentButton, styles.enableButton]}
                       onPress={() => {
-                        handleInputChat(1, inputValue, 1, '');
+                        handleInputChat(1, inputValue, 1, '', null);
                       }}>
                       {isSending ? (
                         <ActivityIndicator size={'small'} color={'#fff'} />
@@ -1967,9 +2011,10 @@ const ChatScreen = ({route}) => {
         refRBSheet={uploadRef}
         media={{image: false, video: false, document: false, audio: false}}
         supportMultiple={false}
-        onPickMedia={(media) => {
+        onPickMedia={media => {
+          console.log(';media', media);
           if (media !== undefined && media !== null) {
-            media.forEach((item) => {
+            media.forEach(item => {
               let mediaType = '1';
               if (item.type === 1) {
                 mediaType = 2;
@@ -1983,7 +2028,50 @@ const ChatScreen = ({route}) => {
               if (item.type === 4) {
                 mediaType = 4;
               }
-              handleInputChat(2, inputValue, mediaType, item.fileName);
+
+              if (item.type === 1) {
+                global.loader_ref.show_loader(1);
+                Image.getSize(item.fileName, (iw, ih) => {
+                  console.log(ih, iw);
+                  let windowWidth = width - 80;
+                  let ratio = Math.min(windowWidth / iw, height / ih);
+                  let iWidth = Math.ceil(iw * ratio);
+                  let iHeight = Math.ceil(ih * ratio);
+                  let element = {};
+                  element.iw = iWidth;
+                  element.ih = iHeight;
+                  global.loader_ref.show_loader(0);
+                  handleInputChat(
+                    2,
+                    inputValue,
+                    mediaType,
+                    item.fileName,
+                    element,
+                  );
+                });
+              } else if (item.type === 2) {
+                global.loader_ref.show_loader(1);
+                doScrapping(item.fileName, callback => {
+                  global.loader_ref.show_loader(0);
+                  handleInputChat(
+                    2,
+                    inputValue,
+                    mediaType,
+                    item.fileName,
+                    callback,
+                  );
+                });
+              } else if (item.type === 3 || item.type === 4) {
+                handleInputChat(
+                  2,
+                  inputValue,
+                  mediaType,
+                  item.fileName,
+                  item.requestObject,
+                );
+              } else {
+                handleInputChat(2, inputValue, mediaType, item.fileName, null);
+              }
             });
           }
 
@@ -2004,6 +2092,7 @@ const ChatScreen = ({route}) => {
       {showPlayer && (
         <AudioPlayer
           mediaContent={playAudio}
+          extraObjects={extraObjects}
           onClose={() => {
             setShowPlayer(false);
           }}

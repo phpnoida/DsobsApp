@@ -1,4 +1,5 @@
 export const SET_NOTIFICATION = 'SET_NOTIFICATION';
+export const CLEAR_NOTIFICATION = 'CLEAR_NOTIFICATION';
 export const CLEAR_RESULT = 'CLEAR_RESULT';
 export const UPDATE_IMAGES = 'UPDATE_IMAGES';
 export const CLEAR_IMAGE_UPDATE = 'CLEAR_IMAGE_UPDATE';
@@ -11,6 +12,12 @@ const initialState = [];
 export function refreshScreen() {
   return {
     type: SET_NOTIFICATION,
+    payload: '',
+  };
+}
+export function clearNotifications() {
+  return {
+    type: CLEAR_NOTIFICATION,
     payload: '',
   };
 }
@@ -66,6 +73,8 @@ function notesReducer(state = initialState, action) {
   switch (action.type) {
     case SET_NOTIFICATION:
       return {...state, refresh: true};
+    case CLEAR_NOTIFICATION:
+      return {...state, refresh: false};
     case CLEAR_RESULT:
       return {...state};
     case UPDATE_IMAGES:

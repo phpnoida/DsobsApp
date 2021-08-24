@@ -6,20 +6,23 @@ import {
   Dimensions,
   TouchableOpacity,
   Linking,
+  ActivityIndicator,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import ProgressImage from '../../component/ProgresImage';
-import YoutubeView from '../../component/YoutubeView';
+import YoutubeView from '../../component/YoutubeItem';
 import moment from 'moment';
 import ParsedText from 'react-native-parsed-text';
 import Helper from '../../helper/Helper';
+import Pdf from 'react-native-pdf';
 
 import {isSameUser, isSameDay} from '../../helper/ChatHelper';
 import {IconType} from '../../helper/Constants';
 import {showMediaType, showImageThumb} from './ChatDelegates';
+import Helpers from '../../helper/Helper';
 
 const {height, width} = Dimensions.get('window');
 
@@ -123,6 +126,22 @@ class ChatItem extends PureComponent {
   }
 
   renderImageComponent(source) {
+    const {currentMessage} = this.props;
+    if (
+      currentMessage.extraObjects !== undefined &&
+      currentMessage.extraObjects !== null
+    ) {
+      let ih = currentMessage.extraObjects.ih - scale(7);
+      let iw = currentMessage.extraObjects.iw - scale(7);
+      return (
+        <ProgressImage
+          source={{uri: source}}
+          containerStyle={{height: ih, width: iw, borderRadius: scale(6)}}
+          imageStyle={{height: ih, width: iw, borderRadius: scale(6)}}
+          mode={'cover'}
+        />
+      );
+    }
     return (
       <ProgressImage
         source={{uri: source}}
@@ -133,47 +152,170 @@ class ChatItem extends PureComponent {
     );
   }
   renderPdfComponent(source) {
+    const {customFont, currentMessage} = this.props;
     return (
-      <View style={[styles.youtubeView, grid.alignItems]}>
-        <GlobalInclude.BaseIcon
-          containerStyle={{height: scale(64), width: scale(64)}}
-          iconColor={'#E61A2D'}
-          iconName={'file-pdf-o'}
-          iconSize={scale(64)}
-          iconType={IconType[4]}
+      <View style={styles.pdfMainContainer}>
+        <Pdf
+          singlePage={true}
+          enablePaging={true}
+          enableAntialiasing={true}
+          activityIndicator={
+            <View style={styles.indicator}>
+              <ActivityIndicator
+                color={GlobalInclude.Color.ColorPrimary}
+                size={'small'}
+              />
+            </View>
+          }
+          source={{
+            uri: source,
+          }}
+          style={[styles.youtubeThumb, styles.pdfContainer]}
         />
+        {currentMessage.extraObjects !== undefined && currentMessage !== null && (
+          <View
+            style={[
+              {maxWidth: width - 120},
+              grid.rowrow,
+              g.p5,
+              grid.alignItems,
+              grid.justifyContentCenter,
+            ]}>
+            <View style={grid.row}>
+              <GlobalInclude.BaseIcon
+                containerStyle={{height: scale(20), width: scale(20)}}
+                iconColor={'#990f02'}
+                iconName={'pdffile1'}
+                iconSize={scale(17)}
+                iconType={IconType[10]}
+              />
+              <Text
+                numberOfLines={1}
+                style={[
+                  g.FHNR,
+                  g.colorBlue,
+                  g.txtCenterVertical,
+                  g.txtLeft,
+                  customFont,
+                ]}>
+                {currentMessage.extraObjects.fileName}
+              </Text>
+            </View>
+            <View style={[grid.rowrow, g.ml5]}>
+              <Text
+                style={[
+                  g.FHNM,
+                  g.colorGray,
+                  g.txtCenterVertical,
+                  g.txtLeft,
+                  g.fs12,
+                ]}>
+                {Helpers.humanFileSize(currentMessage.extraObjects.fileSize)}
+              </Text>
+              <Text
+                style={[
+                  g.FHNM,
+                  g.colorGray,
+                  g.txtCenterVertical,
+                  g.txtLeft,
+                  g.fs12,
+                  g.ml5,
+                  {textTransform: 'uppercase'},
+                ]}>
+                {Helpers.getExtention(currentMessage.extraObjects.fileName)}
+              </Text>
+            </View>
+          </View>
+        )}
       </View>
     );
   }
   renderAudioComponent(source) {
+    const {customFont, currentMessage} = this.props;
     return (
-      <View
-        style={[
-          {aspectRatio: 1 / 1, height: scale(90)},
-          grid.alignItems,
-          grid.justifyContentCenter,
-        ]}>
-        <GlobalInclude.BaseIcon
-          containerStyle={{height: scale(48), width: scale(48)}}
-          iconColor={'#E61A2D'}
-          iconName={'file-audio-o'}
-          iconSize={scale(38)}
-          iconType={IconType[4]}
-        />
+      <View style={[styles.pdfMainContainer, grid.rowrow]}>
+        <View
+          style={{
+            height: scale(40),
+            width: scale(40),
+            borderRadius: scale(42),
+            backgroundColor: 'rgba(62,62,62,0.25)',
+            margin: scale(3),
+            marginHorizontal: scale(5),
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+          <GlobalInclude.BaseIcon
+            containerStyle={{
+              height: scale(38),
+              width: scale(38),
+              justifyContent: 'center',
+              alignItems: 'center',
+              alignContent: 'center',
+            }}
+            iconColor={GlobalInclude.Color.ColorPrimary}
+            iconName={'headset'}
+            iconSize={scale(30)}
+            iconType={IconType[6]}
+          />
+        </View>
+        <View style={[grid.col, grid.justifyContentCenter]}>
+          <Text
+            numberOfLines={1}
+            style={[
+              g.mb5,
+              g.FHNR,
+              g.colorBlue,
+              g.txtCenterVertical,
+              g.txtLeft,
+              customFont,
+            ]}>
+            {currentMessage.extraObjects.fileName}
+          </Text>
+          <View style={[grid.rowrow]}>
+            <Text
+              style={[
+                g.FHNM,
+                g.colorGray,
+                g.txtCenterVertical,
+                g.txtLeft,
+                g.fs12,
+              ]}>
+              {Helpers.humanFileSize(currentMessage.extraObjects.fileSize)}
+            </Text>
+            <Text
+              style={[
+                g.FHNM,
+                g.colorGray,
+                g.txtCenterVertical,
+                g.txtLeft,
+                g.fs12,
+                g.ml5,
+                {textTransform: 'uppercase'},
+              ]}>
+              {Helpers.getExtention(currentMessage.extraObjects.fileName)}
+            </Text>
+          </View>
+        </View>
       </View>
     );
   }
-  renderVideoComponent(source) {
+  renderVideoComponent(source, currentMessage) {
     return (
       <YoutubeView
+        extraObjects={currentMessage.extraObjects}
         link={source}
-        containerStyle={styles.youtubeView}
+        containerWidth={width - 120}
+        containerStyle={styles.youtubeVideo}
         overlayStyle={styles.overlayStyle}
-        thumbStyle={styles.thumbStyle}
+        thumbStyle={styles.youtubeThumb}
         playIconstyle={styles.playIconstyle}
         playIconContainer={{
           height: scale(20),
           width: scale(20),
+          justifyContent: 'center',
+          alignSelf: 'center',
+          alignItems: 'center',
         }}
         iconSize={scale(20)}
         showPlay={true}
@@ -191,9 +333,9 @@ class ChatItem extends PureComponent {
         ]}>
         <Text
           style={[
-            customFont,
+            g.fs11,
             g.FHNR,
-            g.colorBlue,
+            g.colorGray5,
             isLeft ? grid.justifyContentLeft : grid.justifyContentRight,
             isLeft ? grid.alignSelf : grid.alignItemsBottom,
             g.txtCenterVertical,
@@ -322,8 +464,10 @@ class ChatItem extends PureComponent {
   }
 
   renderItem(currentMessage, isLeft) {
+    const {onLongPress, onPress} = this.props;
+
     let style = {
-      paddingHorizontal: scale(0.5),
+      paddingHorizontal: scale(1),
       paddingTop: scale(3),
       paddingBottom: scale(3),
     };
@@ -342,6 +486,15 @@ class ChatItem extends PureComponent {
       messageContent = currentMessage.message;
       mediaContent = currentMessage.media;
       messageType = currentMessage.messageType;
+
+      if (messageType === 1) {
+        style = {};
+        style = {
+          paddingHorizontal: scale(5),
+          paddingTop: scale(8),
+          paddingBottom: scale(5),
+        };
+      }
     }
 
     return (
@@ -353,14 +506,17 @@ class ChatItem extends PureComponent {
         {currentMessage.delete ? (
           <View style={style}>{this.renderRemovedMsg(isLeft)}</View>
         ) : (
-          <View>
+          <TouchableOpacity
+            onPress={onPress}
+            onLongPress={onLongPress}
+            activeOpacity={1}>
             {messageType === 2 ? (
               <View style={style}>
                 {this.renderImageComponent(mediaContent)}
               </View>
             ) : messageType === 3 ? (
               <View style={style}>
-                {this.renderVideoComponent(mediaContent)}
+                {this.renderVideoComponent(mediaContent, currentMessage)}
               </View>
             ) : messageType === 4 ? (
               <View style={style}>
@@ -384,7 +540,7 @@ class ChatItem extends PureComponent {
                   {this.renderTextComponent(messageContent, isLeft)}
                 </View>
               )}
-          </View>
+          </TouchableOpacity>
         )}
 
         <View
@@ -454,8 +610,7 @@ class ChatItem extends PureComponent {
   }
 
   render() {
-    const {currentMessage, nextMessage, position, onLongPress, onPress} =
-      this.props;
+    const {currentMessage, nextMessage, position} = this.props;
     const sameUser = isSameUser(currentMessage, nextMessage);
 
     return (
@@ -463,10 +618,7 @@ class ChatItem extends PureComponent {
         {currentMessage.system ? (
           this.renderSystemMessage()
         ) : (
-          <TouchableOpacity
-            onPress={onPress}
-            onLongPress={onLongPress}
-            activeOpacity={1}
+          <View
             style={[
               g.pl5,
               g.pr5,
@@ -479,7 +631,7 @@ class ChatItem extends PureComponent {
             {position === 'right'
               ? this.renderRightSide(currentMessage)
               : this.renderLeftSide(currentMessage)}
-          </TouchableOpacity>
+          </View>
         )}
       </View>
     );
@@ -531,6 +683,21 @@ const styles = StyleSheet.create({
     alignContent: 'flex-start',
     justifyContent: 'flex-start',
   },
+  youtubeVideo: {
+    width: width - 120,
+    aspectRatio: 16 / 9,
+    borderRadius: 0,
+    borderTopLeftRadius: scale(10),
+    borderTopRightRadius: scale(10),
+    justifyContent: 'center',
+  },
+  youtubeThumb: {
+    width: width - 120,
+    aspectRatio: 16 / 9,
+    borderRadius: 0,
+    borderTopLeftRadius: scale(10),
+    borderTopRightRadius: scale(10),
+  },
   youtubeView: {
     aspectRatio: 1 / 1,
     height: scale(165),
@@ -545,7 +712,9 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     zIndex: 1,
-    borderRadius: scale(10),
+    borderRadius: 0,
+    borderTopLeftRadius: scale(10),
+    borderTopRightRadius: scale(10),
   },
   thumbStyle: {
     aspectRatio: 1 / 1,
@@ -555,8 +724,14 @@ const styles = StyleSheet.create({
   playIconstyle: {
     position: 'absolute',
     zIndex: 9,
-    bottom: 15,
-    left: 15,
+    alignItems: 'center',
+    alignSelf: 'center',
+    alignContent: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(62,62,62,0.5)',
+    height: scale(36),
+    width: scale(36),
+    borderRadius: scale(100),
   },
   tick: {
     fontSize: 10,
@@ -621,6 +796,24 @@ const styles = StyleSheet.create({
   },
   hashTag: {
     fontStyle: 'italic',
+  },
+  pdfContainer: {
+    backgroundColor: 'white',
+    borderRadius: 0,
+    borderTopLeftRadius: scale(8),
+    borderTopRightRadius: scale(8),
+  },
+  indicator: {
+    height: '100%',
+    width: '100%',
+    alignItems: 'center',
+    alignContent: 'center',
+    justifyContent: 'center',
+  },
+  pdfMainContainer: {
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderRadius: scale(6),
+    width: width - 120,
   },
 });
 

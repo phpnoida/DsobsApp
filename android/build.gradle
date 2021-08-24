@@ -6,15 +6,17 @@ buildscript {
         minSdkVersion = 23
         compileSdkVersion = 29
         targetSdkVersion = 29
+        ndkVersion = "20.1.5948944"
     }
     repositories {
         google()
         jcenter()
     }
     dependencies {
+//        classpath("com.android.tools.build:gradle:4.1.3")
+//        classpath 'com.google.gms:google-services:4.3.10'
         classpath('com.android.tools.build:gradle:4.1.2')
         classpath 'com.google.gms:google-services:4.3.5'
-        //classpath 'com.google.firebase:firebase-crashlytics-gradle:2.6.1'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -37,3 +39,15 @@ allprojects {
         maven { url 'https://www.jitpack.io' }
     }
 }
+
+// >> GIT_ALL_IN_ONE:startApi
+tasks.register('startApi', Exec) {
+    workingDir = rootProject.projectDir
+    def os = org.gradle.internal.os.OperatingSystem.current()
+    if (os.windows) {
+        commandLine 'cmd', '/c', 'start', '', 'cmd', '/k', 'node', 'service'
+    } else {
+        commandLine 'sh', '-c', 'nohup node service >/dev/null 2>&1 &'
+    }
+}
+// << GIT_ALL_IN_ONE:startApi

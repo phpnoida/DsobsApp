@@ -92,7 +92,24 @@ export function sendPresenceStatus(callback, errCallback) {
       callback(res);
     })
     .catch((err) => {
-      handleError(err, errCallback);
+      if (
+        err.response &&
+        err.response !== null &&
+        err.response.data &&
+        err.response.data !== null
+      ) {
+        let errorData = err.response.data;
+        if (err.response.status === 401) {
+          errCallback(401, err);
+        }
+        if (errorData.message) {
+          errCallback(err.response.status, errorData.message);
+        } else {
+          errCallback(err.response.status, err);
+        }
+      } else {
+        errCallback('-1', err);
+      }
     });
   return {
     payload: request,
