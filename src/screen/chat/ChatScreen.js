@@ -191,7 +191,7 @@ const ChatScreen = ({route}) => {
               ? response.isGroup
               : null;
 
-          checkUserExist(global.userId)
+          checkUserExist(global.userId,false)
             .then(result => {
               if (result !== undefined && result !== null) {
                 let blockedList = result.blockedUser;

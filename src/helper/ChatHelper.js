@@ -1,5 +1,6 @@
 import {Platform} from 'react-native';
 import firestore from '@react-native-firebase/firestore';
+import database from '@react-native-firebase/database';
 import moment from 'moment';
 import _ from 'lodash';
 import axios from 'axios';
@@ -9,6 +10,7 @@ import {PUSH_KEY} from '../../config';
 const usersCollection = firestore().collection('Users');
 const chatCollection = firestore().collection('Chats');
 const messageCollection = firestore().collection('Messages');
+const reference = database().ref('Messages');
 
 export const getChatId = () => {
   return chatCollection.doc().id;
@@ -94,21 +96,38 @@ export const createSingleChat = (opponentUser, lastMessage, callback) => {
     .then(() => {
       callback(chatObject);
     })
+    .then(() => callback(true))
     .catch(() => {
-      callback(null);
+      callback(false);
     });
 };
 
 export const updateChatObject = (chatId, chatObject, callback) => {
-  chatCollection
-    .doc(chatId)
-    .update(chatObject)
-    .then(() => {
-      callback(true);
+  
+  const postReference = chatCollection.doc(chatId);
+  firestore()
+    .runTransaction(async transaction => {
+      const postSnapshot = await transaction.get(postReference);
+      if (!postSnapshot.exists) {
+        throw 'Post does not exist!';
+      }
+      transaction.update(postReference, chatObject);
     })
-    .catch(() => {
+    .then(() => callback(true))
+    .catch(err => {
+      console.log('err', err);
       callback(false);
     });
+
+  // chatCollection
+  //   .doc(chatId)
+  //   .update(chatObject)
+  //   .then(() => {
+  //     callback(true);
+  //   })
+  //   .catch(() => {
+  //     callback(false);
+  //   });
 };
 
 export const getChatObject = async (chatId, callback) => {
@@ -133,7 +152,7 @@ export const getUserChat = async (opponentUser, chatType) => {
   if (!query.empty) {
     let tmpArray = [];
 
-    query.docs.forEach((item) => {
+    query.docs.forEach(item => {
       tmpArray.push(item.data());
     });
 
@@ -163,6 +182,78 @@ export const checkChatExist = async (opponentUser, chatType) => {
   }
 
   return null;
+};
+
+/**
+ *
+ * @param {*} usersList
+ * @param {*} callback
+ */
+export const createGroupChat = (groupName, usersList, callback) => {
+  let chatId = getChatId();
+
+  var userIds = [];
+  var userTypings = [];
+  var unreads = [];
+
+  usersList.forEach(user => {
+    userIds.push(user._id);
+    userTypings.push({
+      userId: user._id,
+      status: false,
+      userName: Helpers.capitalize(Helpers.concatName(user)),
+    });
+    unreads.push({
+      userId: user._id,
+      count: 0,
+    });
+  });
+
+  const chatObject = {
+    _id: chatId,
+    users: userIds,
+    isTyping: userTypings,
+    userInfo: usersList,
+    lastMessage: '',
+    threadId: chatId,
+    groupAdmin: global.userId,
+    isGroup: true,
+    groupName: groupName,
+    profileImg: '',
+    lastMessageTime: new Date().getTime(),
+    lastMessageType: 1,
+    createdDate: new Date().getTime(),
+    unreadCount: unreads,
+    mutedBy: [],
+    latestMessages: [],
+    removed: [],
+  };
+
+  chatCollection
+    .doc(chatId)
+    .set(chatObject)
+    .then(() => {
+      callback(chatObject);
+    })
+    .catch(error => {
+      console.log('error', error);
+      callback(null);
+    });
+
+  // const postReference = chatCollection.doc(chatId);
+  // firestore()
+  //   .runTransaction(async transaction => {
+  //     const postSnapshot = await transaction.get(postReference);
+  //     if (!postSnapshot.exists) {
+  //       throw 'Post does not exist!';
+  //     }
+  //     transaction.update(postReference, chatObject);
+  //   })
+  //   .then(() => callback(true))
+  //   .catch(error => {
+  //     console.log('error', error);
+  //     callback(false);
+  //   });
 };
 
 /**
@@ -208,6 +299,20 @@ export const addMessageThread = async (threadId, messages, callback) => {
     });
 };
 
+export const getTotalMessages = async (threadId, callback) => {
+  reference
+    .child(threadId)
+    .once('value')
+    .then(snapshot => {
+      console.log('User data: ', snapshot.numChildren());
+      callback(snapshot.numChildren());
+    })
+    .catch(err => {
+      console.log('err', err);
+      callback(0);
+    });
+};
+
 /**
  *
  * Chat operations
@@ -220,18 +325,32 @@ export const addMessageThread = async (threadId, messages, callback) => {
  *
  */
 
-export const checkUserExist = async (userId) => {
-  const query = await usersCollection.where('_id', '==', userId).get();
+export const checkUserExist = async (userId, isGroup) => {
+  //.collection("Users").where("_id", "in", [""])
+  let query = '';
+  if (isGroup) {
+    query = await usersCollection.where('_id', 'in', userId).get();
+  } else {
+    query = await usersCollection.where('_id', '==', userId).get();
+  }
   if (!query.empty) {
-    const snapshot = query.docs[0];
-    const data = snapshot.data();
-    return data;
+    if (isGroup) {
+      let itemArray = [];
+      query.docs.forEach(item => {
+        itemArray.push(item.data());
+      });
+      return itemArray;
+    } else {
+      const snapshot = query.docs[0];
+      const data = snapshot.data();
+      return data;
+    }
   }
   return null;
 };
 
 export const addUser = async (userId, opponentUser, callback) => {
-  const isExist = await checkUserExist(userId);
+  const isExist = await checkUserExist(userId, false);
 
   if (isExist === null) {
     let requestObject = {
@@ -314,7 +433,7 @@ export const updateUserObject = (object, userId, callback) => {
  */
 
 export const addUserToBlockList = async (opponentId, callback) => {
-  const result = await checkUserExist(global.userId);
+  const result = await checkUserExist(global.userId, false);
 
   if (result !== undefined && result !== null) {
     let blockedUser = result.blockedUser;
@@ -342,7 +461,7 @@ export const addUserToBlockList = async (opponentId, callback) => {
 };
 
 export const updateOpponentBlocking = async (opponentId, callback) => {
-  const result = await checkUserExist(opponentId);
+  const result = await checkUserExist(opponentId, false);
 
   if (result !== undefined && result !== null) {
     let blockedByArray = result.blockedBy;
@@ -400,14 +519,71 @@ export function isSameUser(currentMessage = {}, diffMessage = {}) {
 /**
  * Push notification
  */
+
+export const sendWelcomeMessage = (
+  isGroup,
+  result,
+  title,
+  message,
+  threadId,
+  callback,
+) => {
+  let arrayList = [];
+  for (const element of result) {
+    arrayList.push(
+      new Promise(function (resolve, reject) {
+        if (element.enableNotification) {
+          console.log('====================================');
+          console.log('receivers', Helpers.concatName(element));
+          console.log('====================================');
+          let notificationKey = element.notificationKey;
+          let notificationTimestamp = element.notificationTimestamp;
+          let platform = element.platform;
+          let userId = element._id;
+          let topic = `/topics/fcm-${userId}`;
+
+          let data = {
+            title: title,
+            body: message,
+            eventType: 1002,
+            extra: '',
+            linkUrl: '',
+            icon: '',
+            threadId: threadId,
+            isGroup: isGroup,
+          };
+
+          createPushNotification(
+            notificationKey,
+            topic,
+            platform,
+            title,
+            message,
+            data,
+            notificationTimestamp,
+            userId,
+          ).then(status => {
+            resolve(status);
+          });
+        } else {
+          resolve(false);
+        }
+      }),
+    );
+  }
+  Promise.all(arrayList).then(() => {
+    callback(true);
+  });
+};
+
 export const sendPushNotification = async (opponentUser, message, threadId) => {
-  const result = await checkUserExist(opponentUser._id);
+  const result = await checkUserExist(opponentUser._id, false);
 
   if (result !== undefined && result !== null) {
     let enableNotification = result.enableNotification;
 
     if (!enableNotification) {
-      return;
+      return false;
     }
 
     let notificationKey = result.notificationKey;
@@ -427,93 +603,144 @@ export const sendPushNotification = async (opponentUser, message, threadId) => {
       linkUrl: '',
       icon: '',
       threadId: threadId,
+      isGroup: false,
     };
 
     // 1-send notification on all new post 2-twice a day 3-one a day 4-every hour 5-every two hour
-    let chatObject = {
-      notificationTimestamp: new Date().getTime(),
-    };
-    switch (notificationKey) {
-      case 1:
-        executePushNotification(topic, platform, title, message, data);
-        break;
-      case 2:
-        if (
-          notificationTimestamp !== undefined &&
-          notificationTimestamp !== null &&
-          notificationTimestamp !== 0
-        ) {
-          var duration = moment.duration(moment().diff(notificationTimestamp));
-          var hours = duration.asHours();
-          if (hours > 12) {
-            updateUserObject(chatObject, userId, () => {
-              executePushNotification(topic, platform, title, message, data);
-            });
-          }
-        } else {
+    return createPushNotification(
+      notificationKey,
+      topic,
+      platform,
+      title,
+      message,
+      data,
+      notificationTimestamp,
+      userId,
+    );
+  }
+};
+
+export const createPushNotification = async (
+  notificationKey,
+  topic,
+  platform,
+  title,
+  message,
+  data,
+  notificationTimestamp,
+  userId,
+) => {
+  let chatObject = {
+    notificationTimestamp: new Date().getTime(),
+  };
+  switch (notificationKey) {
+    case 1:
+      return executePushNotification(topic, platform, title, message, data);
+    case 2:
+      if (
+        notificationTimestamp !== undefined &&
+        notificationTimestamp !== null &&
+        notificationTimestamp !== 0
+      ) {
+        var duration = moment.duration(moment().diff(notificationTimestamp));
+        var hours = duration.asHours();
+        if (hours > 12) {
           updateUserObject(chatObject, userId, () => {
-            executePushNotification(topic, platform, title, message, data);
+            return executePushNotification(
+              topic,
+              platform,
+              title,
+              message,
+              data,
+            );
           });
         }
-        break;
-      case 3:
-        if (
-          notificationTimestamp !== undefined &&
-          notificationTimestamp !== null &&
-          notificationTimestamp !== 0
-        ) {
-          if (!moment().isSame(notificationTimestamp, 'day')) {
-            updateUserObject(chatObject, userId, () => {
-              executePushNotification(topic, platform, title, message, data);
-            });
-          }
-        } else {
+        return false;
+      } else {
+        updateUserObject(chatObject, userId, () => {
+          return executePushNotification(topic, platform, title, message, data);
+        });
+      }
+      break;
+    case 3:
+      if (
+        notificationTimestamp !== undefined &&
+        notificationTimestamp !== null &&
+        notificationTimestamp !== 0
+      ) {
+        if (!moment().isSame(notificationTimestamp, 'day')) {
           updateUserObject(chatObject, userId, () => {
-            executePushNotification(topic, platform, title, message, data);
+            return executePushNotification(
+              topic,
+              platform,
+              title,
+              message,
+              data,
+            );
+          });
+        } else {
+          return false;
+        }
+      } else {
+        updateUserObject(chatObject, userId, () => {
+          return executePushNotification(topic, platform, title, message, data);
+        });
+      }
+      break;
+    case 4:
+      if (
+        notificationTimestamp !== undefined &&
+        notificationTimestamp !== null &&
+        notificationTimestamp !== 0
+      ) {
+        var duration = moment.duration(moment().diff(notificationTimestamp));
+        var hours = duration.asHours();
+        if (hours > 1) {
+          updateUserObject(chatObject, userId, () => {
+            return executePushNotification(
+              topic,
+              platform,
+              title,
+              message,
+              data,
+            );
           });
         }
-        break;
-      case 4:
-        if (
-          notificationTimestamp !== undefined &&
-          notificationTimestamp !== null &&
-          notificationTimestamp !== 0
-        ) {
-          var duration = moment.duration(moment().diff(notificationTimestamp));
-          var hours = duration.asHours();
-          if (hours > 1) {
-            updateUserObject(chatObject, userId, () => {
-              executePushNotification(topic, platform, title, message, data);
-            });
-          }
-        } else {
+        return false;
+      } else {
+        updateUserObject(chatObject, userId, () => {
+          return executePushNotification(topic, platform, title, message, data);
+        });
+      }
+      break;
+    case 5:
+      if (
+        notificationTimestamp !== undefined &&
+        notificationTimestamp !== null &&
+        notificationTimestamp !== 0
+      ) {
+        var duration = moment.duration(moment().diff(notificationTimestamp));
+        var hours = duration.asHours();
+        if (hours > 2) {
           updateUserObject(chatObject, userId, () => {
-            executePushNotification(topic, platform, title, message, data);
+            return executePushNotification(
+              topic,
+              platform,
+              title,
+              message,
+              data,
+            );
           });
         }
-        break;
-      case 5:
-        if (
-          notificationTimestamp !== undefined &&
-          notificationTimestamp !== null &&
-          notificationTimestamp !== 0
-        ) {
-          var duration = moment.duration(moment().diff(notificationTimestamp));
-          var hours = duration.asHours();
-          if (hours > 2) {
-            updateUserObject(chatObject, userId, () => {
-              executePushNotification(topic, platform, title, message, data);
-            });
-          }
-        } else {
-          updateUserObject(chatObject, userId, () => {
-            executePushNotification(topic, platform, title, message, data);
-          });
-        }
-        break;
-      default:
-        break;
-    }
+        return false;
+      } else {
+        updateUserObject(chatObject, userId, () => {
+          return executePushNotification(topic, platform, title, message, data);
+        });
+      }
+      break;
+    default:
+      break;
   }
 };
 
@@ -555,9 +782,11 @@ export const executePushNotification = async (
   axios(config)
     .then(function (response) {
       console.log(JSON.stringify(response.data));
+      return true;
     })
     .catch(function (error) {
       console.log(error);
+      return true;
     });
 };
 

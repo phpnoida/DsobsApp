@@ -161,10 +161,9 @@ const App = () => {
             global.firstName = null;
             global.lastName = null;
 
-            PushNotification.unsubscribeFromTopic(fcmTopic).then(() => {
-              validateUser(() => {
-                completeLogin();
-              });
+            PushNotification.unsubscribeFromTopic(fcmTopic);
+            validateUser(() => {
+              completeLogin();
             });
           });
         } else {

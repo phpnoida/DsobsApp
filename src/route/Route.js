@@ -60,10 +60,12 @@ import ChatEtiquette from '../screen/chat/ChatEtiquette';
 import StartChatWith from '../screen/chat/StartChatWith';
 import ChatScreen from '../screen/chat/ChatScreen';
 import ChatUserProfile from '../screen/chat/ChatUserProfile';
-import TestScreen from '../screen/chat/TestScreen';
+import GroupChatScreen from '../screen/chat/GroupChatScreen';
+import GroupMembersProfile from '../screen/chat/GroupMembersProfile';
+
 const Stack = createStackNavigator();
 
-export const RootNavigators = (baseRoute) => {
+export const RootNavigators = baseRoute => {
   return (
     <Stack.Navigator initialRouteName={baseRoute}>
       <Stack.Screen
@@ -363,8 +365,13 @@ export const RootNavigators = (baseRoute) => {
         options={{headerShown: false}}
       />
       <Stack.Screen
-        name="TestScreen"
-        component={TestScreen}
+        name="GroupChatScreen"
+        component={GroupChatScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="GroupMembersProfile"
+        component={GroupMembersProfile}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

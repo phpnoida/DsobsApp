@@ -36,6 +36,8 @@ import {
   setUserLastSeen,
   addUserToBlockList,
   setLatestUnread,
+  updateChatObject,
+  getTotalMessages,
 } from '../../helper/ChatHelper';
 
 const chatCollection = firestore().collection('Chats');
@@ -158,49 +160,6 @@ const ChatUserList = ({navigation}) => {
               setPaginationStatus(PaginationStatus.waiting);
               setFirstTimeLoad(false);
             }
-
-            // var allComplete = new Promise((resolve, reject) => {
-            //   tmpArray.forEach((element, index, array) => {
-            //     let data = element;
-
-            //     if (!data.isGroup) {
-            //       let users = data.users;
-            //       let opponentUser = users.filter(
-            //         (userId) => global.userId !== userId,
-            //       );
-
-            //       var isExist = allUsersArray.filter(
-            //         (user) => opponentUser[0] === user._id,
-            //       );
-
-            //       if (isExist.length === 0) {
-            //         checkUserExist(opponentUser[0])
-            //           .then((result) => {
-            //             data.opponentUser = result;
-            //           })
-            //           .then(() => {
-            //             if (index === array.length - 1) {
-            //               resolve();
-            //             }
-            //           });
-            //       } else {
-            //         data.opponentUser = isExist[0];
-            //         if (index === array.length - 1) {
-            //           resolve();
-            //         }
-            //       }
-            //     }
-            //   });
-            // });
-
-            // allComplete.then(() => {
-            //   setFirstTimeLoad(false);
-            //   setChatList(tmpArray);
-            //   setPaginationStatus(PaginationStatus.waiting);
-            //   console.log('====================================');
-            //   console.log('all task complete', tmpArray.length);
-            //   console.log('====================================');
-            // });
           } else {
             setFirstTimeLoad(false);
             setPaginationStatus(PaginationStatus.waiting);
@@ -333,14 +292,11 @@ const ChatUserList = ({navigation}) => {
         unreadCount: unreadCount,
       };
 
-      chatCollection
-        .doc(refId)
-        .update(updateObject)
-        .then(() => {
-          let oldData = chatList;
-          oldData[selectedIndex].unreadCount = unreadCount;
-          setChatList([...oldData]);
-        });
+      updateChatObject(refId, updateObject, callback => {
+        let oldData = chatList;
+        oldData[selectedIndex].unreadCount = unreadCount;
+        setChatList([...oldData]);
+      });
     }
   };
   const muteConversion = () => {
@@ -396,6 +352,41 @@ const ChatUserList = ({navigation}) => {
     }
   };
 
+  const exitUser = () => {
+    if (selectedItem !== undefined && selectedItem !== null) {
+      Alert.alert('Exit from group', 'Are you sure you want to exit?', [
+        {
+          text: 'Cancel',
+          onPress: () => {},
+          style: 'cancel',
+        },
+        {
+          text: 'Yes',
+          onPress: () => {
+            let removed = selectedItem.removed;
+
+            if (!isUserRemoved()) {
+              getTotalMessages(selectedItem._id, count => {
+                removed.push({_id: global.userId, count: count});
+                let updateObject = {
+                  removed: removed,
+                };
+
+                updateChatObject(selectedItem._id, updateObject, status => {
+                  Alert.alert(
+                    status
+                      ? 'Exit successfully'
+                      : 'Error while Exit from group',
+                  );
+                });
+              });
+            }
+          },
+        },
+      ]);
+    }
+  };
+
   const getChatCount = unreadCount => {
     let countData = unreadCount.filter(user => global.userId === user.userId);
 
@@ -439,6 +430,19 @@ const ChatUserList = ({navigation}) => {
     if (opponentUser !== undefined && opponentUser !== null) {
       let isExist = blockedUser.filter(user => opponentUser._id === user);
       return isExist.length > 0;
+    }
+    return false;
+  };
+
+  const isUserRemoved = item => {
+    if (item !== undefined && item !== null && item.isGroup) {
+      let removed = item.removed;
+
+      var index = removed.findIndex(x => x === global.userId);
+
+      if (index > -1) {
+        return true;
+      }
     }
     return false;
   };
@@ -499,14 +503,22 @@ const ChatUserList = ({navigation}) => {
         activeOpacity={0.9}
         onPress={() => {
           if (challengerUser.chatEnabled) {
-            let payload = {
-              challenger: challengerUser,
-              opponent: opponentUser || {},
-              chatDetail: item,
-              threadId: item._id,
-            };
-            //navigation.navigate('ChatScreen', payload);
-            navigation.replace('ChatScreen', payload);
+            if (item.isGroup) {
+              let payload = {
+                threadId: item._id,
+                challenger: challengerUser,
+              };
+              navigation.replace('GroupChatScreen', payload);
+            } else {
+              let payload = {
+                challenger: challengerUser,
+                opponent: opponentUser || {},
+                chatDetail: item,
+                threadId: item._id,
+              };
+              //navigation.navigate('ChatScreen', payload);
+              navigation.replace('ChatScreen', payload);
+            }
           } else {
             Alert.alert(
               'Chat Disabled',
@@ -515,13 +527,15 @@ const ChatUserList = ({navigation}) => {
           }
         }}
         onLongPress={() => {
-          if (
-            refPostOptions.current !== undefined &&
-            refPostOptions.current !== null
-          ) {
-            selectedIndex = index;
-            setSelectedItem(item);
-            refPostOptions.current.open();
+          setSelectedItem(item);
+          if (!isUserRemoved(item)) {
+            if (
+              refPostOptions.current !== undefined &&
+              refPostOptions.current !== null
+            ) {
+              selectedIndex = index;
+              refPostOptions.current.open();
+            }
           }
         }}
         style={[
@@ -705,11 +719,18 @@ const ChatUserList = ({navigation}) => {
         key={index}
         onPress={() => {
           if (challengerUser.chatEnabled) {
-            let payload = {
-              threadId: item.threadId,
-            };
-            //navigation.replace('ChatScreen', payload);
-            navigation.navigate('ChatScreen', payload);
+            if (item.isGroup) {
+              let payload = {
+                threadId: item._id,
+              };
+              navigation.replace('GroupChatScreen', payload);
+            } else {
+              let payload = {
+                threadId: item.threadId,
+              };
+              //navigation.replace('ChatScreen', payload);
+              navigation.navigate('ChatScreen', payload);
+            }
           } else {
             Alert.alert(
               'Chat Disabled',
@@ -878,6 +899,25 @@ const ChatUserList = ({navigation}) => {
                         }, 205);
                       },
                     )}
+              </View>
+            )}
+
+          {selectedItem !== null &&
+            selectedItem !== undefined &&
+            selectedItem.groupAdmin !== global.userId &&
+            selectedItem.isGroup && (
+              <View>
+                {generateMenuOption(
+                  'Exit from group',
+                  'exit-outline',
+                  6,
+                  () => {
+                    refPostOptions.current.close();
+                    setTimeout(() => {
+                      exitUser();
+                    }, 205);
+                  },
+                )}
               </View>
             )}
         </View>

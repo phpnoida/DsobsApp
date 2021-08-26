@@ -2,24 +2,19 @@ import React, {useState, useEffect} from 'react';
 import {
   View,
   StyleSheet,
-  Alert,
   SafeAreaView,
   Text,
   Dimensions,
-  Modal,
   TouchableOpacity,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
-import RadioButton from '../../component/RadioButton';
-import CommonButton from '../../component/CommonButton';
 import ProgressImage from '../../component/ProgresImage';
 import HeaderBar from '../../component/HeaderBar';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {APP_NAME} from '../../helper/Constants';
 import {showProgess} from '../../component/Common';
-import {checkUserExist, updateUserObject} from '../../helper/ChatHelper';
 import Helpers from '../../helper/Helper';
 import moment from 'moment';
 import {useCollection} from 'react-firebase-hooks/firestore';

@@ -405,7 +405,11 @@ const Helpers = {
     for (let i = 0; i < arrOfWords.length; i++) {
       const word = arrOfWords[i];
 
-      arrOfWordsCased.push(word[0].toUpperCase() + word.slice(1).toLowerCase());
+      if (word !== undefined && word !== null) {
+        arrOfWordsCased.push(
+          word[0].toUpperCase() + word.slice(1).toLowerCase(),
+        );
+      }
     }
     return arrOfWordsCased.join(' ');
   },
@@ -477,6 +481,14 @@ const Helpers = {
     var b = parseInt(hexcolor.substr(4, 2), 16);
     var yiq = (r * 299 + g * 587 + b * 114) / 1000;
     return yiq >= 128 ? 'black' : 'white';
+  },
+  getRandomLightColor: function () {
+    var letters = '0123456789ABCDEF'.split('');
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * letters.length)];
+    }
+    return color;
   },
   ytVidId: function (url) {
     var p =

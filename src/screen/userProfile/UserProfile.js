@@ -84,7 +84,7 @@ const UserProfile = ({route, navigation}) => {
 
     console.log('Request for', userId);
 
-    checkUserExist(global.userId).then((result) => {
+    checkUserExist(global.userId, false).then(result => {
       if (result !== undefined && result !== null) {
         challengerUser = result;
       }
@@ -108,7 +108,7 @@ const UserProfile = ({route, navigation}) => {
     setIsLoading(true);
     getUserProfile(
       userId,
-      (response) => {
+      response => {
         setIsLoading(false);
         if (response && response !== null) {
           if (
@@ -142,7 +142,7 @@ const UserProfile = ({route, navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         setIsLoading(false);
         console.log('error', error);
       },
@@ -153,18 +153,18 @@ const UserProfile = ({route, navigation}) => {
     setIsLoading(true);
     getUserProfileFromDirectory(
       userId,
-      (response) => {
+      response => {
         checkUserChat(response);
       },
-      (error) => {
+      error => {
         setIsLoading(false);
         console.log('error', error);
       },
     );
   };
 
-  const checkUserChat = async (profileResponse) => {
-    checkUserExist(userId).then((result) => {
+  const checkUserChat = async profileResponse => {
+    checkUserExist(userId, false).then(result => {
       if (result !== undefined && result !== null) {
         setUserObject(result);
       }
@@ -196,7 +196,7 @@ const UserProfile = ({route, navigation}) => {
     });
   };
 
-  const manageProfile = (profile) => {
+  const manageProfile = profile => {
     if (
       profile.dob &&
       profile.dob !== undefined &&
@@ -228,7 +228,7 @@ const UserProfile = ({route, navigation}) => {
    * API Section End
    * ************************************************
    */
-  const openProfile = (selectedId) => {
+  const openProfile = selectedId => {
     birthDate = 'N/A';
     moveToTab = 1;
 
@@ -254,7 +254,7 @@ const UserProfile = ({route, navigation}) => {
    * ************************************************
    */
 
-  const moveBack = (lastStep) => {
+  const moveBack = lastStep => {
     if (lastStep > 1) {
       setStep(lastStep - 1);
     } else {
@@ -274,7 +274,7 @@ const UserProfile = ({route, navigation}) => {
    * ************************************************
    */
 
-  const naviateEditProfile = (moveToStep) => {
+  const naviateEditProfile = moveToStep => {
     if (moveToStep === 11) {
       navigation.navigate('EditProfile', {
         userId: userId,
@@ -292,7 +292,7 @@ const UserProfile = ({route, navigation}) => {
     }
   };
 
-  const inflateMenu = (item) => {
+  const inflateMenu = item => {
     return (
       <View
         key={item.index.toString()}
@@ -400,7 +400,7 @@ const UserProfile = ({route, navigation}) => {
                     renderTabBar={() => (
                       <ScrollableTabBar style={styles.tabBarStyle} />
                     )}
-                    onChangeTab={(tabVal) => {
+                    onChangeTab={tabVal => {
                       moveToTab = tabVal.i + 1;
                     }}>
                     <Contact
@@ -501,7 +501,7 @@ const UserProfile = ({route, navigation}) => {
 
         {/* city list sheet */}
         <ProfileSheet
-          ref={(ref) => {
+          ref={ref => {
             profileSheet = ref;
           }}
           height={390}

@@ -14,6 +14,7 @@ import {scale} from '../../theme/Scalling';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import ProgressImage from '../../component/ProgresImage';
 import YoutubeView from '../../component/YoutubeItem';
+import BubbleText from '../../component/BubbleText';
 import moment from 'moment';
 import ParsedText from 'react-native-parsed-text';
 import Helper from '../../helper/Helper';
@@ -29,11 +30,13 @@ const {height, width} = Dimensions.get('window');
 class ChatItem extends PureComponent {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      isNewLine: false,
+    };
   }
 
   renderTicks() {
-    const {currentMessage} = this.props;
+    const {currentMessage, groupMembers} = this.props;
     if (
       currentMessage &&
       currentMessage.user &&
@@ -41,25 +44,19 @@ class ChatItem extends PureComponent {
     ) {
       return null;
     }
-    if (
-      currentMessage &&
-      (currentMessage.isSent || currentMessage.isRead || currentMessage.pending)
-    ) {
+    if (currentMessage) {
       let tickIcon = '',
         iconColor = '#323232';
-
-      if (currentMessage.isSent) {
-        tickIcon = 'ios-checkmark-sharp';
-        iconColor = '#cccccc';
-      }
-      if (currentMessage.isDelivered) {
+      if (
+        currentMessage.readBy !== undefined &&
+        currentMessage.readBy !== null &&
+        currentMessage.readBy.length === groupMembers.length
+      ) {
         tickIcon = 'checkmark-done-sharp';
-        iconColor = '#cccccc';
-      }
-      if (currentMessage.isRead) {
-        tickIcon = 'checkmark-done-sharp';
-        //iconColor = GlobalInclude.Color.ColorPrimary;
         iconColor = '#34b7f1';
+      } else {
+        tickIcon = 'checkmark-done-sharp';
+        iconColor = '#cccccc';
       }
       return (
         <View style={styles.tickView}>
@@ -99,12 +96,27 @@ class ChatItem extends PureComponent {
           {pattern: /#(\w+)/, style: styles.hashTag},
         ]}
         childrenProps={{allowFontScaling: false}}
+        onTextLayout={event => {
+          //get all lines
+          const {lines} = event.nativeEvent;
+          if (lines.length > 0) {
+            if (lines.length > 1) {
+              this.setState({isNewLine: true});
+            } else {
+              this.setState({isNewLine: false});
+            }
+          } else {
+            this.setState({isNewLine: true});
+          }
+        }}
         style={[
           customFont,
           g.FHNR,
           g.colorBlack,
           g.txtCenterVertical,
-          {textAlign: 'justify'},
+          {
+            textAlign: 'justify',
+          },
         ]}>
         {source}
       </ParsedText>
@@ -326,18 +338,14 @@ class ChatItem extends PureComponent {
   renderDateComponent(source, isLeft) {
     const {customFont} = this.props;
     return (
-      <View
-        style={[
-          isLeft ? grid.justifyContentLeft : grid.justifyContentRight,
-          isLeft ? grid.alignSelf : grid.alignItemsBottom,
-        ]}>
+      <View style={[grid.justifyContentRight, grid.alignItemsBottom]}>
         <Text
           style={[
             g.fs11,
             g.FHNR,
             g.colorGray5,
-            isLeft ? grid.justifyContentLeft : grid.justifyContentRight,
-            isLeft ? grid.alignSelf : grid.alignItemsBottom,
+            grid.justifyContentRight,
+            grid.alignItemsBottom,
             g.txtCenterVertical,
             isLeft && g.ml5,
             isLeft && g.mb2,
@@ -351,7 +359,7 @@ class ChatItem extends PureComponent {
   renderAvtar() {
     const {nextMessage, currentMessage, isGroup} = this.props;
 
-    if (!isGroup) {
+    if (isGroup) {
       return null;
     }
 
@@ -437,10 +445,29 @@ class ChatItem extends PureComponent {
   }
 
   renderLeftSide(currentMessage) {
+    const {isGroup, customFont, messageColor, previousMessage} = this.props;
+    let color = '#000000';
+
+    let isFound =
+      messageColor !== undefined && messageColor !== null
+        ? messageColor.filter(item => item.userId === global.userId)
+        : [];
+    if (isFound.length > 0) {
+      color = isFound.color;
+    }
+
     return (
       <View style={[grid.rowdir]}>
         {this.renderAvtar()}
+
         <View style={[g.ml5, g.bgWhite, styles.bubbleLeft]}>
+          {isGroup && !isSameUser(currentMessage, previousMessage) && (
+            <Text
+              numberOfLines={1}
+              style={[customFont, g.FHNB, g.pt4, g.pl5, {color: color}]}>
+              {Helper.capitalize(currentMessage.user.firstName)}
+            </Text>
+          )}
           {this.renderItem(currentMessage, true)}
         </View>
         {currentMessage.isEdited &&
@@ -464,7 +491,7 @@ class ChatItem extends PureComponent {
   }
 
   renderItem(currentMessage, isLeft) {
-    const {onLongPress, onPress} = this.props;
+    const {onLongPress, onPress, isGroup} = this.props;
 
     let style = {
       paddingHorizontal: scale(1),
@@ -491,8 +518,8 @@ class ChatItem extends PureComponent {
         style = {};
         style = {
           paddingHorizontal: scale(5),
-          paddingTop: scale(8),
-          paddingBottom: scale(5),
+          paddingTop: isGroup ? scale(3) : scale(1),
+          paddingBottom: scale(2),
         };
       }
     }
@@ -535,16 +562,23 @@ class ChatItem extends PureComponent {
               messageType !== 6 && (
                 <View
                   style={[
+                    grid.rowrow,
                     mediaContent !== '' ? {paddingHorizontal: scale(4)} : style,
                   ]}>
                   {this.renderTextComponent(messageContent, isLeft)}
+                  {/* {!this.state.isNewLine && (
+                    <View style={[grid.rowrow, styles.viewRight]}>
+                      {this.renderDateComponent(currentMessage, isLeft)}
+                      <View style={{marginHorizontal: scale(3)}} />
+                      {this.renderTicks()}
+                    </View>
+                  )} */}
                 </View>
               )}
           </TouchableOpacity>
         )}
 
-        <View
-          style={[grid.rowrow, isLeft ? styles.viewLeft : styles.viewRight]}>
+        <View style={[grid.rowrow, styles.viewRight]}>
           {this.renderDateComponent(currentMessage, isLeft)}
           <View style={{marginHorizontal: scale(3)}} />
           {this.renderTicks()}
@@ -793,6 +827,10 @@ const styles = StyleSheet.create({
   },
   email: {
     textDecorationLine: 'underline',
+  },
+  phone: {
+    textDecorationLine: 'underline',
+    color: GlobalInclude.Color.ColorPrimary,
   },
   hashTag: {
     fontStyle: 'italic',

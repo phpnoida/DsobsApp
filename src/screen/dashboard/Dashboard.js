@@ -33,7 +33,11 @@ import {clearNotifications} from '../../reducer/NotificationReducer';
 import PushNotification from 'react-native-push-notification';
 
 import {IconType} from '../../helper/Constants';
-import {setUserLastSeen, addUser} from '../../helper/ChatHelper';
+import {
+  setUserLastSeen,
+  addUser,
+  checkUserExist,
+} from '../../helper/ChatHelper';
 import {useDocumentDataOnce} from 'react-firebase-hooks/firestore';
 import firestore from '@react-native-firebase/firestore';
 
@@ -79,7 +83,7 @@ const Dashboard = ({props, navigation}) => {
 
   const dispatch = useDispatch();
 
-  const refreshState = useSelector((state) => {
+  const refreshState = useSelector(state => {
     if (state.notification && state.notification !== undefined) {
       let notification = state.notification;
       if (notification.refresh && notification.refresh !== undefined) {
@@ -153,7 +157,7 @@ const Dashboard = ({props, navigation}) => {
     validatePushNotification,
   ]);
 
-  const _handleAppStateChange = useCallback((nextState) => {
+  const _handleAppStateChange = useCallback(nextState => {
     console.log('nextState-128', nextState);
     if (nextState === 'active') {
       if (global.isLoggedIn) {
@@ -165,7 +169,7 @@ const Dashboard = ({props, navigation}) => {
   const getPopNotifications = () => {
     if (global.isConnected) {
       getPopNotification(
-        (response) => {
+        response => {
           if (response && response !== null) {
             if (
               response.data &&
@@ -209,7 +213,7 @@ const Dashboard = ({props, navigation}) => {
     }
   }, [navigation]);
 
-  const openNotification = (notification) => {
+  const openNotification = notification => {
     if (
       notification.linkUrl &&
       notification.linkUrl !== null &&
@@ -283,10 +287,21 @@ const Dashboard = ({props, navigation}) => {
           data.threadId !== ''
         ) {
           setUserLastSeen(true, new Date().getTime(), () => {
-            let payload = {
-              threadId: data.threadId,
-            };
-            navigation.navigate('ChatScreen', payload);
+            checkUserExist(global.userId, false).then(result => {
+              if (result !== undefined && result !== null) {
+                let payload = {
+                  threadId: data.threadId,
+                  challenger: result,
+                  isGroup: data.isGroup,
+                };
+                if (data.isGroup) {
+                  console.log('payload', payload);
+                  navigation.navigate('GroupChatScreen', payload);
+                } else {
+                  navigation.navigate('ChatScreen', payload);
+                }
+              }
+            });
           });
         }
         break;
@@ -295,7 +310,7 @@ const Dashboard = ({props, navigation}) => {
     }
   };
 
-  const inflateProfileMenu = (item) => {
+  const inflateProfileMenu = item => {
     let index = item.index;
     let styleArray = [];
     styleArray.push(styles.profileMenuContainer);
@@ -320,9 +335,8 @@ const Dashboard = ({props, navigation}) => {
               ) {
                 let fcmTopic = global.userDetails.fcmTopic;
                 AsyncStorage.clear().then(() => {
-                  PushNotification.unsubscribeFromTopic(fcmTopic).then(() => {
-                    resetToHome();
-                  });
+                  PushNotification.unsubscribeFromTopic(fcmTopic);
+                  resetToHome();
                 });
               } else {
                 AsyncStorage.clear().then(() => {
@@ -374,7 +388,7 @@ const Dashboard = ({props, navigation}) => {
     );
   };
 
-  const inflateExtraMenu = (item) => {
+  const inflateExtraMenu = item => {
     return (
       <View
         key={item.index.toString()}
@@ -570,7 +584,7 @@ const Dashboard = ({props, navigation}) => {
   const addBottomSheetProfile = () => {
     return (
       <RBSheetProfile
-        ref={(ref) => {
+        ref={ref => {
           bottomSheetProfile = ref;
         }}
         onOpen={() => {
@@ -608,7 +622,7 @@ const Dashboard = ({props, navigation}) => {
   const addBottomSheetExtraMenu = () => {
     return (
       <RBSheetProfile
-        ref={(ref) => {
+        ref={ref => {
           bottomSheetExtraMenu = ref;
         }}
         onOpen={() => {
@@ -646,7 +660,7 @@ const Dashboard = ({props, navigation}) => {
   const addBottomSheetMenu = () => {
     return (
       <RBSheetMenus
-        ref={(ref) => {
+        ref={ref => {
           bottomSheet = ref;
         }}
         onOpen={() => {
@@ -1062,7 +1076,7 @@ const Dashboard = ({props, navigation}) => {
                 currentNotificationIndex = 0;
                 setShowPopNotification(false);
               }}
-              onButtonPress={(selectedItem) => {
+              onButtonPress={selectedItem => {
                 setShowPopNotification(false);
                 setTimeout(() => {
                   openNotification(selectedItem);
@@ -1080,7 +1094,7 @@ const Dashboard = ({props, navigation}) => {
             controls={false}
             focusable={false}
             repeat={true}
-            onError={(err) => {
+            onError={err => {
               console.log('video errr', err);
             }}
           />

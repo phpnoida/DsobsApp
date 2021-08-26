@@ -82,18 +82,15 @@ class LogoutAlert extends Component {
                           fcmTopic !== null &&
                           fcmTopic !== ''
                         ) {
-                          PushNotification.unsubscribeFromTopic(fcmTopic).then(
-                            () => {
-                              this.setState({is_loading: false}, () => {
-                                global.navigationRef.current.dispatch(
-                                  CommonActions.reset({
-                                    index: 0,
-                                    routes: [{name: 'Login'}],
-                                  }),
-                                );
-                              });
-                            },
-                          );
+                          PushNotification.unsubscribeFromTopic(fcmTopic);
+                          this.setState({is_loading: false}, () => {
+                            global.navigationRef.current.dispatch(
+                              CommonActions.reset({
+                                index: 0,
+                                routes: [{name: 'Login'}],
+                              }),
+                            );
+                          });
                         } else {
                           this.setState({is_loading: false}, () => {
                             global.navigationRef.current.dispatch(

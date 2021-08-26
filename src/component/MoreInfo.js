@@ -63,7 +63,7 @@ const MoreInfo = ({text, linesToTruncate}) => {
         g.colorBlack,
         g.FHNR,
       ]}
-      onTextLayout={(event) => {
+      onTextLayout={event => {
         //get all lines
         const {lines} = event.nativeEvent;
         console.log('length', lines.length);
@@ -76,7 +76,7 @@ const MoreInfo = ({text, linesToTruncate}) => {
         }
         let clipped = lines
           .splice(0, linesToTruncate)
-          .map((line) => line.text)
+          .map(line => line.text)
           .join('');
         //substring with some random digit, this might need more work here based on the font size
         //

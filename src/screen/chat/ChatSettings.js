@@ -46,7 +46,7 @@ const ChatSettings = ({route, navigation}) => {
      * We get user own details also
      */
 
-    checkUserExist(global.userId).then((result) => {
+    checkUserExist(global.userId, false).then(result => {
       setIsLoading(false);
       if (result !== undefined && result !== null) {
         /********************
@@ -68,7 +68,7 @@ const ChatSettings = ({route, navigation}) => {
       chatEnabled: enableChat,
       enableNotification: enableNotification,
     };
-    updateUserObject(object, global.userId, (status) => {
+    updateUserObject(object, global.userId, status => {
       if (status) {
         responseMessage = 'Updating information successfully!';
       } else {
@@ -154,7 +154,7 @@ const ChatSettings = ({route, navigation}) => {
               <RadioButton
                 defaultSelected={selectedFilter}
                 PROP={filterList}
-                onRadioSelect={(item) => {
+                onRadioSelect={item => {
                   defaultSelected = '';
                   selectedSetting = item.key;
                   setSelectedFilter(item.key);
