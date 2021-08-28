@@ -13,8 +13,8 @@ import {scale} from '../../theme/Scalling';
 import ProgressImage from '../../component/ProgresImage';
 import HeaderBar from '../../component/HeaderBar';
 import GlobalInclude from '../../globalInclude/Globalinclude';
-import {APP_NAME} from '../../helper/Constants';
-import {showProgess} from '../../component/Common';
+import {APP_NAME, IconType} from '../../helper/Constants';
+import {showProgess, generateView} from '../../component/Common';
 import Helpers from '../../helper/Helper';
 import moment from 'moment';
 import {useCollection} from 'react-firebase-hooks/firestore';
@@ -64,7 +64,14 @@ const ChatUserProfile = ({route, navigation}) => {
       <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
         {profileData !== null ? (
           <View style={[grid.flex1, g.pl10, g.pr10]}>
-            <View style={styles.headerContainer}>
+            <TouchableOpacity
+              activeOpacity={1}
+              style={styles.headerContainer}
+              onPress={() => {
+                navigation.navigate('UserProfile', {
+                  userId: profileData._id,
+                });
+              }}>
               <View
                 style={[
                   {
@@ -154,7 +161,7 @@ const ChatUserProfile = ({route, navigation}) => {
                     : moment(profileData.lastseen).fromNow()}
                 </Text>
               </View>
-            </View>
+            </TouchableOpacity>
             {/* section two */}
             <View>
               <View
@@ -163,7 +170,8 @@ const ChatUserProfile = ({route, navigation}) => {
                   g.bgWhite,
                   g.br3,
                   g.mt10,
-                  grid.alignItems,
+                  g.p5,
+                  g.pl15,
                   grid.justifyContentCenter,
                   {minHeight: scale(65)},
                 ]}>
@@ -188,7 +196,7 @@ const ChatUserProfile = ({route, navigation}) => {
                   g.br3,
                   g.mt10,
                   g.p5,
-                  grid.alignItems,
+                  g.pl15,
                   grid.justifyContentCenter,
                   {minHeight: scale(65)},
                 ]}>
@@ -213,60 +221,38 @@ const ChatUserProfile = ({route, navigation}) => {
               Primary Information
             </Text>
             {/* section three */}
-            <View>
-              <View
-                style={[
-                  g.boxShadow,
-                  g.bgWhite,
-                  g.br3,
-                  g.mt10,
-                  g.pl15,
-                  grid.justifyContentCenter,
-                  {minHeight: scale(65)},
-                ]}>
-                <Text style={[g.colordarkGray, g.fs18, g.FHNM, g.txtLeft]}>
-                  Email Address:
-                </Text>
+            <View style={[g.mt10]}>
+              {generateView(
+                IconType[2],
+                'envelope',
+                'Primary Email',
+                profileData.emailScope === 0
+                  ? 'Set to Private'
+                  : profileData.email,
+                () => {
+                  if (profileData.emailScope !== 0) {
+                    Helpers.openEmail(profileData.email);
+                  }
+                },
+              )}
 
-                <TouchableOpacity
-                  onPress={() => {
-                    if (profileData.emailScope !== 0) {
-                      Helpers.openEmail(profileData.email);
-                    }
-                  }}>
-                  <Text style={[g.colorBlack, g.fs16, g.FHNR, g.mt3]}>
-                    {profileData.emailScope === 0
-                      ? 'Set to Private'
-                      : profileData.email}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-              <View
-                style={[
-                  g.boxShadow,
-                  g.bgWhite,
-                  g.br3,
-                  g.mt10,
-                  g.pl15,
-                  grid.justifyContentCenter,
-                  {minHeight: scale(65)},
-                ]}>
-                <Text style={[g.colordarkGray, g.fs18, g.FHNM, g.txtLeft]}>
-                  Phone Number:
-                </Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    if (profileData.phoneScope !== 0) {
-                      Helpers.openDialler(profileData.phone);
-                    }
-                  }}>
-                  <Text style={[g.colorBlack, g.fs16, g.FHNR, g.mt3]}>
-                    {profileData.phoneScope === 0
-                      ? 'Set to Private'
-                      : profileData.phone}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              {generateView(
+                IconType[2],
+                'phone',
+                'Primary Phone No.',
+                profileData.phoneScope === 0
+                  ? 'Set to Private'
+                  : (profileData.countryCode
+                      ? profileData.countryCode + ' '
+                      : ' ') + profileData.phone,
+                () => {
+                  Helpers.openDialler(
+                    (profileData.countryCode
+                      ? profileData.countryCode + ' '
+                      : ' ') + profileData.phone,
+                  );
+                },
+              )}
             </View>
             {/* section three */}
           </View>

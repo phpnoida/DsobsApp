@@ -154,6 +154,12 @@ const AudioPlayer = props => {
       height={300}
       duration={200}
       closeOnDragDown={false}
+      closeOnPressBack={true}
+      closeOnPressMask={true}
+      closeDuration={200}
+      onClose={() => {
+        stopPlaying();
+      }}
       customStyles={{
         container: GlobalInclude.AppStyle.sheetContainer,
         draggableIcon: {},

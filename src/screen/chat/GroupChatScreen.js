@@ -112,7 +112,7 @@ const GroupChatScreen = ({route}) => {
   const [header, setHeader] = useState('');
   const [subHeader, setSubHeader] = useState('');
   const [typingUser, setTypingUser] = useState('');
-  const [headerImage, setHeaderImage] = useState(GlobalInclude.Assets.AppLogo);
+  const [headerImage, setHeaderImage] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [messageThreadId, setMessageThreadId] = useState('');
   const [selectedChatObject, setSelectedChatObject] = useState(null);
@@ -195,10 +195,12 @@ const GroupChatScreen = ({route}) => {
                 messageColor.push({color: element.color, userId: element._id});
               }
             });
-
-            loggedInUserStatus = false;
             memberKicked = true;
-            blockMsg = 'You are no longer member of this group.';
+            //removedBy
+            blockMsg =
+              removedBy[isExist].removedBy === 1
+                ? 'You have exited this group.'
+                : 'The Admin has removed you.';
             setChatEnabled(false);
             reference
               .child(threadId)
@@ -209,7 +211,23 @@ const GroupChatScreen = ({route}) => {
                   snapshot,
                   snapshots => {
                     if (snapshots && snapshots !== undefined) {
+                      let systemMsg = {
+                        system: true,
+                        message: 'You left',
+                        createdAt: new Date().getTime(),
+                        messageType: 1,
+                        media: '',
+                        user: getUserObject(),
+                        isSent: true,
+                        isDelivered: true,
+                        isRead: true,
+                        replay: {},
+                        removedBy: [],
+                      };
+                      snapshots.push(systemMsg);
+
                       let msgList = snapshots.reverse();
+
                       setMessages([...msgList]);
                       setIsFirstLoad(false);
                     }
@@ -218,10 +236,22 @@ const GroupChatScreen = ({route}) => {
                 );
               });
 
-            let subTitle = userNames.join() + ', You';
+            let subTitle = '';
+            userNames.forEach((item, index) => {
+              subTitle += item + ', ';
+            });
+            subTitle = subTitle.replace(/,\s*$/, '');
+            subTitle = subTitle + ', You';
 
             setHeader(response.groupName);
-            setHeaderImage({uri: response.profileImg});
+            if (
+              response.profileImg !== null &&
+              response.profileImg !== undefined &&
+              response.profileImg !== ''
+            ) {
+              setHeaderImage({uri: response.profileImg});
+            }
+
             setSubHeader(subTitle);
             setProfileLoading(false);
           } else {
@@ -261,7 +291,13 @@ const GroupChatScreen = ({route}) => {
               : [];
 
           setHeader(data.groupName);
-          setHeaderImage({uri: data.profileImg});
+          if (
+            data.profileImg !== null &&
+            data.profileImg !== undefined &&
+            data.profileImg !== ''
+          ) {
+            setHeaderImage({uri: data.profileImg});
+          }
           let userNames = [];
           inMessageThread = true;
           offlineUsers = [];
@@ -303,14 +339,16 @@ const GroupChatScreen = ({route}) => {
             var isExist = data.removed.findIndex(x => x._id === global.userId);
             if (isExist > -1) {
               memberKicked = true;
-              blockMsg = 'You are no longer member of this group.';
+              blockMsg = 'You have exited this group.';
               setChatEnabled(false);
               loggedInUserStatus = false;
               shutAllListeners();
             }
           } else {
+            memberKicked = false;
             loggedInUserStatus = true;
             setChatEnabled(true);
+
             // if (memberKicked) {
             //   memberKicked = false;
             //   onAllListeners();
@@ -331,9 +369,18 @@ const GroupChatScreen = ({route}) => {
 
           if (!memberKicked) {
             if (userNames.length > 0) {
-              let subTitle = loggedInUserStatus
-                ? userNames.join() + ', You'
-                : userNames.join() + '';
+              let subTitle = '';
+              userNames.forEach((item, index) => {
+                subTitle += item + ', ';
+              });
+              subTitle = subTitle.replace(/,\s*$/, '');
+              if (loggedInUserStatus) {
+                subTitle = subTitle + ', You';
+              }
+
+              // let subTitle = loggedInUserStatus
+              //   ? userNames.join() + ', You'
+              //   : userNames.join() + '';
               setSubHeader(subTitle);
             } else {
               setSubHeader('You');
@@ -643,12 +690,104 @@ const GroupChatScreen = ({route}) => {
             isAnyChildFound = true;
           }
         }
+        if (
+          removedBy !== undefined &&
+          removedBy !== null &&
+          removedBy.length > 0 &&
+          isChatExist !== undefined &&
+          isChatExist !== null
+        ) {
+          for (let t = 0; t < removedBy.length; t++) {
+            const removeItem = removedBy[t];
+            if (index === removeItem.count) {
+              var isExist = isChatExist.userInfo.findIndex(
+                x => x._id === removeItem._id,
+              );
+              let userIn = isChatExist.userInfo[isExist];
+              if (isExist > -1) {
+                let msg = '';
+                if (removeItem.removedBy === 1) {
+                  if (userIn._id === global.userId) {
+                    msg = 'You left';
+                  } else {
+                    msg = Helper.capitalize(userIn.firstName) + ' left';
+                  }
+                } else {
+                  msg =
+                    'Admin has removed ' + Helper.capitalize(userIn.firstName);
+                }
+                let systemMsg = {
+                  system: true,
+                  message: msg,
+                  createdAt: new Date().getTime(),
+                  messageType: 1,
+                  media: '',
+                  user: getUserObject(),
+                  isSent: true,
+                  isDelivered: true,
+                  isRead: true,
+                  replay: {},
+                  removedBy: [],
+                };
+                children.push(systemMsg);
+              }
+            }
+          }
+        }
 
         children.push(element);
         arrayItems.push(element);
 
         if (childrenToProcess === 0) {
           lastPickedMsgId = element._id;
+
+          if (
+            removedBy !== undefined &&
+            removedBy !== null &&
+            removedBy.length > 0 &&
+            isChatExist !== undefined &&
+            isChatExist !== null
+          ) {
+            removedBy.forEach(remove => {
+              if (remove.count >= Object.keys(objectValue.val()).length) {
+                var available = isChatExist.userInfo.findIndex(
+                  x => x._id === remove._id,
+                );
+
+                if (available > -1) {
+                  let userIn = isChatExist.userInfo[available];
+                  let msg = '';
+                  if (remove.removedBy === 1) {
+                    if (userIn._id === global.userId) {
+                      msg = 'You left';
+                    } else {
+                      msg = Helper.capitalize(userIn.firstName) + ' left';
+                    }
+                  } else {
+                    msg =
+                      'Admin has removed ' +
+                      Helper.capitalize(userIn.firstName);
+                  }
+
+                  let memberMsg = {
+                    system: true,
+                    message: msg,
+                    createdAt: new Date().getTime(),
+                    messageType: 1,
+                    media: '',
+                    user: getUserObject(),
+                    isSent: true,
+                    isDelivered: true,
+                    isRead: true,
+                    replay: {},
+                    removedBy: [],
+                  };
+                  children.push(memberMsg);
+                }
+              }
+            });
+          }
+
           let systemMsg = {
             system: true,
             message: `(${unreadCount}) Unread Messages`,
@@ -958,7 +1097,8 @@ const GroupChatScreen = ({route}) => {
     if (isChatExist !== undefined && isChatExist !== null) {
       let isTyping = updateTyping(isChatExist.isTyping, false);
       const request = {
-        lastMessage: lastMsg,
+        lastMessage:
+          Helper.capitalize(global.userDetails.firstName) + ': ' + lastMsg,
         lastMessageTime: new Date().getTime(),
         lastMessageType: mediaType,
         isTyping: isTyping,
@@ -991,9 +1131,23 @@ const GroupChatScreen = ({route}) => {
     getChatObject(threadId, response => {
       if (response && response !== null && response !== undefined) {
         let unreadCount = response.unreadCount;
+
         unreadCount.forEach(element => {
           if (element.userId !== global.userId) {
-            element.count = element.count + 1;
+            if (
+              response.removed !== undefined &&
+              response.removed !== null &&
+              response.removed.length > 0
+            ) {
+              var isExist = response.removed.findIndex(
+                x => x._id === element.userId,
+              );
+              if (isExist === -1) {
+                element.count = element.count + 1;
+              }
+            } else {
+              element.count = element.count + 1;
+            }
           }
         });
 
@@ -1108,6 +1262,7 @@ const GroupChatScreen = ({route}) => {
       prefix: challenger.prefix,
       firstName: challenger.firstName,
       lastName: challenger.lastName,
+      batch: challenger.batch,
     };
   };
 
@@ -1224,6 +1379,13 @@ const GroupChatScreen = ({route}) => {
     wantsUpdateChilds = [];
     pendingChilds = [];
     imageArray = [];
+    offlineUsers = [];
+    messageColor = [];
+    mutedBy = [];
+    removedBy = [];
+    groupMembers = [];
+    isBackTap = false;
+    memberKicked = false;
   };
 
   const doScrapping = (link, onDone) => {
@@ -1319,6 +1481,11 @@ const GroupChatScreen = ({route}) => {
               }
             }, 200);
           }
+        }}
+        onTapUserName={() => {
+          navigation.navigate('UserProfile', {
+            userId: item.user._id,
+          });
         }}
       />
     );
@@ -1639,12 +1806,39 @@ const GroupChatScreen = ({route}) => {
                       borderRadius: scale(50),
                     },
                   ]}>
-                  <View style={[g.bggray, g.oh, {borderRadius: scale(50)}]}>
-                    <ProgressImage
-                      source={headerImage}
-                      containerStyle={styles.imageStyle}
-                      mode={'cover'}
-                    />
+                  <View
+                    style={[
+                      g.bggray,
+                      g.oh,
+                      {
+                        borderRadius: scale(50),
+                        width: scale(35),
+                        height: scale(35),
+                      },
+                    ]}>
+                    {headerImage !== undefined &&
+                    headerImage !== null &&
+                    headerImage !== '' ? (
+                      <ProgressImage
+                        source={headerImage}
+                        containerStyle={styles.imageStyle}
+                        mode={'cover'}
+                      />
+                    ) : (
+                      <GlobalInclude.BaseIcon
+                        containerStyle={{
+                          width: scale(35),
+                          height: scale(35),
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          alignContent: 'center',
+                        }}
+                        iconColor={'white'}
+                        iconName={'groups'}
+                        iconSize={scale(25)}
+                        iconType={IconType[0]}
+                      />
+                    )}
                   </View>
                 </View>
                 <TouchableOpacity

@@ -36,7 +36,7 @@ class ChatItem extends PureComponent {
   }
 
   renderTicks() {
-    const {currentMessage, groupMembers} = this.props;
+    const {currentMessage, groupMembers, isGroup} = this.props;
     if (
       currentMessage &&
       currentMessage.user &&
@@ -47,17 +47,43 @@ class ChatItem extends PureComponent {
     if (currentMessage) {
       let tickIcon = '',
         iconColor = '#323232';
-      if (
-        currentMessage.readBy !== undefined &&
-        currentMessage.readBy !== null &&
-        currentMessage.readBy.length === groupMembers.length
-      ) {
-        tickIcon = 'checkmark-done-sharp';
-        iconColor = '#34b7f1';
+
+      if (isGroup) {
+        if (groupMembers !== undefined && groupMembers !== null) {
+          if (
+            currentMessage.readBy !== undefined &&
+            currentMessage.readBy !== null &&
+            currentMessage.readBy.length === groupMembers.length
+          ) {
+            tickIcon = 'checkmark-done-sharp';
+            iconColor = '#34b7f1';
+          } else {
+            tickIcon = 'checkmark-done-sharp';
+            iconColor = '#cccccc';
+          }
+        }
       } else {
-        tickIcon = 'checkmark-done-sharp';
-        iconColor = '#cccccc';
+        if (
+          currentMessage &&
+          (currentMessage.isSent ||
+            currentMessage.isRead ||
+            currentMessage.pending)
+        ) {
+          if (currentMessage.isSent) {
+            tickIcon = 'ios-checkmark-sharp';
+            iconColor = '#cccccc';
+          }
+          if (currentMessage.isDelivered) {
+            tickIcon = 'checkmark-done-sharp';
+            iconColor = '#cccccc';
+          }
+          if (currentMessage.isRead) {
+            tickIcon = 'checkmark-done-sharp';
+            iconColor = '#34b7f1';
+          }
+        }
       }
+
       return (
         <View style={styles.tickView}>
           <GlobalInclude.BaseIcon
@@ -359,21 +385,23 @@ class ChatItem extends PureComponent {
   renderAvtar() {
     const {nextMessage, currentMessage, isGroup} = this.props;
 
-    if (isGroup) {
-      return null;
-    }
+    return null;
 
-    if (!isSameUser(currentMessage, nextMessage)) {
-      return (
-        <ProgressImage
-          source={{uri: currentMessage.user.profileImg}}
-          containerStyle={styles.imageStyle}
-          imageStyle={styles.imageStyle}
-          mode={'cover'}
-        />
-      );
-    }
-    return <View style={styles.imageStyle} />;
+    // if (isGroup) {
+    //   return null;
+    // }
+
+    // if (!isSameUser(currentMessage, nextMessage)) {
+    //   return (
+    //     <ProgressImage
+    //       source={{uri: currentMessage.user.profileImg}}
+    //       containerStyle={styles.imageStyle}
+    //       imageStyle={styles.imageStyle}
+    //       mode={'cover'}
+    //     />
+    //   );
+    // }
+    // return <View style={styles.imageStyle} />;
   }
 
   renderReplyMessage(currentMessage, isLeft) {
@@ -445,15 +473,16 @@ class ChatItem extends PureComponent {
   }
 
   renderLeftSide(currentMessage) {
-    const {isGroup, customFont, messageColor, previousMessage} = this.props;
+    const {isGroup, customFont, messageColor, previousMessage, onTapUserName} =
+      this.props;
     let color = '#000000';
 
     let isFound =
       messageColor !== undefined && messageColor !== null
-        ? messageColor.filter(item => item.userId === global.userId)
+        ? messageColor.filter(item => item.userId === currentMessage.user._id)
         : [];
     if (isFound.length > 0) {
-      color = isFound.color;
+      color = isFound[0].color;
     }
 
     return (
@@ -462,11 +491,22 @@ class ChatItem extends PureComponent {
 
         <View style={[g.ml5, g.bgWhite, styles.bubbleLeft]}>
           {isGroup && !isSameUser(currentMessage, previousMessage) && (
-            <Text
-              numberOfLines={1}
-              style={[customFont, g.FHNB, g.pt4, g.pl5, {color: color}]}>
-              {Helper.capitalize(currentMessage.user.firstName)}
-            </Text>
+            <TouchableOpacity
+              style={{zIndex: 1}}
+              hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
+              onPress={() => {
+                onTapUserName();
+              }}>
+              <Text
+                numberOfLines={1}
+                style={[customFont, g.FHNB, g.pt4, g.pl5, {color: color}]}>
+                {Helper.capitalize(currentMessage.user.firstName)}
+                {currentMessage.user.batch !== undefined &&
+                currentMessage.user.batch !== null
+                  ? ' ' + '-' + currentMessage.user.batch + ' '
+                  : ''}
+              </Text>
+            </TouchableOpacity>
           )}
           {this.renderItem(currentMessage, true)}
         </View>
@@ -518,7 +558,7 @@ class ChatItem extends PureComponent {
         style = {};
         style = {
           paddingHorizontal: scale(5),
-          paddingTop: isGroup ? scale(3) : scale(1),
+          paddingTop: isGroup ? scale(3) : scale(9),
           paddingBottom: scale(2),
         };
       }
@@ -535,6 +575,7 @@ class ChatItem extends PureComponent {
         ) : (
           <TouchableOpacity
             onPress={onPress}
+            hitSlop={{top: 30, bottom: 30, left: 30, right: 30}}
             onLongPress={onLongPress}
             activeOpacity={1}>
             {messageType === 2 ? (

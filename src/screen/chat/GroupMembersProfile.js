@@ -352,6 +352,27 @@ const GroupMembersProfile = ({route, navigation}) => {
     });
   };
 
+  const removeIndex = callBack => {
+    Alert.alert(
+      'Are you sure you want to delete it?',
+      '',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {
+          text: 'Ok',
+          onPress: () => {
+            callBack();
+          },
+        },
+      ],
+      {cancelable: false},
+    );
+  };
+
   const clearData = useCallback(() => {
     searchVal = '';
     removedMembers = [];
@@ -485,7 +506,14 @@ const GroupMembersProfile = ({route, navigation}) => {
           ]}
           key={i}>
           <View style={[grid.rowdir]}>
-            <View style={[grid.col]}>
+            <TouchableOpacity
+              style={[grid.col]}
+              activeOpacity={1}
+              onPress={() => {
+                navigation.navigate('UserProfile', {
+                  userId: item._id,
+                });
+              }}>
               <View style={[grid.rowdir, g.mb5, grid.alignItems]}>
                 <View
                   style={[
@@ -543,41 +571,57 @@ const GroupMembersProfile = ({route, navigation}) => {
                   )}
                 </View>
 
-                <View>
-                  <Text style={[g.colordarkGray, g.fs14, g.FHNR, g.txtLeft]}>
-                    {Helpers.capitalize(Helpers.concatName(item))}
-                    {groupData.groupAdmin === global.userId &&
-                      item._id === groupData.groupAdmin && (
-                        <Text
-                          style={[g.colordarkGray, g.fs14, g.FHNB, g.txtLeft]}>
-                          {'  '}
-                          -Admin
-                        </Text>
-                      )}
-                  </Text>
+                <View style={grid.col}>
+                  <View style={[grid.rowdir]}>
+                    <Text
+                      style={[
+                        g.colordarkGray,
+                        g.fs14,
+                        g.FHNR,
+                        g.txtLeft,
+                        grid.col,
+                      ]}>
+                      {Helpers.capitalize(Helpers.concatName(item))}
+                    </Text>
+                    {item._id === groupData.groupAdmin && (
+                      <Text
+                        style={[g.colordarkGray, g.fs14, g.FHNM, g.txtLeft]}>
+                        Admin
+                      </Text>
+                    )}
+                  </View>
+
                   <View style={[g.mt2, g.mb2]} />
                   <Text style={[g.colordarkGray, g.fs14, g.FHNR, g.txtLeft]}>
                     Batch {item.batch}
                   </Text>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
 
             {groupData.groupAdmin === global.userId &&
               item._id !== global.userId && (
                 <TouchableOpacity
                   onPress={() => {
-                    global.loader_ref.show_loader(1);
-                    getTotalMessages(threadId, count => {
-                      removedMembers.push({_id: item._id, count: count});
-                      let oldData = groupMembers;
-                      oldData.splice(i, 1);
-                      setGroupMembers([...oldData]);
-                      var index = newMembers.findIndex(x => x._id === item._id);
-                      if (index > -1) {
-                        newMembers.splice(index, 1);
-                      }
-                      global.loader_ref.show_loader(0);
+                    removeIndex(() => {
+                      global.loader_ref.show_loader(1);
+                      getTotalMessages(threadId, count => {
+                        removedMembers.push({
+                          _id: item._id,
+                          count: count,
+                          removedBy: 0,
+                        });
+                        let oldData = groupMembers;
+                        oldData.splice(i, 1);
+                        setGroupMembers([...oldData]);
+                        var index = newMembers.findIndex(
+                          x => x._id === item._id,
+                        );
+                        if (index > -1) {
+                          newMembers.splice(index, 1);
+                        }
+                        global.loader_ref.show_loader(0);
+                      });
                     });
                   }}
                   style={[grid.alignItems, grid.justifyContentCenter]}>
@@ -753,8 +797,8 @@ const GroupMembersProfile = ({route, navigation}) => {
                     style={[
                       g.colordarkGray,
                       g.fs18,
-                      g.FHNB,
-                      g.txtCenter,
+                      g.FHNM,
+                      g.txtLeft,
                       g.txtCenterVertical,
                       grid.col,
                     ]}>
@@ -776,9 +820,9 @@ const GroupMembersProfile = ({route, navigation}) => {
                       <GlobalInclude.BaseIcon
                         containerStyle={{height: scale(24), width: scale(24)}}
                         iconColor={'#202020'}
-                        iconName={'add-to-photos'}
+                        iconName={'adduser'}
                         iconSize={scale(22)}
-                        iconType={IconType[0]}
+                        iconType={IconType[10]}
                       />
                     </TouchableOpacity>
                   )}

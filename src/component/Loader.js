@@ -1,7 +1,8 @@
 import React, {Component} from 'react';
 import {ActivityIndicator, StyleSheet} from 'react-native';
 import {View} from 'native-base';
-import GlobalInclude from '../globalInclude/Globalinclude';
+import Color from '../theme/Colors';
+
 export default class Loader extends Component {
   constructor(props) {
     super(props);
@@ -21,10 +22,7 @@ export default class Loader extends Component {
     }
     return (
       <View style={styles.loaderStyle}>
-        <ActivityIndicator
-          size="large"
-          color={GlobalInclude.Color.ColorPrimary}
-        />
+        <ActivityIndicator size="large" color={Color.ColorPrimary} />
       </View>
     );
   }

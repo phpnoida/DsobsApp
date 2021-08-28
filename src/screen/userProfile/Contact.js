@@ -15,51 +15,14 @@ import grid from '../../theme/grid';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
 import {IconType} from '../../helper/Constants';
+import {generateView} from '../../component/Common';
 
-const generateView = (type, icon, title, subTitle, callback) => {
-  return (
-    <View>
-      <TouchableOpacity
-        activeOpacity={1}
-        onPress={() => {
-          callback();
-        }}
-        style={[g.boxShadow, g.bgWhite, g.br3, g.mb10, g.p15]}>
-        <View style={[grid.rowdir, grid.alignItems]}>
-          {icon !== '' && (
-            <GlobalInclude.BaseIcon
-              containerStyle={{height: scale(26), width: scale(26)}}
-              iconColor={GlobalInclude.Color.ColorPrimary}
-              iconName={icon}
-              iconSize={scale(24)}
-              iconType={type}
-            />
-          )}
-          <View style={[grid.col, g.pl15]}>
-            <Text
-              style={[
-                g.colordarkGray,
-                g.fs16,
-                g.FHNB,
-                g.mb5,
-                {textTransform: 'capitalize'},
-              ]}>
-              {title}
-            </Text>
-            <Text style={[g.colorLightGray, g.fs14, g.FHNR]}>{subTitle}</Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
-};
-
-const Contact = (props) => {
-  const openEmail = (email) => {
+const Contact = props => {
+  const openEmail = email => {
     Linking.openURL('mailto:' + `${email}` + '?subject= ');
   };
 
-  const openDialler = (number) => {
+  const openDialler = number => {
     let phoneNumber = '';
     if (Platform.OS === 'android') {
       phoneNumber = `tel:${number.trim()}`;

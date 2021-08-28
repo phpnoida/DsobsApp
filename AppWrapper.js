@@ -2,18 +2,36 @@ import React, {useEffect, useCallback} from 'react';
 import App from './App';
 import NotifService from './src/helper/NotifService';
 import firestore from '@react-native-firebase/firestore';
+import {authentication} from './src/helper/ChatHelper';
 import {useDispatch} from 'react-redux';
 import {refreshScreen} from './src/reducer/NotificationReducer';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 let notif;
 const AppWrapper = ({navigation}) => {
   const dispatch = useDispatch();
+
   useEffect(() => {
     async function bootstrap() {
       await firestore().settings({
         persistence: false, // disable offline persistence
       });
     }
-    bootstrap();
+
+    AsyncStorage.getItem('userDetails').then(details => {
+      if (details && details !== null && details !== '') {
+        var userDetails = JSON.parse(details);
+        global.userDetails = userDetails;
+        if (global.userDetails !== undefined && global.userDetails !== null) {
+          authentication(() => {
+            bootstrap();
+          });
+        }
+      }
+    });
+    return () => {};
+  }, []);
+
+  useEffect(() => {
     notif = new NotifService(onRegister, onNotif);
     return () => {
       notif;

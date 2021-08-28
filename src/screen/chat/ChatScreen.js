@@ -191,7 +191,7 @@ const ChatScreen = ({route}) => {
               ? response.isGroup
               : null;
 
-          checkUserExist(global.userId,false)
+          checkUserExist(global.userId, false)
             .then(result => {
               if (result !== undefined && result !== null) {
                 let blockedList = result.blockedUser;
@@ -1619,12 +1619,12 @@ const ChatScreen = ({route}) => {
       <OptionsSheet
         ref={chatObjRef}
         minClosingHeight={50}
-        // height={
-        //   selectedChatObject !== null &&
-        //   selectedChatObject.user._id === global.userId
-        //     ? 280
-        //     : 180
-        // }
+        height={
+          selectedChatObject !== null &&
+          selectedChatObject.user._id === global.userId
+            ? 310
+            : 180
+        }
         duration={200}
         closeOnDragDown={false}
         keyboardAvoidingViewEnabled={false}

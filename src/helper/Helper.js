@@ -483,7 +483,7 @@ const Helpers = {
     return yiq >= 128 ? 'black' : 'white';
   },
   getRandomLightColor: function () {
-    var letters = '0123456789ABCDEF'.split('');
+    var letters = '3456789ABCDEF'.split('');
     var color = '#';
     for (var i = 0; i < 6; i++) {
       color += letters[Math.floor(Math.random() * letters.length)];

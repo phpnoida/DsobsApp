@@ -31,12 +31,12 @@ import {getPopNotification} from '../../Actions/CommonActions';
 import {useDispatch, useSelector, shallowEqual} from 'react-redux';
 import {clearNotifications} from '../../reducer/NotificationReducer';
 import PushNotification from 'react-native-push-notification';
-
 import {IconType} from '../../helper/Constants';
 import {
   setUserLastSeen,
   addUser,
   checkUserExist,
+  clearAuthentication,
 } from '../../helper/ChatHelper';
 import {useDocumentDataOnce} from 'react-firebase-hooks/firestore';
 import firestore from '@react-native-firebase/firestore';
@@ -74,12 +74,7 @@ const Dashboard = ({props, navigation}) => {
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [showPopNotification, setShowPopNotification] = useState(false);
   const [notificationList, setNotificationList] = useState([]);
-  const [userData, loading, error] = useDocumentDataOnce(
-    firestore().collection('Users').doc(global.userId),
-    {
-      snapshotListenOptions: {includeMetadataChanges: true},
-    },
-  );
+  const [userData, setUserData] = useState(null);
 
   const dispatch = useDispatch();
 
@@ -94,6 +89,7 @@ const Dashboard = ({props, navigation}) => {
   }, shallowEqual);
 
   useEffect(() => {
+    console.log('useeffectt-97');
     timer = setTimeout(() => {
       setShowWelcome(false);
     }, 7000);
@@ -119,11 +115,26 @@ const Dashboard = ({props, navigation}) => {
       }
     };
 
+    const _handleAppStateChange = nextState => {
+      console.log('nextState-128', nextState);
+      // if (nextState === 'active') {
+      //   if (global.isLoggedIn) {
+      //     getPopNotifications();
+      //   }
+      // }
+    };
+
     backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
     AppState.addEventListener('change', _handleAppStateChange);
-
     const unsubscribe = navigation.addListener('focus', () => {
+      addUser(global.userId, global.userDetails, () => {});
+      checkUserExist(global.userId, false).then(detailis => {
+        console.log('detailis', detailis);
+        setUserData(detailis);
+      });
+
       getPopNotifications();
+
       /**
        *
        * We check weather we have push notification data or not
@@ -134,7 +145,6 @@ const Dashboard = ({props, navigation}) => {
       console.log('global.userDetails.fcmTopic', global.userDetails.fcmTopic);
       //console.log('global.userDetails.fcmTopic', global.accessToken);
     });
-    addUser(global.userId, global.userDetails, () => {});
 
     if (refreshState) {
       dispatch(clearNotifications());
@@ -149,22 +159,7 @@ const Dashboard = ({props, navigation}) => {
       backHandler.remove();
       AppState.removeEventListener('change', _handleAppStateChange);
     };
-  }, [
-    navigation,
-    refreshState,
-    _handleAppStateChange,
-    dispatch,
-    validatePushNotification,
-  ]);
-
-  const _handleAppStateChange = useCallback(nextState => {
-    console.log('nextState-128', nextState);
-    if (nextState === 'active') {
-      if (global.isLoggedIn) {
-        getPopNotifications();
-      }
-    }
-  }, []);
+  }, [navigation, refreshState, validatePushNotification, dispatch]);
 
   const getPopNotifications = () => {
     if (global.isConnected) {
@@ -200,7 +195,7 @@ const Dashboard = ({props, navigation}) => {
   const validatePushNotification = useCallback(() => {
     if (global.notification !== undefined && global.notification !== null) {
       let data = global.notification.data;
-      console.log('validatePushNotification', data);
+      //console.log('validatePushNotification', data);
       let linkUrl = data.linkUrl;
       if (linkUrl && linkUrl !== null && linkUrl !== '') {
         global.notification = null;
@@ -287,17 +282,22 @@ const Dashboard = ({props, navigation}) => {
           data.threadId !== ''
         ) {
           setUserLastSeen(true, new Date().getTime(), () => {
+            console.log('notification Data', data);
+            console.log('notification Data', data.isGroup);
+
             checkUserExist(global.userId, false).then(result => {
               if (result !== undefined && result !== null) {
+                console.log('notification isGroup', data.isGroup);
                 let payload = {
                   threadId: data.threadId,
                   challenger: result,
                   isGroup: data.isGroup,
                 };
-                if (data.isGroup) {
-                  console.log('payload', payload);
+                if (data.isGroup === 'true') {
+                  console.log('groupChat', payload);
                   navigation.navigate('GroupChatScreen', payload);
                 } else {
+                  console.log('singleChat', payload);
                   navigation.navigate('ChatScreen', payload);
                 }
               }
@@ -335,6 +335,7 @@ const Dashboard = ({props, navigation}) => {
               ) {
                 let fcmTopic = global.userDetails.fcmTopic;
                 AsyncStorage.clear().then(() => {
+                  clearAuthentication();
                   PushNotification.unsubscribeFromTopic(fcmTopic);
                   resetToHome();
                 });

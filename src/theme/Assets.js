@@ -63,6 +63,7 @@ import ListYellowPage from '../../Assets/Icon/list_business.png';
 import MyYellowPages from '../../Assets/Icon/my_business.png';
 import TickerComment from '../../Assets/Icon/ticker_comment.png';
 import TickerLike from '../../Assets/Icon/ticker_like.png';
+import FontSize from '../../Assets/Icon/font_size.png';
 export default {
   AppLogo: AppLogo,
   MainLogo: MainLogo,
@@ -129,4 +130,5 @@ export default {
   MyYellowPages: MyYellowPages,
   TickerComment: TickerComment,
   TickerLike: TickerLike,
+  FontSize: FontSize,
 };

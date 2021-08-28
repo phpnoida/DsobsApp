@@ -67,7 +67,7 @@ export const renderNoDataComponent = () => {
   );
 };
 
-export const uploadMediaButton = (onPress) => {
+export const uploadMediaButton = onPress => {
   return (
     <TouchableOpacity style={grid.rowdir} onPress={onPress} activeOpacity={0.7}>
       <View
@@ -344,7 +344,7 @@ export const renderCity = (cityList, onPress) => {
   );
 };
 
-export const showProgess = (canShow) => {
+export const showProgess = canShow => {
   return (
     <View style={{marginTop: Platform.OS === 'ios' ? 0 : 8, height: scale(4)}}>
       {canShow && (
@@ -360,5 +360,41 @@ export const showProgess = (canShow) => {
         />
       )}
     </View>
+  );
+};
+
+export const generateView = (type, icon, title, subTitle, callback) => {
+  return (
+    <TouchableOpacity
+      activeOpacity={1}
+      onPress={() => {
+        callback();
+      }}
+      style={[g.boxShadow, g.bgWhite, g.br3, g.mb10, g.p15]}>
+      <View style={[grid.rowdir, grid.alignItems]}>
+        {icon !== '' && (
+          <GlobalInclude.BaseIcon
+            containerStyle={{height: scale(26), width: scale(26)}}
+            iconColor={GlobalInclude.Color.ColorPrimary}
+            iconName={icon}
+            iconSize={scale(24)}
+            iconType={type}
+          />
+        )}
+        <View style={[grid.col, g.pl15]}>
+          <Text
+            style={[
+              g.colordarkGray,
+              g.fs16,
+              g.FHNB,
+              g.mb5,
+              {textTransform: 'capitalize'},
+            ]}>
+            {title}
+          </Text>
+          <Text style={[g.colorLightGray, g.fs14, g.FHNR]}>{subTitle}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 };

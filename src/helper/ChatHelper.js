@@ -1,6 +1,7 @@
 import {Platform} from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import database from '@react-native-firebase/database';
+import auth from '@react-native-firebase/auth';
 import moment from 'moment';
 import _ from 'lodash';
 import axios from 'axios';
@@ -96,14 +97,12 @@ export const createSingleChat = (opponentUser, lastMessage, callback) => {
     .then(() => {
       callback(chatObject);
     })
-    .then(() => callback(true))
     .catch(() => {
       callback(false);
     });
 };
 
 export const updateChatObject = (chatId, chatObject, callback) => {
-  
   const postReference = chatCollection.doc(chatId);
   firestore()
     .runTransaction(async transaction => {
@@ -421,7 +420,8 @@ export const updateUserObject = (object, userId, callback) => {
     .then(() => {
       callback(true);
     })
-    .catch(() => {
+    .catch(error => {
+      console.log(';error', error);
       callback(false);
     });
 };
@@ -765,9 +765,9 @@ export const executePushNotification = async (
 
   notificationPayload = JSON.stringify(notificationPayload);
 
-  // console.log('====================================');
-  // console.log('final Message: ' + notificationPayload);
-  // console.log('====================================');
+  console.log('====================================');
+  console.log('final Message: ' + notificationPayload);
+  console.log('====================================');
 
   var config = {
     method: 'post',
@@ -792,4 +792,61 @@ export const executePushNotification = async (
 
 /**
  * Push notification
+ */
+
+/**
+ * Authentication
+ */
+export const authentication = async callback => {
+  auth().onAuthStateChanged(state => {
+    if (state === null || state === undefined) {
+      checkAndCreateUser(callback);
+    }
+    // else {
+    //   checkAndCreateUser(callback);
+    // }
+  });
+};
+
+export const checkAndCreateUser = async callback => {
+  auth()
+    .fetchSignInMethodsForEmail(global.userDetails.email)
+    .then(methods => {
+      if (methods.length > 0) {
+        auth()
+          .signInWithEmailAndPassword(
+            global.userDetails.email,
+            global.userDetails._id,
+          )
+          .then(user => {
+            callback(true);
+            console.log('user', user);
+          })
+          .catch(() => {
+            callback(false);
+          });
+      } else {
+        auth()
+          .createUserWithEmailAndPassword(
+            global.userDetails.email,
+            global.userDetails._id,
+          )
+          .then(() => {
+            callback(true);
+          })
+          .catch(() => {
+            callback(false);
+          });
+      }
+    });
+};
+
+export const clearAuthentication = async () => {
+  auth()
+    .signOut()
+    .then(() => console.log('User signed out!'));
+};
+
+/**
+ * Authentication
  */

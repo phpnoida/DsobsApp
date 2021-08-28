@@ -151,7 +151,11 @@ const StartChatWith = ({navigation}) => {
             disabledIds.push(element._id);
             isAnyMemberDisabled = true;
             disabledUserMessage =
-              disabledUserMessage + Helper.concatName(element);
+              disabledUserMessage +
+              Helper.capitalize(Helper.concatName(element)) +
+              ' - ' +
+              element.batch +
+              '\n';
           }
         });
 
@@ -159,7 +163,7 @@ const StartChatWith = ({navigation}) => {
           setIsLoading(false);
           Alert.alert(
             'Error',
-            'Some group members disabled chat you cannot add them. Users are\n' +
+            'Some members in your selected list have disabled their chat, so you cannot add them. The members are\n' +
               disabledUserMessage,
           );
         } else {

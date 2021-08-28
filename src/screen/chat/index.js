@@ -125,46 +125,66 @@ const ChatUserList = ({navigation}) => {
     const executeFunctions = () => {
       subscriber = chatCollection
         .where('users', 'array-contains', global.userId)
-        .onSnapshot(query => {
-          setPaginationStatus(PaginationStatus.fetching);
-          if (!query.empty) {
-            tmpArray = [];
-            query.docs.forEach(item => {
-              let data = item.data();
-              tmpArray.push(data);
-            });
-
-            tmpArray.sort(function (x, y) {
-              return y.lastMessageTime - x.lastMessageTime;
-            });
-
-            finalItemsArray = tmpArray;
-            pendingUnreads = false;
-            for (let i = 0; i < tmpArray.length; i++) {
-              const element = tmpArray[i];
-              let unreadCount = getChatCount(element.unreadCount);
-              if (unreadCount > 0) {
-                pendingUnreads = true;
-                break;
+        .onSnapshot(
+          query => {
+            setPaginationStatus(PaginationStatus.fetching);
+            if (!query.empty) {
+              try {
+                tmpArray = [];
+                query.docs.forEach(item => {
+                  let data = item.data();
+                  tmpArray.push(data);
+                });
+                tmpArray.sort(function (x, y) {
+                  return y.lastMessageTime - x.lastMessageTime;
+                });
+                finalItemsArray = tmpArray;
+                pendingUnreads = false;
+                for (let i = 0; i < tmpArray.length; i++) {
+                  const element = tmpArray[i];
+                  let unreadCount = getChatCount(element.unreadCount);
+                  if (unreadCount > 0) {
+                    pendingUnreads = true;
+                    break;
+                  }
+                }
+                if (!pendingUnreads) {
+                  setTimeout(() => {
+                    setLatestUnread(false, global.userId, () => {
+                      setChatList(tmpArray);
+                      setPaginationStatus(PaginationStatus.waiting);
+                      setTimeout(() => {
+                        setFirstTimeLoad(false);
+                      }, 200);
+                    });
+                  }, 200);
+                } else {
+                  setChatList(tmpArray);
+                  setPaginationStatus(PaginationStatus.waiting);
+                  setTimeout(() => {
+                    setFirstTimeLoad(false);
+                  }, 200);
+                }
+                // setChatList(tmpArray);
+                // setPaginationStatus(PaginationStatus.waiting);
+                // setFirstTimeLoad(false);
+              } catch (error) {
+                console.log('error', error);
               }
-            }
-
-            if (!pendingUnreads) {
-              setLatestUnread(false, global.userId, () => {
-                setChatList(tmpArray);
-                setPaginationStatus(PaginationStatus.waiting);
-                setFirstTimeLoad(false);
-              });
             } else {
-              setChatList(tmpArray);
-              setPaginationStatus(PaginationStatus.waiting);
               setFirstTimeLoad(false);
+              setPaginationStatus(PaginationStatus.waiting);
             }
-          } else {
+            // console.log('====================================');
+            // console.log('query', query);
+            // console.log('====================================');
+          },
+          error => {
             setFirstTimeLoad(false);
             setPaginationStatus(PaginationStatus.waiting);
-          }
-        });
+            console.log('error.message');
+          },
+        );
     };
 
     const backAction = () => {
@@ -220,7 +240,6 @@ const ChatUserList = ({navigation}) => {
         oldData.forEach((element, index, array) => {
           let userInfo = element.userInfo;
           let filteredX = userInfo.filter(itemX => itemX._id !== global.userId);
-
           if (
             filteredX.length > 0 &&
             Helper.concatName(filteredX[0])
@@ -228,6 +247,20 @@ const ChatUserList = ({navigation}) => {
               .includes(searchText.toLocaleLowerCase())
           ) {
             tempArray.push(element);
+          } else {
+            if (
+              element.isGroup &&
+              element.groupName
+                .toLocaleLowerCase()
+                .includes(searchText.toLocaleLowerCase())
+            ) {
+              let found = tempArray.some(some => {
+                some._id === element._id;
+              });
+              if (!found) {
+                tempArray.push(element);
+              }
+            }
           }
           if (index === array.length - 1) {
             resolve();
@@ -236,8 +269,7 @@ const ChatUserList = ({navigation}) => {
       });
 
       itemOne.then(() => {
-        setChatList([...tempArray]);
-        var itemTwo = new Promise((resolve, reject) => {
+        var itemThree = new Promise((resolve, reject) => {
           oldData.forEach((element, index, array) => {
             let latestMessages = element.latestMessages;
             let filteredX = latestMessages.filter(itemX =>
@@ -261,7 +293,8 @@ const ChatUserList = ({navigation}) => {
           });
         });
 
-        itemTwo.then(() => {
+        itemThree.then(() => {
+          setChatList([...tempArray]);
           setMessages([...anotherArray]);
           setPaginationStatus(PaginationStatus.waiting);
         });
@@ -365,9 +398,9 @@ const ChatUserList = ({navigation}) => {
           onPress: () => {
             let removed = selectedItem.removed;
 
-            if (!isUserRemoved()) {
+            if (!isUserRemoved(selectedItem)) {
               getTotalMessages(selectedItem._id, count => {
-                removed.push({_id: global.userId, count: count});
+                removed.push({_id: global.userId, count: count, removedBy: 1});
                 let updateObject = {
                   removed: removed,
                 };
@@ -438,7 +471,7 @@ const ChatUserList = ({navigation}) => {
     if (item !== undefined && item !== null && item.isGroup) {
       let removed = item.removed;
 
-      var index = removed.findIndex(x => x === global.userId);
+      var index = removed.findIndex(x => x._id === global.userId);
 
       if (index > -1) {
         return true;
@@ -454,6 +487,7 @@ const ChatUserList = ({navigation}) => {
     let unreadCount = getChatCount(item.unreadCount);
     let opponentUser = null;
     let emptyPicMsg = '';
+    let isExited = false;
     if (!item.isGroup) {
       opponentUser = getOpponentInfo(item.userInfo);
       if (opponentUser !== undefined && opponentUser !== null) {
@@ -471,6 +505,9 @@ const ChatUserList = ({navigation}) => {
         subHeader = opponentUser.profession;
       }
     } else {
+      if (isUserRemoved(item)) {
+        isExited = true;
+      }
       if (
         item.profileImg !== undefined &&
         item.profileImg !== null &&
@@ -569,6 +606,20 @@ const ChatUserList = ({navigation}) => {
               containerStyle={styles.imageStyle}
               mode={'cover'}
             />
+          ) : item.isGroup ? (
+            <GlobalInclude.BaseIcon
+              containerStyle={{
+                width: scale(35),
+                height: scale(35),
+                justifyContent: 'center',
+                alignItems: 'center',
+                alignContent: 'center',
+              }}
+              iconColor={'white'}
+              iconName={'groups'}
+              iconSize={scale(30)}
+              iconType={IconType[0]}
+            />
           ) : (
             <Text
               style={[
@@ -587,13 +638,13 @@ const ChatUserList = ({navigation}) => {
               <Text
                 style={[
                   g.fs13,
-                  g.FHNM,
+                  g.FHNB,
                   g.colorBlue,
                   GlobalInclude.AppStyle.transform,
                 ]}>
                 {headerTitle}
               </Text>
-              {/* {subHeader !== undefined && subHeader !== '' && (
+              {subHeader !== undefined && subHeader !== '' && (
                 <Text
                   style={[
                     g.fs12,
@@ -604,7 +655,7 @@ const ChatUserList = ({navigation}) => {
                   ]}>
                   {subHeader}
                 </Text>
-              )} */}
+              )}
             </View>
             {item.lastMessageTime > 0 && (
               <Text
@@ -635,7 +686,7 @@ const ChatUserList = ({navigation}) => {
                 item.lastMessage !== null &&
                 item.lastMessage !== '' ? (
                   <Text
-                    numberOfLines={2}
+                    numberOfLines={item.lastMessageType === 1 ? 2 : 1}
                     style={[
                       g.fs12,
                       g.FHNR,
@@ -643,7 +694,7 @@ const ChatUserList = ({navigation}) => {
                       g.txtCenterVertical,
                       g.textJustify,
                     ]}>
-                    {item.lastMessage}
+                    {isExited ? 'You left' : item.lastMessage}
                   </Text>
                 ) : (
                   <Text
@@ -722,6 +773,7 @@ const ChatUserList = ({navigation}) => {
             if (item.isGroup) {
               let payload = {
                 threadId: item._id,
+                challenger: challengerUser,
               };
               navigation.replace('GroupChatScreen', payload);
             } else {
@@ -1094,7 +1146,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: scale(10),
-    paddingVertical: scale(6),
+    paddingVertical: scale(10),
   },
   chatIcon: {
     position: 'absolute',

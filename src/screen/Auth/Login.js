@@ -27,6 +27,7 @@ import {scale} from '../../theme/Scalling';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Constants from '../../helper/Constants';
 import {URL_REGX, APP_NAME} from '../../helper/Constants';
+import {authentication} from '../../helper/ChatHelper';
 import {CommonActions} from '@react-navigation/native';
 import PushNotification from 'react-native-push-notification';
 import CommonButton from '../../component/CommonButton';
@@ -340,11 +341,16 @@ const Login = ({navigation}) => {
       AsyncStorage.setItem('tokens', JSON.stringify(tokens)).then(() => {
         AsyncStorage.setItem('userDetails', JSON.stringify(userDetails)).then(
           () => {
-            AsyncStorage.setItem('accessToken', tokens.accessToken).then(() => {
-              AsyncStorage.setItem('refreshToken', tokens.refreshToken).then(
+            authentication(callback => {
+              AsyncStorage.setItem('accessToken', tokens.accessToken).then(
                 () => {
-                  AsyncStorage.setItem('fcmTopic', fcmTopic).then(() => {
-                    openHome();
+                  AsyncStorage.setItem(
+                    'refreshToken',
+                    tokens.refreshToken,
+                  ).then(() => {
+                    AsyncStorage.setItem('fcmTopic', fcmTopic).then(() => {
+                      openHome();
+                    });
                   });
                 },
               );
