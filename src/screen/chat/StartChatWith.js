@@ -25,6 +25,7 @@ import ModelAlert from '../../component/ModalAlert';
 import CommonButton from '../../component/CommonButton';
 import {
   addUser,
+  checkChatExist,
   checkUserExist,
   createGroupChat,
   sendWelcomeMessage,
@@ -97,14 +98,24 @@ const StartChatWith = ({navigation}) => {
   };
 
   const createChatUser = async opponentUser => {
+    const result = await checkChatExist(opponentUser._id, 1);
     setIsLoading(false);
-    let payload = {
-      challenger: challengerUser,
-      opponent: opponentUser || {},
-      isGroup: false,
-    };
-    navigation.navigate('ChatScreen', payload);
-    //navigation.replace('ChatScreen', payload);
+    if (result !== undefined && result !== null) {
+      let threadId = result._id;
+      let payload = {
+        isGroup: false,
+        threadId: threadId,
+      };
+      navigation.navigate('ChatScreen', payload);
+      //props.navigation.replace('ChatScreen', payload);
+    } else {
+      let payload = {
+        challenger: challengerUser,
+        opponent: opponentUser || {},
+        isGroup: false,
+      };
+      navigation.navigate('ChatScreen', payload);
+    }
   };
 
   const createGroup = async () => {
@@ -575,7 +586,14 @@ const StartChatWith = ({navigation}) => {
                       if (chatType === 1) {
                         validateUser();
                       } else {
-                        createGroup();
+                        if (selectedUser.length > 10) {
+                          Alert.alert(
+                            'Max limit exceeded',
+                            'Multi user chat is available for groups of 10 users or less only. Please limit the number of people in this chat to 10 or fewer.',
+                          );
+                        } else {
+                          createGroup();
+                        }
                       }
                     }
                   }}

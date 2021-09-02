@@ -37,6 +37,7 @@ import {
   addUser,
   checkUserExist,
   clearAuthentication,
+  updateUserObject,
 } from '../../helper/ChatHelper';
 import {useDocumentDataOnce} from 'react-firebase-hooks/firestore';
 import firestore from '@react-native-firebase/firestore';
@@ -115,22 +116,16 @@ const Dashboard = ({props, navigation}) => {
       }
     };
 
-    const _handleAppStateChange = nextState => {
-      console.log('nextState-128', nextState);
-      // if (nextState === 'active') {
-      //   if (global.isLoggedIn) {
-      //     getPopNotifications();
-      //   }
-      // }
-    };
-
     backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-    AppState.addEventListener('change', _handleAppStateChange);
     const unsubscribe = navigation.addListener('focus', () => {
       addUser(global.userId, global.userDetails, () => {});
       checkUserExist(global.userId, false).then(detailis => {
         console.log('detailis', detailis);
         setUserData(detailis);
+        let object = {
+          platform: Platform.OS,
+        };
+        updateUserObject(object, global.userId, status => {});
       });
 
       getPopNotifications();
@@ -157,7 +152,6 @@ const Dashboard = ({props, navigation}) => {
       clearInterval(timer);
       unsubscribe();
       backHandler.remove();
-      AppState.removeEventListener('change', _handleAppStateChange);
     };
   }, [navigation, refreshState, validatePushNotification, dispatch]);
 

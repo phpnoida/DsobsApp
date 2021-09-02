@@ -808,13 +808,20 @@ const GroupMembersProfile = ({route, navigation}) => {
                   {groupData.groupAdmin === global.userId && (
                     <TouchableOpacity
                       onPress={() => {
-                        setSelectedUsers([]);
-                        if (
-                          userSelector &&
-                          userSelector.current !== undefined &&
-                          userSelector.current !== null
-                        ) {
-                          userSelector.current.open();
+                        if (groupMembers.length > 10) {
+                          Alert.alert(
+                            'Max limit exceeded',
+                            'Multi user chat is available for groups of 10 users or less only. Please limit the number of people in this chat to 10 or fewer.',
+                          );
+                        } else {
+                          setSelectedUsers([]);
+                          if (
+                            userSelector &&
+                            userSelector.current !== undefined &&
+                            userSelector.current !== null
+                          ) {
+                            userSelector.current.open();
+                          }
                         }
                       }}>
                       <GlobalInclude.BaseIcon

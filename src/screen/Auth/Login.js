@@ -27,7 +27,7 @@ import {scale} from '../../theme/Scalling';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Constants from '../../helper/Constants';
 import {URL_REGX, APP_NAME} from '../../helper/Constants';
-import {authentication} from '../../helper/ChatHelper';
+import {checkAndCreateUser} from '../../helper/ChatHelper';
 import {CommonActions} from '@react-navigation/native';
 import PushNotification from 'react-native-push-notification';
 import CommonButton from '../../component/CommonButton';
@@ -278,7 +278,6 @@ const Login = ({navigation}) => {
       verifyAuthCode(
         requestData,
         response => {
-          setIsLoading(false);
           //console.log('verifyAuthCode', response);
           if (response && response !== null) {
             if (
@@ -291,15 +290,23 @@ const Login = ({navigation}) => {
               if (data.status) {
                 if (data.data && data.data !== null) {
                   let userDetails = data.data;
-
                   let tokens = userDetails.tokens;
-
                   global.accessToken = tokens.accessToken;
-
+                  global.userDetails = userDetails;
+                  global.userId = userDetails._id;
+                  global.firstName = userDetails.firstName;
+                  global.lastName = userDetails.lastName;
+                  global.isLoggedIn = true;
                   sendUserPresence(userDetails);
                 }
+              } else {
+                setIsLoading(false);
               }
+            } else {
+              setIsLoading(false);
             }
+          } else {
+            setIsLoading(false);
           }
         },
         (statusCode, error) => {
@@ -315,25 +322,26 @@ const Login = ({navigation}) => {
   };
 
   const sendUserPresence = userDetails => {
-    sendPresenceStatus(
-      response => {
-        console.log('details');
-        completeLogin(userDetails);
-      },
-      (statusCode, error) => {
-        console.log('error', error, statusCode);
-      },
-    );
+    checkAndCreateUser(status => {
+      sendPresenceStatus(
+        response => {
+          completeLogin(userDetails);
+        },
+        (statusCode, error) => {
+          console.log('error', error, statusCode);
+        },
+      );
+    });
   };
 
   const completeLogin = userDetails => {
     let tokens = userDetails.tokens;
     let fcmTopic = userDetails.fcmTopic;
-    global.userDetails = userDetails;
     global.accessToken = tokens.accessToken;
     global.userId = userDetails._id;
     global.firstName = userDetails.firstName;
     global.lastName = userDetails.lastName;
+    global.isLoggedIn = true;
     clearInterval(timerInterval);
 
     PushNotification.subscribeToTopic(fcmTopic);
@@ -341,16 +349,11 @@ const Login = ({navigation}) => {
       AsyncStorage.setItem('tokens', JSON.stringify(tokens)).then(() => {
         AsyncStorage.setItem('userDetails', JSON.stringify(userDetails)).then(
           () => {
-            authentication(callback => {
-              AsyncStorage.setItem('accessToken', tokens.accessToken).then(
+            AsyncStorage.setItem('accessToken', tokens.accessToken).then(() => {
+              AsyncStorage.setItem('refreshToken', tokens.refreshToken).then(
                 () => {
-                  AsyncStorage.setItem(
-                    'refreshToken',
-                    tokens.refreshToken,
-                  ).then(() => {
-                    AsyncStorage.setItem('fcmTopic', fcmTopic).then(() => {
-                      openHome();
-                    });
+                  AsyncStorage.setItem('fcmTopic', fcmTopic).then(() => {
+                    openHome();
                   });
                 },
               );
@@ -362,6 +365,7 @@ const Login = ({navigation}) => {
   };
 
   const openHome = () => {
+    setIsLoading(false);
     navigation.dispatch(
       CommonActions.reset({
         index: 0,

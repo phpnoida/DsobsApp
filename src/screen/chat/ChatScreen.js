@@ -14,6 +14,7 @@ import {
   BackHandler,
   Dimensions,
   Alert,
+  AppState,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
@@ -44,6 +45,7 @@ import database from '@react-native-firebase/database';
 import {useCollection} from 'react-firebase-hooks/firestore';
 
 import {
+  setUserLastSeen,
   createSingleChat,
   updateChatObject,
   getChatObject,
@@ -81,6 +83,7 @@ let pendingChilds = [];
 let lastOnlineStatus = false;
 let imageArray = [];
 let isBackTap = false;
+let isOpenPicker = false;
 
 const scrollToBottomOffset = 200;
 const usersCollection = firestore().collection('Users');
@@ -88,6 +91,7 @@ const chatCollection = firestore().collection('Chats');
 const reference = database().ref('Messages');
 
 const ChatScreen = ({route}) => {
+  const appState = useRef(AppState.currentState);
   const uploadRef = useRef();
   const emojiRef = useRef();
   const animRef = useRef();
@@ -101,6 +105,7 @@ const ChatScreen = ({route}) => {
       ? [{scaleY: -1}, {perspective: 1280}]
       : [{scaleY: -1}];
 
+  const [nextState, setNextState] = useState(appState.current);
   const [opponentId, setOpponentId] = useState('');
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [isSenderBlocked, setIsSenderBlocked] = useState(false);
@@ -142,8 +147,11 @@ const ChatScreen = ({route}) => {
    */
 
   useEffect(() => {
-    resetOldData();
+    updateResources();
+  }, [route, navigation, updateResources]);
 
+  const updateResources = useCallback(() => {
+    resetOldData();
     if (
       route !== undefined &&
       route.params !== undefined &&
@@ -177,9 +185,7 @@ const ChatScreen = ({route}) => {
         setIsFirstLoad(false);
       }
     }
-
-    //return () => {};
-  }, [route, navigation, validateChatScreen]);
+  }, [route, validateChatScreen]);
 
   const validateChatScreen = useCallback(() => {
     getChatObject(threadId, response => {
@@ -440,7 +446,11 @@ const ChatScreen = ({route}) => {
     let childAddedHandler;
 
     const onChildAdded = (child, previousKey) => {
+      console.log('childAdded', child);
+      console.log('childAdded', newItems);
+      console.log('childAdded', lastPickedMsgId);
       if (!newItems || lastPickedMsgId === child.val()._id) {
+        console.log('451');
         return;
       }
       if (child && child !== null && child !== undefined) {
@@ -591,12 +601,31 @@ const ChatScreen = ({route}) => {
 
     mainRef.once('value', onInitialLoad, onError);
 
+    const _handleAppStateChange = state => {
+      if (isOpenPicker) {
+        return;
+      }
+      console.log('state-597', state);
+      if (appState.current.match(/inactive|background/) && state === 'active') {
+        console.log('App has come to the foreground!');
+        updateResources();
+        newItems = true;
+        lastPickedMsgId = '';
+        setUserLastSeen(true, new Date().getTime(), () => {});
+      } else if (state === 'background' || state === 'inactive') {
+        console.log('App gone to the background!');
+        if (!isBackTap) {
+          isBackTap = true;
+          offlineSelf(false, () => {
+            setUserLastSeen(false, new Date().getTime(), () => {});
+          });
+        }
+      }
+      appState.current = state;
+      setNextState(appState.current);
+    };
+
     const backAction = () => {
-      console.log('backAction');
-      // if (navigation.isFocused()) {
-      //   setUserLastSeenAndMakeOffline();
-      //   return true;
-      // }
       setUserLastSeenAndMakeOffline();
       return true;
     };
@@ -606,13 +635,21 @@ const ChatScreen = ({route}) => {
       backAction,
     );
 
+    AppState.addEventListener('change', _handleAppStateChange);
+
     return () => {
       mainRef.off('child_added', childAddedHandler);
       if (backHandler !== undefined && backHandler !== null) {
         backHandler.remove();
       }
+      AppState.removeEventListener('change', _handleAppStateChange);
     };
-  }, [messageThreadId, showScrollToBottom, setUserLastSeenAndMakeOffline]);
+  }, [
+    messageThreadId,
+    showScrollToBottom,
+    setUserLastSeenAndMakeOffline,
+    updateResources,
+  ]);
   /**Firebase All functions Hook**/
 
   /**Firebase child change Hook**/
@@ -1927,6 +1964,7 @@ const ChatScreen = ({route}) => {
                       <TouchableOpacity
                         onPress={() => {
                           if (uploadRef.current !== null) {
+                            isOpenPicker = true;
                             uploadRef.current.open();
                           }
                         }}
@@ -2012,6 +2050,7 @@ const ChatScreen = ({route}) => {
         media={{image: false, video: false, document: false, audio: false}}
         supportMultiple={false}
         onPickMedia={media => {
+          isOpenPicker = false;
           console.log(';media', media);
           if (media !== undefined && media !== null) {
             media.forEach(item => {

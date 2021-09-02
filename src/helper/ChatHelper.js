@@ -797,18 +797,31 @@ export const executePushNotification = async (
 /**
  * Authentication
  */
+
+export const checkUserAuthenticated = async callback => {
+  auth().onAuthStateChanged(state => {
+    console.log('auth state changed', state);
+    callback(state);
+  });
+};
+
 export const authentication = async callback => {
   auth().onAuthStateChanged(state => {
+    console.log('auth state changed', state);
     if (state === null || state === undefined) {
-      checkAndCreateUser(callback);
+      if (global.isLoggedIn) {
+        checkAndCreateUser(callback);
+      } else {
+        callback(true);
+      }
+    } else {
+      callback(true);
     }
-    // else {
-    //   checkAndCreateUser(callback);
-    // }
   });
 };
 
 export const checkAndCreateUser = async callback => {
+  console.log('checkAndCreateUser');
   auth()
     .fetchSignInMethodsForEmail(global.userDetails.email)
     .then(methods => {
@@ -822,7 +835,10 @@ export const checkAndCreateUser = async callback => {
             callback(true);
             console.log('user', user);
           })
-          .catch(() => {
+          .catch(error => {
+            console.log('====================================');
+            console.log('error-833', error);
+            console.log('====================================');
             callback(false);
           });
       } else {

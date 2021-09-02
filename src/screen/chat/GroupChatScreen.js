@@ -15,6 +15,7 @@ import {
   Dimensions,
   ScrollView,
   Alert,
+  AppState,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
@@ -90,6 +91,7 @@ const chatCollection = firestore().collection('Chats');
 const reference = database().ref('Messages');
 
 const GroupChatScreen = ({route}) => {
+  const appState = useRef(AppState.currentState);
   const uploadRef = useRef();
   const emojiRef = useRef();
   const animRef = useRef();
@@ -104,6 +106,7 @@ const GroupChatScreen = ({route}) => {
       ? [{scaleY: -1}, {perspective: 1280}]
       : [{scaleY: -1}];
 
+  const [nextState, setNextState] = useState(appState.current);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [profileLoading, setProfileLoading] = useState(true);
   const [messages, setMessages] = useState([]);
@@ -136,6 +139,10 @@ const GroupChatScreen = ({route}) => {
    */
 
   useEffect(() => {
+    updateResources();
+  }, [updateResources]);
+
+  const updateResources = useCallback(() => {
     resetOldData();
     if (
       route !== undefined &&
@@ -160,14 +167,12 @@ const GroupChatScreen = ({route}) => {
         });
       }
     }
-    //return () => {};
-  }, [route, navigation, offlineSelf, validateChatScreen]);
+  }, [route, validateChatScreen, offlineSelf]);
 
   const validateChatScreen = useCallback(() => {
     getChatObject(threadId, response => {
       if (response && response !== null && response !== undefined) {
         isChatExist = response;
-        var loggedInUserStatus = true;
         let userNames = [];
         inMessageThread = true;
         offlineUsers = [];
@@ -544,12 +549,28 @@ const GroupChatScreen = ({route}) => {
 
     mainRef.once('value', onInitialLoad, onError);
 
+    const _handleAppStateChange = state => {
+      console.log('state-597', state);
+      if (appState.current.match(/inactive|background/) && state === 'active') {
+        console.log('App has come to the foreground!');
+        updateResources();
+        newItems = true;
+        lastPickedMsgId = '';
+        // let previousMessages = messages;
+        // console.log('previousMessages',previousMessages);
+        // updateMessages(previousMessages, onValue, false);
+      } else if (state === 'background' || state === 'inactive') {
+        console.log('App gone to the background!');
+        if (!isBackTap) {
+          isBackTap = true;
+          offlineSelf(false, () => {});
+        }
+      }
+      appState.current = state;
+      setNextState(appState.current);
+    };
+
     const backAction = () => {
-      console.log('backAction');
-      // if (navigation.isFocused()) {
-      //   setUserLastSeenAndMakeOffline();
-      //   return true;
-      // }
       setUserLastSeenAndMakeOffline();
       return true;
     };
@@ -559,17 +580,23 @@ const GroupChatScreen = ({route}) => {
       backAction,
     );
 
+    AppState.addEventListener('change', _handleAppStateChange);
+
     return () => {
       mainRef.off('child_added', childAddedHandler);
       if (backHandler !== undefined && backHandler !== null) {
         backHandler.remove();
       }
+      AppState.removeEventListener('change', _handleAppStateChange);
     };
   }, [
+    messages,
     messageThreadId,
     showScrollToBottom,
     setUserLastSeenAndMakeOffline,
     updateMessages,
+    offlineSelf,
+    updateResources,
   ]);
   /**Firebase All functions Hook**/
 
@@ -587,6 +614,9 @@ const GroupChatScreen = ({route}) => {
 
     const onChildChanged = childChanged => {
       if (childChanged && childChanged !== null && childChanged !== undefined) {
+        console.log('====================================');
+        console.log('childChanged', childChanged.val());
+        console.log('====================================');
         let nextMsg = JSON.parse(JSON.stringify(childChanged.val()));
         let msgUser = nextMsg.user;
         if (
@@ -862,7 +892,7 @@ const GroupChatScreen = ({route}) => {
   const offlineSelf = useCallback((status, callback) => {
     if (threadId !== undefined && threadId !== null && threadId !== '') {
       getChatObject(threadId, response => {
-        console.log('response', response);
+        //console.log('response', response);
         if (response && response !== null && response !== undefined) {
           let userInfo = response.userInfo;
           let unreadCount = response.unreadCount;

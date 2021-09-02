@@ -10,6 +10,7 @@ import {
   Alert,
   BackHandler,
   ScrollView,
+  AppState,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
@@ -21,7 +22,6 @@ import SingleSearchWithFilter from '../../component/SingleSearchWithFilter';
 import {
   renderNoDataComponent,
   generateMenuOption,
-  showProgess,
 } from '../../component/Common';
 import {IconType, APP_NAME} from '../../helper/Constants';
 import Helper from '../../helper/Helper';
@@ -58,8 +58,11 @@ let backHandler = null;
 let pendingUnreads = false;
 
 const ChatUserList = ({navigation}) => {
+  const appState = useRef(AppState.currentState);
   const refOptions = useRef();
   const refPostOptions = useRef();
+
+  const [nextState, setNextState] = useState(appState.current);
   const [firstTimeLoad, setFirstTimeLoad] = useState(true);
   const [chatList, setChatList] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -187,6 +190,19 @@ const ChatUserList = ({navigation}) => {
         );
     };
 
+    const _handleAppStateChange = state => {
+      console.log('state-597', state);
+      if (appState.current.match(/inactive|background/) && state === 'active') {
+        console.log('App has come to the foreground!');
+        setUserLastSeen(true, new Date().getTime(), () => {});
+      } else if (state === 'background' || state === 'inactive') {
+        console.log('App gone to the background!');
+        setUserLastSeen(false, new Date().getTime(), () => {});
+      }
+      appState.current = state;
+      setNextState(appState.current);
+    };
+
     const backAction = () => {
       if (navigation.isFocused()) {
         setUserLastSeen(false, new Date().getTime(), () => {
@@ -203,7 +219,7 @@ const ChatUserList = ({navigation}) => {
     };
 
     backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-
+    AppState.addEventListener('change', _handleAppStateChange);
     return () => {
       if (subscriber !== undefined && subscriber !== null) {
         subscriber();
@@ -211,6 +227,7 @@ const ChatUserList = ({navigation}) => {
       if (backHandler !== undefined && backHandler !== null) {
         backHandler.remove();
       }
+      AppState.removeEventListener('change', _handleAppStateChange);
     };
   }, [navigation]);
 
@@ -728,7 +745,7 @@ const ChatUserList = ({navigation}) => {
                   />
                 </View>
               )}
-              {isUserBlocked(item.userInfo) && (
+              {!item.isGroup && isUserBlocked(item.userInfo) && (
                 <View style={[g.ml5, g.mr5]}>
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(18), width: scale(18)}}
@@ -1145,8 +1162,8 @@ const styles = StyleSheet.create({
     backgroundColor: GlobalInclude.Color.ColorPrimary,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: scale(10),
-    paddingVertical: scale(10),
+    width: scale(24),
+    height: scale(24),
   },
   chatIcon: {
     position: 'absolute',

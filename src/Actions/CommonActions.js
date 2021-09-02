@@ -9,10 +9,10 @@ export function getCountries(callback, errCallback) {
   let requestPath = `${SERVER_PATH}utils/countries`;
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -24,10 +24,10 @@ export function getStates(countryId, callback, errCallback) {
   let requestPath = `${SERVER_PATH}utils/states?name=${countryId}`;
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -39,10 +39,10 @@ export function getCities(stateId, callback, errCallback) {
   let requestPath = `${SERVER_PATH}utils/cities?name=${stateId}`;
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -61,12 +61,12 @@ export function uploadMedia(childPath, body, callback, errCallback) {
     },
     body,
   )
-    .then((resp) => {
+    .then(resp => {
       let bodyData = JSON.parse(resp.data);
       callback(bodyData);
     })
 
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
 }
@@ -84,14 +84,13 @@ export function sendPresenceStatus(callback, errCallback) {
   let object = {
     platform: Platform.OS,
   };
-  updateUserObject(object, global.userId, (status) => {});
-
+  updateUserObject(object, global.userId, status => {});
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       if (
         err.response &&
         err.response !== null &&
@@ -120,10 +119,10 @@ export function getPopNotification(callback, errCallback) {
   let requestPath = `${SERVER_PATH}utils/popFilter`;
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -135,10 +134,10 @@ export function doSearchCity(query, size, index, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user/directory/cities?size=${size}&index=${index}&s=${query}`;
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -150,10 +149,10 @@ export function doSearchCompany(query, size, index, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user/directory/company?size=${size}&index=${index}&s=${query}`;
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -164,10 +163,10 @@ export function doSearchProfession(query, size, index, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user/directory/proffession?size=${size}&index=${index}&s=${query}`;
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -178,10 +177,10 @@ export function doSearchBusiness(query, size, index, callback, errCallback) {
   let requestPath = `${SERVER_PATH}yellowPages/business?size=${size}&index=${index}&s=${query}`;
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -193,10 +192,10 @@ export function getScrappedData(link, callback, errCallback) {
   let requestPath = `${SERVER_PATH}news/scrap?link=${link}`;
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {

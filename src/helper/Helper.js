@@ -404,8 +404,7 @@ const Helpers = {
     const arrOfWordsCased = [];
     for (let i = 0; i < arrOfWords.length; i++) {
       const word = arrOfWords[i];
-
-      if (word !== undefined && word !== null) {
+      if (word !== undefined && word !== null && word.length > 0) {
         arrOfWordsCased.push(
           word[0].toUpperCase() + word.slice(1).toLowerCase(),
         );
