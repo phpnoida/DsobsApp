@@ -366,7 +366,7 @@ export const addUser = async (userId, opponentUser, callback) => {
       city: opponentUser.city,
       blockedUser: [],
       blockedBy: [],
-      lastseen: new Date().getTime(),
+      lastseen: 0,
       chatEnabled: true,
       groups: [],
       isOnline: false,
