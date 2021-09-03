@@ -137,7 +137,7 @@ const Dashboard = ({props, navigation}) => {
        */
       validatePushNotification();
 
-      console.log('global.userDetails.fcmTopic', global.userDetails.fcmTopic);
+      //console.log('global.userDetails.fcmTopic', global.userDetails.fcmTopic);
       //console.log('global.userDetails.fcmTopic', global.accessToken);
     });
 

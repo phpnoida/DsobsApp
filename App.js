@@ -153,6 +153,7 @@ const App = () => {
       },
       (statusCode, error) => {
         if (statusCode === 401) {
+          baseRoute = 'AppTour';
           let fcmTopic = global.userDetails.fcmTopic;
           AsyncStorage.clear().then(() => {
             global.userDetails = null;
@@ -160,7 +161,7 @@ const App = () => {
             global.userId = null;
             global.firstName = null;
             global.lastName = null;
-
+            global.isLoggedIn = false;
             PushNotification.unsubscribeFromTopic(fcmTopic);
             validateUser(() => {
               completeLogin();

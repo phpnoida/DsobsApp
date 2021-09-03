@@ -158,7 +158,9 @@ const ChatUserProfile = ({route, navigation}) => {
                   Last Seen:{' '}
                   {profileData.isOnline
                     ? 'Online'
-                    : moment(profileData.lastseen).fromNow()}
+                    : profileData.lastseen > 0
+                    ? moment(profileData.lastseen).fromNow()
+                    : 'Not yet'}
                 </Text>
               </View>
             </TouchableOpacity>

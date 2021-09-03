@@ -74,6 +74,8 @@ PushNotification.configure({
    */
   requestPermissions: true,
   foreground: true,
+  largeIcon: 'ic_launcher',
+  smallIcon: 'ic_notification',
 });
 
 export default handler;

@@ -35,6 +35,9 @@
             android:value="@string/app_name"
             tools:replace="android:value" />
 
+        <meta-data  android:name="com.dieam.reactnativepushnotification.notification_color"
+            android:resource="@color/background"/>
+
         <receiver android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationActions" />
         <receiver android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationPublisher" />
         <receiver android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationBootEventReceiver">
