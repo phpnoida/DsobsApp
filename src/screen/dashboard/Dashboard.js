@@ -39,8 +39,7 @@ import {
   clearAuthentication,
   updateUserObject,
 } from '../../helper/ChatHelper';
-import {useDocumentDataOnce} from 'react-firebase-hooks/firestore';
-import firestore from '@react-native-firebase/firestore';
+import Orientation from 'react-native-orientation-locker';
 
 let deviceHeight = Dimensions.get('screen').height;
 let deviceWidth = Dimensions.get('screen').width;
@@ -118,6 +117,7 @@ const Dashboard = ({props, navigation}) => {
 
     backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
     const unsubscribe = navigation.addListener('focus', () => {
+      Orientation.lockToPortrait();
       addUser(global.userId, global.userDetails, () => {});
       checkUserExist(global.userId, false).then(detailis => {
         console.log('detailis', detailis);

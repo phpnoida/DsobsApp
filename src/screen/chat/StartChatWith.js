@@ -489,14 +489,29 @@ const StartChatWith = ({navigation}) => {
                       let itemArray = [];
                       itemArray.push(row);
                       setSelectedUser([...itemArray]);
+                      setSearchedUser([]);
+                      setSearchUserName('');
+                      Keyboard.dismiss();
                     } else {
                       let oldData = selectedUser;
-                      oldData.push(row);
-                      setSelectedUser([...oldData]);
+
+                      let isExist = oldData.findIndex(
+                        item => item._id === row._id,
+                      );
+
+                      if (isExist > -1) {
+                        Alert.alert(
+                          'You have already selected this participant',
+                          '',
+                        );
+                      } else {
+                        oldData.push(row);
+                        setSelectedUser([...oldData]);
+                        setSearchedUser([]);
+                        setSearchUserName('');
+                        Keyboard.dismiss();
+                      }
                     }
-                    setSearchedUser([]);
-                    setSearchUserName('');
-                    Keyboard.dismiss();
                   }}
                 />
               )}

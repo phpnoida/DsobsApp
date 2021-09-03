@@ -111,7 +111,8 @@ const ChatScreen = ({route}) => {
   const [isSenderBlocked, setIsSenderBlocked] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
   const [messages, setMessages] = useState([]);
-  const [fontSize, setFontSize] = useState(scale(14));
+  const [fontSize, setFontSize] = useState(scale(16));
+  const [scaleSize, setScaleSize] = useState(scale(22));
   const [inputValue, setInputValue] = useState('');
   const [header, setHeader] = useState('');
   const [subHeader, setSubHeader] = useState('');
@@ -1040,11 +1041,11 @@ const ChatScreen = ({route}) => {
         inEditMode = false;
         let oldData = messages;
         oldData[lastPickIndex] = selectedMsg;
-        previousStatusOfTyping = false;
         setMessages([...oldData]);
         setIsSending(false);
         setInputValue('');
         sendUserTyping(false);
+        previousStatusOfTyping = false;
         Keyboard.dismiss();
         if (
           chatRef !== undefined &&
@@ -1503,67 +1504,41 @@ const ChatScreen = ({route}) => {
                   )}
                 </TouchableOpacity>
               </View>
-              <View
-                style={[
-                  grid.rowrow,
-                  grid.alignItems,
-                  grid.justifyContent,
-                  {height: 30},
-                ]}>
-                <TouchableOpacity
-                  activeOpacity={1}
-                  onPress={() => {
-                    setFontSize(scale(14));
-                    selectedFontSize = 1;
-                  }}>
-                  <Text
-                    style={[
-                      selectedFontSize === 1 ? g.colorBlue : g.colordarkGray,
-                      selectedFontSize === 1 ? g.textunderline : null,
-                      {
-                        lineHeight: 18,
-                        fontSize: 12,
-                      },
-                      g.FHNB,
-                    ]}>
-                    A
-                  </Text>
-                </TouchableOpacity>
-                <View style={{marginHorizontal: scale(4)}} />
-                <TouchableOpacity
-                  activeOpacity={1}
-                  onPress={() => {
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => {
+                  if (selectedFontSize === 1) {
                     setFontSize(scale(18));
+                    setScaleSize(scale(24));
                     selectedFontSize = 2;
-                  }}>
-                  <Text
-                    style={[
-                      selectedFontSize === 2 ? g.colorBlue : g.colordarkGray,
-                      selectedFontSize === 2 ? g.textunderline : null,
-                      {lineHeight: 20, fontSize: 15},
-                      g.FHNB,
-                    ]}>
-                    A
-                  </Text>
-                </TouchableOpacity>
-                <View style={{marginHorizontal: scale(3)}} />
-                <TouchableOpacity
-                  activeOpacity={1}
-                  onPress={() => {
-                    setFontSize(scale(22));
+                  } else if (selectedFontSize === 2) {
+                    setFontSize(scale(20));
+                    setScaleSize(scale(26));
                     selectedFontSize = 3;
-                  }}>
-                  <Text
-                    style={[
-                      selectedFontSize === 3 ? g.colorBlue : g.colordarkGray,
-                      selectedFontSize === 3 ? g.textunderline : null,
-                      {lineHeight: 20, fontSize: 20},
-                      g.FHNB,
-                    ]}>
-                    A
-                  </Text>
-                </TouchableOpacity>
-              </View>
+                  } else if (selectedFontSize === 3) {
+                    setFontSize(scale(16));
+                    setScaleSize(scale(22));
+                    selectedFontSize = 1;
+                  }
+                }}
+                hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
+                style={{
+                  height: scaleSize,
+                  width: scaleSize,
+                  alignSelf: 'center',
+                }}>
+                <Image
+                  source={GlobalInclude.Assets.FontSize}
+                  style={{
+                    height: scaleSize,
+                    width: scaleSize,
+                    padding: scale(5),
+                    alignSelf: 'center',
+                  }}
+                  resizeMethod={'auto'}
+                  resizeMode={'contain'}
+                />
+              </TouchableOpacity>
             </View>
           )}
         </View>

@@ -505,6 +505,7 @@ const ChatUserList = ({navigation}) => {
     let opponentUser = null;
     let emptyPicMsg = '';
     let isExited = false;
+    let lastMessage = item.lastMessage;
     if (!item.isGroup) {
       opponentUser = getOpponentInfo(item.userInfo);
       if (opponentUser !== undefined && opponentUser !== null) {
@@ -534,10 +535,20 @@ const ChatUserList = ({navigation}) => {
       }
       headerTitle = item.groupName;
       emptyPicMsg = item.groupName.charAt(0);
+
+      let userName = Helper.capitalize(global.userDetails.firstName);
+      let msgArray = lastMessage.split(':');
+
+      if (msgArray !== undefined && msgArray !== null && msgArray.length > 1) {
+        if (lastMessage.split(':')[0] === userName) {
+          lastMessage = 'You: ' + msgArray[1];
+        }
+      }
     }
 
     let mediaIcon = null;
     let mediaIconType = null;
+
     if (item.lastMessageType === 2) {
       mediaIcon = 'camera';
       mediaIconType = 'feather';
@@ -711,7 +722,7 @@ const ChatUserList = ({navigation}) => {
                       g.txtCenterVertical,
                       g.textJustify,
                     ]}>
-                    {isExited ? 'You left' : item.lastMessage}
+                    {isExited ? 'You left' : lastMessage}
                   </Text>
                 ) : (
                   <Text
