@@ -4,7 +4,7 @@ import g from '../theme/global';
 import {scale} from '../theme/Scalling';
 import Color from '../theme/Colors';
 
-const CommonButton = (props) => {
+const CommonButton = props => {
   return (
     <TouchableOpacity
       activeOpacity={1}
@@ -17,8 +17,8 @@ const CommonButton = (props) => {
         height: scale(38),
         justifyContent: 'center',
       }}
-      onPress={() => {
-        props.onPress();
+      onPress={e => {
+        props.onPress(e);
       }}>
       {props.showLoader ? (
         <ActivityIndicator size={'small'} color={'white'} />

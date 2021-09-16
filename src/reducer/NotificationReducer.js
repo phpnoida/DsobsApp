@@ -7,6 +7,8 @@ export const INCREASE_COMMENT = 'INCREASE_COMMENT';
 export const CLEAR_INCREASE_COMMENT = 'CLEAR_INCREASE_COMMENT';
 export const REFRESH_PREVIOUS_SCREEN = 'REFRESH_PREVIOUS_SCREEN';
 export const CLEAR_REFRESH_PREVIOUS = 'CLEAR_REFRESH_PREVIOUS';
+export const REFRESH_GROUPS = 'REFRESH_GROUPS';
+export const CLEAR_REFRESH_GROUPS = 'CLEAR_REFRESH_GROUPS';
 const initialState = [];
 
 export function refreshScreen() {
@@ -69,6 +71,20 @@ export function clearRefreshPrevious() {
   };
 }
 
+export function refreshGroups() {
+  return {
+    type: REFRESH_GROUPS,
+    payload: '',
+  };
+}
+
+export function clearRefreshGroups() {
+  return {
+    type: CLEAR_REFRESH_GROUPS,
+    payload: '',
+  };
+}
+
 function notesReducer(state = initialState, action) {
   switch (action.type) {
     case SET_NOTIFICATION:
@@ -89,6 +105,10 @@ function notesReducer(state = initialState, action) {
       return {...state, refreshPrevious: true};
     case CLEAR_REFRESH_PREVIOUS:
       return {...state};
+    case REFRESH_GROUPS:
+      return {...state, refreshGroup: true};
+    case CLEAR_REFRESH_GROUPS:
+      return {...state, refreshGroup: false};
     default:
       return state;
   }

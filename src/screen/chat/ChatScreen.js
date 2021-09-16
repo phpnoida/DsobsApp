@@ -1722,8 +1722,11 @@ const ChatScreen = ({route}) => {
   };
 
   const emptyComponent = () => {
+    {
+      /*<View style={[transform]}>*/
+    }
     return (
-      <View style={[transform]}>
+      <View>
         <View style={GlobalInclude.AppStyle.fillCenter}>
           <Text
             style={[

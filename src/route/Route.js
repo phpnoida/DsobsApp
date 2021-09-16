@@ -62,6 +62,11 @@ import ChatScreen from '../screen/chat/ChatScreen';
 import ChatUserProfile from '../screen/chat/ChatUserProfile';
 import GroupChatScreen from '../screen/chat/GroupChatScreen';
 import GroupMembersProfile from '../screen/chat/GroupMembersProfile';
+import GroupsList from '../screen/Groups/';
+import CreateGroup from '../screen/Groups/CreateGroup';
+import GroupSettings from '../screen/Groups/GroupSettings';
+import StartGroupChat from '../screen/Groups/StartGroupChat';
+import GroupInfo from '../screen/Groups/GroupInfo';
 
 const Stack = createStackNavigator();
 
@@ -372,6 +377,31 @@ export const RootNavigators = baseRoute => {
       <Stack.Screen
         name="GroupMembersProfile"
         component={GroupMembersProfile}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="GroupsList"
+        component={GroupsList}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="CreateGroup"
+        component={CreateGroup}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="GroupSettings"
+        component={GroupSettings}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="StartGroupChat"
+        component={StartGroupChat}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="GroupInfo"
+        component={GroupInfo}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

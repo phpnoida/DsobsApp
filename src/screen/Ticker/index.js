@@ -103,7 +103,7 @@ const Ticker = ({route, navigation}) => {
   const [pickedIndex, setPickedIndex] = useState(0);
   const dispatch = useDispatch();
 
-  const refreshState = useSelector((state) => {
+  const refreshState = useSelector(state => {
     if (state.notification && state.notification !== undefined) {
       let notification = state.notification;
 
@@ -181,7 +181,7 @@ const Ticker = ({route, navigation}) => {
 
   const getMyFollowing = () => {
     getUserFollowing(
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -198,13 +198,13 @@ const Ticker = ({route, navigation}) => {
           }
         }
       },
-      (error) => {},
+      error => {},
     );
   };
 
   const getCategory = () => {
     getCategories(
-      (response) => {
+      response => {
         getTickers(filterObject);
         if (response && response !== null) {
           if (
@@ -234,16 +234,16 @@ const Ticker = ({route, navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         getTickers(filterObject);
       },
     );
   };
 
-  const getTickers = (requestObj) => {
+  const getTickers = requestObj => {
     doFitlerPost(
       requestObj,
-      (response) => {
+      response => {
         manageResponse(response);
       },
       (code, error) => {
@@ -257,7 +257,7 @@ const Ticker = ({route, navigation}) => {
     );
   };
 
-  const manageResponse = (response) => {
+  const manageResponse = response => {
     setIsRefreshing(false);
     if (response && response !== null) {
       if (
@@ -314,7 +314,7 @@ const Ticker = ({route, navigation}) => {
     };
     doFollowUser(
       requestObject,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -339,7 +339,7 @@ const Ticker = ({route, navigation}) => {
           }
         }
       },
-      (error) => {},
+      error => {},
     );
   };
 
@@ -349,7 +349,7 @@ const Ticker = ({route, navigation}) => {
     };
     doUnFollowUser(
       requestObject,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -399,7 +399,7 @@ const Ticker = ({route, navigation}) => {
       setIsReporting(true);
       doReportPost(
         requestData,
-        (response) => {
+        response => {
           setIsReporting(false);
           if (response && response !== null) {
             if (
@@ -422,7 +422,7 @@ const Ticker = ({route, navigation}) => {
             }
           }
         },
-        (error) => {
+        error => {
           responseMessage = 'Error while reporting!';
           setShowModal(true);
           setIsReporting(false);
@@ -462,7 +462,7 @@ const Ticker = ({route, navigation}) => {
   const deletePost = () => {
     doDeletePost(
       selectedFeed._id,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -540,10 +540,10 @@ const Ticker = ({route, navigation}) => {
       myFollowing !== null &&
       myFollowing.length > 0
     ) {
-      return myFollowing.find((o) => o._id === selectedFeed.author.id) ===
+      return myFollowing.find(o => o._id === selectedFeed.author.id) ===
         undefined
         ? null
-        : myFollowing.find((o) => o._id === selectedFeed.author.id);
+        : myFollowing.find(o => o._id === selectedFeed.author.id);
     } else {
       return null;
     }
@@ -736,7 +736,7 @@ const Ticker = ({route, navigation}) => {
           <Likes
             postId={selectedFeed._id}
             navigation={navigation}
-            onStatusChange={(status) => {
+            onStatusChange={status => {
               if (
                 selectedFeed.totalLikes !== undefined &&
                 selectedFeed.totalLikes !== null
@@ -746,7 +746,7 @@ const Ticker = ({route, navigation}) => {
                   : selectedFeed.totalLikes - 1;
               }
             }}
-            onClickUser={(userId) => {
+            onClickUser={userId => {
               refPostLikes.current.close();
               setTimeout(() => {
                 navigation.navigate('UserProfile', {
@@ -781,7 +781,7 @@ const Ticker = ({route, navigation}) => {
       totalLikes={item.totalLikes}
       totalComments={item.totalComments}
       item={item}
-      onLayout={(event) => {
+      onLayout={event => {
         const layout = event.nativeEvent.layout;
         dataSourceCords[index] = layout.y;
       }}
@@ -818,7 +818,7 @@ const Ticker = ({route, navigation}) => {
           refPostOptions.current.open();
         }
       }}
-      onClickMediaOption={(type) => {
+      onClickMediaOption={type => {
         selectedIndex = index;
         if (type === 1) {
           setSelectedFeed(item);
@@ -874,7 +874,7 @@ const Ticker = ({route, navigation}) => {
           ]}>
           <SingleSearchWithFilter
             placeholder={'Search for Users or Content'}
-            changeText={(text) => {
+            changeText={text => {
               searchVal = text;
               setFilterQuery(text);
               if (searchVal.trim() === '') {
@@ -966,7 +966,6 @@ const Ticker = ({route, navigation}) => {
               ) : (
                 <Animated.FlatList
                   ref={refFlatList}
-                  
                   removeClippedSubviews={Platform.OS !== 'web'}
                   showsVerticalScrollIndicator={false}
                   extraData={postContent}
@@ -1073,7 +1072,7 @@ const Ticker = ({route, navigation}) => {
                   g.textareaStyle,
                   {minHeight: 100, maxHeight: 100, height: 100},
                 ]}
-                onChangeText={(comment) => {
+                onChangeText={comment => {
                   setReportText(comment);
                   setErrorMessage({});
                 }}

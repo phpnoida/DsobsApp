@@ -28,6 +28,7 @@ const menuOptions = [
   {screen: 'CommonRoom', visible: true, value: 10, label: 'The Common Room'},
   {screen: 'JobListing', visible: true, value: 11, label: 'Jobs'},
   {screen: 'ChatUserList', visible: true, value: 12, label: 'Chat'},
+  {screen: 'GroupsList', visible: true, value: 13, label: 'Groups'},
 ];
 
 const TopHeaderView = ({

@@ -217,6 +217,7 @@ const UploadMedia = ({
           uploadMediaContent(body, childPath, mediaType)
             .then(data => {
               if (data !== undefined && data !== null) {
+                data.imageInfo = pickFile;
                 resolve(data);
               } else {
                 reject(null);
