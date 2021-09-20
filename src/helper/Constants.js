@@ -1,6 +1,9 @@
 export const WHATSAPP_NO = '+919821107610';
 export const APP_NAME = 'DSOBS';
 export const MAP_KEY = 'AIzaSyD_KsfuaGXsy2s8URk07fVVNFx_RVk23wg';
+
+export const Media = ['IMAGE', 'VIDEO', 'AUDIO', 'DOCUMENT'];
+
 export const IconType = [
   'material',
   'material-community',

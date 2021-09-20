@@ -16,7 +16,6 @@ import {
   ScrollView,
   AppState,
 } from 'react-native';
-import AnimatedSearchbar from 'react-native-animated-searchbar';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
@@ -39,6 +38,8 @@ import * as Animatable from 'react-native-animatable';
 import {useNavigation} from '@react-navigation/native';
 import {getScrappedData} from '../../Actions/CommonActions';
 import {DummyMsg, UserInfo} from './Dummy';
+
+import {doGetGroupMessages} from '../../Actions/GroupActions';
 
 const {height, width} = Dimensions.get('window');
 
@@ -75,7 +76,18 @@ let memberKicked = false;
 
 const scrollToBottomOffset = 200;
 
-let groupId = '';
+let groupId = '',
+  groupInfo = null;
+
+let filterObject = {
+  index: 0,
+  size: 10,
+};
+const PaginationStatus = {
+  firstLoad: 0,
+  waiting: 1,
+  allLoaded: 2,
+};
 
 const StartGroupChat = ({route}) => {
   const appState = useRef(AppState.currentState);
@@ -94,12 +106,16 @@ const StartGroupChat = ({route}) => {
       ? [{scaleY: -1}, {perspective: 1280}]
       : [{scaleY: -1}];
 
+  const [paginationStatus, setPaginationStatus] = useState(
+    PaginationStatus.firstLoad,
+  );
   const [nextState, setNextState] = useState(appState.current);
-  const [isFirstLoad, setIsFirstLoad] = useState(false);
-  const [profileLoading, setProfileLoading] = useState(true);
-  const [messages, setMessages] = useState(DummyMsg);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const [messages, setMessages] = useState([]);
+
   const [fontSize, setFontSize] = useState(scale(14));
   const [scaleSize, setScaleSize] = useState(scale(22));
+
   const [inputValue, setInputValue] = useState('');
   const [header, setHeader] = useState('');
   const [subHeader, setSubHeader] = useState('');
@@ -126,6 +142,17 @@ const StartGroupChat = ({route}) => {
   useEffect(() => {
     if (route.params !== undefined && route.params !== null) {
       groupId = route.params.groupId;
+      groupInfo = route.params.groupInfo;
+
+      if (groupInfo && groupInfo !== null && groupInfo !== undefined) {
+        setupGroupInfo();
+      }
+
+      if (groupId && groupId !== undefined && groupId !== null) {
+        resetCount();
+        filterObject.groupId = groupId;
+        getOldMessages();
+      }
     }
     return () => {};
   }, [route.params]);
@@ -152,6 +179,105 @@ const StartGroupChat = ({route}) => {
    * @ChatMethod
    *
    */
+
+  const setupGroupInfo = () => {
+    //{"_id":"6144682e9f295339cf4a69c1","name":"Power Rangers","description":"In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content.","profilePicture":"https://dsobs-new.s3.ap-south-1.amazonaws.com/1631873057_649654_1631873055176.jpg","lastMessage":"last message","totalMember":9,"status":1}
+    setHeader(groupInfo.name);
+    setHeaderImage({uri: groupInfo.profilePicture});
+  };
+
+  const resetCount = () => {
+    filterObject = {};
+    filterObject.index = 0;
+    filterObject.size = 10;
+  };
+
+  const getOldMessages = () => {
+    doGetGroupMessages(
+      filterObject,
+      groupId,
+      response => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              let array = data.data;
+
+              let tmpArray = [];
+              let objArray = [];
+              let counter = 0;
+              let authorId = 0;
+
+              for (let i = 0; i < array.length; i++) {
+                const element = array[i];
+                let media = element.media;
+                let mediaType = media.mediaType;
+                let tmpAuthorId = element.authorId._id;
+
+                if (authorId === 0) {
+                  authorId = tmpAuthorId;
+                }
+
+                if (authorId === tmpAuthorId) {
+                  if (mediaType === 'IMAGE') {
+                    counter++;
+                    tmpArray.push(element);
+                  } else {
+                    if (counter > 3) {
+                      let request = {
+                        media: {
+                          mediaType: 'IMAGE_GROUP',
+                          metaData: {
+                            imageArray: tmpArray,
+                          },
+                        },
+                        authorId: {
+                          _id: '602cb54aa1714c5bd91862e0',
+                          name: 'Richa Sharma - 2021',
+                        },
+                      };
+                      objArray.push(request);
+                      tmpArray = [];
+                      counter = 0;
+                    } else {
+                      tmpArray.forEach(child => {
+                        objArray.push(child);
+                      });
+                      tmpArray = [];
+                      counter = 0;
+                    }
+                    objArray.push(element);
+                  }
+                } else {
+                  counter = 0;
+                  tmpArray = [];
+                  objArray.push(element);
+                }
+              }
+
+              console.log('====================================');
+              console.log('Obj Array', JSON.stringify(objArray));
+              console.log('====================================');
+              setMessages([...data.data]);
+            }
+          }
+        }
+        setIsFirstLoad(false);
+      },
+      (code, error) => {
+        console.log('====================================');
+        console.log('code', code, error);
+        console.log('====================================');
+        setIsFirstLoad(false);
+        setMessages([]);
+      },
+    );
+  };
 
   /**
    *
@@ -264,20 +390,20 @@ const StartGroupChat = ({route}) => {
    */
 
   const renderChatItem = ({item, index}) => {
-    const previousMessage = messages[index + 1] || {};
-    const nextMessage = messages[index - 1] || {};
+    const previousMessage = messages[index - 1] || {};
+    const nextMessage = messages[index + 1] || {};
     const customFont = {fontSize: fontSize};
 
     const messageProps = {
-      groupMembers: UserInfo,
-      messageColor: messageColor,
+      groupMembers: [],
+      messageColor: [],
       isGroup: true,
       key: item._id,
       currentMessage: item,
       previousMessage,
       nextMessage,
       customFont,
-      position: item.user._id === global.userId ? 'right' : 'left',
+      position: item.authorId._id === global.userId ? 'right' : 'left',
     };
 
     return (
@@ -785,9 +911,9 @@ const StartGroupChat = ({route}) => {
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(24), width: scale(24)}}
                     iconColor={GlobalInclude.Color.ColorPrimary}
-                    iconName={'text-search'}
+                    iconName={'search'}
                     iconSize={scale(24)}
-                    iconType={IconType[1]}
+                    iconType={IconType[5]}
                   />
                 </TouchableOpacity>
 
@@ -1075,7 +1201,7 @@ const StartGroupChat = ({route}) => {
         ) : (
           <FlatList
             ref={chatRef}
-            inverted={-1}
+            // inverted={-1}
             data={messages}
             renderItem={renderChatItem}
             removeClippedSubviews={Platform.OS !== 'web'}

@@ -10,6 +10,7 @@ import {
   Modal,
   Alert,
   TextInput,
+  Keyboard,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
@@ -17,19 +18,21 @@ import {scale} from '../../theme/Scalling';
 import ProgressImage from '../../component/ProgresImage';
 import HeaderBar from '../../component/HeaderBar';
 import CommonButton from '../../component/CommonButton';
+import UploadMedia from '../../component/UploadMedia';
 import {
   generateHeader,
   generateMenuOption,
-  showUser,
+  showProgess,
+  renderNoDataComponent,
 } from '../../component/Common';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {IconType, APP_NAME} from '../../helper/Constants';
-import {showProgess, renderNoDataComponent} from '../../component/Common';
 import Helpers from '../../helper/Helper';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
 import ScrollableTabView, {
   ScrollableTabBar,
 } from 'react-native-scrollable-tab-view';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
 import GroupMembers from './GroupMembers';
 import PendingRequests from './PendingRequests';
@@ -39,6 +42,7 @@ import {
   doAcceptUserRequest,
   doExitFromGroup,
   doUpdateGroupAdmin,
+  doUpdateGroup,
 } from '../../Actions/GroupActions';
 
 const {width, height} = Dimensions.get('window');
@@ -52,13 +56,18 @@ let isSuccess = false;
 
 const GroupInfo = ({route, navigation}) => {
   const userInfoRef = useRef();
+  const uploadRef = useRef();
+  const groupTitleRef = useRef();
 
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [groupData, setGroupData] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedUserInfo, setSelectedUserInfo] = useState(null);
+
+  const [aboutGroup, setAboutGroup] = useState('');
+  const [errorMessage, setErrorMessage] = useState({});
+  const [mediaData, setMediaData] = useState(null);
 
   useEffect(() => {
     if (route.params !== undefined && route.params !== null) {
@@ -84,27 +93,8 @@ const GroupInfo = ({route, navigation}) => {
             if (data.status) {
               let group = data.data;
               if (group && group !== undefined && group !== null) {
-                let users = group.users;
-                if (
-                  users &&
-                  users !== undefined &&
-                  users !== null &&
-                  users.length > 0
-                ) {
-                  for (let i = 0; i < users.length; i++) {
-                    const element = users[i];
-                    if (
-                      element !== undefined &&
-                      element !== null &&
-                      element._id === global.userId &&
-                      element.isAdmin
-                    ) {
-                      setIsAdmin(true);
-                      break;
-                    }
-                  }
-                }
-
+                setMediaData(group.profilePicture);
+                setAboutGroup(group.description);
                 setGroupData(group);
               }
             }
@@ -240,6 +230,55 @@ const GroupInfo = ({route, navigation}) => {
     );
   };
 
+  /**
+   *
+   * @UpdateGroup
+   *
+   */
+  const updateGroupData = requestObject => {
+    global.loader_ref.show_loader(1);
+    doUpdateGroup(
+      groupId,
+      requestObject,
+      response => {
+        global.loader_ref.show_loader(0);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            console.log('data', data);
+            if (data.status) {
+              isSuccess = true;
+              responseMessage =
+                'You have successfully updated group information';
+              setShowErrorMessage(true);
+              setTimeout(() => {
+                setShowErrorMessage(false);
+                getGroupData();
+              }, 2500);
+            } else {
+              responseMessage = 'Error while updating your request!';
+              setShowErrorMessage(true);
+              setTimeout(() => {
+                setShowErrorMessage(false);
+              }, 2500);
+            }
+          }
+        }
+      },
+      (code, error) => {
+        console.log('====================================');
+        console.log(code, error);
+        console.log('====================================');
+        //setSubmitting(false);
+        Alert.alert('Something went wrong', error);
+      },
+    );
+  };
+
   const removeIndex = (message, callBack) => {
     Alert.alert(
       message,
@@ -262,6 +301,9 @@ const GroupInfo = ({route, navigation}) => {
   };
 
   const userInfoSheet = () => {
+    let isSuperAdmin = selectedUserInfo.isSuperAdmin;
+    let isAdmin = selectedUserInfo.isAdmin;
+
     return (
       <OptionsSheet
         ref={userInfoRef}
@@ -284,55 +326,49 @@ const GroupInfo = ({route, navigation}) => {
             </Text>
           </View>
 
-          {isAdminUser
-            ? generateMenuOption('Remove Admin', 'account-remove', 1, () => {
-                userInfoRef.current.close();
-                let admins = groupData.admins;
+          {!isSuperAdmin &&
+            !isAdmin &&
+            generateMenuOption('Make Admin', 'user-plus', 4, () => {
+              userInfoRef.current.close();
+              removeIndex(
+                `Are you sure you want to make ${Helpers.capitalize(
+                  Helpers.concatName(selectedUserInfo),
+                )} as admin?`,
+                () => {
+                  mode = 1;
+                  updateAdminRequest();
+                },
+              );
+            })}
 
-                if (admins) {
-                  if (admins.length > 1) {
-                    removeIndex(
-                      `Are you sure you want to remove ${Helpers.capitalize(
-                        Helpers.concatName(selectedUserInfo),
-                      )} from admin?`,
-                      () => {
-                        mode = 2;
-                        updateAdminRequest();
-                      },
-                    );
-                  } else {
-                    removeIndex(
-                      'Pls make some one admin then only u can leave.',
-                      () => {},
-                    );
-                  }
-                }
-              })
-            : generateMenuOption('Make Admin', 'user-plus', 4, () => {
-                userInfoRef.current.close();
-                removeIndex(
-                  `Are you sure you want to make ${Helpers.capitalize(
-                    Helpers.concatName(selectedUserInfo),
-                  )} as admin?`,
-                  () => {
-                    mode = 1;
-                    updateAdminRequest();
-                  },
-                );
-              })}
+          {!isSuperAdmin &&
+            isAdmin &&
+            generateMenuOption('Remove Admin', 'account-remove', 1, () => {
+              userInfoRef.current.close();
+              removeIndex(
+                `Are you sure you want to remove ${Helpers.capitalize(
+                  Helpers.concatName(selectedUserInfo),
+                )} from admin?`,
+                () => {
+                  mode = 2;
+                  updateAdminRequest();
+                },
+              );
+            })}
 
-          {generateMenuOption('Remove From Group', 'add-to-list', 9, () => {
-            userInfoRef.current.close();
-            removeIndex(
-              `Are you sure you want to remove ${Helpers.capitalize(
-                Helpers.concatName(selectedUserInfo),
-              )} from group?`,
-              () => {
-                selectedUser = selectedUserInfo;
-                removeUser();
-              },
-            );
-          })}
+          {!isSuperAdmin &&
+            generateMenuOption('Remove From Group', 'add-to-list', 9, () => {
+              userInfoRef.current.close();
+              removeIndex(
+                `Are you sure you want to remove ${Helpers.capitalize(
+                  Helpers.concatName(selectedUserInfo),
+                )} from group?`,
+                () => {
+                  selectedUser = selectedUserInfo;
+                  removeUser();
+                },
+              );
+            })}
         </View>
       </OptionsSheet>
     );
@@ -340,42 +376,15 @@ const GroupInfo = ({route, navigation}) => {
 
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
-      {isAdmin && groupData !== undefined && groupData !== null ? (
-        <HeaderBar
-          title={
-            groupData !== null
-              ? `${Helpers.capitalize(groupData.name)}`
-              : APP_NAME
-          }
-          customIcon={{
-            containerStyle: {height: scale(24), width: scale(24)},
-            iconColor: GlobalInclude.Color.ColorPrimary,
-            iconName: 'edit',
-            size: scale(24),
-            type: IconType[0],
-          }}
-          customIconPress={() => {
-            let data = {
-              data: groupData,
-              inEditMode: true,
-            };
-            data.data._id = groupId;
-            navigation.navigate('CreateGroup', {data: data});
-          }}
-          navigation={navigation}
-          showBack={true}
-        />
-      ) : (
-        <HeaderBar
-          title={
-            groupData !== null
-              ? `${Helpers.capitalize(groupData.name)}`
-              : APP_NAME
-          }
-          navigation={navigation}
-          showBack={true}
-        />
-      )}
+      <HeaderBar
+        title={
+          groupData !== null
+            ? `${Helpers.capitalize(groupData.name)}`
+            : APP_NAME
+        }
+        navigation={navigation}
+        showBack={true}
+      />
       {showProgess(isLoading)}
 
       {groupData !== null && groupData !== undefined ? (
@@ -383,18 +392,50 @@ const GroupInfo = ({route, navigation}) => {
           <ScrollView contentContainerStyle={{flexGrow: 1}}>
             <View style={GlobalInclude.AppStyle.contentSpaceHorizonta}>
               <View style={styles.imageStyle}>
-                {groupData.profilePicture !== null &&
-                  groupData.profilePicture !== undefined &&
-                  groupData.profilePicture !== '' && (
+                {mediaData !== null &&
+                  mediaData !== undefined &&
+                  mediaData !== '' && (
                     <ProgressImage
                       source={{
-                        uri: groupData.profilePicture,
+                        uri: mediaData,
                       }}
                       containerStyle={styles.imageStyle}
                       imageStyle={styles.imageStyle}
                       mode={'cover'}
                     />
                   )}
+                {groupData.isAdmin && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (
+                        uploadRef &&
+                        uploadRef.current !== undefined &&
+                        uploadRef.current !== null
+                      ) {
+                        uploadRef.current.open();
+                      }
+                    }}
+                    style={{
+                      height: scale(30),
+                      width: scale(30),
+                      borderRadius: scale(100),
+                      backgroundColor: 'white',
+                      position: 'absolute',
+                      right: -4,
+                      bottom: -5,
+                      elevation: 1,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}>
+                    <GlobalInclude.BaseIcon
+                      containerStyle={{height: scale(24), width: scale(24)}}
+                      iconColor={'#202020'}
+                      iconName={'add-photo-alternate'}
+                      iconSize={scale(22)}
+                      iconType={IconType[0]}
+                    />
+                  </TouchableOpacity>
+                )}
               </View>
 
               <View
@@ -407,6 +448,45 @@ const GroupInfo = ({route, navigation}) => {
                   g.pl15,
                   grid.justifyContentCenter,
                 ]}>
+                <View style={[grid.row]}>
+                  <Text
+                    style={[
+                      g.fs16,
+                      g.mt5,
+                      g.FHNB,
+                      GlobalInclude.AppStyle.transform,
+                      g.colorBlue,
+                      grid.col,
+                    ]}>
+                    About the group
+                  </Text>
+
+                  {groupData.isAdmin && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (
+                          groupTitleRef.current !== undefined &&
+                          groupTitleRef.current !== null
+                        ) {
+                          groupTitleRef.current.open();
+                        }
+                      }}
+                      style={{
+                        height: scale(30),
+                        width: scale(30),
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}>
+                      <GlobalInclude.BaseIcon
+                        containerStyle={{height: scale(24), width: scale(24)}}
+                        iconColor={'#202020'}
+                        iconName={'edit'}
+                        iconSize={scale(22)}
+                        iconType={IconType[10]}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
                 <Text
                   style={[
                     g.fs14,
@@ -437,9 +517,8 @@ const GroupInfo = ({route, navigation}) => {
               <GroupMembers
                 tabLabel={'People In Group'}
                 groupData={groupData}
-                onTap={(item, index, adminUser) => {
+                onTap={(item, index) => {
                   if (groupData.isAdmin) {
-                    isAdminUser = adminUser;
                     setSelectedUserInfo(item);
                     if (
                       userInfoRef.current !== undefined &&
@@ -526,6 +605,103 @@ const GroupInfo = ({route, navigation}) => {
       {selectedUserInfo !== undefined &&
         selectedUserInfo !== null &&
         userInfoSheet()}
+
+      <UploadMedia
+        currentModule={'groups'}
+        navigation={navigation}
+        refRBSheet={uploadRef}
+        media={{
+          image: false,
+          video: true,
+          document: true,
+          audio: true,
+        }}
+        supportMultiple={false}
+        onPickMedia={media => {
+          uploadRef.current.close();
+          if (media !== undefined && media !== null) {
+            let requestObject = {
+              profilePicture: media[0].thumbnail,
+            };
+            updateGroupData(requestObject);
+          }
+        }}
+      />
+
+      <OptionsSheet
+        ref={groupTitleRef}
+        minClosingHeight={50}
+        height={height / 2 - 100}
+        duration={200}
+        closeOnDragDown={true}
+        customStyles={{
+          container: GlobalInclude.AppStyle.sheetContainer,
+        }}>
+        <KeyboardAwareScrollView
+          keyboardShouldPersistTaps={'handled'}
+          style={grid.flex1}
+          showsVerticalScrollIndicator={false}>
+          <View style={grid.flex1}>
+            <View style={g.mb15}>
+              {generateHeader('About Group', true)}
+              <TextInput
+                underlineColorAndroid="transparent"
+                numberOfLines={6}
+                style={styles.commentInput}
+                value={aboutGroup}
+                keyboardType={'default'}
+                autoCapitalize={'words'}
+                multiline={true}
+                blurOnSubmit={true}
+                maxLength={500}
+                onSubmitEditing={() => {
+                  Keyboard.dismiss();
+                }}
+                returnKeyType="done"
+                placeholder={'Type here'}
+                onChangeText={value => {
+                  setErrorMessage({});
+                  setAboutGroup(value);
+                }}
+              />
+              {errorMessage.aboutGroup && errorMessage.aboutGroup !== '' ? (
+                <Text style={g.errorMsg}>{errorMessage.aboutGroup}</Text>
+              ) : null}
+            </View>
+          </View>
+          <CommonButton
+            title={'Save'}
+            showLoader={false}
+            onPress={() => {
+              setErrorMessage({});
+              if (aboutGroup.trim() === '' || aboutGroup.trim().length === 0) {
+                setErrorMessage({aboutGroup: 'This field is required'});
+                return;
+              } else {
+                let requestObject = {
+                  description: aboutGroup,
+                };
+                updateGroupData(requestObject);
+              }
+              groupTitleRef.current.close();
+            }}
+          />
+        </KeyboardAwareScrollView>
+      </OptionsSheet>
+
+      {showErrorMessage && (
+        <GlobalInclude.ModalAlert
+          status={showErrorMessage}
+          header={responseMessage}
+          okButton={isSuccess ? 'Okay' : `Contact ${APP_NAME}`}
+          okAction={() => {
+            setShowErrorMessage(!showErrorMessage);
+          }}
+          closeAction={() => {
+            setShowErrorMessage(!showErrorMessage);
+          }}
+        />
+      )}
     </View>
   );
 };
@@ -538,7 +714,7 @@ const styles = StyleSheet.create({
   },
   imageStyle: {
     width: '100%',
-    aspectRatio: 16 / 9,
+    height: scale(80),
     borderRadius: scale(10),
   },
   headerContainer: {

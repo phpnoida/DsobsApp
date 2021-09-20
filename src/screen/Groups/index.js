@@ -20,6 +20,7 @@ import OptionsSheet from 'react-native-raw-bottom-sheet';
 import ScrollableTabView, {
   ScrollableTabBar,
 } from 'react-native-scrollable-tab-view';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -29,14 +30,20 @@ import grid from '../../theme/grid';
 import Helpers from '../../helper/Helper';
 import {IconType, APP_NAME} from '../../helper/Constants';
 
-import {generateMenuOption} from '../../component/Common';
+import {
+  generateMenuOption,
+  uploadMediaButton,
+  generateHeader,
+} from '../../component/Common';
+import UploadMedia from '../../component/UploadMedia';
 import TopHeaderView from '../../component/TopHeaderView';
+import CommonButton from '../../component/CommonButton';
 import SingleSearchWithFilter from '../../component/SingleSearchWithFilter';
 
 import MyGroups from './MyGroups';
 import DiscoverGroups from './DiscoverGroups';
 import BatchGroups from './BatchGroups';
-import {doJoinGroup} from '../../Actions/GroupActions';
+import {doJoinGroup, doCreateGroup} from '../../Actions/GroupActions';
 import {useDispatch} from 'react-redux';
 import {refreshScreen} from '../../reducer/GroupReducer';
 
@@ -44,10 +51,15 @@ let responseMessage = '';
 let isSuccess = false;
 let initialPage = 0;
 
+const {height, width} = Dimensions.get('window');
+
 const GroupsList = ({route, navigation}) => {
   const refOptions = useRef();
   const refJoinGroup = useRef();
   const discoverRef = useRef();
+  const createGroupRef = useRef();
+  const uploadRef = useRef();
+
   const tabRef = useRef();
   const dispatch = useDispatch();
 
@@ -56,6 +68,18 @@ const GroupsList = ({route, navigation}) => {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [currentTab, setCurrentTab] = useState(0);
+
+  /**
+   * Create Group
+   *
+   */
+
+  const [groupName, setGroupName] = useState('');
+  const [aboutGroup, setAboutGroup] = useState('');
+  const [mediaData, setMediaData] = useState(null);
+  const [myComment, setMyComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState({});
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -118,10 +142,207 @@ const GroupsList = ({route, navigation}) => {
       },
     );
   };
+
+  const validateInput = () => {
+    if (groupName.trim() === '' || groupName.length === 0) {
+      setErrorMessage({groupName: 'This field is required'});
+    } else if (aboutGroup.trim() === '' || aboutGroup.length === 0) {
+      setErrorMessage({aboutGroup: 'This field is required'});
+    } else if (mediaData === undefined || mediaData === null) {
+      setErrorMessage({mediaData: 'This field is required'});
+    } else {
+      saveGroup();
+    }
+  };
+
+  const saveGroup = () => {
+    let requestObject = {
+      name: groupName,
+      description: aboutGroup,
+      profilePicture: mediaData.thumbnail,
+      firstComment: myComment,
+    };
+
+    console.log('====================================');
+    console.log('requestObject', JSON.stringify(requestObject));
+    console.log('====================================');
+    Keyboard.dismiss();
+
+    uploadPostData(requestObject);
+  };
+
+  const uploadPostData = requestObject => {
+    setSubmitting(true);
+    doCreateGroup(
+      requestObject,
+      response => {
+        setSubmitting(false);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            if (data.status) {
+              isSuccess = true;
+              responseMessage =
+                'You have successfully submitted your request to start a new group';
+              setShowErrorMessage(true);
+              setTimeout(() => {
+                setShowErrorMessage(false);
+                navigation.goBack();
+              }, 2500);
+            } else {
+              responseMessage = 'Error while posting your request!';
+              setShowErrorMessage(true);
+              setTimeout(() => {
+                setShowErrorMessage(false);
+              }, 2500);
+            }
+          }
+        }
+      },
+      (code, error) => {
+        setSubmitting(false);
+        Alert.alert('Something went wrong', error);
+      },
+    );
+  };
   /**
    *
    * @API Section
    */
+
+  const createNewGroup = () => {
+    return (
+      <OptionsSheet
+        ref={createGroupRef}
+        minClosingHeight={50}
+        height={height / 2 + 150}
+        duration={200}
+        closeOnDragDown={true}
+        customStyles={{
+          container: GlobalInclude.AppStyle.sheetContainer,
+        }}>
+        <View style={GlobalInclude.AppStyle.fill}>
+          <KeyboardAwareScrollView
+            keyboardShouldPersistTaps={'handled'}
+            style={[grid.flex1]}
+            showsVerticalScrollIndicator={false}>
+            <View>
+              <View style={g.mb15}>
+                {generateHeader('Set Group Name', true)}
+                <TextInput
+                  underlineColorAndroid="transparent"
+                  numberOfLines={1}
+                  style={g.inputWhite}
+                  value={groupName}
+                  keyboardType={'default'}
+                  autoCapitalize={'words'}
+                  multiline={false}
+                  blurOnSubmit={true}
+                  onSubmitEditing={() => {
+                    Keyboard.dismiss();
+                  }}
+                  returnKeyType="done"
+                  placeholder={'Type here'}
+                  onChangeText={value => {
+                    setErrorMessage({});
+                    setGroupName(value);
+                  }}
+                />
+                {errorMessage.groupName && errorMessage.groupName !== '' ? (
+                  <Text style={g.errorMsg}>{errorMessage.groupName}</Text>
+                ) : null}
+              </View>
+
+              <View style={g.mb15}>
+                {generateHeader('About Group', true)}
+                <TextInput
+                  underlineColorAndroid="transparent"
+                  numberOfLines={6}
+                  style={styles.commentInput}
+                  value={aboutGroup}
+                  keyboardType={'default'}
+                  autoCapitalize={'words'}
+                  multiline={true}
+                  blurOnSubmit={true}
+                  maxLength={500}
+                  onSubmitEditing={() => {
+                    Keyboard.dismiss();
+                  }}
+                  returnKeyType="done"
+                  placeholder={'Type here'}
+                  onChangeText={value => {
+                    setErrorMessage({});
+                    setAboutGroup(value);
+                  }}
+                />
+                {errorMessage.aboutGroup && errorMessage.aboutGroup !== '' ? (
+                  <Text style={g.errorMsg}>{errorMessage.aboutGroup}</Text>
+                ) : null}
+              </View>
+
+              <View style={g.mb15}>
+                {generateHeader('Upload Pic', true)}
+                {uploadMediaButton(
+                  () => {
+                    if (uploadRef.current !== null) {
+                      uploadRef.current.open();
+                    }
+                  },
+                  mediaData !== undefined && mediaData !== null
+                    ? 'Image Uploaded successfully'
+                    : 'Upload Pic',
+                )}
+                {errorMessage.mediaData && errorMessage.mediaData !== '' ? (
+                  <Text style={g.errorMsg}>{errorMessage.mediaData}</Text>
+                ) : null}
+              </View>
+
+              <View style={g.mb15}>
+                {generateHeader('Your first comment in the group', false)}
+                <TextInput
+                  underlineColorAndroid="transparent"
+                  numberOfLines={1}
+                  style={styles.commentInput}
+                  value={myComment}
+                  keyboardType={'default'}
+                  autoCapitalize={'words'}
+                  multiline={true}
+                  blurOnSubmit={true}
+                  maxLength={200}
+                  onSubmitEditing={() => {
+                    Keyboard.dismiss();
+                  }}
+                  returnKeyType="done"
+                  placeholder={'Type here'}
+                  onChangeText={value => {
+                    setErrorMessage({});
+                    setMyComment(value);
+                  }}
+                />
+                {errorMessage.myComment && errorMessage.myComment !== '' ? (
+                  <Text style={g.errorMsg}>{errorMessage.inputValue}</Text>
+                ) : null}
+              </View>
+            </View>
+          </KeyboardAwareScrollView>
+          <View style={styles.buttonContainer}>
+            <CommonButton
+              showLoader={submitting}
+              title={'Create Now'}
+              onPress={e => {
+                e.preventDefault();
+                validateInput();
+              }}
+            />
+          </View>
+        </View>
+      </OptionsSheet>
+    );
+  };
 
   const userOptions = () => {
     return (
@@ -137,8 +358,20 @@ const GroupsList = ({route, navigation}) => {
         <View stylre={[grid.flex1, g.mb10]}>
           {generateMenuOption('Start a New Group', 'add-to-list', 9, () => {
             refOptions.current.close();
+            setGroupName('');
+            setAboutGroup('');
+            setMediaData(null);
+            setMyComment('');
+            setSubmitting(false);
+            setErrorMessage({});
             setTimeout(() => {
-              navigation.navigate('CreateGroup');
+              if (
+                createGroupRef.current !== undefined &&
+                createGroupRef.current !== null
+              ) {
+                createGroupRef.current.open();
+              }
+              //navigation.navigate('CreateGroup');
             }, 220);
           })}
 
@@ -211,11 +444,11 @@ const GroupsList = ({route, navigation}) => {
               })
             : generateMenuOption(title, 'add-to-list', 9, () => {
                 refJoinGroup.current.close();
-                // if (groupStatus === 2 || groupStatus === 3) {
-                //   setTimeout(() => {
-                //     joinGroupRequest();
-                //   }, 200);
-                // }
+                if (groupStatus === 2 || groupStatus === 3) {
+                  setTimeout(() => {
+                    joinGroupRequest();
+                  }, 200);
+                }
               })}
         </View>
       </OptionsSheet>
@@ -287,9 +520,20 @@ const GroupsList = ({route, navigation}) => {
                   isActive={currentTab === 1}
                   tabLabel={'My Groups'}
                   onTap={(item, index) => {
-                    setTimeout(() => {
-                      navigation.navigate('StartGroupChat');
-                    }, 200);
+                    if (item.status === 1) {
+                      navigation.navigate('StartGroupChat', {
+                        groupId: item._id,
+                        groupInfo: item,
+                      });
+                    } else {
+                      setSelectedGroup(item);
+                      if (
+                        refJoinGroup.current !== undefined &&
+                        refJoinGroup.current !== null
+                      ) {
+                        refJoinGroup.current.open();
+                      }
+                    }
                   }}
                 />
                 <DiscoverGroups
@@ -303,16 +547,14 @@ const GroupsList = ({route, navigation}) => {
                       2 = rejected
                       3 = removed
                     */
-                    console.log('====================================');
-                    console.log('selectedItem', JSON.stringify(item));
-                    console.log('====================================');
-                    setSelectedGroup(item);
 
                     if (item.status === 1) {
-                      navigation.navigate('GroupInfo', {
+                      navigation.navigate('StartGroupChat', {
                         groupId: item._id,
+                        groupInfo: item,
                       });
                     } else {
+                      setSelectedGroup(item);
                       if (
                         refJoinGroup.current !== undefined &&
                         refJoinGroup.current !== null
@@ -331,6 +573,7 @@ const GroupsList = ({route, navigation}) => {
           )}
         </View>
         {userOptions()}
+        {createNewGroup()}
         {selectedGroup !== undefined && selectedGroup !== null && joinGroup()}
 
         {showErrorMessage && (
@@ -350,6 +593,27 @@ const GroupsList = ({route, navigation}) => {
           />
         )}
       </SafeAreaView>
+
+      <UploadMedia
+        navigation={navigation}
+        refRBSheet={uploadRef}
+        currentModule={'groups'}
+        media={{
+          image: false,
+          video: true,
+          document: true,
+          audio: true,
+        }}
+        supportMultiple={false}
+        onPickMedia={media => {
+          uploadRef.current.close();
+          if (media !== undefined && media !== null) {
+            console.log('media', JSON.stringify(media));
+            setErrorMessage({});
+            setMediaData(media[0]);
+          }
+        }}
+      />
     </View>
   );
 };
@@ -358,6 +622,27 @@ const styles = StyleSheet.create({
   tabBarUnderlineStyle: {
     borderBottomColor: 'transparent',
     backgroundColor: 'white',
+  },
+  buttonContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: scale(150),
+    paddingTop: scale(10),
+    paddingBottom: scale(10),
+    alignContent: 'center',
+    alignSelf: 'center',
+  },
+  commentInput: {
+    height: scale(90),
+    color: 'black',
+    textAlignVertical: 'top',
+    backgroundColor: '#f8f8f8',
+    padding: scale(10),
+    margin: 0,
+    fontSize: scale(12),
+    borderRadius: scale(8),
+    fontFamily: 'Lato-Regular',
+    justifyContent: 'center',
   },
 });
 

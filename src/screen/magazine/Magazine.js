@@ -136,7 +136,7 @@ const Magazine = ({route, navigation}) => {
   const getMagazine = () => {
     getMagazines(
       filterObject,
-      (response) => {
+      response => {
         setIsLoading(false);
         if (response && response !== null) {
           if (
@@ -184,7 +184,7 @@ const Magazine = ({route, navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         setIsLoading(false);
         if (error === 404) {
           setPaginationStatus(PaginationStatus.allLoaded);
@@ -199,7 +199,7 @@ const Magazine = ({route, navigation}) => {
   };
 
   const downloadImage = useCallback(
-    async (file) => {
+    async file => {
       if (!isDownloading) {
         setIsDownloading(true);
         let result = await _downloadContent(file);
@@ -244,6 +244,9 @@ const Magazine = ({route, navigation}) => {
 
   const onEndReached = () => {
     console.log('onEndReached()');
+    if (pageContent === null || pageContent === undefined) {
+      return;
+    }
     if (pageContent.length === totalCount || pageContent.length < 10) {
       setPaginationStatus(PaginationStatus.allLoaded);
       return;
@@ -266,6 +269,9 @@ const Magazine = ({route, navigation}) => {
   };
 
   const renderFooter = () => {
+    if (pageContent === null || pageContent == undefined) {
+      return null;
+    }
     return (
       <View style={style.footerView}>
         {pageContent.length === totalCount ? (
@@ -336,39 +342,41 @@ const Magazine = ({route, navigation}) => {
               </View>
             ) : (
               <View style={GlobalInclude.AppStyle.fill}>
-                <FlatList
-                  ref={flatList}
-                  showsVerticalScrollIndicator={false}
-                  extraData={pageContent}
-                  data={pageContent}
-                  renderItem={renderItem}
-                  keyExtractor={keyExtractor}
-                  onEndReachedThreshold={0.1}
-                  onEndReached={onEndReached}
-                  refreshing={isRefreshing}
-                  onRefresh={handleRefresh}
-                  initialScrollIndex={defaultPosition}
-                  ListEmptyComponent={renderNoDataComponent}
-                  ListFooterComponent={renderFooter}
-                  contentContainerStyle={{
-                    paddingBottom: pageContent.length > 0 ? scale(130) : 0,
-                    flexGrow: 1,
-                  }}
-                  getItemLayout={getItemLayout}
-                  onScrollToIndexFailed={(error) => {
-                    console.log('failed', error);
-                    flatList.current.scrollToOffset({
-                      offset: error.averageItemLength * error.index,
-                      animated: true,
-                    });
-                    setTimeout(() => {
-                      flatList.current.scrollToIndex({
-                        index: error.index,
+                {pageContent !== null && pageContent !== undefined && (
+                  <FlatList
+                    ref={flatList}
+                    showsVerticalScrollIndicator={false}
+                    extraData={pageContent}
+                    data={pageContent}
+                    renderItem={renderItem}
+                    keyExtractor={keyExtractor}
+                    onEndReachedThreshold={0.1}
+                    onEndReached={onEndReached}
+                    refreshing={isRefreshing}
+                    onRefresh={handleRefresh}
+                    initialScrollIndex={defaultPosition}
+                    ListEmptyComponent={renderNoDataComponent}
+                    ListFooterComponent={renderFooter}
+                    contentContainerStyle={{
+                      paddingBottom: pageContent.length > 0 ? scale(130) : 0,
+                      flexGrow: 1,
+                    }}
+                    getItemLayout={getItemLayout}
+                    onScrollToIndexFailed={error => {
+                      console.log('failed', error);
+                      flatList.current.scrollToOffset({
+                        offset: error.averageItemLength * error.index,
                         animated: true,
                       });
-                    }, 500);
-                  }}
-                />
+                      setTimeout(() => {
+                        flatList.current.scrollToIndex({
+                          index: error.index,
+                          animated: true,
+                        });
+                      }, 500);
+                    }}
+                  />
+                )}
               </View>
             )}
           </View>

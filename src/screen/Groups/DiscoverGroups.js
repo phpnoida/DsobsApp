@@ -1,11 +1,9 @@
-import React, {useState, useRef, useEffect, useCallback} from 'react';
-import {Text, View, TouchableOpacity, StyleSheet, FlatList} from 'react-native';
-import g from '../../theme/global';
+import React, {useState, useEffect, useCallback} from 'react';
+import {View, StyleSheet, FlatList} from 'react-native';
 import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
-import GlobalInclude from '../../globalInclude/Globalinclude';
-import ProgressImage from '../../component/ProgresImage';
-import {doGetGroups} from '../../Actions/GroupActions';
+import {renderGroupItem} from './GroupCommon';
+import {doGetDiscoverGroups} from '../../Actions/GroupActions';
 import {showProgess, renderNoDataComponent} from '../../component/Common';
 import {useDispatch, useSelector, shallowEqual} from 'react-redux';
 import {clearRefreshScreen} from '../../reducer/GroupReducer';
@@ -23,7 +21,6 @@ const DiscoverGroups = ({content, isActive, onTap}) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [firstTimeLoad, setFirstTimeLoad] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [postData, setPostData] = useState([]);
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
@@ -71,12 +68,11 @@ const DiscoverGroups = ({content, isActive, onTap}) => {
   }, [refreshState, dispatch, getGroupData]);
 
   const getGroupData = useCallback(() => {
-    doGetGroups(
+    doGetDiscoverGroups(
       response => {
         manageResponse(response);
       },
       (code, error) => {
-        setIsRefreshing(false);
         setFirstTimeLoad(false);
         setPostData([]);
       },
@@ -84,7 +80,6 @@ const DiscoverGroups = ({content, isActive, onTap}) => {
   }, []);
 
   const manageResponse = response => {
-    setIsRefreshing(false);
     if (response && response !== null) {
       if (
         response.data &&
@@ -103,93 +98,8 @@ const DiscoverGroups = ({content, isActive, onTap}) => {
     setFirstTimeLoad(false);
   };
 
-  const renderGroupItem = ({item, index}) => {
-    return (
-      <View key={index}>
-        <TouchableOpacity
-          activeOpacity={1}
-          onLongPress={() => onTap(item, index)}
-          onPress={() => onTap(item, index)}
-          style={{
-            marginBottom: scale(15),
-          }}>
-          <View style={[g.bgWhite, g.boxShadow, {borderRadius: scale(10)}]}>
-            <View style={[g.bggray3, style.backgroundBorder]}>
-              <View style={style.imageStyle}>
-                <ProgressImage
-                  source={
-                    item.profilePicture
-                      ? {
-                          uri: item.profilePicture,
-                        }
-                      : GlobalInclude.Assets.DefaultImage
-                  }
-                  containerStyle={style.coverImage}
-                  imageStyle={style.coverImage}
-                  mode={'cover'}
-                />
-                {item.newPost > 0 && (
-                  <View style={style.newPostContainer}>
-                    <Text
-                      numberOfLines={1}
-                      style={[
-                        g.FHNB,
-                        g.fs20,
-                        g.colorWhite,
-                        GlobalInclude.AppStyle.transform,
-                      ]}>
-                      {item.newPost.toString()}
-                    </Text>
-                    <Text
-                      numberOfLines={1}
-                      style={[
-                        g.FHNB,
-                        g.fs16,
-                        g.colorWhite,
-                        GlobalInclude.AppStyle.transform,
-                      ]}>
-                      New
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-            <View style={g.p10}>
-              <Text
-                numberOfLines={1}
-                style={[
-                  g.FHNB,
-                  g.fs18,
-                  g.colorBlue,
-                  GlobalInclude.AppStyle.transform,
-                ]}>
-                {item.name !== undefined && item.name !== null
-                  ? item.name
-                  : 'N/A'}
-              </Text>
-              <Text
-                style={[
-                  g.fs14,
-                  g.mt5,
-                  g.FHNR,
-                  GlobalInclude.AppStyle.transform,
-                  g.colorGray,
-                ]}
-                numberOfLines={2}>
-                {item.description !== undefined && item.description !== null
-                  ? item.description
-                  : 'N/A'}
-              </Text>
-              <Text
-                style={[g.fs16, g.mt5, g.FHNM, g.colordarkGray]}
-                numberOfLines={1}>
-                {item.totalMember} Member(s)
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-      </View>
-    );
+  const renderItem = ({item, index}) => {
+    return renderGroupItem(item, index, onTap);
   };
 
   return (
@@ -199,7 +109,7 @@ const DiscoverGroups = ({content, isActive, onTap}) => {
         extraData={postData}
         data={postData}
         onEndReachedThreshold={0.1}
-        renderItem={renderGroupItem}
+        renderItem={renderItem}
         ListEmptyComponent={renderNoDataComponent}
         contentContainerStyle={{
           paddingStart: scale(15),
@@ -218,7 +128,7 @@ const DiscoverGroups = ({content, isActive, onTap}) => {
 const style = StyleSheet.create({
   imageStyle: {
     width: '100%',
-    aspectRatio: 16 / 9,
+    height: scale(80),
     borderRadius: scale(10),
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
@@ -235,6 +145,7 @@ const style = StyleSheet.create({
     position: 'absolute',
     top: 0,
     right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(62,62,62,0.6)',
     paddingHorizontal: scale(13),
     paddingVertical: scale(7),

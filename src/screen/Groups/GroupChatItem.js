@@ -19,7 +19,7 @@ import ParsedText from 'react-native-parsed-text';
 import Helper from '../../helper/Helper';
 import Pdf from 'react-native-pdf';
 
-import {isSameUser, isSameDay} from '../../helper/ChatHelper';
+import {isSameDay} from '../../helper/ChatHelper';
 import {IconType} from '../../helper/Constants';
 import {showMediaType, showImageThumb} from '../chat/ChatDelegates';
 import Helpers from '../../helper/Helper';
@@ -33,374 +33,217 @@ class GroupChatItem extends PureComponent {
       isNewLine: false,
     };
   }
-
-  renderTicks() {
-    const {currentMessage, groupMembers, isGroup} = this.props;
-    if (
-      currentMessage &&
+  isSameUser(currentMessage = {}, diffMessage = {}) {
+    return !!(
+      diffMessage.user &&
       currentMessage.user &&
-      currentMessage.user._id !== global.userId
-    ) {
-      return null;
-    }
-    if (currentMessage) {
-      let tickIcon = '',
-        iconColor = '#323232';
-
-      if (isGroup) {
-        if (groupMembers !== undefined && groupMembers !== null) {
-          if (
-            currentMessage.readBy !== undefined &&
-            currentMessage.readBy !== null &&
-            currentMessage.readBy.length === groupMembers.length
-          ) {
-            tickIcon = 'checkmark-done-sharp';
-            iconColor = '#34b7f1';
-          } else {
-            tickIcon = 'checkmark-done-sharp';
-            iconColor = '#cccccc';
-          }
-        }
-      } else {
-        if (
-          currentMessage &&
-          (currentMessage.isSent ||
-            currentMessage.isRead ||
-            currentMessage.pending)
-        ) {
-          if (currentMessage.isSent) {
-            tickIcon = 'ios-checkmark-sharp';
-            iconColor = '#cccccc';
-          }
-          if (currentMessage.isDelivered) {
-            tickIcon = 'checkmark-done-sharp';
-            iconColor = '#cccccc';
-          }
-          if (currentMessage.isRead) {
-            tickIcon = 'checkmark-done-sharp';
-            iconColor = '#34b7f1';
-          }
-        }
-      }
-
-      return (
-        <View style={styles.tickView}>
-          <GlobalInclude.BaseIcon
-            containerStyle={{height: scale(16), width: scale(16)}}
-            iconColor={iconColor}
-            iconName={tickIcon}
-            iconSize={scale(16)}
-            iconType={IconType[6]}
-          />
-        </View>
-      );
-    }
-    return null;
-  }
-
-  handleEmailPress(email, matchIndex /*: number*/) {
-    Helper.openEmail(email);
-  }
-
-  handleUrlPress(url, matchIndex /*: number*/) {
-    Helper.openLink(url);
-  }
-
-  handlePhonePress(phone, matchIndex /*: number*/) {
-    Helper.openDialler(phone);
-  }
-
-  renderTextComponent(source, isLeft) {
-    const {customFont} = this.props;
-    return (
-      <ParsedText
-        parse={[
-          {type: 'url', style: styles.url, onPress: this.handleUrlPress},
-          {type: 'phone', style: styles.phone, onPress: this.handlePhonePress},
-          {type: 'email', style: styles.email, onPress: this.handleEmailPress},
-          {pattern: /#(\w+)/, style: styles.hashTag},
-        ]}
-        childrenProps={{allowFontScaling: false}}
-        onTextLayout={event => {
-          //get all lines
-          const {lines} = event.nativeEvent;
-          if (lines.length > 0) {
-            if (lines.length > 1) {
-              this.setState({isNewLine: true});
-            } else {
-              this.setState({isNewLine: false});
-            }
-          } else {
-            this.setState({isNewLine: true});
-          }
-        }}
-        style={[
-          customFont,
-          g.FHNR,
-          g.colorBlack,
-          g.txtCenterVertical,
-          {
-            textAlign: 'justify',
-          },
-        ]}>
-        {source}
-      </ParsedText>
+      diffMessage.user._id === currentMessage.user._id
     );
   }
 
-  renderEmojiComponent(source, isLeft) {
-    return (
-      <Text
-        style={[
-          g.FHNR,
-          g.colorBlack,
-          g.txtCenterVertical,
-          {textAlign: 'justify', fontSize: scale(54)},
-        ]}>
-        {source}
-      </Text>
-    );
-  }
+  renderLeftSide(currentMessage) {
+    const {customFont, previousMessage, onTapUserName} = this.props;
 
-  renderImageComponent(source) {
-    const {currentMessage} = this.props;
-    if (
-      currentMessage.extraObjects !== undefined &&
-      currentMessage.extraObjects !== null
-    ) {
-      let ih = currentMessage.extraObjects.ih - scale(7);
-      let iw = currentMessage.extraObjects.iw - scale(7);
-      return (
-        <ProgressImage
-          source={{uri: source}}
-          containerStyle={{height: ih, width: iw, borderRadius: scale(6)}}
-          imageStyle={{height: ih, width: iw, borderRadius: scale(6)}}
-          mode={'cover'}
-        />
-      );
-    }
     return (
-      <ProgressImage
-        source={{uri: source}}
-        containerStyle={styles.thumbStyle}
-        imageStyle={styles.thumbStyle}
-        mode={'cover'}
-      />
-    );
-  }
-  renderPdfComponent(source) {
-    const {customFont, currentMessage} = this.props;
-    return (
-      <View style={styles.pdfMainContainer}>
-        <Pdf
-          singlePage={true}
-          enablePaging={true}
-          enableAntialiasing={true}
-          activityIndicator={
-            <View style={styles.indicator}>
-              <ActivityIndicator
-                color={GlobalInclude.Color.ColorPrimary}
-                size={'small'}
-              />
+      <View style={grid.col}>
+        {currentMessage.isReported && this.renderReported()}
+        <View style={[g.bgWhite, styles.bubbleLeft, g.p5]}>
+          <View style={[grid.row, g.mt3, g.mb2]}>
+            <View style={[grid.col]}>
+              {!this.isSameUser(currentMessage, previousMessage) && (
+                <TouchableOpacity
+                  hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
+                  onPress={() => {
+                    onTapUserName();
+                  }}>
+                  <Text numberOfLines={1} style={[customFont, g.FHNB]}>
+                    {currentMessage.authorId.name}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
-          }
-          source={{
-            uri: source,
-          }}
-          style={[styles.youtubeThumb, styles.pdfContainer]}
-        />
-        {currentMessage.extraObjects !== undefined && currentMessage !== null && (
-          <View
+            <View style={[g.mr5, grid.justifyContentCenter, grid.alignItems]}>
+              {this.renderDateComponent(currentMessage, true)}
+            </View>
+          </View>
+          <View style={[g.mt5, g.mb5]}>
+            {this.renderItem(currentMessage, true)}
+          </View>
+        </View>
+        {currentMessage.isEdited &&
+          !currentMessage.delete &&
+          this.renderEditView()}
+      </View>
+    );
+  }
+
+  renderRightSide(currentMessage) {
+    const {customFont, previousMessage, onTapUserName} = this.props;
+
+    return (
+      <View style={grid.col}>
+        {currentMessage.isEdited &&
+          !currentMessage.delete &&
+          this.renderEditView()}
+        {currentMessage.isReported && this.renderReported()}
+        <View style={[g.bgGreenLight, styles.bubbleRight, g.p5]}>
+          <View style={[grid.row, g.mt3, g.mb2]}>
+            <View style={[grid.col]}>
+              {!this.isSameUser(currentMessage, previousMessage) && (
+                <TouchableOpacity
+                  hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
+                  onPress={() => {
+                    onTapUserName();
+                  }}>
+                  <Text
+                    numberOfLines={1}
+                    style={[customFont, g.FHNB, g.colorBlack]}>
+                    {currentMessage.authorId.name}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            <View style={[g.mr5, grid.justifyContentCenter, grid.alignItems]}>
+              {this.renderDateComponent(currentMessage, false)}
+            </View>
+          </View>
+
+          <View style={[g.mt5, g.mb5]}>
+            {this.renderItem(currentMessage, false)}
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  renderReported() {
+    const {customFont} = this.props;
+
+    return (
+      <View style={styles.reportedContainer}>
+        <View style={styles.reportedView}>
+          <Text
+            numberOfLines={1}
             style={[
-              {maxWidth: width - 120},
-              grid.rowrow,
-              g.p5,
+              customFont,
+              g.FHNB,
+              g.colorWhite,
               grid.alignItems,
               grid.justifyContentCenter,
             ]}>
-            <View style={grid.row}>
-              <GlobalInclude.BaseIcon
-                containerStyle={{height: scale(20), width: scale(20)}}
-                iconColor={'#990f02'}
-                iconName={'pdffile1'}
-                iconSize={scale(17)}
-                iconType={IconType[10]}
-              />
-              <Text
-                numberOfLines={1}
-                style={[
-                  g.FHNR,
-                  g.colorBlue,
-                  g.txtCenterVertical,
-                  g.txtLeft,
-                  customFont,
-                ]}>
-                {currentMessage.extraObjects.fileName}
-              </Text>
-            </View>
-            <View style={[grid.rowrow, g.ml5]}>
-              <Text
-                style={[
-                  g.FHNM,
-                  g.colorGray,
-                  g.txtCenterVertical,
-                  g.txtLeft,
-                  g.fs12,
-                ]}>
-                {Helpers.humanFileSize(currentMessage.extraObjects.fileSize)}
-              </Text>
-              <Text
-                style={[
-                  g.FHNM,
-                  g.colorGray,
-                  g.txtCenterVertical,
-                  g.txtLeft,
-                  g.fs12,
-                  g.ml5,
-                  {textTransform: 'uppercase'},
-                ]}>
-                {Helpers.getExtention(currentMessage.extraObjects.fileName)}
-              </Text>
-            </View>
-          </View>
+            Reported
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  renderItem(currentMessage, isLeft) {
+    // 'IMAGE', 'VIDEO', 'AUDIO', 'DOCUMENT'
+    const {onLongPress, onPress} = this.props;
+    let messageContent = currentMessage.messageText;
+    let mediaContent = '';
+    let messageType = '';
+
+    if (currentMessage.media !== undefined && currentMessage.media !== null) {
+      mediaContent = currentMessage.media.mediaUrl;
+      messageType = currentMessage.media.mediaType;
+    }
+
+    return (
+      <View>
+        {currentMessage.isHidden ? (
+          <View>{this.renderRemovedMsg(isLeft)}</View>
+        ) : (
+          <TouchableOpacity
+            onPress={onPress}
+            hitSlop={{top: 30, bottom: 30, left: 30, right: 30}}
+            onLongPress={onLongPress}
+            activeOpacity={1}>
+            {messageType === 'IMAGE' ? (
+              <View>{this.renderImageComponent(mediaContent)}</View>
+            ) : messageType === 'VIDEO' ? (
+              <View>
+                {this.renderVideoComponent(mediaContent, currentMessage)}
+              </View>
+            ) : messageType === 'AUDIO' ? (
+              <View>{this.renderAudioComponent(mediaContent)}</View>
+            ) : messageType === 'DOCUMENT' ? (
+              <View>{this.renderPdfComponent(mediaContent)}</View>
+            ) : messageType === 'EMOJI' ? (
+              <View>{this.renderEmojiComponent(messageContent)}</View>
+            ) : null}
+
+            {messageContent !== null &&
+              messageContent !== undefined &&
+              messageContent.trim().length > 0 &&
+              messageType !== 'EMOJI' && (
+                <View style={[grid.rowrow, {marginTop: scale(5)}]}>
+                  {this.renderTextComponent(messageContent, isLeft)}
+                </View>
+              )}
+          </TouchableOpacity>
         )}
       </View>
     );
   }
-  renderAudioComponent(source) {
-    const {customFont, currentMessage} = this.props;
+
+  renderEditView() {
     return (
-      <View style={[styles.pdfMainContainer, grid.rowrow]}>
-        <View
-          style={{
-            height: scale(40),
-            width: scale(40),
-            borderRadius: scale(42),
-            backgroundColor: 'rgba(62,62,62,0.25)',
-            margin: scale(3),
-            marginHorizontal: scale(5),
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-          <GlobalInclude.BaseIcon
-            containerStyle={{
-              height: scale(38),
-              width: scale(38),
-              justifyContent: 'center',
-              alignItems: 'center',
-              alignContent: 'center',
-            }}
-            iconColor={GlobalInclude.Color.ColorPrimary}
-            iconName={'headset'}
-            iconSize={scale(30)}
-            iconType={IconType[6]}
-          />
-        </View>
-        <View style={[grid.col, grid.justifyContentCenter]}>
-          <Text
-            numberOfLines={1}
-            style={[
-              g.mb5,
-              g.FHNR,
-              g.colorBlue,
-              g.txtCenterVertical,
-              g.txtLeft,
-              customFont,
-            ]}>
-            {currentMessage.extraObjects.fileName}
-          </Text>
-          <View style={[grid.rowrow]}>
-            <Text
-              style={[
-                g.FHNM,
-                g.colorGray,
-                g.txtCenterVertical,
-                g.txtLeft,
-                g.fs12,
-              ]}>
-              {Helpers.humanFileSize(currentMessage.extraObjects.fileSize)}
-            </Text>
-            <Text
-              style={[
-                g.FHNM,
-                g.colorGray,
-                g.txtCenterVertical,
-                g.txtLeft,
-                g.fs12,
-                g.ml5,
-                {textTransform: 'uppercase'},
-              ]}>
-              {Helpers.getExtention(currentMessage.extraObjects.fileName)}
-            </Text>
-          </View>
-        </View>
+      <View style={[styles.tickView, grid.alignItemsBottom, g.mb5]}>
+        <GlobalInclude.BaseIcon
+          containerStyle={{height: scale(16), width: scale(16)}}
+          iconColor={GlobalInclude.Color.ColorPrimary}
+          iconName={'edit'}
+          iconSize={scale(16)}
+          iconType={IconType[0]}
+        />
       </View>
     );
   }
-  renderVideoComponent(source, currentMessage) {
-    return (
-      <YoutubeView
-        extraObjects={currentMessage.extraObjects}
-        link={source}
-        containerWidth={width - 120}
-        containerStyle={styles.youtubeVideo}
-        overlayStyle={styles.overlayStyle}
-        thumbStyle={styles.youtubeThumb}
-        playIconstyle={styles.playIconstyle}
-        playIconContainer={{
-          height: scale(20),
-          width: scale(20),
-          justifyContent: 'center',
-          alignSelf: 'center',
-          alignItems: 'center',
-        }}
-        iconSize={scale(20)}
-        showPlay={true}
-      />
-    );
-  }
 
-  renderDateComponent(source, isLeft) {
+  renderRemovedMsg(isLeft) {
     const {customFont} = this.props;
     return (
-      <View style={[grid.justifyContentRight, grid.alignItemsBottom]}>
+      <View style={[grid.rowrow, grid.alignItems]}>
+        <GlobalInclude.BaseIcon
+          containerStyle={{height: scale(13), width: scale(13)}}
+          iconColor={GlobalInclude.Color.ColorPrimary}
+          iconName={'block'}
+          iconSize={scale(12)}
+          iconType={IconType[9]}
+        />
         <Text
           style={[
-            g.fs11,
+            customFont,
             g.FHNR,
-            g.colorGray5,
-            grid.justifyContentRight,
-            grid.alignItemsBottom,
+            g.ml2,
+            g.colorBlack,
             g.txtCenterVertical,
-            isLeft && g.ml5,
-            isLeft && g.mb2,
+            {textAlign: 'justify'},
           ]}>
-          {Helper.getChatDate(source.createdAt)}
+          This message has been deleted
         </Text>
       </View>
     );
   }
 
-  renderAvtar() {
-    const {nextMessage, currentMessage, isGroup} = this.props;
+  renderDay() {
+    const {previousMessage, currentMessage, customFont} = this.props;
 
+    if (currentMessage && !isSameDay(currentMessage, previousMessage)) {
+      return (
+        <View style={styles.timeStamp}>
+          <Text style={[customFont, g.FHNR, g.colorWhite]}>
+            {moment(currentMessage.createdAt * 1000)
+              .format('DD MMM YYYY')
+              .toString()
+              .toUpperCase()}
+          </Text>
+        </View>
+      );
+    }
     return null;
-
-    // if (isGroup) {
-    //   return null;
-    // }
-
-    // if (!isSameUser(currentMessage, nextMessage)) {
-    //   return (
-    //     <ProgressImage
-    //       source={{uri: currentMessage.user.profileImg}}
-    //       containerStyle={styles.imageStyle}
-    //       imageStyle={styles.imageStyle}
-    //       mode={'cover'}
-    //     />
-    //   );
-    // }
-    // return <View style={styles.imageStyle} />;
   }
 
   renderReplyMessage(currentMessage, isLeft) {
@@ -457,292 +300,380 @@ class GroupChatItem extends PureComponent {
     );
   }
 
-  renderEditView() {
+  renderDateComponent(source, isLeft) {
     return (
-      <View style={[styles.tickView, grid.alignItemsBottom, g.mb5]}>
-        <GlobalInclude.BaseIcon
-          containerStyle={{height: scale(16), width: scale(16)}}
-          iconColor={GlobalInclude.Color.ColorPrimary}
-          iconName={'edit'}
-          iconSize={scale(16)}
-          iconType={IconType[0]}
-        />
-      </View>
-    );
-  }
-
-  renderLeftSide(currentMessage) {
-    const {isGroup, customFont, messageColor, previousMessage, onTapUserName} =
-      this.props;
-    let color = '#000000';
-
-    let isFound =
-      messageColor !== undefined && messageColor !== null
-        ? messageColor.filter(item => item.userId === currentMessage.user._id)
-        : [];
-    if (isFound.length > 0) {
-      color = isFound[0].color;
-    }
-
-    return (
-      <View style={[grid.rowdir]}>
-        {this.renderAvtar()}
-
-        <View style={[g.ml5, g.bgWhite, styles.bubbleLeft]}>
-          {isGroup && !isSameUser(currentMessage, previousMessage) && (
-            <TouchableOpacity
-              style={{zIndex: 1}}
-              hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
-              onPress={() => {
-                onTapUserName();
-              }}>
-              <Text
-                numberOfLines={1}
-                style={[customFont, g.FHNB, g.pt4, g.pl5, {color: color}]}>
-                {Helper.capitalize(currentMessage.user.firstName)}
-                {currentMessage.user.batch !== undefined &&
-                currentMessage.user.batch !== null
-                  ? ' ' + '-' + currentMessage.user.batch + ' '
-                  : ''}
-              </Text>
-            </TouchableOpacity>
-          )}
-          {this.renderItem(currentMessage, true)}
-
-          {currentMessage.isReported && (
-            <View
-              style={{
-                position: 'absolute',
-                height: scale(13),
-                width: scale(13),
-                backgroundColor: 'red',
-                alignSelf: 'center',
-                marginLeft: scale(3),
-                borderTopRightRadius: scale(10),
-                borderBottomLeftRadius: scale(1),
-                right: 0,
-              }}
-            />
-          )}
-        </View>
-        {currentMessage.isEdited &&
-          !currentMessage.delete &&
-          this.renderEditView()}
-
-        {/* {currentMessage.isReported && (
-          <View
-            style={{
-              height: scale(10),
-              width: scale(10),
-              backgroundColor: 'red',
-              alignSelf: 'center',
-              marginLeft: scale(3),
-              borderRadius: scale(32),
-            }}
-          />
-        )} */}
-      </View>
-    );
-  }
-
-  renderRightSide(currentMessage) {
-    return (
-      <View style={[grid.rowdir, styles.viewRight]}>
-        {currentMessage.isEdited &&
-          !currentMessage.delete &&
-          this.renderEditView()}
-        <View style={[g.bgGreenLight, styles.bubbleRight]}>
-          {this.renderItem(currentMessage, false)}
-        </View>
-      </View>
-    );
-  }
-
-  renderItem(currentMessage, isLeft) {
-    const {onLongPress, onPress, isGroup} = this.props;
-
-    let style = {
-      paddingHorizontal: scale(1),
-      paddingTop: scale(3),
-      paddingBottom: scale(3),
-    };
-    let messageContent = '';
-    let mediaContent = '';
-    let messageType = '';
-    if (
-      currentMessage.replay !== undefined &&
-      currentMessage.replay !== null &&
-      Object.keys(currentMessage.replay).length > 0
-    ) {
-      messageContent = currentMessage.replay.message;
-      mediaContent = currentMessage.replay.media;
-      messageType = currentMessage.replay.messageType;
-    } else {
-      messageContent = currentMessage.message;
-      mediaContent = currentMessage.media;
-      messageType = currentMessage.messageType;
-
-      if (messageType === 1) {
-        style = {};
-        style = {
-          paddingHorizontal: scale(5),
-          paddingTop: isGroup ? scale(3) : scale(9),
-          paddingBottom: scale(2),
-        };
-      }
-    }
-
-    return (
-      <View>
-        {currentMessage.replay !== undefined &&
-          currentMessage.replay !== null &&
-          Object.keys(currentMessage.replay).length > 0 &&
-          this.renderReplyMessage(currentMessage, isLeft)}
-        {currentMessage.delete ? (
-          <View style={style}>{this.renderRemovedMsg(isLeft)}</View>
-        ) : (
-          <TouchableOpacity
-            onPress={onPress}
-            hitSlop={{top: 30, bottom: 30, left: 30, right: 30}}
-            onLongPress={onLongPress}
-            activeOpacity={1}>
-            {messageType === 2 ? (
-              <View style={style}>
-                {this.renderImageComponent(mediaContent)}
-              </View>
-            ) : messageType === 3 ? (
-              <View style={style}>
-                {this.renderVideoComponent(mediaContent, currentMessage)}
-              </View>
-            ) : messageType === 4 ? (
-              <View style={style}>
-                {this.renderAudioComponent(mediaContent)}
-              </View>
-            ) : messageType === 5 ? (
-              <View style={style}>{this.renderPdfComponent(mediaContent)}</View>
-            ) : messageType === 6 ? (
-              <View style={style}>
-                {this.renderEmojiComponent(messageContent)}
-              </View>
-            ) : null}
-            {messageContent !== null &&
-              messageContent !== undefined &&
-              messageContent.trim().length > 0 &&
-              messageType !== 6 && (
-                <View
-                  style={[
-                    grid.rowrow,
-                    mediaContent !== '' ? {paddingHorizontal: scale(4)} : style,
-                  ]}>
-                  {this.renderTextComponent(messageContent, isLeft)}
-                  {/* {!this.state.isNewLine && (
-                    <View style={[grid.rowrow, styles.viewRight]}>
-                      {this.renderDateComponent(currentMessage, isLeft)}
-                      <View style={{marginHorizontal: scale(3)}} />
-                      {this.renderTicks()}
-                    </View>
-                  )} */}
-                </View>
-              )}
-          </TouchableOpacity>
-        )}
-
-        <View style={[grid.rowrow, styles.viewRight]}>
-          {this.renderDateComponent(currentMessage, isLeft)}
-          <View style={{marginHorizontal: scale(3)}} />
-          {this.renderTicks()}
-        </View>
-      </View>
-    );
-  }
-
-  renderSystemMessage() {
-    const {currentMessage, customFont} = this.props;
-    return (
-      <View style={[styles.container]}>
-        <View>
-          <Text style={[styles.text, customFont]}>
-            {currentMessage.message}
-          </Text>
-        </View>
-      </View>
-    );
-  }
-  renderRemovedMsg(isLeft) {
-    const {customFont} = this.props;
-    return (
-      <View style={[grid.rowrow, grid.alignItems, grid.justifyContentCenter]}>
-        <GlobalInclude.BaseIcon
-          containerStyle={{height: scale(13), width: scale(13)}}
-          iconColor={GlobalInclude.Color.ColorPrimary}
-          iconName={'block'}
-          iconSize={scale(12)}
-          iconType={IconType[9]}
-        />
+      <View style={[grid.justifyContentRight, grid.alignItemsBottom]}>
         <Text
           style={[
-            customFont,
+            g.fs11,
             g.FHNR,
-            g.ml5,
-            g.colorBlack,
+            g.colorGray5,
+            grid.justifyContentRight,
+            grid.alignItemsBottom,
             g.txtCenterVertical,
-            {textAlign: 'justify'},
+            isLeft && g.ml5,
+            isLeft && g.mb2,
           ]}>
-          This message has been deleted
+          {moment(new Date(source.createdAt * 1000)).fromNow()}
         </Text>
       </View>
     );
   }
 
-  renderDay() {
-    const {previousMessage, currentMessage, customFont} = this.props;
+  /**
+   *
+   * @Components
+   *
+   */
+  renderAudioComponent(source) {
+    const {customFont, currentMessage} = this.props;
 
-    if (currentMessage && !isSameDay(currentMessage, previousMessage)) {
-      return (
-        <View style={styles.timeStamp}>
-          <Text style={[customFont, g.FHNR, g.colorWhite]}>
-            {moment(currentMessage.createdAt)
-              .format('DD MMM YYYY')
-              .toString()
-              .toUpperCase()}
-          </Text>
+    const {metaData} = currentMessage.media;
+
+    return (
+      <View style={[styles.audioMainContainer, grid.rowrow]}>
+        <View
+          style={{
+            height: scale(40),
+            width: scale(40),
+            borderRadius: scale(42),
+            backgroundColor: 'rgba(62,62,62,0.25)',
+            margin: scale(3),
+            marginHorizontal: scale(5),
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+          <GlobalInclude.BaseIcon
+            containerStyle={{
+              height: scale(38),
+              width: scale(38),
+              justifyContent: 'center',
+              alignItems: 'center',
+              alignContent: 'center',
+            }}
+            iconColor={GlobalInclude.Color.ColorPrimary}
+            iconName={'headset'}
+            iconSize={scale(30)}
+            iconType={IconType[6]}
+          />
         </View>
+        <View style={[grid.col, grid.justifyContentCenter]}>
+          <Text
+            numberOfLines={1}
+            style={[
+              g.mb5,
+              g.FHNR,
+              g.colorBlue,
+              g.txtCenterVertical,
+              g.txtLeft,
+              customFont,
+            ]}>
+            {metaData.fileName}
+          </Text>
+          <View style={[grid.rowrow]}>
+            <Text
+              style={[
+                g.FHNM,
+                g.colorGray,
+                g.txtCenterVertical,
+                g.txtLeft,
+                g.fs12,
+              ]}>
+              {Helpers.humanFileSize(metaData.fileSize)}
+            </Text>
+            <Text
+              style={[
+                g.FHNM,
+                g.colorGray,
+                g.txtCenterVertical,
+                g.txtLeft,
+                g.fs12,
+                g.ml5,
+                {textTransform: 'uppercase'},
+              ]}>
+              {Helpers.getExtention(metaData.fileName)}
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
+  renderVideoComponent(source, currentMessage) {
+    const {metaData} = currentMessage.media;
+
+    return (
+      <>
+        <YoutubeView
+          link={source}
+          containerWidth={width / 2}
+          containerStyle={styles.youtubeVideo}
+          overlayStyle={styles.overlayStyle}
+          thumbStyle={styles.youtubeThumb}
+          playIconstyle={styles.playIconstyle}
+          playIconContainer={{
+            height: scale(20),
+            width: scale(20),
+            justifyContent: 'center',
+            alignSelf: 'center',
+            alignItems: 'center',
+          }}
+          iconSize={scale(20)}
+          showPlay={true}
+        />
+        {metaData !== undefined && metaData !== null && (
+          <View style={g.p5}>
+            {metaData.title !== undefined &&
+              metaData.title !== null &&
+              metaData.title !== '' && (
+                <Text style={[g.fs14, g.FHNB, g.colorBlue]} numberOfLines={1}>
+                  {metaData.title}
+                </Text>
+              )}
+            {metaData.description !== undefined &&
+              metaData.description !== null &&
+              metaData.description !== '' && (
+                <Text
+                  style={[g.fs12, g.FHNR, g.colordarkGray, g.mt2]}
+                  numberOfLines={2}>
+                  {metaData.description}
+                </Text>
+              )}
+
+            <ParsedText
+              parse={[
+                {
+                  type: 'url',
+                  style: styles.url,
+                  onPress: this.handleUrlPress,
+                },
+              ]}
+              childrenProps={{allowFontScaling: false}}
+              style={[g.fs12, g.FHNM, g.mt2, g.colorSkyBlue]}>
+              {source}
+            </ParsedText>
+          </View>
+        )}
+      </>
+    );
+  }
+
+  renderImageComponent(source) {
+    const {currentMessage} = this.props;
+    if (
+      currentMessage.extraObjects !== undefined &&
+      currentMessage.extraObjects !== null
+    ) {
+      let ih = currentMessage.extraObjects.ih - scale(7);
+      let iw = currentMessage.extraObjects.iw - scale(7);
+      return (
+        <ProgressImage
+          source={{uri: source}}
+          containerStyle={{height: ih, width: iw}}
+          imageStyle={{height: ih, width: iw}}
+          mode={'cover'}
+        />
       );
     }
-    return null;
+    return (
+      <ProgressImage
+        source={{uri: source}}
+        containerStyle={styles.thumbStyle}
+        imageStyle={styles.thumbStyle}
+        mode={'cover'}
+      />
+    );
   }
+  renderPdfComponent(source) {
+    const {customFont, currentMessage} = this.props;
+    return (
+      <View>
+        <View style={styles.pdfMainContainer}>
+          <Pdf
+            singlePage={true}
+            enablePaging={true}
+            enableAntialiasing={true}
+            activityIndicator={
+              <View style={styles.indicator}>
+                <ActivityIndicator
+                  color={GlobalInclude.Color.ColorPrimary}
+                  size={'small'}
+                />
+              </View>
+            }
+            source={{
+              uri: source,
+            }}
+            style={[styles.youtubeThumb]}
+          />
+        </View>
+
+        {currentMessage.media.metaData !== undefined &&
+          currentMessage !== null && (
+            <View style={g.p5}>
+              <View style={grid.row}>
+                <GlobalInclude.BaseIcon
+                  containerStyle={{height: scale(20), width: scale(20)}}
+                  iconColor={'#990f02'}
+                  iconName={'pdffile1'}
+                  iconSize={scale(17)}
+                  iconType={IconType[10]}
+                />
+                <Text
+                  numberOfLines={1}
+                  style={[
+                    g.FHNR,
+                    g.colorBlue,
+                    g.txtCenterVertical,
+                    g.txtLeft,
+                    customFont,
+                  ]}>
+                  {currentMessage.media.metaData.fileName}
+                </Text>
+              </View>
+              <View style={[grid.rowrow, g.mt5, g.ml10]}>
+                <Text
+                  style={[
+                    g.FHNM,
+                    g.colorGray,
+                    g.txtCenterVertical,
+                    g.txtLeft,
+                    g.fs12,
+                  ]}>
+                  {Helpers.humanFileSize(
+                    currentMessage.media.metaData.fileSize,
+                  )}
+                </Text>
+                <Text
+                  style={[
+                    g.FHNM,
+                    g.colorGray,
+                    g.txtCenterVertical,
+                    g.txtLeft,
+                    g.fs12,
+                    g.ml5,
+                    {textTransform: 'uppercase'},
+                  ]}>
+                  {Helpers.getExtention(currentMessage.media.metaData.fileName)}
+                </Text>
+              </View>
+            </View>
+          )}
+      </View>
+    );
+  }
+
+  renderEmojiComponent(source, isLeft) {
+    return (
+      <View style={[grid.alignItems, grid.justifyContentCenter]}>
+        <Text
+          style={[
+            g.FHNR,
+            g.colorBlack,
+            g.txtCenterVertical,
+            g.txtCenter,
+
+            {textAlign: 'justify', fontSize: scale(54)},
+          ]}>
+          {source}
+        </Text>
+      </View>
+    );
+  }
+
+  renderTextComponent(source, isLeft) {
+    const {customFont} = this.props;
+    return (
+      <ParsedText
+        parse={[
+          {type: 'url', style: styles.url, onPress: this.handleUrlPress},
+          {type: 'phone', style: styles.phone, onPress: this.handlePhonePress},
+          {type: 'email', style: styles.email, onPress: this.handleEmailPress},
+          {pattern: /#(\w+)/, style: styles.hashTag},
+        ]}
+        childrenProps={{allowFontScaling: false}}
+        onTextLayout={event => {
+          //get all lines
+          const {lines} = event.nativeEvent;
+          if (lines.length > 0) {
+            if (lines.length > 1) {
+              this.setState({isNewLine: true});
+            } else {
+              this.setState({isNewLine: false});
+            }
+          } else {
+            this.setState({isNewLine: true});
+          }
+        }}
+        style={[
+          customFont,
+          g.FHNR,
+          g.colorBlack,
+          g.txtCenterVertical,
+          {
+            textAlign: 'justify',
+          },
+        ]}>
+        {source}
+      </ParsedText>
+    );
+  }
+  handleEmailPress(email, matchIndex /*: number*/) {
+    Helper.openEmail(email);
+  }
+
+  handleUrlPress(url, matchIndex /*: number*/) {
+    Helper.openLink(url);
+  }
+
+  handlePhonePress(phone, matchIndex /*: number*/) {
+    Helper.openDialler(phone);
+  }
+
+  /**
+   *
+   * @Components
+   *
+   */
 
   render() {
     const {currentMessage, nextMessage, position} = this.props;
-    const sameUser = isSameUser(currentMessage, nextMessage);
+    const sameUser = this.isSameUser(currentMessage, nextMessage);
 
     return (
       <View>
-        {currentMessage.system ? (
-          this.renderSystemMessage()
-        ) : (
-          <View
-            style={[
-              g.pl5,
-              g.pr5,
-              {marginBottom: sameUser ? scale(5) : scale(10)},
-              {marginBottom: scale(5), zIndex: 3},
-            ]}>
-            <View style={[grid.rowdir, grid.justifyContentCenter]}>
-              {this.renderDay()}
-            </View>
-
-            {position === 'right'
-              ? this.renderRightSide(currentMessage)
-              : this.renderLeftSide(currentMessage)}
+        <View
+          style={[
+            g.pl5,
+            g.pr5,
+            {marginBottom: sameUser ? scale(5) : scale(10)},
+            {marginBottom: scale(5), zIndex: 3},
+          ]}>
+          <View style={[grid.rowdir, grid.justifyContentCenter]}>
+            {this.renderDay()}
           </View>
-        )}
+
+          {position === 'right'
+            ? this.renderRightSide(currentMessage)
+            : this.renderLeftSide(currentMessage)}
+        </View>
       </View>
     );
   }
 }
 
 const styles = StyleSheet.create({
+  bubbleLeft: {
+    borderRadius: scale(10),
+    marginHorizontal: scale(6),
+  },
+  bubbleRight: {
+    borderTopLeftRadius: scale(10),
+    borderBottomLeftRadius: scale(10),
+    borderTopRightRadius: scale(10),
+    borderBottomRightRadius: 0,
+    paddingBottom: scale(5),
+    marginHorizontal: scale(6),
+  },
   timeStamp: {
     backgroundColor: GlobalInclude.Color.ColorPrimary,
     marginBottom: 10,
@@ -757,24 +688,7 @@ const styles = StyleSheet.create({
     width: scale(40),
     borderRadius: scale(40),
   },
-  bubbleLeft: {
-    borderTopLeftRadius: scale(10),
-    borderBottomLeftRadius: 0,
-    borderTopRightRadius: scale(10),
-    borderBottomRightRadius: scale(10),
-    paddingHorizontal: scale(3),
-    paddingBottom: scale(5),
-    maxWidth: width - 80,
-  },
-  bubbleRight: {
-    borderTopLeftRadius: scale(10),
-    borderBottomLeftRadius: scale(10),
-    borderTopRightRadius: scale(10),
-    borderBottomRightRadius: 0,
-    paddingHorizontal: scale(3),
-    paddingBottom: scale(5),
-    maxWidth: width - 80,
-  },
+
   viewRight: {
     alignSelf: 'flex-end',
     alignItems: 'flex-end',
@@ -788,25 +702,17 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   youtubeVideo: {
-    width: width - 120,
     aspectRatio: 16 / 9,
-    borderRadius: 0,
-    borderTopLeftRadius: scale(10),
-    borderTopRightRadius: scale(10),
+    width: width / 2 + 100,
+    alignSelf: 'center',
+    borderRadius: scale(6),
     justifyContent: 'center',
   },
   youtubeThumb: {
-    width: width - 120,
     aspectRatio: 16 / 9,
-    borderRadius: 0,
-    borderTopLeftRadius: scale(10),
-    borderTopRightRadius: scale(10),
-  },
-  youtubeView: {
-    aspectRatio: 1 / 1,
-    height: scale(165),
-    borderRadius: scale(10),
-    justifyContent: 'center',
+    width: width / 2 + 100,
+    alignSelf: 'center',
+    borderRadius: scale(6),
   },
   overlayStyle: {
     backgroundColor: '#00000066',
@@ -816,14 +722,13 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     zIndex: 1,
-    borderRadius: 0,
-    borderTopLeftRadius: scale(10),
-    borderTopRightRadius: scale(10),
+    borderRadius: scale(6),
   },
   thumbStyle: {
     aspectRatio: 1 / 1,
-    height: scale(165),
-    borderRadius: scale(10),
+    width: width / 2,
+    alignSelf: 'center',
+    borderRadius: scale(6),
   },
   playIconstyle: {
     position: 'absolute',
@@ -908,8 +813,6 @@ const styles = StyleSheet.create({
   pdfContainer: {
     backgroundColor: 'white',
     borderRadius: 0,
-    borderTopLeftRadius: scale(8),
-    borderTopRightRadius: scale(8),
   },
   indicator: {
     height: '100%',
@@ -918,10 +821,31 @@ const styles = StyleSheet.create({
     alignContent: 'center',
     justifyContent: 'center',
   },
-  pdfMainContainer: {
+  audioMainContainer: {
     backgroundColor: 'rgba(255,255,255,0.5)',
     borderRadius: scale(6),
-    width: width - 120,
+    width: width - 80,
+  },
+  pdfMainContainer: {
+    borderRadius: scale(6),
+    width: width / 2,
+    alignSelf: 'center',
+  },
+  reportedContainer: {
+    alignSelf: 'flex-end',
+    marginRight: scale(30),
+    alignContent: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: scale(6),
+  },
+  reportedView: {
+    backgroundColor: 'red',
+    borderRadius: scale(6),
+    padding: scale(4),
+    borderBottomRightRadius: 0,
+    borderBottomLeftRadius: 0,
+    marginBottom: -8,
   },
 });
 

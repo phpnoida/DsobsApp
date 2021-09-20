@@ -67,7 +67,7 @@ export const renderNoDataComponent = () => {
   );
 };
 
-export const uploadMediaButton = onPress => {
+export const uploadMediaButton = (onPress, text) => {
   return (
     <TouchableOpacity style={grid.rowdir} onPress={onPress} activeOpacity={0.7}>
       <View
@@ -77,7 +77,9 @@ export const uploadMediaButton = onPress => {
           g.mr10,
           {padding: 15, borderRadius: 10},
         ]}>
-        <Text style={[g.fs16, g.FHNR, g.colorLightGray]}>Upload Media</Text>
+        <Text style={[g.fs16, g.FHNR, g.colorLightGray]}>
+          {text ? text : 'Upload Media'}
+        </Text>
       </View>
       <View
         style={[

@@ -23,7 +23,7 @@ export function doCreateGroup(payload, callback, errCallback) {
 export function doUpdateGroup(groupId, payload, callback, errCallback) {
   let requestPath = `${SERVER_PATH}group/edit/${groupId}`;
 
-  console.log('requestPath', requestPath);
+  console.log('requestPath', requestPath, payload);
 
   const request = axios
     .patch(requestPath, payload, {
@@ -43,6 +43,20 @@ export function doUpdateGroup(groupId, payload, callback, errCallback) {
 
 export function doGetGroups(callback, errCallback) {
   let requestPath = `${SERVER_PATH}group`;
+
+  const request = axios
+    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .then(res => callback(res))
+    .catch(err => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function doGetDiscoverGroups(callback, errCallback) {
+  let requestPath = `${SERVER_PATH}group/discover-group`;
 
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
@@ -162,6 +176,21 @@ export function doUpdateGroupAdmin(
         Authorization: global.accessToken,
         'content-type': 'application/json',
       },
+    })
+    .then(res => callback(res))
+    .catch(err => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function doGetGroupMessages(params, groupId, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}chat/get-messages/${groupId}`;
+  const request = axios
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
     })
     .then(res => callback(res))
     .catch(err => {

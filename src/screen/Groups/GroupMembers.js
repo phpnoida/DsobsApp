@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   Text,
   View,
@@ -12,14 +12,38 @@ import {scale} from '../../theme/Scalling';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import ProgressImage from '../../component/ProgresImage';
 import Helpers from '../../helper/Helper';
-import {IconType, APP_NAME} from '../../helper/Constants';
-import {DummyMsg, UserInfo} from './Dummy';
 
 const GroupMembers = ({groupData, onTap}) => {
-  const showTaggedUsers = (userTag, isAdmin) => {
+  const [groupAdmin, setGroupAdmin] = useState([]);
+
+  useEffect(() => {
+    let adminArray = [];
+
+    let superAdmin = groupData.superAdmins;
+    superAdmin[0].isSuperAdmin = true;
+    superAdmin[0].isAdmin = true;
+
+    adminArray.push(superAdmin[0]);
+
+    let admins = groupData.admins;
+
+    admins.forEach(element => {
+      element.isAdmin = true;
+      adminArray.push(element);
+    });
+
+    setGroupAdmin(adminArray);
+
+    return () => {};
+  }, [groupData]);
+
+  const showTaggedUsers = userTag => {
     let componentArray = [];
     for (let i = 0; i < userTag.length; i++) {
       let item = userTag[i];
+      console.log('====================================');
+      console.log('item', item);
+      console.log('====================================');
       const component = (
         <View
           style={[
@@ -33,7 +57,7 @@ const GroupMembers = ({groupData, onTap}) => {
             style={[grid.col]}
             activeOpacity={1}
             onPress={() => {
-              onTap(item, i, isAdmin);
+              onTap(item, i);
             }}>
             <View style={[grid.rowdir, g.mb5, grid.alignItems]}>
               <View
@@ -135,11 +159,17 @@ const GroupMembers = ({groupData, onTap}) => {
         <Text style={[g.colordarkGray, g.fs14, g.FHNR, g.txtLeft, g.mb5]}>
           Group Admin
         </Text>
-        <View style={[g.ml5]}>{showTaggedUsers(groupData.admins, true)}</View>
-        <Text style={[g.colordarkGray, g.fs14, g.FHNR, g.txtLeft]}>
-          Group Member(s)
-        </Text>
-        <View style={[g.ml5]}>{showTaggedUsers(groupData.users, false)}</View>
+        <View style={[g.ml5]}>
+          {groupAdmin && groupAdmin.length > 0 && showTaggedUsers(groupAdmin)}
+        </View>
+        {groupData.users && groupData.users.length > 0 && (
+          <>
+            <Text style={[g.colordarkGray, g.fs14, g.FHNR, g.txtLeft]}>
+              Group Member(s)
+            </Text>
+            <View style={[g.ml5]}>{showTaggedUsers(groupData.users)}</View>
+          </>
+        )}
       </View>
     </ScrollView>
   );

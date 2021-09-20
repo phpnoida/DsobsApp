@@ -198,38 +198,40 @@ const YoutubeItem = props => {
                 )}
               <View style={{width: props.containerWidth}}>
                 {metaData !== undefined && metaData !== null && (
-                  <View
-                    style={[
-                      g.p5,
-                      {
-                        backgroundColor: 'rgba(255,255,255,0.2)',
-                        borderRadius: scale(3),
-                        marginVertical: scale(5),
-                      },
-                    ]}>
-                    {metaData.title !== undefined &&
-                      metaData.title !== null &&
-                      metaData.title !== '' && (
-                        <Text
-                          style={[g.fs14, g.FHNB, g.colorBlack]}
-                          numberOfLines={1}>
-                          {metaData.title}
-                        </Text>
-                      )}
-                    {metaData.description !== undefined &&
-                      metaData.description !== null &&
-                      metaData.description !== '' && (
-                        <Text
-                          style={[g.fs12, g.FHNR, g.colordarkGray, g.mt2]}
-                          numberOfLines={2}>
-                          {metaData.description}
-                        </Text>
-                      )}
-                  </View>
+                  <>
+                    <View
+                      style={[
+                        g.p5,
+                        {
+                          backgroundColor: 'rgba(255,255,255,0.2)',
+                          borderRadius: scale(3),
+                          marginVertical: scale(5),
+                        },
+                      ]}>
+                      {metaData.title !== undefined &&
+                        metaData.title !== null &&
+                        metaData.title !== '' && (
+                          <Text
+                            style={[g.fs14, g.FHNB, g.colorBlack]}
+                            numberOfLines={1}>
+                            {metaData.title}
+                          </Text>
+                        )}
+                      {metaData.description !== undefined &&
+                        metaData.description !== null &&
+                        metaData.description !== '' && (
+                          <Text
+                            style={[g.fs12, g.FHNR, g.colordarkGray, g.mt2]}
+                            numberOfLines={2}>
+                            {metaData.description}
+                          </Text>
+                        )}
+                    </View>
+                    <Text style={[g.fs12, g.FHNM, g.colorSkyBlue]}>
+                      {props.link}
+                    </Text>
+                  </>
                 )}
-                <Text style={[g.fs12, g.FHNM, g.colorSkyBlue]}>
-                  {props.link}
-                </Text>
               </View>
             </View>
           )}

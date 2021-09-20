@@ -9,6 +9,7 @@ import {
   Platform,
   TextInput,
   NativeModules,
+  Dimensions,
 } from 'react-native';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import g from '../theme/global';
@@ -30,6 +31,9 @@ var re = /(?:\.([^.]+))?$/;
 let uploadTmpImages = [];
 let uploadFinalImages = [];
 let imageIndex = 0;
+
+const {width} = Dimensions.get('window');
+
 const UploadMedia = ({
   refRBSheet,
   media,
@@ -37,6 +41,7 @@ const UploadMedia = ({
   onPickMedia,
   supportMultiple,
   hideTagInVideo,
+  currentModule,
 }) => {
   const videoRef = useRef();
 
@@ -137,6 +142,11 @@ const UploadMedia = ({
       options.height = singleItem.height;
     } else if (Platform.OS === 'android') {
       options.enableRotationGesture = true;
+    }
+
+    if (currentModule === 'groups') {
+      options.width = width;
+      options.height = 80;
     }
 
     ImagePicker.openCropper(options)
