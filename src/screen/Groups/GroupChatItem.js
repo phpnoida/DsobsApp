@@ -14,6 +14,7 @@ import {scale} from '../../theme/Scalling';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import ProgressImage from '../../component/ProgresImage';
 import YoutubeView from '../../component/YoutubeItem';
+import GroupImages from '../../component/GroupImage/GroupImages';
 import moment from 'moment';
 import ParsedText from 'react-native-parsed-text';
 import Helper from '../../helper/Helper';
@@ -172,6 +173,8 @@ class GroupChatItem extends PureComponent {
               <View>{this.renderPdfComponent(mediaContent)}</View>
             ) : messageType === 'EMOJI' ? (
               <View>{this.renderEmojiComponent(messageContent)}</View>
+            ) : messageType === 'IMAGE_GROUP' ? (
+              <View>{this.renderGroupImages(currentMessage)}</View>
             ) : null}
 
             {messageContent !== null &&
@@ -627,6 +630,25 @@ class GroupChatItem extends PureComponent {
 
   handlePhonePress(phone, matchIndex /*: number*/) {
     Helper.openDialler(phone);
+  }
+
+  renderGroupImages(currentMessage) {
+    //{"_id": "61499999b8ddad5e96cc3936", "authorId": {"_id": "602cb54aa1714c5bd91862e0", "name": "Richa Sharma - 2021"}, "createdAt": 1632213401, "isHidden": false, "isReported": false, "media": {"mediaType": "IMAGE_GROUP", "metaData": {"imageArray": [Array]}}, "messageText": ""}
+
+    let mediaContent = null;
+    if (currentMessage.media !== undefined && currentMessage.media !== null) {
+      mediaContent = currentMessage.media.metaData.imageArray;
+    }
+    console.log('====================================');
+    console.log('mediaContent', JSON.stringify(mediaContent));
+    console.log('====================================');
+    return (
+      <GroupImages
+        images={mediaContent}
+        style={{aspectRatio: 1 / 1, alignSelf: 'center'}}
+        width={width / 2}
+      />
+    );
   }
 
   /**

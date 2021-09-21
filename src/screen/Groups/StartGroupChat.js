@@ -193,6 +193,9 @@ const StartGroupChat = ({route}) => {
   };
 
   const getOldMessages = () => {
+    console.log('====================================');
+    console.log('groupId', groupId);
+    console.log('====================================');
     doGetGroupMessages(
       filterObject,
       groupId,
@@ -236,9 +239,14 @@ const StartGroupChat = ({route}) => {
                             imageArray: tmpArray,
                           },
                         },
+                        isHidden: false,
+                        messageText: '',
+                        isReported: false,
+                        createdAt: 1632213401,
+                        _id: '61499999b8ddad5e96cc3936',
                         authorId: {
-                          _id: '602cb54aa1714c5bd91862e0',
-                          name: 'Richa Sharma - 2021',
+                          _id: tmpArray[0].authorId._id,
+                          name: tmpArray[0].authorId.name,
                         },
                       };
                       objArray.push(request);
@@ -259,11 +267,38 @@ const StartGroupChat = ({route}) => {
                   objArray.push(element);
                 }
               }
-
-              console.log('====================================');
-              console.log('Obj Array', JSON.stringify(objArray));
-              console.log('====================================');
-              setMessages([...data.data]);
+              if (tmpArray.length > 0) {
+                if (counter > 3) {
+                  let request = {
+                    media: {
+                      mediaUrl: '',
+                      mediaType: 'IMAGE_GROUP',
+                      metaData: {
+                        imageArray: tmpArray,
+                      },
+                    },
+                    isHidden: false,
+                    messageText: '',
+                    isReported: false,
+                    createdAt: 1632213401,
+                    _id: '61499999b8ddad5e96cc3936',
+                    authorId: {
+                      _id: tmpArray[0].authorId._id,
+                      name: tmpArray[0].authorId.name,
+                    },
+                  };
+                  objArray.push(request);
+                  tmpArray = [];
+                  counter = 0;
+                } else {
+                  tmpArray.forEach(child => {
+                    objArray.push(child);
+                  });
+                  tmpArray = [];
+                  counter = 0;
+                }
+              }
+              setMessages([...objArray]);
             }
           }
         }
