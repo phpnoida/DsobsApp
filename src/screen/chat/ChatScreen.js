@@ -1312,7 +1312,6 @@ const ChatScreen = ({route}) => {
   const renderChatItem = ({item, index}) => {
     const previousMessage = messages[index + 1] || {};
     const nextMessage = messages[index - 1] || {};
-
     const customFont = {fontSize: fontSize};
 
     const messageProps = {
@@ -1689,7 +1688,7 @@ const ChatScreen = ({route}) => {
 
         <TouchableOpacity
           activeOpacity={0.9}
-          onPress={() => {
+          onss={() => {
             if (
               chatObjRef.current !== undefined &&
               chatObjRef.current !== null

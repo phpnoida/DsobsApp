@@ -118,10 +118,12 @@ class GroupChatItem extends PureComponent {
   }
 
   renderReported() {
-    const {customFont} = this.props;
+    const {customFont, onReportPress} = this.props;
 
     return (
-      <View style={styles.reportedContainer}>
+      <TouchableOpacity
+        style={styles.reportedContainer}
+        onPress={onReportPress}>
         <View style={styles.reportedView}>
           <Text
             numberOfLines={1}
@@ -135,7 +137,7 @@ class GroupChatItem extends PureComponent {
             Reported
           </Text>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   }
 
@@ -225,7 +227,7 @@ class GroupChatItem extends PureComponent {
             g.txtCenterVertical,
             {textAlign: 'justify'},
           ]}>
-          This message has been deleted
+          Admin has removed this message
         </Text>
       </View>
     );

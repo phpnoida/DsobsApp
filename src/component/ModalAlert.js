@@ -15,7 +15,7 @@ import Color from '../theme/Colors';
 
 const windowWidth = Dimensions.get('window').width;
 
-const ModalAlert = (props) => {
+const ModalAlert = props => {
   const [showModal, setShowModal] = useState(props.status);
 
   const {header} = props;

@@ -62,10 +62,14 @@ const UploadMedia = ({
         childPath,
         body,
         response => {
+          console.log('====================================');
+          console.log('childData', response);
+          console.log('====================================');
           global.loader_ref.show_loader(0);
           if (response && response !== undefined && response !== null) {
             if (response.status && response.data && response.data !== null) {
               let childData = response.data.data;
+
               let object = {
                 thumbnail: childData,
                 fileName: childData,
@@ -80,6 +84,7 @@ const UploadMedia = ({
           }
         },
         (error, message) => {
+          console.log('error', error);
           reject(null);
         },
       );
@@ -162,7 +167,7 @@ const UploadMedia = ({
 
   const completeCropping = () => {
     console.log('====================================');
-    console.log('Cropping done');
+    console.log('Cropping done', uploadFinalImages.length);
     console.log('====================================');
 
     if (uploadFinalImages.length > 0) {
@@ -223,6 +228,8 @@ const UploadMedia = ({
         };
         body.push(imageData);
 
+        console.log('imageData', imageData);
+
         return new Promise(function (resolve, reject) {
           uploadMediaContent(body, childPath, mediaType)
             .then(data => {
@@ -234,6 +241,9 @@ const UploadMedia = ({
               }
             })
             .catch(error => {
+              console.log('====================================');
+              console.log('error', error);
+              console.log('====================================');
               reject(null);
             });
         });

@@ -67,20 +67,46 @@ class ImageList extends Component {
 
   renderImages = () => {
     const {images, backgroundColor} = this.props;
-    const imagesToRender = images.map((img, i) => (
-      <TouchableOpacity
-        key={`List-Image-${i + 1}`}
-        style={[styles.clickableImg, {backgroundColor}]}
-        onPress={() => this.showImgInModal(i)}
-        activeOpacity={0.8}>
-        <ProgressImage
-          source={{uri: img.media.mediaUrl}}
-          containerStyle={{width: '100%', aspectRatio: 1 / 1}}
-          imageStyle={{width: '100%', aspectRatio: 1 / 1}}
-          mode={'cover'}
-        />
-      </TouchableOpacity>
-    ));
+    const imagesToRender = images.map((img, i) => {
+      let extraObj =
+        img.extraObjects !== undefined && img.extraObjects !== null
+          ? img.extraObjects !== undefined
+          : null;
+
+      if (extraObj !== undefined && extraObj !== null) {
+        let ih = extraObj.ih - scale(7);
+        let iw = extraObj.iw - scale(7);
+
+        return (
+          <TouchableOpacity
+            key={`List-Image-${i + 1}`}
+            style={[styles.clickableImg, {backgroundColor}]}
+            onPress={() => this.showImgInModal(i)}
+            activeOpacity={0.8}>
+            <ProgressImage
+              source={{uri: img.media.mediaUrl}}
+              containerStyle={{width: iw, height: ih}}
+              imageStyle={{width: iw, height: ih}}
+              mode={'cover'}
+            />
+          </TouchableOpacity>
+        );
+      }
+      return (
+        <TouchableOpacity
+          key={`List-Image-${i + 1}`}
+          style={[styles.clickableImg, {backgroundColor}]}
+          onPress={() => this.showImgInModal(i)}
+          activeOpacity={0.8}>
+          <ProgressImage
+            source={{uri: img.media.mediaUrl}}
+            containerStyle={{width: '100%', aspectRatio: 1 / 1}}
+            imageStyle={{width: '100%', aspectRatio: 1 / 1}}
+            mode={'cover'}
+          />
+        </TouchableOpacity>
+      );
+    });
     return imagesToRender;
   };
 

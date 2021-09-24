@@ -1,4 +1,10 @@
-import React, {useState, useCallback, useEffect, useRef} from 'react';
+import React, {
+  useState,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+} from 'react';
 import {
   View,
   StyleSheet,
@@ -15,16 +21,18 @@ import {
   Dimensions,
   ScrollView,
   AppState,
+  Alert,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
-import {showProgess} from '../../component/Common';
+import {showProgess, generateHeader} from '../../component/Common';
 import UploadMedia from '../../component/UploadMedia';
 import ProgressImage from '../../component/ProgresImage';
 import DocViewer from '../../component/DocViewer';
 import AudioPlayer from '../../component/AudioPlayer';
 import ImageViewer from '../../component/ImageViewer';
+import CommonButton from '../../component/CommonButton';
 import {showMediaType, showImageThumb} from '../chat/ChatDelegates';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {getStatusBarHeight} from 'react-native-iphone-x-helper';
@@ -37,42 +45,37 @@ import OptionsSheet from 'react-native-raw-bottom-sheet';
 import * as Animatable from 'react-native-animatable';
 import {useNavigation} from '@react-navigation/native';
 import {getScrappedData} from '../../Actions/CommonActions';
-import {DummyMsg, UserInfo} from './Dummy';
-
-import {doGetGroupMessages} from '../../Actions/GroupActions';
+import {UserInfo} from './Dummy';
+import {
+  doGetGroupMessages,
+  doReportMessage,
+  doHideMessage,
+  doGetReportedMessageInfo,
+} from '../../Actions/GroupActions';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import io from 'socket.io-client';
+import moment from 'moment';
 
 const {height, width} = Dimensions.get('window');
 
-let selectedFontSize = 1;
-let challenger = null,
-  opponent = null,
-  isGroup = null;
-var isChatExist = null;
-let newItems = false;
-let lastPickedMsgId = '';
+let selectedFontSize = 1,
+  isOpenPicker = false,
+  isBackTap = false,
+  isUserConnected = false,
+  responseMessage = '',
+  totalPages = 0,
+  currentPage = 1;
+
 let isStickerShowing = false;
-let lastPickIndex = -1;
 let blockMsg = '';
 let inEditMode = false;
 let documentItem = '';
 let playAudio = '';
 let extraObjects = null;
-let latestMessageArray = [];
 let bottomUnread = 0;
 let newMessageList = [];
-let inMessageThread = false;
-let threadId = '';
-let previousStatusOfTyping = false;
-let wantsUpdateChilds = [];
-let pendingChilds = [];
 let imageArray = [];
-let offlineUsers = [];
-let messageColor = [];
-let mutedBy = [];
-let removedBy = [];
-let groupMembers = [];
-let isBackTap = false;
-let memberKicked = false;
+let messagePosition = -1;
 
 const scrollToBottomOffset = 200;
 
@@ -80,9 +83,9 @@ let groupId = '',
   groupInfo = null;
 
 let filterObject = {
-  index: 0,
-  size: 10,
+  page: 0,
 };
+
 const PaginationStatus = {
   firstLoad: 0,
   waiting: 1,
@@ -90,6 +93,7 @@ const PaginationStatus = {
 };
 
 const StartGroupChat = ({route}) => {
+  const socketRef = useRef();
   const appState = useRef(AppState.currentState);
   const uploadRef = useRef();
   const emojiRef = useRef();
@@ -98,19 +102,17 @@ const StartGroupChat = ({route}) => {
   const chatObjRef = useRef();
   const chatRef = useRef();
   const messageInfoRef = useRef();
+  const messageReportRef = useRef();
+  const reporetedMessageListRef = useRef();
 
   const navigation = useNavigation();
-
-  const transform =
-    Platform.OS === 'android'
-      ? [{scaleY: -1}, {perspective: 1280}]
-      : [{scaleY: -1}];
 
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
   );
-  const [nextState, setNextState] = useState(appState.current);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState([]);
 
   const [fontSize, setFontSize] = useState(scale(14));
@@ -119,20 +121,23 @@ const StartGroupChat = ({route}) => {
   const [inputValue, setInputValue] = useState('');
   const [header, setHeader] = useState('');
   const [subHeader, setSubHeader] = useState('');
-  const [typingUser, setTypingUser] = useState('');
   const [headerImage, setHeaderImage] = useState(null);
   const [isSending, setIsSending] = useState(false);
-  const [messageThreadId, setMessageThreadId] = useState('');
   const [selectedChatObject, setSelectedChatObject] = useState(null);
   const [isReplayEditComment, setIsReplayEditComment] = useState(false);
-  const [chatEnabled, setChatEnabled] = useState(true);
   const [showDocViewer, setShowDocViewer] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
   const [emojiIconWidth, setEmojiIconWidth] = useState(scale(40));
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
   const [bottomMessages, setBottomMessages] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+
+  const [reportContent, setReportContent] = useState('');
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [showHideMessageAlert, setShowHideMessageAlert] = useState(false);
+  const [reportedMessageData, setReportedMessageData] = useState([]);
 
   /**
    *
@@ -140,6 +145,7 @@ const StartGroupChat = ({route}) => {
    */
 
   useEffect(() => {
+    resetOldData();
     if (route.params !== undefined && route.params !== null) {
       groupId = route.params.groupId;
       groupInfo = route.params.groupInfo;
@@ -150,12 +156,207 @@ const StartGroupChat = ({route}) => {
 
       if (groupId && groupId !== undefined && groupId !== null) {
         resetCount();
-        filterObject.groupId = groupId;
-        getOldMessages();
+        connectSocket();
       }
     }
+
+    const handleAppStateChange = state => {
+      if (isOpenPicker) {
+        return;
+      }
+
+      if (appState.current.match(/inactive|background/) && state === 'active') {
+        console.log('App has come to the foreground!');
+      } else if (state === 'background' || state === 'inactive') {
+        console.log('App gone to the background!');
+        if (!isBackTap) {
+          isBackTap = true;
+          disconnectUser();
+        }
+      }
+      appState.current = state;
+    };
+
+    const backAction = () => {
+      if (!isBackTap) {
+        isBackTap = true;
+        disconnectUser();
+      }
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      if (backHandler !== undefined && backHandler !== null) {
+        backHandler.remove();
+      }
+      AppState.removeEventListener('change', handleAppStateChange);
+      disconnectUser();
+    };
+  }, [route.params, connectSocket, disconnectUser, navigation]);
+
+  const connectSocket = useCallback(() => {
+    console.log('====================================');
+    console.log('202-event');
+    console.log('====================================');
+
+    socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
+      reconnectionAttempts: 2,
+    });
+
+    socketRef.current.on('connect', () => {
+      if (socketRef.current.connected) {
+        console.log(socketRef.current.id); // "G5p5..."
+        console.log('socketRef.current.connected', socketRef.current.connected);
+        filterObject.groupId = groupId;
+        setIsConnected(true);
+        getOldMessages();
+        setTimeout(() => {
+          joinGroupRequest();
+        }, 100);
+      }
+    });
+    socketRef.current.on('error', attempt => {
+      console.log('====================================');
+      console.log('errror', attempt);
+      console.log('====================================');
+    });
+
+    socketRef.current.on('disconnect', () => {
+      isUserConnected = false;
+      console.log('socket disconnected'); // undefined
+    });
+
+    socketRef.current.on('reconnect', attempt => {
+      console.log('====================================');
+      console.log('attempt', attempt);
+      console.log('====================================');
+    });
+    socketRef.current.on('reconnect_error', attempt => {
+      console.log('====================================');
+      console.log('reconnect_error', attempt);
+      console.log('====================================');
+      //socketRef.current.disconnect();
+      isUserConnected = false;
+    });
+    socketRef.current.on('reconnect_attempt', attempt => {
+      console.log('====================================');
+      console.log('reconnect_attempt', attempt);
+      console.log('====================================');
+    });
+
+    /********************
+     * Specific Events
+     */
+  }, [joinGroupRequest]);
+
+  useEffect(() => {
+    /********************
+     * Specific Events
+     */
+
+    socketRef.current.on('user-connected', event => {
+      console.log('====================================');
+      //console.log('connected', event);
+      console.log('connected', event.status);
+      console.log('====================================');
+      isUserConnected = event.status;
+      
+      // if (event.status) {
+      //   getOldMessages();
+      // }
+    });
+
+    socketRef.current.on('get-message', event => {
+      if (event && event !== null && event !== undefined) {
+        let message = event.message;
+        let author = message.authorId;
+        console.log('====================================');
+        console.log('message', message);
+        console.log('====================================');
+        if (author._id !== global.userId) {
+          if (showScrollToBottom) {
+            bottomUnread = bottomUnread + 1;
+            setBottomMessages(bottomUnread);
+          }
+          setMessages(previousMessages => append(previousMessages, message));
+        }
+      }
+    });
     return () => {};
-  }, [route.params]);
+  }, []);
+
+  const joinGroupRequest = useCallback(() => {
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      let payload = {
+        groupId: groupId,
+        userId: global.userId,
+      };
+
+      console.log('payload', payload);
+      socketRef.current.emit('subscribe-group', payload);
+    }
+  }, []);
+
+  const postMessage = object => {
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      setIsSending(true);
+      setInputValue('');
+      setEmojiIconWidth(scale(40));
+      animRef.current.slideInLeft().then(() => {});
+      Keyboard.dismiss();
+      if (isReplayEditComment) {
+        setIsReplayEditComment(false);
+        setSelectedChatObject(null);
+      }
+      socketRef.current.emit('send-message', object);
+
+      object.createdAt = moment().unix();
+      object.isHidden = false;
+      object.isReported = false;
+      setMessages(previousMessages => append(previousMessages, object));
+      setIsSending(false);
+    }
+  };
+
+  const disconnectUser = useCallback(() => {
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      let payload = {
+        groupId: groupId,
+        userId: global.userId,
+      };
+
+      console.log('disconnectUser', payload);
+      socketRef.current.emit('disconnect', payload);
+
+      setTimeout(() => {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+        resetOldData();
+        navigation.goBack();
+      }, 200);
+    }
+  }, [navigation]);
+
+  const resetOldData = () => {
+    isBackTap = false;
+    selectedFontSize = 1;
+
+    isStickerShowing = false;
+    blockMsg = '';
+    inEditMode = false;
+    documentItem = '';
+    playAudio = '';
+    bottomUnread = 0;
+    newMessageList = [];
+    imageArray = [];
+  };
 
   /**
    *
@@ -188,18 +389,16 @@ const StartGroupChat = ({route}) => {
 
   const resetCount = () => {
     filterObject = {};
-    filterObject.index = 0;
-    filterObject.size = 10;
+    filterObject.page = 1;
   };
 
   const getOldMessages = () => {
-    console.log('====================================');
-    console.log('groupId', groupId);
-    console.log('====================================');
+    setIsRefreshing(true);
     doGetGroupMessages(
       filterObject,
       groupId,
       response => {
+        setIsRefreshing(false);
         if (response && response !== null) {
           if (
             response.data &&
@@ -210,106 +409,241 @@ const StartGroupChat = ({route}) => {
 
             if (data.status) {
               let array = data.data;
-
               let tmpArray = [];
               let objArray = [];
               let counter = 0;
               let authorId = 0;
 
-              for (let i = 0; i < array.length; i++) {
-                const element = array[i];
-                let media = element.media;
-                let mediaType = media.mediaType;
-                let tmpAuthorId = element.authorId._id;
+              totalPages = data.totalPages;
 
-                if (authorId === 0) {
-                  authorId = tmpAuthorId;
-                }
+              if (array.length === 0) {
+                setPaginationStatus(PaginationStatus.allLoaded);
+              } else {
+                for (let i = 0; i < array.length; i++) {
+                  const element = array[i];
+                  let media = element.media;
+                  let mediaType = media.mediaType;
+                  let tmpAuthorId = element.authorId._id;
 
-                if (authorId === tmpAuthorId) {
-                  if (mediaType === 'IMAGE') {
-                    counter++;
-                    tmpArray.push(element);
-                  } else {
-                    if (counter > 3) {
-                      let request = {
-                        media: {
-                          mediaType: 'IMAGE_GROUP',
-                          metaData: {
-                            imageArray: tmpArray,
-                          },
-                        },
-                        isHidden: false,
-                        messageText: '',
-                        isReported: false,
-                        createdAt: 1632213401,
-                        _id: '61499999b8ddad5e96cc3936',
-                        authorId: {
-                          _id: tmpArray[0].authorId._id,
-                          name: tmpArray[0].authorId.name,
-                        },
-                      };
-                      objArray.push(request);
-                      tmpArray = [];
-                      counter = 0;
+                  if (authorId === 0) {
+                    authorId = tmpAuthorId;
+                  }
+
+                  if (authorId === tmpAuthorId) {
+                    if (mediaType === 'IMAGE') {
+                      counter++;
+                      tmpArray.push(element);
                     } else {
-                      tmpArray.forEach(child => {
-                        objArray.push(child);
-                      });
-                      tmpArray = [];
-                      counter = 0;
+                      if (counter > 3) {
+                        let request = {
+                          media: {
+                            mediaType: 'IMAGE_GROUP',
+                            metaData: {
+                              imageArray: tmpArray,
+                            },
+                          },
+                          isHidden: false,
+                          messageText: '',
+                          isReported: false,
+                          createdAt: 1632213401,
+                          _id: '61499999b8ddad5e96cc3936',
+                          authorId: {
+                            _id: tmpArray[0].authorId._id,
+                            name: tmpArray[0].authorId.name,
+                          },
+                        };
+                        objArray.push(request);
+                        tmpArray = [];
+                        counter = 0;
+                      } else {
+                        tmpArray.forEach(child => {
+                          objArray.push(child);
+                        });
+                        tmpArray = [];
+                        counter = 0;
+                      }
+                      objArray.push(element);
                     }
+                  } else {
+                    counter = 0;
+                    tmpArray = [];
                     objArray.push(element);
                   }
-                } else {
-                  counter = 0;
-                  tmpArray = [];
-                  objArray.push(element);
                 }
-              }
-              if (tmpArray.length > 0) {
-                if (counter > 3) {
-                  let request = {
-                    media: {
-                      mediaUrl: '',
-                      mediaType: 'IMAGE_GROUP',
-                      metaData: {
-                        imageArray: tmpArray,
+                if (tmpArray.length > 0) {
+                  if (counter > 3) {
+                    let request = {
+                      media: {
+                        mediaUrl: '',
+                        mediaType: 'IMAGE_GROUP',
+                        metaData: {
+                          imageArray: tmpArray,
+                        },
                       },
-                    },
-                    isHidden: false,
-                    messageText: '',
-                    isReported: false,
-                    createdAt: 1632213401,
-                    _id: '61499999b8ddad5e96cc3936',
-                    authorId: {
-                      _id: tmpArray[0].authorId._id,
-                      name: tmpArray[0].authorId.name,
-                    },
-                  };
-                  objArray.push(request);
-                  tmpArray = [];
-                  counter = 0;
-                } else {
-                  tmpArray.forEach(child => {
-                    objArray.push(child);
-                  });
-                  tmpArray = [];
-                  counter = 0;
+                      isHidden: false,
+                      messageText: '',
+                      isReported: false,
+                      createdAt: 1632213401,
+                      _id: '61499999b8ddad5e96cc3936',
+                      authorId: {
+                        _id: tmpArray[0].authorId._id,
+                        name: tmpArray[0].authorId.name,
+                      },
+                    };
+                    objArray.push(request);
+                    tmpArray = [];
+                    counter = 0;
+                  } else {
+                    tmpArray.forEach(child => {
+                      objArray.push(child);
+                    });
+                    tmpArray = [];
+                    counter = 0;
+                  }
                 }
+
+                let msgList = objArray.reverse();
+                if (filterObject.page === 1) {
+                  setMessages([...msgList]);
+                } else {
+                  setMessages([...messages, ...msgList]);
+                }
+                setPaginationStatus(PaginationStatus.waiting);
               }
-              setMessages([...objArray]);
             }
           }
         }
+
         setIsFirstLoad(false);
       },
       (code, error) => {
+        setIsRefreshing(false);
         console.log('====================================');
         console.log('code', code, error);
         console.log('====================================');
         setIsFirstLoad(false);
         setMessages([]);
+      },
+    );
+  };
+
+  const sendReport = requestObject => {
+    global.loader_ref.show_loader(1);
+    doReportMessage(
+      groupId,
+      selectedChatObject._id,
+      requestObject,
+      response => {
+        global.loader_ref.show_loader(0);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              responseMessage = 'Information was successfully updated.';
+              setShowErrorMessage(true);
+
+              let oldData = messages;
+              oldData[messagePosition].isReported = true;
+
+              setTimeout(() => {
+                setMessages([...oldData]);
+                setShowErrorMessage(false);
+              }, 2500);
+            }
+            console.log('====================================');
+            console.log('data', JSON.stringify(data));
+            console.log('====================================');
+          }
+        }
+      },
+      (code, error) => {
+        console.log('====================================');
+        console.log(code, error);
+        console.log('====================================');
+        global.loader_ref.show_loader(0);
+      },
+    );
+  };
+
+  const hideMessageFromList = () => {
+    global.loader_ref.show_loader(1);
+    doHideMessage(
+      groupId,
+      selectedChatObject._id,
+      response => {
+        global.loader_ref.show_loader(0);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              responseMessage = 'Message hide successfully!';
+              setShowErrorMessage(true);
+              setTimeout(() => {
+                setShowErrorMessage(false);
+              }, 2500);
+            }
+            console.log('====================================');
+            console.log('data', JSON.stringify(data));
+            console.log('====================================');
+          }
+        }
+      },
+      (code, error) => {
+        console.log('====================================');
+        console.log(code, error);
+        console.log('====================================');
+        global.loader_ref.show_loader(0);
+      },
+    );
+  };
+
+  const getReportedMessageDetail = messageId => {
+    global.loader_ref.show_loader(1);
+    doGetReportedMessageInfo(
+      groupId,
+      messageId,
+      response => {
+        global.loader_ref.show_loader(0);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              let reported = data.message;
+
+              setReportedMessageData([...reported]);
+              if (
+                reporetedMessageListRef.current !== undefined &&
+                reporetedMessageListRef.current !== null
+              ) {
+                reporetedMessageListRef.current.open();
+              }
+              console.log('====================================');
+              console.log('Reporeted', JSON.stringify(reported));
+              console.log('====================================');
+            }
+          }
+        }
+      },
+      (code, error) => {
+        console.log('====================================');
+        console.log(code, error);
+        console.log('====================================');
+        global.loader_ref.show_loader(0);
       },
     );
   };
@@ -336,7 +670,43 @@ const StartGroupChat = ({route}) => {
    * @PostMessage
    */
 
-  const handleInputChat = (type, input, mediaType, media, extraItem) => {};
+  const generateChatObject = (input, media, mediaType) => {
+    return {
+      groupId: groupId,
+      authorId: {
+        _id: global.userId,
+        name: `${Helper.capitalize(Helper.concatName(global.userDetails))} - ${
+          global.userDetails.batch
+        }`,
+        profileImg: global.userDetails.profileImg,
+      },
+      messageText: input,
+      depth: 0,
+      media: {
+        mediaUrl: media,
+        mediaType: mediaType,
+      },
+      parentMessageId: '',
+    };
+  };
+
+  const handleInputChat = (type, input, mediaType, media, extraItem) => {
+    if (inEditMode) {
+      //editMessageInThread(extraItem);
+    } else if (isReplayEditComment) {
+      let request = generateChatObject(input, media, mediaType);
+      request.extraObjects = extraItem;
+      request.depth = 1;
+      request.parentMessageId = selectedChatObject._id;
+      //postUserCommentInThread(input, media, mediaType, extraItem);
+      postMessage(request);
+    } else {
+      let request = generateChatObject(input, media, mediaType);
+      request.extraObjects = extraItem;
+      //postMsg(request);
+      postMessage(request);
+    }
+  };
   /**
    *
    * @PostMessage
@@ -347,6 +717,15 @@ const StartGroupChat = ({route}) => {
    * @CommonFunctions
    */
 
+  const append = (currentMessages = [], message) => {
+    if (!Array.isArray(message)) {
+      message = [message];
+    }
+    let newData = message.concat(currentMessages);
+
+    return newData;
+  };
+
   const handleOnScroll = event => {
     const {
       nativeEvent: {
@@ -356,15 +735,38 @@ const StartGroupChat = ({route}) => {
 
     if (contentOffsetY > scrollToBottomOffset) {
       setShowScrollToBottom(true);
+      setHasScrolled(true);
     } else {
       if (contentOffsetY === 0) {
-        // newMessageList.forEach(element => {
-        //   setMessages(previousMessages => append(previousMessages, element));
-        // });
+        newMessageList.forEach(element => {
+          setMessages(previousMessages => append(previousMessages, element));
+        });
       }
       bottomUnread = 0;
       setBottomMessages(0);
       setShowScrollToBottom(false);
+      setHasScrolled(false);
+    }
+  };
+
+  const onPaginate = () => {
+    if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
+      setPaginationStatus(PaginationStatus.waiting);
+      filterObject.page = filterObject.page + 1;
+      currentPage = currentPage + 1;
+      getOldMessages();
+    }
+  };
+
+  const onEndReached = ({distanceFromEnd}) => {
+    if ((hasScrolled || distanceFromEnd > 0) && distanceFromEnd <= 100) {
+      if (totalPages <= currentPage) {
+        setPaginationStatus(PaginationStatus.allLoaded);
+        return;
+      }
+      if (paginationStatus === PaginationStatus.waiting) {
+        onPaginate();
+      }
     }
   };
 
@@ -375,10 +777,7 @@ const StartGroupChat = ({route}) => {
       chatRef.current !== undefined &&
       chatRef.current !== null
     ) {
-      chatRef.current.scrollToOffset({
-        offset: 0,
-        animated: true,
-      });
+      chatRef.current.scrollToEnd({animating: true});
     }
   };
 
@@ -425,8 +824,8 @@ const StartGroupChat = ({route}) => {
    */
 
   const renderChatItem = ({item, index}) => {
-    const previousMessage = messages[index - 1] || {};
-    const nextMessage = messages[index + 1] || {};
+    const previousMessage = messages[index + 1] || {};
+    const nextMessage = messages[index - 1] || {};
     const customFont = {fontSize: fontSize};
 
     const messageProps = {
@@ -463,9 +862,11 @@ const StartGroupChat = ({route}) => {
           }
         }}
         onLongPress={() => {
-          if (!item.delete) {
+          if (!item.isHidden) {
             setSelectedChatObject(item);
-            lastPickIndex = index;
+
+            messagePosition = index;
+
             setTimeout(() => {
               if (
                 chatObjRef.current !== undefined &&
@@ -480,6 +881,11 @@ const StartGroupChat = ({route}) => {
           navigation.navigate('UserProfile', {
             userId: item.user._id,
           });
+        }}
+        onReportPress={() => {
+          setSelectedChatObject(item);
+          messagePosition = index;
+          getReportedMessageDetail(item._id);
         }}
       />
     );
@@ -681,6 +1087,107 @@ const StartGroupChat = ({route}) => {
     return componentArray;
   };
 
+  const showReportedContent = () => {
+    let componentArray = [];
+
+    reportedMessageData.forEach((item, index) => {
+      let isLast = index + 1 === reportedMessageData.length;
+      const component = (
+        <View
+          key={index}
+          style={[
+            !isLast && {
+              borderBottomWidth: 1,
+              borderBottomColor: '#ebebe4',
+              paddingBottom: scale(8),
+            },
+          ]}>
+          <View style={[grid.rowdir, g.mb5, grid.alignItems]}>
+            <View
+              style={[
+                {
+                  height: scale(36),
+                  width: scale(36),
+                  borderRadius: scale(90),
+                },
+                grid.alignItems,
+                grid.justifyContentCenter,
+                g.mr5,
+              ]}>
+              <View
+                style={[
+                  {
+                    height: scale(36),
+                    width: scale(36),
+                    borderRadius: scale(90),
+                  },
+                  g.bggray,
+                  g.oh,
+                  grid.alignItems,
+                  grid.justifyContentCenter,
+                ]}>
+                <Text
+                  style={[
+                    g.fs28,
+                    g.FHNM,
+                    g.colorWhite,
+                    GlobalInclude.AppStyle.transform,
+                  ]}>
+                  {item.authorId !== null && item.authorId.name.charAt(0)}
+                </Text>
+              </View>
+            </View>
+            <View style={grid.col}>
+              <Text style={[g.colordarkGray, g.fs16, g.FHNB, g.txtLeft]}>
+                {item.authorId !== null && item.authorId.name}
+              </Text>
+              <Text style={[g.colordarkGray, g.fs12, g.mt5, g.FHNR, g.txtLeft]}>
+                {item.reportTxt}
+              </Text>
+            </View>
+          </View>
+        </View>
+      );
+      componentArray.push(component);
+    });
+    return componentArray;
+  };
+
+  const showReportedInfo = () => {
+    return (
+      <OptionsSheet
+        ref={reporetedMessageListRef}
+        minClosingHeight={50}
+        height={Platform.OS === 'ios' ? height - 100 : height - 64}
+        duration={200}
+        closeOnDragDown={true}
+        customStyles={{
+          container: GlobalInclude.AppStyle.sheetContainer,
+        }}>
+        <View style={[grid.flex1, g.mb10, g.mt15]}>
+          {reportedMessageData !== null && (
+            <View>
+              <Text style={[g.colordarkGray, g.fs20, g.FHNB]}>
+                Message Reported By:
+              </Text>
+              {reportedMessageData.length > 0 ? (
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  <View style={[g.mt10, g.mb10]}>{showReportedContent()}</View>
+                </ScrollView>
+              ) : (
+                <View style={GlobalInclude.AppStyle.fillCenter}>
+                  <Text style={[g.colorBlack, g.FHNM, g.fs12, g.txtCenter]}>
+                    Currently No Information is available
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+      </OptionsSheet>
+    );
+  };
+
   const messageInfoSheet = () => {
     return (
       <OptionsSheet
@@ -839,7 +1346,9 @@ const StartGroupChat = ({route}) => {
               <View style={GlobalInclude.AppStyle.fillRow}>
                 <View style={[grid.alignItems, grid.justifyContentCenter]}>
                   <TouchableOpacity
-                    onPress={() => {}}
+                    onPress={() => {
+                      disconnectUser();
+                    }}
                     style={[grid.alignItems, grid.justifyContentCenter]}>
                     <Image
                       source={GlobalInclude.Assets.Back}
@@ -925,7 +1434,7 @@ const StartGroupChat = ({route}) => {
                           g.mt2,
                         ]}
                         numberOfLines={1}>
-                        {typingUser.length > 0 ? typingUser : subHeader}
+                        {subHeader}
                       </Text>
                     )}
                   </TouchableOpacity>
@@ -996,44 +1505,71 @@ const StartGroupChat = ({route}) => {
     );
   };
 
+  const reportUserMessage = () => {
+    return (
+      <OptionsSheet
+        ref={messageReportRef}
+        minClosingHeight={50}
+        height={height / 2 - 100}
+        duration={200}
+        closeOnDragDown={true}
+        customStyles={{
+          container: GlobalInclude.AppStyle.sheetContainer,
+        }}>
+        <KeyboardAwareScrollView
+          keyboardShouldPersistTaps={'handled'}
+          style={grid.flex1}
+          showsVerticalScrollIndicator={false}>
+          <View style={grid.flex1}>
+            <View style={g.mb15}>
+              {generateHeader('Report Text', true)}
+              <TextInput
+                underlineColorAndroid="transparent"
+                numberOfLines={6}
+                style={styles.commentInput}
+                value={reportContent}
+                keyboardType={'default'}
+                autoCapitalize={'words'}
+                multiline={true}
+                blurOnSubmit={true}
+                maxLength={500}
+                onSubmitEditing={() => {
+                  Keyboard.dismiss();
+                }}
+                returnKeyType="done"
+                placeholder={'Type here'}
+                onChangeText={value => {
+                  setReportContent(value);
+                }}
+              />
+            </View>
+          </View>
+          <CommonButton
+            title={'Save'}
+            showLoader={false}
+            onPress={() => {
+              if (
+                reportContent.trim() === '' ||
+                reportContent.trim().length === 0
+              ) {
+                Alert.alert('Erorr', 'Report content is required');
+              } else {
+                let requestObject = {
+                  reportTxt: reportContent,
+                };
+                sendReport(requestObject);
+              }
+              messageReportRef.current.close();
+            }}
+          />
+        </KeyboardAwareScrollView>
+      </OptionsSheet>
+    );
+  };
+
   const showUserPostOptions = () => {
     return (
       <View>
-        {selectedChatObject.messageType === 1 && (
-          <TouchableOpacity
-            onPress={() => {
-              if (
-                chatObjRef.current !== undefined &&
-                chatObjRef.current !== null
-              ) {
-                chatObjRef.current.close();
-              }
-              inEditMode = true;
-              setInputValue(selectedChatObject.message);
-            }}
-            style={[
-              grid.justifyContentCenter,
-              grid.alignItems,
-              g.p15,
-              {
-                borderBottomWidth: 2,
-                borderBottomColor: '#ebebe4',
-              },
-            ]}>
-            <Text
-              style={[
-                g.fs18,
-                g.FHNM,
-                g.colorBlue,
-                grid.justifyContentCenter,
-                grid.alignItems,
-                g.txtCenterVertical,
-              ]}>
-              Edit
-            </Text>
-          </TouchableOpacity>
-        )}
-
         <TouchableOpacity
           onPress={() => {
             if (
@@ -1106,9 +1642,9 @@ const StartGroupChat = ({route}) => {
         minClosingHeight={50}
         height={
           selectedChatObject !== null &&
-          selectedChatObject.user._id === global.userId
+          selectedChatObject.authorId._id === global.userId
             ? 340
-            : 180
+            : 260
         }
         duration={200}
         closeOnDragDown={false}
@@ -1139,7 +1675,7 @@ const StartGroupChat = ({route}) => {
               grid.alignItems,
               g.p15,
               selectedChatObject !== null &&
-              selectedChatObject.user._id === global.userId
+              selectedChatObject.authorId._id === global.userId
                 ? {borderBottomWidth: 2, borderBottomColor: '#ebebe4'}
                 : {},
             ]}>
@@ -1155,8 +1691,87 @@ const StartGroupChat = ({route}) => {
               Reply
             </Text>
           </TouchableOpacity>
+
           {selectedChatObject !== null &&
-            selectedChatObject.user._id === global.userId &&
+            selectedChatObject.authorId._id !== global.userId && (
+              <TouchableOpacity
+                onPress={() => {
+                  if (
+                    chatObjRef.current !== undefined &&
+                    chatObjRef.current !== null
+                  ) {
+                    chatObjRef.current.close();
+                  }
+                  if (
+                    messageReportRef.current !== undefined &&
+                    messageReportRef.current !== null
+                  ) {
+                    messageReportRef.current.open();
+                  }
+                }}
+                style={[
+                  grid.justifyContentCenter,
+                  grid.alignItems,
+                  g.p15,
+                  selectedChatObject !== null &&
+                  selectedChatObject.authorId._id === global.userId
+                    ? {borderBottomWidth: 2, borderBottomColor: '#ebebe4'}
+                    : {},
+                ]}>
+                <Text
+                  style={[
+                    g.fs18,
+                    g.FHNM,
+                    g.colorBlue,
+                    grid.justifyContentCenter,
+                    grid.alignItems,
+                    g.txtCenterVertical,
+                  ]}>
+                  Report Comment
+                </Text>
+              </TouchableOpacity>
+            )}
+
+          {selectedChatObject !== null &&
+            selectedChatObject.authorId._id !== global.userId &&
+            groupInfo !== undefined &&
+            groupInfo !== null &&
+            groupInfo.isUserAdmin && (
+              <TouchableOpacity
+                onPress={() => {
+                  if (
+                    chatObjRef.current !== undefined &&
+                    chatObjRef.current !== null
+                  ) {
+                    chatObjRef.current.close();
+                  }
+                  setShowHideMessageAlert(true);
+                }}
+                style={[
+                  grid.justifyContentCenter,
+                  grid.alignItems,
+                  g.p15,
+                  selectedChatObject !== null &&
+                  selectedChatObject.authorId._id === global.userId
+                    ? {borderBottomWidth: 2, borderBottomColor: '#ebebe4'}
+                    : {},
+                ]}>
+                <Text
+                  style={[
+                    g.fs18,
+                    g.FHNM,
+                    g.colorBlue,
+                    grid.justifyContentCenter,
+                    grid.alignItems,
+                    g.txtCenterVertical,
+                  ]}>
+                  Hide Comment
+                </Text>
+              </TouchableOpacity>
+            )}
+
+          {selectedChatObject !== null &&
+            selectedChatObject.authorId._id === global.userId &&
             showUserPostOptions()}
         </View>
 
@@ -1196,7 +1811,7 @@ const StartGroupChat = ({route}) => {
 
   const emptyComponent = () => {
     return (
-      <View style={[transform]}>
+      <View>
         <View style={GlobalInclude.AppStyle.fillCenter}>
           <Text
             style={[
@@ -1225,7 +1840,7 @@ const StartGroupChat = ({route}) => {
       {renderHeader()}
       {showProgess(isFirstLoad)}
       {showScrollToBottom ? renderScrollToBottomWrapper() : null}
-      <View style={[GlobalInclude.AppStyle.fill]}>
+      <View style={GlobalInclude.AppStyle.fill}>
         {isFirstLoad ? (
           <View style={[GlobalInclude.AppStyle.fillCenter]}>
             <ThreeDotsLoader
@@ -1236,8 +1851,9 @@ const StartGroupChat = ({route}) => {
         ) : (
           <FlatList
             ref={chatRef}
-            // inverted={-1}
+            inverted={-1}
             data={messages}
+            extraData={messages}
             renderItem={renderChatItem}
             removeClippedSubviews={Platform.OS !== 'web'}
             showsVerticalScrollIndicator={false}
@@ -1245,7 +1861,7 @@ const StartGroupChat = ({route}) => {
             onEndReachedThreshold={0.1}
             maintainVisibleContentPosition={true}
             ListEmptyComponent={emptyComponent}
-            scrollEventThrottle={16}
+            scrollEventThrottle={100}
             bounces={false}
             initialNumToRender={10}
             maxToRenderPerBatch={8}
@@ -1258,13 +1874,14 @@ const StartGroupChat = ({route}) => {
               paddingBottom: scale(20),
             }}
             onScroll={handleOnScroll}
+            onEndReached={onEndReached}
           />
         )}
 
         <KeyboardAvoidingView
           behavior={Platform.select({android: 'height', ios: 'padding'})}
           style={{marginBottom: scale(10)}}>
-          {chatEnabled ? (
+          {isConnected ? (
             <View style={styles.footer}>
               <View
                 style={{
@@ -1307,25 +1924,25 @@ const StartGroupChat = ({route}) => {
                           </Text>
                           <Text style={[g.fs14, g.FHNB, g.colorBlack]}>
                             {Helper.capitalize(
-                              Helper.concatName(selectedChatObject.user),
+                              selectedChatObject.authorId.name,
                             )}
                           </Text>
                           <View style={[g.mt2, g.mb2]} />
-                          <Text
+                          {/* <Text
                             numberOfLines={1}
                             style={[g.fs12, g.FHNR, g.colorBlack]}>
                             {selectedChatObject.messageType === 1
                               ? selectedChatObject.message
                               : showMediaType(selectedChatObject.messageType)}
-                          </Text>
+                          </Text> */}
                         </View>
                       </View>
-                      <View style={[g.mt2, g.mr5]}>
+                      {/* <View style={[g.mt2, g.mr5]}>
                         {showImageThumb(
                           selectedChatObject.media,
                           selectedChatObject.messageType,
                         )}
-                      </View>
+                      </View> */}
 
                       {/* part two */}
                       <TouchableOpacity
@@ -1400,7 +2017,6 @@ const StartGroupChat = ({route}) => {
                           inEditMode = false;
                           isStickerShowing = false;
                           setEmojiIconWidth(scale(40));
-
                           animRef.current.slideInLeft().then(() => {});
                         }
                       }}
@@ -1409,6 +2025,7 @@ const StartGroupChat = ({route}) => {
                     <TouchableOpacity
                       onPress={() => {
                         if (uploadRef.current !== null) {
+                          isOpenPicker = true;
                           uploadRef.current.open();
                         }
                       }}
@@ -1439,7 +2056,7 @@ const StartGroupChat = ({route}) => {
                   <TouchableOpacity
                     style={[styles.commentButton, styles.enableButton]}
                     onPress={() => {
-                      handleInputChat(1, inputValue, 1, '', null);
+                      handleInputChat(1, inputValue, '', '', '');
                     }}>
                     {isSending ? (
                       <ActivityIndicator size={'small'} color={'#fff'} />
@@ -1477,7 +2094,7 @@ const StartGroupChat = ({route}) => {
                     g.txtCenter,
                     g.txtCenterVertical,
                   ]}>
-                  {blockMsg === '' ? 'This chat has been blocked' : blockMsg}
+                  {blockMsg === '' ? 'Connecting...' : blockMsg}
                 </Text>
               </View>
             </View>
@@ -1490,27 +2107,14 @@ const StartGroupChat = ({route}) => {
         media={{image: false, video: false, document: false, audio: false}}
         supportMultiple={false}
         onPickMedia={media => {
-          console.log(';media', media);
+          isOpenPicker = false;
           if (media !== undefined && media !== null) {
+            console.log(';media', media);
             media.forEach(item => {
-              let mediaType = '1';
-              if (item.type === 1) {
-                mediaType = 2;
-              }
-              if (item.type === 2) {
-                mediaType = 3;
-              }
-              if (item.type === 3) {
-                mediaType = 5;
-              }
-              if (item.type === 4) {
-                mediaType = 4;
-              }
-
               if (item.type === 1) {
                 global.loader_ref.show_loader(1);
                 Image.getSize(item.fileName, (iw, ih) => {
-                  console.log(ih, iw);
+                  console.log('Height/Width', ih, iw);
                   let windowWidth = width;
                   let windowHeight = height;
                   if (ih > iw) {
@@ -1530,7 +2134,7 @@ const StartGroupChat = ({route}) => {
                   handleInputChat(
                     2,
                     inputValue,
-                    mediaType,
+                    'IMAGE',
                     item.fileName,
                     element,
                   );
@@ -1542,31 +2146,38 @@ const StartGroupChat = ({route}) => {
                   handleInputChat(
                     2,
                     inputValue,
-                    mediaType,
+                    'VIDEO',
                     item.fileName,
                     callback,
                   );
                 });
-              } else if (item.type === 3 || item.type === 4) {
+              } else if (item.type === 3) {
                 handleInputChat(
                   2,
                   inputValue,
-                  mediaType,
+                  'AUDIO',
                   item.fileName,
                   item.requestObject,
                 );
-              } else {
-                handleInputChat(2, inputValue, mediaType, item.fileName, null);
+              } else if (item.type === 4) {
+                handleInputChat(
+                  2,
+                  inputValue,
+                  'DOCUMENT',
+                  item.fileName,
+                  item.requestObject,
+                );
               }
             });
           }
-
           uploadRef.current.close();
         }}
       />
       {emojiList()}
       {chatOptions()}
       {messageInfoSheet()}
+      {reportUserMessage()}
+      {showReportedInfo()}
 
       {showDocViewer && (
         <DocViewer
@@ -1590,6 +2201,40 @@ const StartGroupChat = ({route}) => {
           imageViewerArray={imageArray}
           onClose={() => {
             setShowImageModal(false);
+          }}
+        />
+      )}
+
+      {showErrorMessage && (
+        <GlobalInclude.ModalAlert
+          status={showErrorMessage}
+          header={responseMessage}
+          okButton={'Okay'}
+          okAction={() => {
+            setShowErrorMessage(!showErrorMessage);
+          }}
+          closeAction={() => {
+            setShowErrorMessage(!showErrorMessage);
+          }}
+        />
+      )}
+
+      {showHideMessageAlert && (
+        <GlobalInclude.ModalAlert
+          status={showHideMessageAlert}
+          header={'Hide message'}
+          subHeader={'Are you sure you want to hide this message?'}
+          okButton={'Yes'}
+          cancelButton={'No'}
+          okAction={() => {
+            setShowHideMessageAlert(false);
+            hideMessageFromList();
+          }}
+          cancelAction={() => {
+            setShowHideMessageAlert(false);
+          }}
+          closeAction={() => {
+            setShowHideMessageAlert(false);
           }}
         />
       )}

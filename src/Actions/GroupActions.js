@@ -201,6 +201,77 @@ export function doGetGroupMessages(params, groupId, callback, errCallback) {
   };
 }
 
+export function doReportMessage(
+  groupId,
+  chatId,
+  payload,
+  callback,
+  errCallback,
+) {
+  let requestPath = `${SERVER_PATH}chat/report-message/${groupId}/${chatId}`;
+
+  console.log('requestPath', requestPath);
+  console.log('payload', payload);
+
+  const request = axios
+    .post(requestPath, payload, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
+    })
+    .then(res => callback(res))
+    .catch(err => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function doHideMessage(groupId, messageId, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}chat/hide-message/${groupId}/${messageId}`;
+
+  const request = axios
+    .post(requestPath, null, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
+    })
+    .then(res => callback(res))
+    .catch(err => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+////{{local}}/
+
+export function doGetReportedMessageInfo(
+  groupId,
+  messageId,
+  callback,
+  errCallback,
+) {
+  let requestPath = `${SERVER_PATH}chat/reported-message-details/${groupId}/${messageId}`;
+
+  console.log('requestPath', requestPath);
+  const request = axios
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
+    })
+    .then(res => callback(res))
+    .catch(err => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
 export function handleError(err, errCallback) {
   if (
     err.response &&
