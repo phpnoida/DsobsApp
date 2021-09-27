@@ -64,7 +64,7 @@ const SingleSearchWithFilter = ({
               placeholder={
                 placeholder ? placeholder : 'Type more than 2 characters'
               }
-              onChangeText={(text) => {
+              onChangeText={text => {
                 changeText(text);
               }}
             />

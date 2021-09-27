@@ -45,12 +45,12 @@ import OptionsSheet from 'react-native-raw-bottom-sheet';
 import * as Animatable from 'react-native-animatable';
 import {useNavigation} from '@react-navigation/native';
 import {getScrappedData} from '../../Actions/CommonActions';
-import {UserInfo} from './Dummy';
 import {
   doGetGroupMessages,
   doReportMessage,
   doHideMessage,
   doGetReportedMessageInfo,
+  doSearchMessage,
 } from '../../Actions/GroupActions';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import io from 'socket.io-client';
@@ -64,7 +64,8 @@ let selectedFontSize = 1,
   isUserConnected = false,
   responseMessage = '',
   totalPages = 0,
-  currentPage = 1;
+  currentPage = 1,
+  fitlerText = '';
 
 let isStickerShowing = false;
 let blockMsg = '';
@@ -83,7 +84,13 @@ let groupId = '',
   groupInfo = null;
 
 let filterObject = {
-  page: 0,
+  page: 1,
+  limit: 10,
+};
+let searchfilterObject = {
+  page: 1,
+  search: '',
+  limit: 10,
 };
 
 const PaginationStatus = {
@@ -98,10 +105,8 @@ const StartGroupChat = ({route}) => {
   const uploadRef = useRef();
   const emojiRef = useRef();
   const animRef = useRef();
-  const searchRef = useRef();
   const chatObjRef = useRef();
   const chatRef = useRef();
-  const messageInfoRef = useRef();
   const messageReportRef = useRef();
   const reporetedMessageListRef = useRef();
 
@@ -114,6 +119,10 @@ const StartGroupChat = ({route}) => {
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState([]);
+
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [filterQuery, setFilterQuery] = useState('');
+  const [filterMessage, setFilterMessage] = useState([]);
 
   const [fontSize, setFontSize] = useState(scale(14));
   const [scaleSize, setScaleSize] = useState(scale(22));
@@ -212,8 +221,8 @@ const StartGroupChat = ({route}) => {
 
     socketRef.current.on('connect', () => {
       if (socketRef.current.connected) {
-        console.log(socketRef.current.id); // "G5p5..."
-        console.log('socketRef.current.connected', socketRef.current.connected);
+        // console.log(socketRef.current.id); // "G5p5..."
+        // console.log('socketRef.current.connected', socketRef.current.connected);
         filterObject.groupId = groupId;
         setIsConnected(true);
         getOldMessages();
@@ -262,35 +271,108 @@ const StartGroupChat = ({route}) => {
      */
 
     socketRef.current.on('user-connected', event => {
-      console.log('====================================');
-      //console.log('connected', event);
-      console.log('connected', event.status);
-      console.log('====================================');
-      isUserConnected = event.status;
-      
-      // if (event.status) {
-      //   getOldMessages();
-      // }
+      // console.log('====================================');
+      // console.log('connected', event);
+      // console.log('connected', event.status);
+      // console.log('====================================');
+      isUserConnected = JSON.parse(event.status);
     });
 
     socketRef.current.on('get-message', event => {
       if (event && event !== null && event !== undefined) {
         let message = event.message;
-        let author = message.authorId;
+
         console.log('====================================');
-        console.log('message', message);
+        console.log('get-message', message);
         console.log('====================================');
-        if (author._id !== global.userId) {
-          if (showScrollToBottom) {
-            bottomUnread = bottomUnread + 1;
-            setBottomMessages(bottomUnread);
+
+        if (isFiltering) {
+          newMessageList.push(message);
+        } else {
+          let author = message.authorId;
+          if (author._id !== global.userId) {
+            if (showScrollToBottom) {
+              bottomUnread = bottomUnread + 1;
+              setBottomMessages(bottomUnread);
+            }
+            setMessages(previousMessages => append(previousMessages, message));
           }
-          setMessages(previousMessages => append(previousMessages, message));
         }
       }
     });
+
+    socketRef.current.on('get-edited-message', event => {
+      if (event && event !== null && event !== undefined) {
+        let message = event.message;
+        let author = message.authorId;
+
+        console.log('====================================');
+        console.log('edited', message);
+        console.log('====================================');
+
+        // if (isFiltering) {
+        //   newMessageList.push(message);
+        // } else {
+        //   if (author._id !== global.userId) {
+        //     if (showScrollToBottom) {
+        //       bottomUnread = bottomUnread + 1;
+        //       setBottomMessages(bottomUnread);
+        //     }
+        //     setMessages(previousMessages => append(previousMessages, message));
+        //   }
+        // }
+      }
+    });
+
+    socketRef.current.on('removed-user', event => {
+      if (event && event !== null && event !== undefined) {
+        if (
+          event.userId &&
+          event.userId !== null &&
+          event.userId !== undefined &&
+          event.userId === global.userId
+        ) {
+          blockMsg = 'Admin removed you from group!';
+          setIsConnected(false);
+          setTimeout(() => {
+            disconnectUser();
+          }, 5000);
+        }
+      }
+    });
+
+    socketRef.current.on('removed-admin', event => {
+      if (event && event !== null && event !== undefined) {
+        if (
+          event.userId &&
+          event.userId !== null &&
+          event.userId !== undefined &&
+          event.userId === global.userId
+        ) {
+          blockMsg = 'Admin removed you from group!';
+          setIsConnected(false);
+          setTimeout(() => {
+            disconnectUser();
+          }, 5000);
+        }
+      }
+    });
+
+    socketRef.current.on('made-admin', event => {
+      if (event && event !== null && event !== undefined) {
+        if (
+          event.userId &&
+          event.userId !== null &&
+          event.userId !== undefined &&
+          event.userId === global.userId
+        ) {
+          Alert.alert('Made admin', 'You are now admin!');
+        }
+      }
+    });
+
     return () => {};
-  }, []);
+  }, [showScrollToBottom, disconnectUser, isFiltering]);
 
   const joinGroupRequest = useCallback(() => {
     if (socketRef.current !== undefined && socketRef.current !== null) {
@@ -310,16 +392,17 @@ const StartGroupChat = ({route}) => {
       setInputValue('');
       setEmojiIconWidth(scale(40));
       animRef.current.slideInLeft().then(() => {});
-      Keyboard.dismiss();
-      if (isReplayEditComment) {
-        setIsReplayEditComment(false);
-        setSelectedChatObject(null);
-      }
+      //Keyboard.dismiss();
       socketRef.current.emit('send-message', object);
-
       object.createdAt = moment().unix();
       object.isHidden = false;
       object.isReported = false;
+      if (isReplayEditComment) {
+        setIsReplayEditComment(false);
+        setSelectedChatObject(null);
+        object.parentMessageId = selectedChatObject;
+        setSelectedChatObject(null);
+      }
       setMessages(previousMessages => append(previousMessages, object));
       setIsSending(false);
     }
@@ -382,7 +465,6 @@ const StartGroupChat = ({route}) => {
    */
 
   const setupGroupInfo = () => {
-    //{"_id":"6144682e9f295339cf4a69c1","name":"Power Rangers","description":"In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content.","profilePicture":"https://dsobs-new.s3.ap-south-1.amazonaws.com/1631873057_649654_1631873055176.jpg","lastMessage":"last message","totalMember":9,"status":1}
     setHeader(groupInfo.name);
     setHeaderImage({uri: groupInfo.profilePicture});
   };
@@ -390,6 +472,7 @@ const StartGroupChat = ({route}) => {
   const resetCount = () => {
     filterObject = {};
     filterObject.page = 1;
+    filterObject.limit = 10;
   };
 
   const getOldMessages = () => {
@@ -399,132 +482,196 @@ const StartGroupChat = ({route}) => {
       groupId,
       response => {
         setIsRefreshing(false);
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
-
-            if (data.status) {
-              let array = data.data;
-              let tmpArray = [];
-              let objArray = [];
-              let counter = 0;
-              let authorId = 0;
-
-              totalPages = data.totalPages;
-
-              if (array.length === 0) {
-                setPaginationStatus(PaginationStatus.allLoaded);
-              } else {
-                for (let i = 0; i < array.length; i++) {
-                  const element = array[i];
-                  let media = element.media;
-                  let mediaType = media.mediaType;
-                  let tmpAuthorId = element.authorId._id;
-
-                  if (authorId === 0) {
-                    authorId = tmpAuthorId;
-                  }
-
-                  if (authorId === tmpAuthorId) {
-                    if (mediaType === 'IMAGE') {
-                      counter++;
-                      tmpArray.push(element);
-                    } else {
-                      if (counter > 3) {
-                        let request = {
-                          media: {
-                            mediaType: 'IMAGE_GROUP',
-                            metaData: {
-                              imageArray: tmpArray,
-                            },
-                          },
-                          isHidden: false,
-                          messageText: '',
-                          isReported: false,
-                          createdAt: 1632213401,
-                          _id: '61499999b8ddad5e96cc3936',
-                          authorId: {
-                            _id: tmpArray[0].authorId._id,
-                            name: tmpArray[0].authorId.name,
-                          },
-                        };
-                        objArray.push(request);
-                        tmpArray = [];
-                        counter = 0;
-                      } else {
-                        tmpArray.forEach(child => {
-                          objArray.push(child);
-                        });
-                        tmpArray = [];
-                        counter = 0;
-                      }
-                      objArray.push(element);
-                    }
-                  } else {
-                    counter = 0;
-                    tmpArray = [];
-                    objArray.push(element);
-                  }
-                }
-                if (tmpArray.length > 0) {
-                  if (counter > 3) {
-                    let request = {
-                      media: {
-                        mediaUrl: '',
-                        mediaType: 'IMAGE_GROUP',
-                        metaData: {
-                          imageArray: tmpArray,
-                        },
-                      },
-                      isHidden: false,
-                      messageText: '',
-                      isReported: false,
-                      createdAt: 1632213401,
-                      _id: '61499999b8ddad5e96cc3936',
-                      authorId: {
-                        _id: tmpArray[0].authorId._id,
-                        name: tmpArray[0].authorId.name,
-                      },
-                    };
-                    objArray.push(request);
-                    tmpArray = [];
-                    counter = 0;
-                  } else {
-                    tmpArray.forEach(child => {
-                      objArray.push(child);
-                    });
-                    tmpArray = [];
-                    counter = 0;
-                  }
-                }
-
-                let msgList = objArray.reverse();
-                if (filterObject.page === 1) {
-                  setMessages([...msgList]);
-                } else {
-                  setMessages([...messages, ...msgList]);
-                }
-                setPaginationStatus(PaginationStatus.waiting);
-              }
-            }
-          }
-        }
-
+        manageResponse(response);
         setIsFirstLoad(false);
       },
       (code, error) => {
         setIsRefreshing(false);
-        console.log('====================================');
-        console.log('code', code, error);
-        console.log('====================================');
         setIsFirstLoad(false);
         setMessages([]);
       },
     );
+  };
+
+  const searchMessageContent = () => {
+    doSearchMessage(
+      groupId,
+      searchfilterObject,
+      response => {
+        setIsRefreshing(false);
+        manageResponse(response);
+        setIsFirstLoad(false);
+      },
+      (code, error) => {
+        console.log('====================================');
+        console.log('code ,error', code, error);
+        console.log('====================================');
+        setIsRefreshing(false);
+        setIsFirstLoad(false);
+        setMessages([]);
+      },
+    );
+  };
+
+  const manageResponse = response => {
+    try {
+      if (response && response !== null) {
+        if (
+          response.data &&
+          response.data !== undefined &&
+          response.data !== null
+        ) {
+          let data = response.data;
+
+          // console.log('====================================');
+          // console.log('filterData', data);
+          // console.log('====================================');
+
+          if (data.status) {
+            let array = data.data;
+
+            console.log('====================================');
+            console.log('last item', JSON.stringify(array[0]));
+            console.log('====================================');
+
+            let tmpArray = [];
+            let objArray = [];
+            let counter = 0;
+            let authorId = 0;
+
+            totalPages = data.totalPages;
+
+            if (array.length === 0) {
+              setPaginationStatus(PaginationStatus.allLoaded);
+            } else {
+              for (let i = 0; i < array.length; i++) {
+                const element = array[i];
+                let media = element.media;
+                let mediaType = media.mediaType;
+                let tmpAuthorId = element.authorId._id;
+
+                if (authorId === 0) {
+                  authorId = tmpAuthorId;
+                }
+
+                if (authorId === tmpAuthorId) {
+                  if (mediaType === 'IMAGE') {
+                    counter++;
+                    tmpArray.push(element);
+                  } else {
+                    if (counter > 3) {
+                      let request = {
+                        media: {
+                          mediaType: 'IMAGE_GROUP',
+                          metaData: {
+                            imageArray: tmpArray,
+                          },
+                        },
+                        isHidden: false,
+                        messageText: '',
+                        isReported: false,
+                        createdAt: 1632213401,
+                        _id: '61499999b8ddad5e96cc3936',
+                        authorId: {
+                          _id: tmpArray[0].authorId._id,
+                          name: tmpArray[0].authorId.name,
+                        },
+                      };
+                      objArray.push(request);
+                      tmpArray = [];
+                      counter = 0;
+                    } else {
+                      tmpArray.forEach(child => {
+                        objArray.push(child);
+                      });
+                      tmpArray = [];
+                      counter = 0;
+                    }
+                    objArray.push(element);
+                  }
+                } else {
+                  counter = 0;
+                  tmpArray = [];
+                  objArray.push(element);
+                }
+              }
+
+              if (tmpArray.length > 0) {
+                if (counter > 3) {
+                  let request = {
+                    media: {
+                      mediaUrl: '',
+                      mediaType: 'IMAGE_GROUP',
+                      metaData: {
+                        imageArray: tmpArray,
+                      },
+                    },
+                    isHidden: false,
+                    messageText: '',
+                    isReported: false,
+                    createdAt: 1632213401,
+                    _id: '61499999b8ddad5e96cc3936',
+                    authorId: {
+                      _id: tmpArray[0].authorId._id,
+                      name: tmpArray[0].authorId.name,
+                    },
+                  };
+                  objArray.push(request);
+                  tmpArray = [];
+                  counter = 0;
+                } else {
+                  tmpArray.forEach(child => {
+                    objArray.push(child);
+                  });
+                  tmpArray = [];
+                  counter = 0;
+                }
+              }
+
+              //let msgList = objArray.reverse();
+
+              // console.log('====================================');
+              // console.log('msgList', msgList);
+              // console.log('====================================');
+
+              if (isFiltering) {
+                if (searchfilterObject.page === 1) {
+                  setFilterMessage([...objArray]);
+                } else {
+                  setFilterMessage([...filterMessage, ...objArray]);
+                }
+              } else {
+                if (filterObject.page === 1) {
+                  setGroupMembers(data.users);
+                  setMessages([...objArray]);
+                } else {
+                  setMessages([...messages, ...objArray]);
+                }
+              }
+              setPaginationStatus(PaginationStatus.waiting);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.log('error in manage', error);
+    }
+  };
+
+  const setGroupMembers = members => {
+    if (members !== undefined && members !== null) {
+      let subTitle = '';
+      members.forEach(element => {
+        if (element._id !== global.userId) {
+          subTitle += Helper.capitalize(element.firstName) + ', ';
+        }
+      });
+      subTitle = subTitle.replace(/,\s*$/, '');
+      subTitle = subTitle + ', You';
+      setSubHeader(subTitle);
+    } else {
+      setSubHeader('eemre');
+    }
   };
 
   const sendReport = requestObject => {
@@ -692,13 +839,15 @@ const StartGroupChat = ({route}) => {
 
   const handleInputChat = (type, input, mediaType, media, extraItem) => {
     if (inEditMode) {
-      //editMessageInThread(extraItem);
+      let request = generateChatObject(input, media, mediaType);
+      request.extraObjects = extraItem;
+      request.isEdited = true;
+      postMessage(request);
     } else if (isReplayEditComment) {
       let request = generateChatObject(input, media, mediaType);
       request.extraObjects = extraItem;
       request.depth = 1;
       request.parentMessageId = selectedChatObject._id;
-      //postUserCommentInThread(input, media, mediaType, extraItem);
       postMessage(request);
     } else {
       let request = generateChatObject(input, media, mediaType);
@@ -752,9 +901,15 @@ const StartGroupChat = ({route}) => {
   const onPaginate = () => {
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
       setPaginationStatus(PaginationStatus.waiting);
-      filterObject.page = filterObject.page + 1;
-      currentPage = currentPage + 1;
-      getOldMessages();
+      if (isFiltering) {
+        searchfilterObject.page = searchfilterObject.page + 1;
+        currentPage = currentPage + 1;
+        searchMessageContent();
+      } else {
+        filterObject.page = filterObject.page + 1;
+        currentPage = currentPage + 1;
+        getOldMessages();
+      }
     }
   };
 
@@ -946,162 +1101,13 @@ const StartGroupChat = ({route}) => {
     );
   };
 
-  const findUser = userId => {
-    const found = UserInfo.some(el => el._id === userId);
-    if (found) {
-      let info = UserInfo.find(el => el._id === userId);
-      return info;
-    }
-    return null;
-  };
-
-  const findDeliveredTo = readBy => {
-    let members = JSON.parse(JSON.stringify(UserInfo));
-
-    if (readBy === undefined || readBy === null) {
-      return members.length > 0 ? members : null;
-    }
-    for (var i = members.length - 1; i >= 0; i--) {
-      let member = members[i];
-      for (let j = 0; j < readBy.length; j++) {
-        const read = readBy[j];
-        if (member._id === read._id) {
-          members.splice(i, 1);
-          break;
-        }
-      }
-    }
-
-    return members.length > 0 ? members : null;
-  };
-
-  const showReadByUsers = (userTag, isRead) => {
-    let componentArray = [];
-    for (let i = 0; i < userTag.length; i++) {
-      let item = userTag[i];
-      let userInfo = findUser(item._id);
-
-      const component = (
-        <View
-          style={[
-            i < userTag.length - 1 ? styles.bottomLine : {},
-            g.mb5,
-            g.ml5,
-            g.mr5,
-          ]}
-          key={i}>
-          <View style={[grid.rowdir]}>
-            <View style={[grid.col]}>
-              <View style={[grid.rowdir, g.mb5, grid.alignItems]}>
-                <View
-                  style={[
-                    {
-                      height: scale(42),
-                      width: scale(42),
-                      borderRadius: scale(90),
-                    },
-                    grid.alignItems,
-                    grid.justifyContentCenter,
-                    g.mr10,
-                  ]}>
-                  {userInfo !== null &&
-                  userInfo.profileImg !== null &&
-                  userInfo.profileImg !== undefined &&
-                  userInfo.profileImg !== '' ? (
-                    <ProgressImage
-                      source={{uri: userInfo.profileImg}}
-                      containerStyle={{
-                        aspectRatio: 1 / 1,
-                        height: scale(42),
-                        width: scale(42),
-                        borderRadius: scale(90),
-                      }}
-                      imageStyle={{
-                        aspectRatio: 1 / 1,
-                        height: scale(42),
-                        width: scale(42),
-                        borderRadius: scale(90),
-                      }}
-                      mode={'cover'}
-                    />
-                  ) : (
-                    <View
-                      style={[
-                        {
-                          height: scale(42),
-                          width: scale(42),
-                          borderRadius: scale(90),
-                        },
-                        g.bggray,
-                        g.oh,
-                        grid.alignItems,
-                        grid.justifyContentCenter,
-                      ]}>
-                      <Text
-                        style={[
-                          g.fs28,
-                          g.FHNM,
-                          g.colorWhite,
-                          GlobalInclude.AppStyle.transform,
-                        ]}>
-                        {userInfo !== null
-                          ? userInfo.firstName.charAt(0)
-                          : item.fullName.charAt(0)}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                <View>
-                  <Text style={[g.colordarkGray, g.fs14, g.FHNR, g.txtLeft]}>
-                    {userInfo !== null
-                      ? Helper.capitalize(Helper.concatName(userInfo))
-                      : item.fullName}
-                  </Text>
-                  {userInfo !== null && (
-                    <View>
-                      <View style={[g.mt2, g.mb2]} />
-                      <Text
-                        style={[g.colordarkGray, g.fs14, g.FHNR, g.txtLeft]}>
-                        Batch {userInfo.batch}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            </View>
-            <View style={[grid.alignItems, grid.justifyContentCenter]}>
-              <GlobalInclude.BaseIcon
-                containerStyle={{height: scale(20), width: scale(20)}}
-                iconColor={isRead ? '#34b7f1' : '#cccccc'}
-                iconName={'checkmark-done-sharp'}
-                iconSize={scale(18)}
-                iconType={IconType[6]}
-              />
-            </View>
-          </View>
-        </View>
-      );
-
-      componentArray.push(component);
-    }
-    return componentArray;
-  };
-
   const showReportedContent = () => {
     let componentArray = [];
 
     reportedMessageData.forEach((item, index) => {
       let isLast = index + 1 === reportedMessageData.length;
       const component = (
-        <View
-          key={index}
-          style={[
-            !isLast && {
-              borderBottomWidth: 1,
-              borderBottomColor: '#ebebe4',
-              paddingBottom: scale(8),
-            },
-          ]}>
+        <View key={index} style={[!isLast && [styles.bottomLine, g.pb7]]}>
           <View style={[grid.rowdir, g.mb5, grid.alignItems]}>
             <View
               style={[
@@ -1188,92 +1194,6 @@ const StartGroupChat = ({route}) => {
     );
   };
 
-  const messageInfoSheet = () => {
-    return (
-      <OptionsSheet
-        ref={messageInfoRef}
-        minClosingHeight={50}
-        height={height / 2 + 150}
-        duration={200}
-        closeOnDragDown={true}
-        customStyles={{
-          container: GlobalInclude.AppStyle.sheetContainer,
-        }}>
-        {selectedChatObject !== null && (
-          <View>
-            <Text style={[g.colordarkGray, g.fs20, g.FHNB]}>Message Info</Text>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {selectedChatObject.readBy &&
-                selectedChatObject.readBy !== undefined &&
-                selectedChatObject.readBy !== null && (
-                  <View>
-                    <View style={[styles.bottomLine, g.ml10, g.mr10]}>
-                      <View
-                        style={[
-                          grid.rowdir,
-                          grid.alignItems,
-                          grid.justifyContentCenter,
-                          g.mb5,
-                          g.mt10,
-                        ]}>
-                        <Text
-                          style={[
-                            g.colordarkGray,
-                            g.fs16,
-                            g.FHNB,
-                            g.txtLeft,
-                            g.txtCenterVertical,
-                            grid.col,
-                          ]}>
-                          Read By
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={[g.mt5, g.mb10, g.pl5, g.pr5]}>
-                      {showReadByUsers(selectedChatObject.readBy, true)}
-                    </View>
-                  </View>
-                )}
-
-              {findDeliveredTo(selectedChatObject.readBy) !== null && (
-                <View>
-                  <View style={[styles.bottomLine, g.ml10, g.mr10]}>
-                    <View
-                      style={[
-                        grid.rowdir,
-                        grid.alignItems,
-                        grid.justifyContentCenter,
-                        g.mb5,
-                        g.mt10,
-                      ]}>
-                      <Text
-                        style={[
-                          g.colordarkGray,
-                          g.fs16,
-                          g.FHNB,
-                          g.txtLeft,
-                          g.txtCenterVertical,
-                          grid.col,
-                        ]}>
-                        Delivered To
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={[g.mt5, g.mb10, g.pl5, g.pr5]}>
-                    {showReadByUsers(
-                      findDeliveredTo(selectedChatObject.readBy),
-                      false,
-                    )}
-                  </View>
-                </View>
-              )}
-            </ScrollView>
-          </View>
-        )}
-      </OptionsSheet>
-    );
-  };
-
   const renderHeader = () => {
     return (
       <View style={headerStyle.headerContainer}>
@@ -1281,13 +1201,14 @@ const StartGroupChat = ({route}) => {
         <View style={headerStyle.container}>
           {showSearch ? (
             <View
-              style={[grid.rowdir, g.bglightGray, {borderRadius: scale(6)}]}>
+              style={[
+                grid.rowdir,
+                g.bglightGray,
+                grid.alignItems,
+                {borderRadius: scale(6)},
+              ]}>
               <GlobalInclude.BaseIcon
-                containerStyle={{
-                  height: scale(24),
-                  width: scale(24),
-                  alignSelf: 'center',
-                }}
+                containerStyle={headerStyle.searchIcon}
                 iconColor={GlobalInclude.Color.ColorPrimary}
                 iconName={'search'}
                 iconSize={scale(24)}
@@ -1303,43 +1224,73 @@ const StartGroupChat = ({route}) => {
                     {borderTopLeftRadius: 0, borderBottomLeftRadius: 0},
                   ]}
                   keyboardType={'default'}
-                  value={inputValue}
-                  multiline={true}
+                  value={filterQuery}
+                  multiline={false}
                   placeholder="Enter text here"
                   onChangeText={input => {
-                    setInputValue(input);
-
-                    if (input.length > 0 && !isStickerShowing) {
-                      isStickerShowing = true;
-                      setEmojiIconWidth(0);
-                      animRef.current.slideOutLeft().then(() => {});
-                    } else if (input.length === 0 && isStickerShowing) {
-                      inEditMode = false;
-                      isStickerShowing = false;
-                      setEmojiIconWidth(scale(40));
-
-                      animRef.current.slideInLeft().then(() => {});
-                    }
+                    fitlerText = input;
+                    setFilterQuery(input);
+                    setIsFiltering(input.length > 0);
                   }}
                   placeholderTextColor={'#b2b2b2'}
                 />
               </View>
-              <TouchableOpacity
-                style={[grid.alignItems, grid.justifyContentCenter]}
-                onPress={() => setShowSearch(false)}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={{
-                    height: scale(24),
-                    width: scale(24),
-                    alignSelf: 'center',
-                    marginEnd: scale(4),
+              {filterQuery.length > 0 ? (
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    setTimeout(() => {
+                      searchfilterObject = {
+                        page: 1,
+                        search: fitlerText,
+                        limit: 10,
+                      };
+                      searchMessageContent();
+                    }, 200);
                   }}
-                  iconColor={GlobalInclude.Color.ColorPrimary}
-                  iconName={'close'}
-                  iconSize={scale(24)}
-                  iconType={IconType[8]}
-                />
-              </TouchableOpacity>
+                  style={[
+                    g.br3,
+                    grid.alignItems,
+                    grid.justifyContentCenter,
+                    g.bgBlue,
+                    g.pl5,
+                    g.pr5,
+                    {height: scale(30)},
+                  ]}>
+                  <Text style={[g.colorWhite, g.FHNM, g.fs16]}>Search</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[grid.alignItems, grid.justifyContentCenter]}
+                  onPress={() => {
+                    fitlerText = '';
+                    setIsFiltering(false);
+                    searchfilterObject = {
+                      page: 1,
+                      search: '',
+                      limit: 10,
+                    };
+                    setIsConnected(true);
+                    setShowSearch(false);
+
+                    if (newMessageList.length > 0) {
+                      newMessageList.forEach(element => {
+                        setMessages(previousMessages =>
+                          append(previousMessages, element),
+                        );
+                      });
+                      newMessageList = [];
+                    }
+                  }}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={headerStyle.closeIcon}
+                    iconColor={GlobalInclude.Color.ColorPrimary}
+                    iconName={'close'}
+                    iconSize={scale(24)}
+                    iconType={IconType[8]}
+                  />
+                </TouchableOpacity>
+              )}
             </View>
           ) : (
             <View style={GlobalInclude.AppStyle.fillRow}>
@@ -1570,36 +1521,40 @@ const StartGroupChat = ({route}) => {
   const showUserPostOptions = () => {
     return (
       <View>
-        <TouchableOpacity
-          onPress={() => {
-            if (
-              chatObjRef.current !== undefined &&
-              chatObjRef.current !== null
-            ) {
-              chatObjRef.current.close();
-            }
-          }}
-          style={[
-            grid.justifyContentCenter,
-            grid.alignItems,
-            g.p15,
-            {
-              borderBottomWidth: 2,
-              borderBottomColor: '#ebebe4',
-            },
-          ]}>
-          <Text
+        {selectedChatObject?.media?.mediaType === '' && (
+          <TouchableOpacity
+            onPress={() => {
+              if (
+                chatObjRef.current !== undefined &&
+                chatObjRef.current !== null
+              ) {
+                chatObjRef.current.close();
+              }
+              inEditMode = true;
+              setInputValue(selectedChatObject?.messageText);
+            }}
             style={[
-              g.fs18,
-              g.FHNM,
-              g.colorBlue,
               grid.justifyContentCenter,
               grid.alignItems,
-              g.txtCenterVertical,
+              g.p15,
+              {
+                borderBottomWidth: 2,
+                borderBottomColor: '#ebebe4',
+              },
             ]}>
-            Remove Message
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={[
+                g.fs18,
+                g.FHNM,
+                g.colorBlue,
+                grid.justifyContentCenter,
+                grid.alignItems,
+                g.txtCenterVertical,
+              ]}>
+              Edit
+            </Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           onPress={() => {
             if (
@@ -1608,15 +1563,6 @@ const StartGroupChat = ({route}) => {
             ) {
               chatObjRef.current.close();
             }
-
-            setTimeout(() => {
-              if (
-                messageInfoRef.current !== undefined &&
-                messageInfoRef.current !== null
-              ) {
-                messageInfoRef.current.open();
-              }
-            }, 220);
           }}
           style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
           <Text
@@ -1628,7 +1574,7 @@ const StartGroupChat = ({route}) => {
               grid.alignItems,
               g.txtCenterVertical,
             ]}>
-            Message Info
+            Remove Message
           </Text>
         </TouchableOpacity>
       </View>
@@ -1848,6 +1794,34 @@ const StartGroupChat = ({route}) => {
               activeBackground={GlobalInclude.Color.ColorPrimary}
             />
           </View>
+        ) : isFiltering ? (
+          <FlatList
+            ref={chatRef}
+            inverted={-1}
+            data={filterMessage}
+            extraData={filterMessage}
+            renderItem={renderChatItem}
+            removeClippedSubviews={Platform.OS !== 'web'}
+            showsVerticalScrollIndicator={false}
+            keyExtractor={keyExtractor}
+            onEndReachedThreshold={0.1}
+            maintainVisibleContentPosition={true}
+            ListEmptyComponent={emptyComponent}
+            scrollEventThrottle={100}
+            bounces={false}
+            initialNumToRender={10}
+            maxToRenderPerBatch={8}
+            updateCellsBatchingPeriod={100}
+            automaticallyAdjustContentInsets={false}
+            initialListSize={5}
+            pageSize={1}
+            contentContainerStyle={{
+              paddingTop: scale(15),
+              paddingBottom: scale(20),
+            }}
+            onScroll={handleOnScroll}
+            onEndReached={onEndReached}
+          />
         ) : (
           <FlatList
             ref={chatRef}
@@ -1878,228 +1852,235 @@ const StartGroupChat = ({route}) => {
           />
         )}
 
-        <KeyboardAvoidingView
-          behavior={Platform.select({android: 'height', ios: 'padding'})}
-          style={{marginBottom: scale(10)}}>
-          {isConnected ? (
-            <View style={styles.footer}>
-              <View
-                style={{
-                  backgroundColor: '#fff',
-                  flexDirection: 'row',
-                  flex: 1,
-                  borderRadius: isReplayEditComment ? scale(10) : scale(30),
-                }}>
+        {!isFiltering && (
+          <KeyboardAvoidingView
+            behavior={Platform.select({android: 'height', ios: 'padding'})}
+            style={{marginBottom: scale(10)}}>
+            {isConnected ? (
+              <View style={styles.footer}>
                 <View
-                  style={[grid.flex1, isReplayEditComment && [g.pt5, g.pb5]]}>
-                  {isReplayEditComment && (
-                    <View style={grid.rowdir}>
-                      <View
-                        style={[
-                          styles.replayContainer,
-                          g.ml10,
-                          g.mr10,
-                          grid.col,
-                        ]}>
+                  style={{
+                    backgroundColor: '#fff',
+                    flexDirection: 'row',
+                    flex: 1,
+                    borderRadius: isReplayEditComment ? scale(10) : scale(30),
+                  }}>
+                  <View
+                    style={[grid.flex1, isReplayEditComment && [g.pt5, g.pb5]]}>
+                    {isReplayEditComment && (
+                      <View style={grid.rowdir}>
                         <View
                           style={[
-                            styles.renderBorder,
-                            {
-                              backgroundColor: GlobalInclude.Color.ColorPrimary,
-                            },
-                          ]}
-                        />
-                        <View style={[g.pl10, g.pt3, g.pr10, g.pb3]}>
-                          <Text
+                            styles.replayContainer,
+                            g.ml10,
+                            g.mr10,
+                            grid.col,
+                          ]}>
+                          <View
                             style={[
-                              g.fs12,
-                              g.FHNB,
-                              g.colorBlue,
-                              grid.justifyContentCenter,
-                              grid.alignItems,
-                              g.txtCenterVertical,
-                              g.mb5,
-                            ]}>
-                            {'Replying To:'}
-                          </Text>
-                          <Text style={[g.fs14, g.FHNB, g.colorBlack]}>
-                            {Helper.capitalize(
-                              selectedChatObject.authorId.name,
-                            )}
-                          </Text>
-                          <View style={[g.mt2, g.mb2]} />
-                          {/* <Text
-                            numberOfLines={1}
-                            style={[g.fs12, g.FHNR, g.colorBlack]}>
-                            {selectedChatObject.messageType === 1
-                              ? selectedChatObject.message
-                              : showMediaType(selectedChatObject.messageType)}
-                          </Text> */}
+                              styles.renderBorder,
+                              {
+                                backgroundColor:
+                                  GlobalInclude.Color.ColorPrimary,
+                              },
+                            ]}
+                          />
+                          <View style={[g.pl10, g.pt3, g.pr10, g.pb3]}>
+                            <Text
+                              style={[
+                                g.fs12,
+                                g.FHNB,
+                                g.colorBlue,
+                                grid.justifyContentCenter,
+                                grid.alignItems,
+                                g.txtCenterVertical,
+                                g.mb5,
+                              ]}>
+                              {'Replying To:'}
+                            </Text>
+                            <Text style={[g.fs14, g.FHNB, g.colorBlack]}>
+                              {Helper.capitalize(
+                                selectedChatObject.authorId.name,
+                              )}
+                            </Text>
+                            <View style={[g.mt2, g.mb2]} />
+                            <Text
+                              numberOfLines={1}
+                              style={[g.fs12, g.FHNR, g.colorBlack]}>
+                              {selectedChatObject.media.mediaType === 1
+                                ? selectedChatObject.message
+                                : selectedChatObject.media.mediaType}
+                            </Text>
+                          </View>
                         </View>
-                      </View>
-                      {/* <View style={[g.mt2, g.mr5]}>
-                        {showImageThumb(
-                          selectedChatObject.media,
-                          selectedChatObject.messageType,
-                        )}
-                      </View> */}
+                        <View style={[g.mt2, g.mr5]}>
+                          {showImageThumb(
+                            selectedChatObject.media.mediaUrl,
+                            selectedChatObject.media.mediaType === 'IMAGE'
+                              ? 2
+                              : selectedChatObject.media.mediaType === 'VIDEO'
+                              ? 3
+                              : 4,
+                          )}
+                        </View>
 
-                      {/* part two */}
-                      <TouchableOpacity
-                        onPress={() => {
-                          setIsReplayEditComment(false);
-                          setSelectedChatObject(null);
-                        }}
-                        style={styles.closeComment}>
-                        <GlobalInclude.BaseIcon
-                          containerStyle={{
-                            height: scale(14),
-                            width: scale(14),
+                        {/* part two */}
+                        <TouchableOpacity
+                          onPress={() => {
+                            setIsReplayEditComment(false);
+                            setSelectedChatObject(null);
                           }}
-                          iconColor={'#fff'}
-                          iconName={'close'}
-                          iconSize={scale(14)}
-                          iconType={IconType[6]}
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  )}
+                          style={styles.closeComment}>
+                          <GlobalInclude.BaseIcon
+                            containerStyle={{
+                              height: scale(14),
+                              width: scale(14),
+                            }}
+                            iconColor={'#fff'}
+                            iconName={'close'}
+                            iconSize={scale(14)}
+                            iconType={IconType[6]}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    )}
 
-                  {/* row two */}
-                  <View style={[grid.rowdir]}>
-                    <Animatable.View
-                      ref={animRef}
-                      useNativeDriver={true}
-                      style={{
-                        width: emojiIconWidth,
-                        height: scale(40),
-                        borderRadius: scale(10),
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        alignSelf: 'center',
-                      }}
-                      easing={'linear'}>
+                    {/* row two */}
+                    <View style={[grid.rowdir]}>
+                      <Animatable.View
+                        ref={animRef}
+                        useNativeDriver={true}
+                        style={{
+                          width: emojiIconWidth,
+                          height: scale(40),
+                          borderRadius: scale(10),
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          alignSelf: 'center',
+                        }}
+                        easing={'linear'}>
+                        <TouchableOpacity
+                          onPress={() => {
+                            if (emojiRef !== undefined && emojiRef !== null) {
+                              emojiRef.current.open();
+                            }
+                          }}
+                          style={[styles.commentButton]}>
+                          <GlobalInclude.BaseIcon
+                            containerStyle={{
+                              height: scale(20),
+                              width: scale(20),
+                            }}
+                            iconColor={GlobalInclude.Color.ColorPrimary}
+                            iconName={'sticker-emoji'}
+                            iconSize={scale(20)}
+                            iconType={IconType[1]}
+                          />
+                        </TouchableOpacity>
+                      </Animatable.View>
+                      <TextInput
+                        autoCapitalize={'sentences'}
+                        underlineColorAndroid="transparent"
+                        style={[styles.inputContainer, styles.inputView]}
+                        keyboardType={'default'}
+                        value={inputValue}
+                        multiline={true}
+                        placeholder="Enter text here"
+                        onChangeText={input => {
+                          setInputValue(input);
+
+                          if (input.length > 0 && !isStickerShowing) {
+                            isStickerShowing = true;
+                            setEmojiIconWidth(0);
+                            animRef.current.slideOutLeft().then(() => {});
+                          } else if (input.length === 0 && isStickerShowing) {
+                            inEditMode = false;
+                            isStickerShowing = false;
+                            setEmojiIconWidth(scale(40));
+                            animRef.current.slideInLeft().then(() => {});
+                          }
+                        }}
+                        placeholderTextColor={'#b2b2b2'}
+                      />
                       <TouchableOpacity
                         onPress={() => {
-                          if (emojiRef !== undefined && emojiRef !== null) {
-                            emojiRef.current.open();
+                          if (uploadRef.current !== null) {
+                            isOpenPicker = true;
+                            uploadRef.current.open();
                           }
                         }}
                         style={[styles.commentButton]}>
                         <GlobalInclude.BaseIcon
-                          containerStyle={{
-                            height: scale(20),
-                            width: scale(20),
-                          }}
+                          containerStyle={{height: scale(20), width: scale(20)}}
                           iconColor={GlobalInclude.Color.ColorPrimary}
-                          iconName={'sticker-emoji'}
+                          iconName={'attach-file'}
                           iconSize={scale(20)}
-                          iconType={IconType[1]}
+                          iconType={IconType[0]}
                         />
                       </TouchableOpacity>
-                    </Animatable.View>
-                    <TextInput
-                      autoCapitalize={'sentences'}
-                      underlineColorAndroid="transparent"
-                      style={[styles.inputContainer, styles.inputView]}
-                      keyboardType={'default'}
-                      value={inputValue}
-                      multiline={true}
-                      placeholder="Enter text here"
-                      onChangeText={input => {
-                        setInputValue(input);
-
-                        if (input.length > 0 && !isStickerShowing) {
-                          isStickerShowing = true;
-                          setEmojiIconWidth(0);
-                          animRef.current.slideOutLeft().then(() => {});
-                        } else if (input.length === 0 && isStickerShowing) {
-                          inEditMode = false;
-                          isStickerShowing = false;
-                          setEmojiIconWidth(scale(40));
-                          animRef.current.slideInLeft().then(() => {});
-                        }
-                      }}
-                      placeholderTextColor={'#b2b2b2'}
-                    />
-                    <TouchableOpacity
-                      onPress={() => {
-                        if (uploadRef.current !== null) {
-                          isOpenPicker = true;
-                          uploadRef.current.open();
-                        }
-                      }}
-                      style={[styles.commentButton]}>
-                      <GlobalInclude.BaseIcon
-                        containerStyle={{height: scale(20), width: scale(20)}}
-                        iconColor={GlobalInclude.Color.ColorPrimary}
-                        iconName={'attach-file'}
-                        iconSize={scale(20)}
-                        iconType={IconType[0]}
-                      />
-                    </TouchableOpacity>
+                    </View>
+                    {/* row two */}
                   </View>
-                  {/* row two */}
+                </View>
+                {inputValue.trim().length > 0 && (
+                  <Animatable.View
+                    useNativeDriver={true}
+                    animation={'slideInRight'}
+                    style={[
+                      g.ml5,
+                      styles.commentButton,
+                      inputValue.trim().length > 0
+                        ? styles.enableButton
+                        : styles.disbleButton,
+                    ]}>
+                    <TouchableOpacity
+                      style={[styles.commentButton, styles.enableButton]}
+                      onPress={() => {
+                        handleInputChat(1, inputValue, '', '', '');
+                      }}>
+                      {isSending ? (
+                        <ActivityIndicator size={'small'} color={'#fff'} />
+                      ) : (
+                        <GlobalInclude.BaseIcon
+                          containerStyle={{height: scale(20), width: scale(20)}}
+                          iconColor={
+                            inputValue.trim().length > 0 ? '#fff' : '#b2b2b2'
+                          }
+                          iconName={'send-o'}
+                          iconSize={scale(20)}
+                          iconType={IconType[4]}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  </Animatable.View>
+                )}
+              </View>
+            ) : (
+              <View style={styles.footer}>
+                <View
+                  style={[
+                    styles.whiteCurvedBox,
+                    g.p10,
+                    grid.alignItems,
+                    grid.justifyContentCenter,
+                    g.ml15,
+                    g.mr15,
+                  ]}>
+                  <Text
+                    style={[
+                      g.colorBlue,
+                      g.fs12,
+                      g.FHNR,
+                      g.txtCenter,
+                      g.txtCenterVertical,
+                    ]}>
+                    {blockMsg === '' ? 'Connecting...' : blockMsg}
+                  </Text>
                 </View>
               </View>
-              {inputValue.trim().length > 0 && (
-                <Animatable.View
-                  useNativeDriver={true}
-                  animation={'slideInRight'}
-                  style={[
-                    g.ml5,
-                    styles.commentButton,
-                    inputValue.trim().length > 0
-                      ? styles.enableButton
-                      : styles.disbleButton,
-                  ]}>
-                  <TouchableOpacity
-                    style={[styles.commentButton, styles.enableButton]}
-                    onPress={() => {
-                      handleInputChat(1, inputValue, '', '', '');
-                    }}>
-                    {isSending ? (
-                      <ActivityIndicator size={'small'} color={'#fff'} />
-                    ) : (
-                      <GlobalInclude.BaseIcon
-                        containerStyle={{height: scale(20), width: scale(20)}}
-                        iconColor={
-                          inputValue.trim().length > 0 ? '#fff' : '#b2b2b2'
-                        }
-                        iconName={'send-o'}
-                        iconSize={scale(20)}
-                        iconType={IconType[4]}
-                      />
-                    )}
-                  </TouchableOpacity>
-                </Animatable.View>
-              )}
-            </View>
-          ) : (
-            <View style={styles.footer}>
-              <View
-                style={[
-                  styles.whiteCurvedBox,
-                  g.p10,
-                  grid.alignItems,
-                  grid.justifyContentCenter,
-                  g.ml15,
-                  g.mr15,
-                ]}>
-                <Text
-                  style={[
-                    g.colorBlue,
-                    g.fs12,
-                    g.FHNR,
-                    g.txtCenter,
-                    g.txtCenterVertical,
-                  ]}>
-                  {blockMsg === '' ? 'Connecting...' : blockMsg}
-                </Text>
-              </View>
-            </View>
-          )}
-        </KeyboardAvoidingView>
+            )}
+          </KeyboardAvoidingView>
+        )}
       </View>
       <UploadMedia
         hideTagInVideo={true}
@@ -2175,7 +2156,7 @@ const StartGroupChat = ({route}) => {
       />
       {emojiList()}
       {chatOptions()}
-      {messageInfoSheet()}
+
       {reportUserMessage()}
       {showReportedInfo()}
 
@@ -2360,6 +2341,17 @@ const styles = StyleSheet.create({
 });
 
 const headerStyle = StyleSheet.create({
+  searchIcon: {
+    height: scale(24),
+    width: scale(24),
+    alignSelf: 'center',
+  },
+  closeIcon: {
+    height: scale(24),
+    width: scale(24),
+    alignSelf: 'center',
+    marginRight: scale(5),
+  },
   container: {
     flexDirection: 'row',
     height: scale(50),

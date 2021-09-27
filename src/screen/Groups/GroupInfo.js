@@ -33,6 +33,7 @@ import ScrollableTabView, {
   ScrollableTabBar,
 } from 'react-native-scrollable-tab-view';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {CommonActions} from '@react-navigation/native';
 
 import GroupMembers from './GroupMembers';
 import PendingRequests from './PendingRequests';
@@ -45,19 +46,22 @@ import {
   doUpdateGroup,
 } from '../../Actions/GroupActions';
 
+import io from 'socket.io-client';
+
 const {width, height} = Dimensions.get('window');
 
 let groupId = '';
 let responseMessage = '';
 let selectedUser = null;
 let mode = 1;
-let isAdminUser = false;
 let isSuccess = false;
+let isUserConnected = false;
 
 const GroupInfo = ({route, navigation}) => {
   const userInfoRef = useRef();
   const uploadRef = useRef();
   const groupTitleRef = useRef();
+  const socketRef = useRef();
 
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -93,6 +97,7 @@ const GroupInfo = ({route, navigation}) => {
             if (data.status) {
               let group = data.data;
               if (group && group !== undefined && group !== null) {
+                connectSocket();
                 setMediaData(group.profilePicture);
                 setAboutGroup(group.description);
                 setGroupData(group);
@@ -106,7 +111,70 @@ const GroupInfo = ({route, navigation}) => {
         setIsLoading(false);
       },
     );
+  }, [connectSocket]);
+
+  const connectSocket = useCallback(() => {
+    console.log('====================================');
+    console.log('202-event');
+    console.log('====================================');
+
+    socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
+      reconnectionAttempts: 2,
+    });
+
+    socketRef.current.on('connect', () => {
+      if (socketRef.current.connected) {
+        isUserConnected = true;
+      }
+    });
+    socketRef.current.on('error', attempt => {
+      isUserConnected = false;
+      console.log('====================================');
+      console.log('errror', attempt);
+      console.log('====================================');
+    });
+
+    socketRef.current.on('disconnect', () => {
+      isUserConnected = false;
+      console.log('socket disconnected'); // undefined
+    });
+
+    /********************
+     * Specific Events
+     */
   }, []);
+
+  const emitAdminEvent = (userId, eventName) => {
+    if (
+      socketRef.current !== undefined &&
+      socketRef.current !== null &&
+      isUserConnected
+    ) {
+      let payload = {
+        groupId: groupId,
+        userId: userId,
+      };
+
+      console.log('payload', payload);
+      socketRef.current.emit(eventName, payload);
+    }
+  };
+
+  const emitRemoveUserEvent = userId => {
+    if (
+      socketRef.current !== undefined &&
+      socketRef.current !== null &&
+      isUserConnected
+    ) {
+      let payload = {
+        groupId: groupId,
+        userId: userId,
+      };
+
+      console.log('payload', payload);
+      socketRef.current.emit('remove-user', payload);
+    }
+  };
 
   const updateUserRequest = () => {
     setIsLoading(true);
@@ -149,7 +217,7 @@ const GroupInfo = ({route, navigation}) => {
     );
   };
 
-  const removeUser = () => {
+  const removeUser = moveHome => {
     setIsLoading(true);
     doExitFromGroup(
       groupId,
@@ -164,12 +232,23 @@ const GroupInfo = ({route, navigation}) => {
             let data = response.data;
 
             if (data.status) {
+              emitRemoveUserEvent(selectedUser._id);
               isSuccess = true;
               responseMessage = 'Group information was successfully updated.';
               setShowErrorMessage(true);
               setTimeout(() => {
                 setShowErrorMessage(false);
-                getGroupData();
+
+                if (moveHome) {
+                  navigation.dispatch(
+                    CommonActions.reset({
+                      index: 0,
+                      routes: [{name: 'Dashboard'}],
+                    }),
+                  );
+                } else {
+                  getGroupData();
+                }
               }, 2500);
             }
             console.log('====================================');
@@ -204,6 +283,14 @@ const GroupInfo = ({route, navigation}) => {
             let data = response.data;
 
             if (data.status) {
+              //made admin
+              emitAdminEvent(selectedUserInfo._id, 'make-admin');
+              if (mode === 1) {
+              } else {
+                emitAdminEvent(selectedUserInfo._id, 'remove-admin');
+                //remove admin
+              }
+
               isSuccess = true;
               responseMessage =
                 'Group admin information was successfully updated.';
@@ -365,7 +452,7 @@ const GroupInfo = ({route, navigation}) => {
                 )} from group?`,
                 () => {
                   selectedUser = selectedUserInfo;
-                  removeUser();
+                  removeUser(false);
                 },
               );
             })}
@@ -541,7 +628,6 @@ const GroupInfo = ({route, navigation}) => {
                 onTap={(item, selectedMode) => {
                   selectedUser = item;
                   mode = selectedMode;
-
                   removeIndex(
                     mode === 1
                       ? 'Are you sure you want to accept it?'
@@ -573,7 +659,7 @@ const GroupInfo = ({route, navigation}) => {
                         }
                       }
 
-                      removeUser();
+                      removeUser(true);
                     },
                   );
                 }}

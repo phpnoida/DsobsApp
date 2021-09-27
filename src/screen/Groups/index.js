@@ -4,16 +4,11 @@ import {
   StyleSheet,
   SafeAreaView,
   ActivityIndicator,
-  TouchableOpacity,
   Text,
-  Platform,
   Dimensions,
   TextInput,
   Keyboard,
-  Animated,
-  Modal,
   Alert,
-  ScrollView,
 } from 'react-native';
 
 import OptionsSheet from 'react-native-raw-bottom-sheet';
@@ -27,7 +22,6 @@ import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
 
-import Helpers from '../../helper/Helper';
 import {IconType, APP_NAME} from '../../helper/Constants';
 
 import {
@@ -43,27 +37,30 @@ import SingleSearchWithFilter from '../../component/SingleSearchWithFilter';
 import MyGroups from './MyGroups';
 import DiscoverGroups from './DiscoverGroups';
 import BatchGroups from './BatchGroups';
-import {doJoinGroup, doCreateGroup} from '../../Actions/GroupActions';
+import {
+  doJoinGroup,
+  doCreateGroup,
+  doGetUserStatusForGroup,
+} from '../../Actions/GroupActions';
 import {useDispatch} from 'react-redux';
 import {refreshScreen} from '../../reducer/GroupReducer';
 
 let responseMessage = '';
 let isSuccess = false;
 let initialPage = 0;
+let seletedItem = null;
 
-const {height, width} = Dimensions.get('window');
+const {height} = Dimensions.get('window');
 
 const GroupsList = ({route, navigation}) => {
   const refOptions = useRef();
   const refJoinGroup = useRef();
-  const discoverRef = useRef();
   const createGroupRef = useRef();
   const uploadRef = useRef();
 
   const tabRef = useRef();
   const dispatch = useDispatch();
 
-  const [firstTimeLoad, setFirstTimeLoad] = useState(false);
   const [filterQuery, setFilterQuery] = useState('');
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
@@ -139,6 +136,63 @@ const GroupsList = ({route, navigation}) => {
         console.log('error: ' + error);
         console.log('code: ' + code);
         global.loader_ref.show_loader(0);
+      },
+    );
+  };
+
+  const getUserStatus = groupId => {
+    global.loader_ref.show_loader(1);
+    doGetUserStatusForGroup(
+      groupId,
+      response => {
+        global.loader_ref.show_loader(0);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data && data !== null && data !== undefined) {
+              if (data.status) {
+                //{"status": true, "userStatus": 1}
+                let userStatus = data.userStatus;
+                /*
+                      -1 = unjoin
+                      0 = pending
+                      1 = active
+                      2 = rejected
+                      3 = removed
+                    */
+                if (userStatus === 1) {
+                  navigation.navigate('StartGroupChat', {
+                    groupId: seletedItem._id,
+                    groupInfo: seletedItem,
+                  });
+                } else {
+                  setSelectedGroup(seletedItem);
+                  if (
+                    refJoinGroup.current !== undefined &&
+                    refJoinGroup.current !== null
+                  ) {
+                    refJoinGroup.current.open();
+                  }
+                }
+              }
+            }
+            console.log('====================================');
+            console.log('user status', data);
+            console.log('====================================');
+          }
+        }
+      },
+      (code, error) => {
+        global.loader_ref.show_loader(0);
+        Alert.alert('something wrong', error);
+        console.log('====================================');
+        console.log('code ,error', code, error);
+        console.log('====================================');
       },
     );
   };
@@ -476,101 +530,60 @@ const GroupsList = ({route, navigation}) => {
 
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={[GlobalInclude.AppStyle.fill]}>
-          {firstTimeLoad ? (
-            <View style={GlobalInclude.AppStyle.fillCenter}>
-              <ActivityIndicator
-                size={'large'}
-                color={GlobalInclude.Color.ColorPrimary}
+          <View style={[GlobalInclude.AppStyle.fill, g.pt10]}>
+            <View style={GlobalInclude.AppStyle.contentSpaceHorizonta}>
+              <SingleSearchWithFilter
+                placeholder={'Type more than three Characters'}
+                filterQuery={filterQuery}
+                changeText={text => {
+                  setFilterQuery(text);
+                }}
+                showGoButton={false}
+                onFilterPress={() => {}}
+                hideFilter={true}
               />
             </View>
-          ) : (
-            <View style={[GlobalInclude.AppStyle.fill, g.pt10]}>
-              <View style={GlobalInclude.AppStyle.contentSpaceHorizonta}>
-                <SingleSearchWithFilter
-                  placeholder={'Type more than three Characters'}
-                  filterQuery={filterQuery}
-                  changeText={text => {
-                    setFilterQuery(text);
-                  }}
-                  showGoButton={false}
-                  onFilterPress={() => {}}
-                  hideFilter={true}
-                />
-              </View>
 
-              <ScrollableTabView
-                ref={tabRef}
-                underlineColor={'#ffffff'}
-                initialPage={initialPage}
-                tabBarActiveTextColor={GlobalInclude.Color.ColorPrimary}
-                tabBarInactiveTextColor={'#bababa'}
-                tabBarTextStyle={{
-                  fontSize: scale(15),
-                  fontFamily: 'Lato-Regular',
-                  margin: -5,
+            <ScrollableTabView
+              ref={tabRef}
+              underlineColor={'#ffffff'}
+              initialPage={initialPage}
+              tabBarActiveTextColor={GlobalInclude.Color.ColorPrimary}
+              tabBarInactiveTextColor={'#bababa'}
+              tabBarTextStyle={{
+                fontSize: scale(15),
+                fontFamily: 'Lato-Regular',
+                margin: -5,
+              }}
+              onChangeTab={e => {
+                setCurrentTab(e.i);
+              }}
+              tabBarUnderlineStyle={styles.tabBarUnderlineStyle}
+              renderTabBar={() => (
+                <ScrollableTabBar style={styles.tabBarStyle} />
+              )}>
+              <MyGroups
+                isActive={currentTab === 1}
+                tabLabel={'My Groups'}
+                onTap={(item, index) => {
+                  seletedItem = item;
+                  getUserStatus(item._id);
                 }}
-                onChangeTab={e => {
-                  setCurrentTab(e.i);
+              />
+              <DiscoverGroups
+                isActive={currentTab === 2}
+                tabLabel={'Discover More'}
+                onTap={(item, index) => {
+                  seletedItem = item;
+                  getUserStatus(item._id);
                 }}
-                tabBarUnderlineStyle={styles.tabBarUnderlineStyle}
-                renderTabBar={() => (
-                  <ScrollableTabBar style={styles.tabBarStyle} />
-                )}>
-                <MyGroups
-                  isActive={currentTab === 1}
-                  tabLabel={'My Groups'}
-                  onTap={(item, index) => {
-                    if (item.status === 1) {
-                      navigation.navigate('StartGroupChat', {
-                        groupId: item._id,
-                        groupInfo: item,
-                      });
-                    } else {
-                      setSelectedGroup(item);
-                      if (
-                        refJoinGroup.current !== undefined &&
-                        refJoinGroup.current !== null
-                      ) {
-                        refJoinGroup.current.open();
-                      }
-                    }
-                  }}
-                />
-                <DiscoverGroups
-                  isActive={currentTab === 2}
-                  tabLabel={'Discover More'}
-                  onTap={(item, index) => {
-                    /*
-                      -1 = unjoin
-                      0 = pending
-                      1 = active
-                      2 = rejected
-                      3 = removed
-                    */
-
-                    if (item.status === 1) {
-                      navigation.navigate('StartGroupChat', {
-                        groupId: item._id,
-                        groupInfo: item,
-                      });
-                    } else {
-                      setSelectedGroup(item);
-                      if (
-                        refJoinGroup.current !== undefined &&
-                        refJoinGroup.current !== null
-                      ) {
-                        refJoinGroup.current.open();
-                      }
-                    }
-                  }}
-                />
-                <BatchGroups
-                  isActive={currentTab === 3}
-                  tabLabel={'Batch Groups'}
-                />
-              </ScrollableTabView>
-            </View>
-          )}
+              />
+              <BatchGroups
+                isActive={currentTab === 3}
+                tabLabel={'Batch Groups'}
+              />
+            </ScrollableTabView>
+          </View>
         </View>
         {userOptions()}
         {createNewGroup()}

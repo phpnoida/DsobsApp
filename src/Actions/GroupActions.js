@@ -55,6 +55,19 @@ export function doGetGroups(callback, errCallback) {
   };
 }
 
+export function doGetUserStatusForGroup(groupId, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}group/user-status-for-group/${groupId}`;
+  const request = axios
+    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .then(res => callback(res))
+    .catch(err => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
 export function doGetDiscoverGroups(callback, errCallback) {
   let requestPath = `${SERVER_PATH}group/discover-group`;
 
@@ -188,9 +201,11 @@ export function doUpdateGroupAdmin(
 
 export function doGetGroupMessages(params, groupId, callback, errCallback) {
   let requestPath = `${SERVER_PATH}chat/get-messages/${groupId}`;
+  // console.log('requestPath', requestPath);
   const request = axios
     .get(requestPath, {
       headers: {Authorization: global.accessToken},
+      params: params,
     })
     .then(res => callback(res))
     .catch(err => {
@@ -248,8 +263,6 @@ export function doHideMessage(groupId, messageId, callback, errCallback) {
   };
 }
 
-////{{local}}/
-
 export function doGetReportedMessageInfo(
   groupId,
   messageId,
@@ -262,6 +275,23 @@ export function doGetReportedMessageInfo(
   const request = axios
     .get(requestPath, {
       headers: {Authorization: global.accessToken},
+    })
+    .then(res => callback(res))
+    .catch(err => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function doSearchMessage(groupId, filterParams, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}chat/message/${groupId}`;
+  //console.log('requestPath', requestPath, filterParams);
+  const request = axios
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
+      params: filterParams,
     })
     .then(res => callback(res))
     .catch(err => {

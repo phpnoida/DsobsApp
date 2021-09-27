@@ -89,10 +89,6 @@ const MyGroups = ({content, isActive, onTap}) => {
       ) {
         let data = response.data;
 
-        console.log('====================================');
-        console.log('data', JSON.stringify(data));
-        console.log('====================================');
-
         if (data.status) {
           setPostData([...data.groups]);
           setPaginationStatus(PaginationStatus.waiting);

@@ -46,34 +46,37 @@ class GroupChatItem extends PureComponent {
     const {customFont, previousMessage, onTapUserName} = this.props;
 
     return (
-      <View style={grid.col}>
+      <View style={grid.flex1}>
         {currentMessage.isReported && this.renderReported()}
-        <View style={[g.bgWhite, styles.bubbleLeft, g.p5]}>
-          <View style={[grid.row, g.mt3, g.mb2]}>
-            <View style={[grid.col]}>
-              {!this.isSameUser(currentMessage, previousMessage) && (
-                <TouchableOpacity
-                  hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
-                  onPress={() => {
-                    onTapUserName();
-                  }}>
-                  <Text numberOfLines={1} style={[customFont, g.FHNB]}>
-                    {currentMessage.authorId.name}
-                  </Text>
-                </TouchableOpacity>
-              )}
+
+        <View style={[grid.row]}>
+          <View style={[grid.col, g.bgWhite, styles.bubbleLeft, g.p5]}>
+            <View style={[grid.row, g.mt3, g.mb2]}>
+              <View style={[grid.col]}>
+                {!this.isSameUser(currentMessage, previousMessage) && (
+                  <TouchableOpacity
+                    hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
+                    onPress={() => {
+                      onTapUserName();
+                    }}>
+                    <Text numberOfLines={1} style={[customFont, g.FHNB]}>
+                      {currentMessage.authorId.name}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              <View style={[g.mr5, grid.justifyContentCenter, grid.alignItems]}>
+                {this.renderDateComponent(currentMessage, true)}
+              </View>
             </View>
-            <View style={[g.mr5, grid.justifyContentCenter, grid.alignItems]}>
-              {this.renderDateComponent(currentMessage, true)}
+            <View style={[g.mt5, g.mb5]}>
+              {this.renderItem(currentMessage, true)}
             </View>
           </View>
-          <View style={[g.mt5, g.mb5]}>
-            {this.renderItem(currentMessage, true)}
-          </View>
+          {currentMessage.isEdited &&
+            !currentMessage.delete &&
+            this.renderEditView()}
         </View>
-        {currentMessage.isEdited &&
-          !currentMessage.delete &&
-          this.renderEditView()}
       </View>
     );
   }
@@ -82,35 +85,37 @@ class GroupChatItem extends PureComponent {
     const {customFont, previousMessage, onTapUserName} = this.props;
 
     return (
-      <View style={grid.col}>
-        {currentMessage.isEdited &&
-          !currentMessage.delete &&
-          this.renderEditView()}
+      <View style={grid.flex1}>
         {currentMessage.isReported && this.renderReported()}
-        <View style={[g.bgGreenLight, styles.bubbleRight, g.p5]}>
-          <View style={[grid.row, g.mt3, g.mb2]}>
-            <View style={[grid.col]}>
-              {!this.isSameUser(currentMessage, previousMessage) && (
-                <TouchableOpacity
-                  hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
-                  onPress={() => {
-                    onTapUserName();
-                  }}>
-                  <Text
-                    numberOfLines={1}
-                    style={[customFont, g.FHNB, g.colorBlack]}>
-                    {currentMessage.authorId.name}
-                  </Text>
-                </TouchableOpacity>
-              )}
+        <View style={[grid.row]}>
+          {currentMessage.isEdited &&
+            !currentMessage.delete &&
+            this.renderEditView()}
+          <View style={[grid.col, g.bgGreenLight, styles.bubbleRight, g.p5]}>
+            <View style={[grid.row, g.mt3, g.mb2]}>
+              <View style={[grid.col]}>
+                {!this.isSameUser(currentMessage, previousMessage) && (
+                  <TouchableOpacity
+                    hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
+                    onPress={() => {
+                      onTapUserName();
+                    }}>
+                    <Text
+                      numberOfLines={1}
+                      style={[customFont, g.FHNB, g.colorBlack]}>
+                      {currentMessage.authorId.name}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              <View style={[g.mr5, grid.justifyContentCenter, grid.alignItems]}>
+                {this.renderDateComponent(currentMessage, false)}
+              </View>
             </View>
-            <View style={[g.mr5, grid.justifyContentCenter, grid.alignItems]}>
-              {this.renderDateComponent(currentMessage, false)}
-            </View>
-          </View>
 
-          <View style={[g.mt5, g.mb5]}>
-            {this.renderItem(currentMessage, false)}
+            <View style={[g.mt5, g.mb5]}>
+              {this.renderItem(currentMessage, false)}
+            </View>
           </View>
         </View>
       </View>
@@ -155,6 +160,11 @@ class GroupChatItem extends PureComponent {
 
     return (
       <View>
+        {currentMessage.parentMessageId !== undefined &&
+          currentMessage.parentMessageId !== null &&
+          Object.keys(currentMessage.parentMessageId).length > 0 &&
+          this.renderReplyMessage(currentMessage, isLeft)}
+
         {currentMessage.isHidden ? (
           <View>{this.renderRemovedMsg(isLeft)}</View>
         ) : (
@@ -252,6 +262,7 @@ class GroupChatItem extends PureComponent {
   }
 
   renderReplyMessage(currentMessage, isLeft) {
+    let parentMessage = currentMessage.parentMessageId;
     const {customFont} = this.props;
     return (
       <View style={[styles.replayContainer, grid.col]}>
@@ -267,7 +278,7 @@ class GroupChatItem extends PureComponent {
           style={[
             g.mt5,
             g.mb5,
-            {marginRight: currentMessage.messageType === 1 ? 0 : scale(52)},
+            {marginRight: parentMessage.messageType === 1 ? 0 : scale(52)},
           ]}>
           <Text
             style={[
@@ -277,17 +288,17 @@ class GroupChatItem extends PureComponent {
               g.p3,
               GlobalInclude.AppStyle.transform,
             ]}>
-            {currentMessage.replay.user._id === global.userId &&
-            currentMessage.user._id === global.userId
+            {parentMessage.authorId._id === global.userId &&
+            currentMessage.authorId._id === global.userId
               ? 'You'
-              : Helper.concatName(currentMessage.replay.user)}
+              : parentMessage.authorId.name}
           </Text>
           <Text
             numberOfLines={2}
             style={[customFont, g.FHNR, g.colorBlack, g.p3]}>
-            {currentMessage.messageType === 1
-              ? currentMessage.message
-              : showMediaType(currentMessage.messageType)}
+            {currentMessage.media.mediaType === ''
+              ? currentMessage.messageText
+              : currentMessage.media.mediaType}
           </Text>
         </View>
         <View
@@ -299,7 +310,14 @@ class GroupChatItem extends PureComponent {
             top: 0,
             justifyContent: 'center',
           }}>
-          {showImageThumb(currentMessage.media, currentMessage.messageType)}
+          {showImageThumb(
+            currentMessage.media.mediaUrl,
+            currentMessage.media.mediaType === 'IMAGE'
+              ? 2
+              : currentMessage.media.mediaType === 'VIDEO'
+              ? 3
+              : 4,
+          )}
         </View>
       </View>
     );

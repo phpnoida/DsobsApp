@@ -41,9 +41,7 @@ const GroupMembers = ({groupData, onTap}) => {
     let componentArray = [];
     for (let i = 0; i < userTag.length; i++) {
       let item = userTag[i];
-      console.log('====================================');
-      console.log('item', item);
-      console.log('====================================');
+
       const component = (
         <View
           style={[
