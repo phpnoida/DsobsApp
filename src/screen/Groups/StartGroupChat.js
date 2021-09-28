@@ -55,6 +55,7 @@ import {
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import io from 'socket.io-client';
 import moment from 'moment';
+import _ from 'lodash';
 
 const {height, width} = Dimensions.get('window');
 
@@ -281,46 +282,27 @@ const StartGroupChat = ({route}) => {
     socketRef.current.on('get-message', event => {
       if (event && event !== null && event !== undefined) {
         let message = event.message;
+        let author = message.authorId;
+        // console.log('====================================');
+        // console.log('get-message', message);
+        // console.log('====================================');
 
-        console.log('====================================');
-        console.log('get-message', message);
-        console.log('====================================');
-
-        if (isFiltering) {
-          newMessageList.push(message);
-        } else {
-          let author = message.authorId;
-          if (author._id !== global.userId) {
-            if (showScrollToBottom) {
-              bottomUnread = bottomUnread + 1;
-              setBottomMessages(bottomUnread);
+        if (author._id !== global.userId) {
+          if (isFiltering) {
+            newMessageList.push(message);
+          } else {
+            if (author._id !== global.userId) {
+              readMessage(message._id);
+              if (showScrollToBottom) {
+                bottomUnread = bottomUnread + 1;
+                setBottomMessages(bottomUnread);
+              }
+              setMessages(previousMessages =>
+                append(previousMessages, message),
+              );
             }
-            setMessages(previousMessages => append(previousMessages, message));
           }
         }
-      }
-    });
-
-    socketRef.current.on('get-edited-message', event => {
-      if (event && event !== null && event !== undefined) {
-        let message = event.message;
-        let author = message.authorId;
-
-        console.log('====================================');
-        console.log('edited', message);
-        console.log('====================================');
-
-        // if (isFiltering) {
-        //   newMessageList.push(message);
-        // } else {
-        //   if (author._id !== global.userId) {
-        //     if (showScrollToBottom) {
-        //       bottomUnread = bottomUnread + 1;
-        //       setBottomMessages(bottomUnread);
-        //     }
-        //     setMessages(previousMessages => append(previousMessages, message));
-        //   }
-        // }
       }
     });
 
@@ -342,6 +324,11 @@ const StartGroupChat = ({route}) => {
     });
 
     socketRef.current.on('removed-admin', event => {
+      if (event && event !== null && event !== undefined) {
+      }
+    });
+
+    socketRef.current.on('removed-user', event => {
       if (event && event !== null && event !== undefined) {
         if (
           event.userId &&
@@ -374,6 +361,44 @@ const StartGroupChat = ({route}) => {
     return () => {};
   }, [showScrollToBottom, disconnectUser, isFiltering]);
 
+  useEffect(() => {
+    socketRef.current.on('get-edited-message', event => {
+      if (event && event !== null && event !== undefined) {
+        let message = event.message;
+        let _id = message._id;
+        // console.log('====================================');
+        // console.log('edited', message);
+        // console.log('====================================');
+
+        let oldData = messages;
+        var index = oldData.findIndex(x => x._id === _id);
+
+        console.log('====================================');
+        console.log('index', index);
+        console.log('====================================');
+
+        if (index > -1) {
+          oldData[index] = message;
+          setMessages([...oldData]);
+        }
+      }
+    });
+    return () => {};
+  }, [messages]);
+
+  const readMessage = useCallback(messageId => {
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      let payload = {
+        groupId: groupId,
+        userId: global.userId,
+        messageId: messageId,
+      };
+
+      console.log('readMessage', payload);
+      socketRef.current.emit('read-message', payload);
+    }
+  }, []);
+
   const joinGroupRequest = useCallback(() => {
     if (socketRef.current !== undefined && socketRef.current !== null) {
       let payload = {
@@ -393,23 +418,34 @@ const StartGroupChat = ({route}) => {
       setEmojiIconWidth(scale(40));
       animRef.current.slideInLeft().then(() => {});
       //Keyboard.dismiss();
+
+      console.log('====================================');
+      console.log('sendMessage', JSON.stringify(object));
+      console.log('====================================');
       socketRef.current.emit('send-message', object);
       object.createdAt = moment().unix();
       object.isHidden = false;
       object.isReported = false;
       if (isReplayEditComment) {
-        setIsReplayEditComment(false);
-        setSelectedChatObject(null);
         object.parentMessageId = selectedChatObject;
-        setSelectedChatObject(null);
       }
+
+      inEditMode = false;
+
+      setIsReplayEditComment(false);
+      setSelectedChatObject(null);
       setMessages(previousMessages => append(previousMessages, object));
       setIsSending(false);
     }
   };
 
   const disconnectUser = useCallback(() => {
-    if (socketRef.current !== undefined && socketRef.current !== null) {
+    if (
+      socketRef !== undefined &&
+      socketRef !== null &&
+      socketRef.current !== undefined &&
+      socketRef.current !== null
+    ) {
       let payload = {
         groupId: groupId,
         userId: global.userId,
@@ -439,6 +475,20 @@ const StartGroupChat = ({route}) => {
     bottomUnread = 0;
     newMessageList = [];
     imageArray = [];
+  };
+
+  const updateReadMessages = messageIds => {
+    if (
+      messageIds !== undefined &&
+      messageIds !== null &&
+      messageIds.length > 0
+    ) {
+      messageIds.forEach(element => {
+        if (element !== undefined && element !== null) {
+          readMessage(element);
+        }
+      });
+    }
   };
 
   /**
@@ -530,9 +580,14 @@ const StartGroupChat = ({route}) => {
           if (data.status) {
             let array = data.data;
 
+            let unreadIds = _.map(_.filter(array, {isRead: false}), '_id');
+
             console.log('====================================');
-            console.log('last item', JSON.stringify(array[0]));
+            console.log('unreadIds', unreadIds);
             console.log('====================================');
+            if (unreadIds.length > 0) {
+              updateReadMessages(unreadIds);
+            }
 
             let tmpArray = [];
             let objArray = [];
@@ -629,10 +684,6 @@ const StartGroupChat = ({route}) => {
               }
 
               //let msgList = objArray.reverse();
-
-              // console.log('====================================');
-              // console.log('msgList', msgList);
-              // console.log('====================================');
 
               if (isFiltering) {
                 if (searchfilterObject.page === 1) {
@@ -817,7 +868,7 @@ const StartGroupChat = ({route}) => {
    * @PostMessage
    */
 
-  const generateChatObject = (input, media, mediaType) => {
+  const generateChatObject = (input, media, mediaType, extraItem) => {
     return {
       groupId: groupId,
       authorId: {
@@ -832,6 +883,7 @@ const StartGroupChat = ({route}) => {
       media: {
         mediaUrl: media,
         mediaType: mediaType,
+        extraObjects: extraItem,
       },
       parentMessageId: '',
     };
@@ -839,19 +891,18 @@ const StartGroupChat = ({route}) => {
 
   const handleInputChat = (type, input, mediaType, media, extraItem) => {
     if (inEditMode) {
-      let request = generateChatObject(input, media, mediaType);
-      request.extraObjects = extraItem;
+      let request = generateChatObject(input, media, mediaType, extraItem);
       request.isEdited = true;
+      request.messageId = selectedChatObject._id;
       postMessage(request);
+      inEditMode = false;
     } else if (isReplayEditComment) {
-      let request = generateChatObject(input, media, mediaType);
-      request.extraObjects = extraItem;
+      let request = generateChatObject(input, media, mediaType, extraItem);
       request.depth = 1;
       request.parentMessageId = selectedChatObject._id;
       postMessage(request);
     } else {
-      let request = generateChatObject(input, media, mediaType);
-      request.extraObjects = extraItem;
+      let request = generateChatObject(input, media, mediaType, extraItem);
       //postMsg(request);
       postMessage(request);
     }

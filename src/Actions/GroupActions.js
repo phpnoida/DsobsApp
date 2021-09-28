@@ -23,8 +23,6 @@ export function doCreateGroup(payload, callback, errCallback) {
 export function doUpdateGroup(groupId, payload, callback, errCallback) {
   let requestPath = `${SERVER_PATH}group/edit/${groupId}`;
 
-  console.log('requestPath', requestPath, payload);
-
   const request = axios
     .patch(requestPath, payload, {
       headers: {
@@ -41,11 +39,48 @@ export function doUpdateGroup(groupId, payload, callback, errCallback) {
   };
 }
 
-export function doGetGroups(callback, errCallback) {
+export function doGetGroups(filterObject, callback, errCallback) {
   let requestPath = `${SERVER_PATH}group`;
 
   const request = axios
-    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
+      params: filterObject,
+    })
+    .then(res => callback(res))
+    .catch(err => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function doGetBatchGroups(filterObject, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}group/batch-group`;
+
+  const request = axios
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
+      params: filterObject,
+    })
+    .then(res => callback(res))
+    .catch(err => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function doSearchGroup(query, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}group/search`;
+
+  const request = axios
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
+      params: query,
+    })
     .then(res => callback(res))
     .catch(err => {
       handleError(err, errCallback);
@@ -68,11 +103,14 @@ export function doGetUserStatusForGroup(groupId, callback, errCallback) {
   };
 }
 
-export function doGetDiscoverGroups(callback, errCallback) {
+export function doGetDiscoverGroups(filterObject, callback, errCallback) {
   let requestPath = `${SERVER_PATH}group/discover-group`;
 
   const request = axios
-    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
+      params: filterObject,
+    })
     .then(res => callback(res))
     .catch(err => {
       handleError(err, errCallback);

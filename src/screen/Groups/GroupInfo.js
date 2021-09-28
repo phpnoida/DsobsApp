@@ -238,7 +238,6 @@ const GroupInfo = ({route, navigation}) => {
               setShowErrorMessage(true);
               setTimeout(() => {
                 setShowErrorMessage(false);
-
                 if (moveHome) {
                   navigation.dispatch(
                     CommonActions.reset({
@@ -247,6 +246,7 @@ const GroupInfo = ({route, navigation}) => {
                     }),
                   );
                 } else {
+                  emitAdminEvent(selectedUserInfo._id, 'remove-user');
                   getGroupData();
                 }
               }, 2500);
@@ -284,8 +284,8 @@ const GroupInfo = ({route, navigation}) => {
 
             if (data.status) {
               //made admin
-              emitAdminEvent(selectedUserInfo._id, 'make-admin');
               if (mode === 1) {
+                emitAdminEvent(selectedUserInfo._id, 'make-admin');
               } else {
                 emitAdminEvent(selectedUserInfo._id, 'remove-admin');
                 //remove admin
@@ -391,6 +391,13 @@ const GroupInfo = ({route, navigation}) => {
     let isSuperAdmin = selectedUserInfo.isSuperAdmin;
     let isAdmin = selectedUserInfo.isAdmin;
 
+    let maxAdminReached =
+      groupData.admins !== undefined &&
+      groupData.admins !== null &&
+      groupData.admins.length > 4
+        ? true
+        : false;
+
     return (
       <OptionsSheet
         ref={userInfoRef}
@@ -415,6 +422,7 @@ const GroupInfo = ({route, navigation}) => {
 
           {!isSuperAdmin &&
             !isAdmin &&
+            !maxAdminReached &&
             generateMenuOption('Make Admin', 'user-plus', 4, () => {
               userInfoRef.current.close();
               removeIndex(

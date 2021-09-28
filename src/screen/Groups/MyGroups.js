@@ -8,6 +8,7 @@ import {showProgess, renderNoDataComponent} from '../../component/Common';
 import {useDispatch, useSelector, shallowEqual} from 'react-redux';
 import {clearRefreshScreen} from '../../reducer/GroupReducer';
 import {useNavigation} from '@react-navigation/native';
+import io from 'socket.io-client';
 
 const PaginationStatus = {
   firstLoad: 0,
@@ -15,6 +16,13 @@ const PaginationStatus = {
   allLoaded: 2,
 };
 
+let filterObject = {
+  page: 1,
+  limit: 10,
+};
+
+let totalPages = 0;
+let currentPage = 1;
 let refreshPage = true;
 
 const MyGroups = ({content, isActive, onTap}) => {
@@ -26,6 +34,7 @@ const MyGroups = ({content, isActive, onTap}) => {
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
   );
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const refreshState = useSelector(state => {
     if (state.group && state.group !== undefined) {
@@ -51,7 +60,9 @@ const MyGroups = ({content, isActive, onTap}) => {
   }, [navigation, getGroupData]);
 
   useEffect(() => {
-    getGroupData();
+    if (isActive) {
+      getGroupData();
+    }
     return () => {};
   }, [getGroupData, isActive]);
 
@@ -70,6 +81,7 @@ const MyGroups = ({content, isActive, onTap}) => {
 
   const getGroupData = useCallback(() => {
     doGetGroups(
+      filterObject,
       response => {
         manageResponse(response);
       },
@@ -99,6 +111,49 @@ const MyGroups = ({content, isActive, onTap}) => {
     setFirstTimeLoad(false);
   };
 
+  /**
+   *
+   * Pagination
+   *
+   */
+  const onPaginate = () => {
+    if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
+      setPaginationStatus(PaginationStatus.waiting);
+      filterObject.page = filterObject.page + 1;
+      getGroupData();
+    }
+  };
+
+  const onEndReached = () => {
+    if (totalPages <= currentPage) {
+      setPaginationStatus(PaginationStatus.allLoaded);
+      return;
+    }
+    if (paginationStatus === PaginationStatus.waiting) {
+      onPaginate();
+    }
+  };
+
+  const handleRefresh = () => {
+    filterObject.page = 1;
+    totalPages = 0;
+    setIsRefreshing(false);
+    resetCount();
+    getGroupData();
+  };
+
+  const resetCount = () => {
+    totalPages = 0;
+    filterObject = {};
+    filterObject.page = 0;
+    filterObject.size = 10;
+  };
+  /**
+   *
+   * Pagination
+   *
+   */
+
   const renderItem = ({item, index}) => {
     return renderGroupItem(item, index, onTap);
   };
@@ -110,6 +165,7 @@ const MyGroups = ({content, isActive, onTap}) => {
         extraData={postData}
         data={postData}
         onEndReachedThreshold={0.1}
+        onEndReached={onEndReached}
         renderItem={renderItem}
         ListEmptyComponent={renderNoDataComponent}
         contentContainerStyle={{
@@ -120,6 +176,9 @@ const MyGroups = ({content, isActive, onTap}) => {
         bounces={false}
         keyExtractor={(v, i) => i.toString()}
         scrollEventThrottle={16}
+        refreshing={isRefreshing}
+        onRefresh={handleRefresh}
+        handleRefresh={handleRefresh}
       />
       {showProgess(firstTimeLoad)}
     </View>

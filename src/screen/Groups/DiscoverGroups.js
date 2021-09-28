@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useCallback} from 'react';
-import {View, StyleSheet, FlatList} from 'react-native';
+import {View, FlatList} from 'react-native';
 import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
 import {renderGroupItem} from './GroupCommon';
@@ -15,6 +15,13 @@ const PaginationStatus = {
   allLoaded: 2,
 };
 
+let filterObject = {
+  page: 1,
+  limit: 10,
+};
+
+let totalPages = 0;
+let currentPage = 1;
 let refreshPage = true;
 
 const DiscoverGroups = ({content, isActive, onTap}) => {
@@ -25,6 +32,7 @@ const DiscoverGroups = ({content, isActive, onTap}) => {
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
   );
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const refreshState = useSelector(state => {
     if (state.group && state.group !== undefined) {
@@ -69,6 +77,7 @@ const DiscoverGroups = ({content, isActive, onTap}) => {
 
   const getGroupData = useCallback(() => {
     doGetDiscoverGroups(
+      filterObject,
       response => {
         manageResponse(response);
       },
@@ -98,6 +107,49 @@ const DiscoverGroups = ({content, isActive, onTap}) => {
     setFirstTimeLoad(false);
   };
 
+  /**
+   *
+   * Pagination
+   *
+   */
+  const onPaginate = () => {
+    if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
+      setPaginationStatus(PaginationStatus.waiting);
+      filterObject.page = filterObject.page + 1;
+      getGroupData();
+    }
+  };
+
+  const onEndReached = () => {
+    if (totalPages <= currentPage) {
+      setPaginationStatus(PaginationStatus.allLoaded);
+      return;
+    }
+    if (paginationStatus === PaginationStatus.waiting) {
+      onPaginate();
+    }
+  };
+
+  const handleRefresh = () => {
+    filterObject.page = 1;
+    totalPages = 0;
+    setIsRefreshing(false);
+    resetCount();
+    getGroupData();
+  };
+
+  const resetCount = () => {
+    totalPages = 0;
+    filterObject = {};
+    filterObject.page = 0;
+    filterObject.size = 10;
+  };
+  /**
+   *
+   * Pagination
+   *
+   */
+
   const renderItem = ({item, index}) => {
     return renderGroupItem(item, index, onTap);
   };
@@ -109,6 +161,7 @@ const DiscoverGroups = ({content, isActive, onTap}) => {
         extraData={postData}
         data={postData}
         onEndReachedThreshold={0.1}
+        onEndReached={onEndReached}
         renderItem={renderItem}
         ListEmptyComponent={renderNoDataComponent}
         contentContainerStyle={{
@@ -119,39 +172,13 @@ const DiscoverGroups = ({content, isActive, onTap}) => {
         bounces={false}
         keyExtractor={(v, i) => i.toString()}
         scrollEventThrottle={16}
+        refreshing={isRefreshing}
+        onRefresh={handleRefresh}
+        handleRefresh={handleRefresh}
       />
       {showProgess(firstTimeLoad)}
     </View>
   );
 };
-
-const style = StyleSheet.create({
-  imageStyle: {
-    width: '100%',
-    height: scale(80),
-    borderRadius: scale(10),
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-  },
-  coverImage: {height: '100%', width: '100%'},
-  grayColorText: {color: '#bababa'},
-  backgroundBorder: {
-    borderRadius: scale(10),
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-    overflow: 'hidden',
-  },
-  newPostContainer: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(62,62,62,0.6)',
-    paddingHorizontal: scale(13),
-    paddingVertical: scale(7),
-    ...grid.alignItems,
-    ...grid.justifyContentCenter,
-  },
-});
 
 export default DiscoverGroups;

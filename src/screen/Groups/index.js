@@ -3,12 +3,12 @@ import {
   View,
   StyleSheet,
   SafeAreaView,
-  ActivityIndicator,
   Text,
   Dimensions,
   TextInput,
   Keyboard,
   Alert,
+  FlatList,
 } from 'react-native';
 
 import OptionsSheet from 'react-native-raw-bottom-sheet';
@@ -28,11 +28,13 @@ import {
   generateMenuOption,
   uploadMediaButton,
   generateHeader,
+  renderNoDataComponent,
 } from '../../component/Common';
 import UploadMedia from '../../component/UploadMedia';
 import TopHeaderView from '../../component/TopHeaderView';
 import CommonButton from '../../component/CommonButton';
 import SingleSearchWithFilter from '../../component/SingleSearchWithFilter';
+import {renderGroupItem} from './GroupCommon';
 
 import MyGroups from './MyGroups';
 import DiscoverGroups from './DiscoverGroups';
@@ -41,6 +43,7 @@ import {
   doJoinGroup,
   doCreateGroup,
   doGetUserStatusForGroup,
+  doSearchGroup,
 } from '../../Actions/GroupActions';
 import {useDispatch} from 'react-redux';
 import {refreshScreen} from '../../reducer/GroupReducer';
@@ -49,8 +52,24 @@ let responseMessage = '';
 let isSuccess = false;
 let initialPage = 0;
 let seletedItem = null;
+let searchQuery = '';
+let totalPages = 0;
+let currentPage = 1;
 
 const {height} = Dimensions.get('window');
+
+let filterObject = {
+  page: 1,
+  limit: 10,
+  q: '',
+  size: 10,
+};
+
+const PaginationStatus = {
+  firstLoad: 0,
+  waiting: 1,
+  allLoaded: 2,
+};
 
 const GroupsList = ({route, navigation}) => {
   const refOptions = useRef();
@@ -66,6 +85,11 @@ const GroupsList = ({route, navigation}) => {
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [currentTab, setCurrentTab] = useState(0);
 
+  const [paginationStatus, setPaginationStatus] = useState(
+    PaginationStatus.firstLoad,
+  );
+  const [filteredGroup, setFilteredGroup] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   /**
    * Create Group
    *
@@ -78,25 +102,52 @@ const GroupsList = ({route, navigation}) => {
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState({});
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      initialPage = 0;
-      setCurrentTab(0);
-    });
-    return () => {
-      unsubscribe();
-    };
-  }, [navigation]);
-
   /**
    *
    * @API Section
    */
+
+  const searchGroupData = useCallback(() => {
+    filterObject.q = searchQuery;
+    doSearchGroup(
+      filterObject,
+      response => {
+        manageResponse(response);
+      },
+      (code, error) => {
+        setFilteredGroup([]);
+      },
+    );
+  }, []);
+
+  const manageResponse = response => {
+    if (response && response !== null) {
+      if (
+        response.data &&
+        response.data !== undefined &&
+        response.data !== null
+      ) {
+        let data = response.data;
+
+        console.log('data', data);
+
+        if (data.status) {
+          totalPages = data.totalPages;
+
+          if (searchQuery.length > 0) {
+            setFilteredGroup([...data.groups]);
+          } else {
+            setFilteredGroup([]);
+          }
+
+          setPaginationStatus(PaginationStatus.waiting);
+        }
+      }
+    }
+  };
+
   const joinGroupRequest = () => {
     if (selectedGroup === undefined || selectedGroup === null) {
-      console.log('====================================');
-      console.log('56 ');
-      console.log('====================================');
       return;
     }
     let groupId = selectedGroup._id;
@@ -171,6 +222,7 @@ const GroupsList = ({route, navigation}) => {
                     groupInfo: seletedItem,
                   });
                 } else {
+                  seletedItem.status = userStatus;
                   setSelectedGroup(seletedItem);
                   if (
                     refJoinGroup.current !== undefined &&
@@ -266,6 +318,50 @@ const GroupsList = ({route, navigation}) => {
   /**
    *
    * @API Section
+   */
+
+  /**
+   *
+   * Pagination
+   *
+   */
+  const onPaginate = () => {
+    if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
+      setPaginationStatus(PaginationStatus.waiting);
+      filterObject.page = filterObject.page + 1;
+      searchGroupData();
+    }
+  };
+
+  const onEndReached = () => {
+    if (totalPages <= currentPage) {
+      setPaginationStatus(PaginationStatus.allLoaded);
+      return;
+    }
+    if (paginationStatus === PaginationStatus.waiting) {
+      onPaginate();
+    }
+  };
+
+  const handleRefresh = () => {
+    filterObject.page = 1;
+    totalPages = 0;
+    setIsRefreshing(false);
+    resetCount();
+    searchGroupData(filterObject);
+  };
+
+  const resetCount = () => {
+    totalPages = 0;
+    filterObject = {};
+    filterObject.page = 0;
+    filterObject.size = 10;
+    filterObject.q = '';
+  };
+  /**
+   *
+   * Pagination
+   *
    */
 
   const createNewGroup = () => {
@@ -509,6 +605,13 @@ const GroupsList = ({route, navigation}) => {
     );
   };
 
+  const renderItem = ({item, index}) => {
+    return renderGroupItem(item, index, () => {
+      seletedItem = item;
+      getUserStatus(item._id);
+    });
+  };
+
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
       <TopHeaderView
@@ -537,6 +640,10 @@ const GroupsList = ({route, navigation}) => {
                 filterQuery={filterQuery}
                 changeText={text => {
                   setFilterQuery(text);
+                  searchQuery = text;
+                  if (text.length > 3) {
+                    searchGroupData();
+                  }
                 }}
                 showGoButton={false}
                 onFilterPress={() => {}}
@@ -544,45 +651,77 @@ const GroupsList = ({route, navigation}) => {
               />
             </View>
 
-            <ScrollableTabView
-              ref={tabRef}
-              underlineColor={'#ffffff'}
-              initialPage={initialPage}
-              tabBarActiveTextColor={GlobalInclude.Color.ColorPrimary}
-              tabBarInactiveTextColor={'#bababa'}
-              tabBarTextStyle={{
-                fontSize: scale(15),
-                fontFamily: 'Lato-Regular',
-                margin: -5,
-              }}
-              onChangeTab={e => {
-                setCurrentTab(e.i);
-              }}
-              tabBarUnderlineStyle={styles.tabBarUnderlineStyle}
-              renderTabBar={() => (
-                <ScrollableTabBar style={styles.tabBarStyle} />
-              )}>
-              <MyGroups
-                isActive={currentTab === 1}
-                tabLabel={'My Groups'}
-                onTap={(item, index) => {
-                  seletedItem = item;
-                  getUserStatus(item._id);
+            {filterQuery.trim().length > 3 ? (
+              <FlatList
+                showsVerticalScrollIndicator={false}
+                extraData={filteredGroup}
+                data={filteredGroup}
+                onEndReachedThreshold={0.1}
+                onEndReached={onEndReached}
+                renderItem={renderItem}
+                ListEmptyComponent={renderNoDataComponent}
+                contentContainerStyle={{
+                  paddingStart: scale(15),
+                  paddingEnd: scale(15),
+                  paddingBottom: scale(200),
                 }}
+                bounces={false}
+                keyExtractor={(v, i) => i.toString()}
+                scrollEventThrottle={16}
+                refreshing={isRefreshing}
+                onRefresh={handleRefresh}
+                handleRefresh={handleRefresh}
               />
-              <DiscoverGroups
-                isActive={currentTab === 2}
-                tabLabel={'Discover More'}
-                onTap={(item, index) => {
-                  seletedItem = item;
-                  getUserStatus(item._id);
+            ) : (
+              <ScrollableTabView
+                ref={tabRef}
+                underlineColor={'#ffffff'}
+                initialPage={initialPage}
+                tabBarActiveTextColor={GlobalInclude.Color.ColorPrimary}
+                tabBarInactiveTextColor={'#bababa'}
+                tabBarTextStyle={{
+                  fontSize: scale(15),
+                  fontFamily: 'Lato-Regular',
+                  margin: -5,
                 }}
-              />
-              <BatchGroups
-                isActive={currentTab === 3}
-                tabLabel={'Batch Groups'}
-              />
-            </ScrollableTabView>
+                onChangeTab={({i, ref, from}) => {
+                  if (i !== from) {
+                    console.log('====================================');
+                    console.log('700', i);
+                    console.log('====================================');
+                    setCurrentTab(i);
+                  }
+                }}
+                tabBarUnderlineStyle={styles.tabBarUnderlineStyle}
+                renderTabBar={() => (
+                  <ScrollableTabBar style={styles.tabBarStyle} />
+                )}>
+                <MyGroups
+                  isActive={currentTab === 1}
+                  tabLabel={'My Groups'}
+                  onTap={(item, index) => {
+                    seletedItem = item;
+                    getUserStatus(item._id);
+                  }}
+                />
+                <DiscoverGroups
+                  isActive={currentTab === 2}
+                  tabLabel={'Discover More'}
+                  onTap={(item, index) => {
+                    seletedItem = item;
+                    getUserStatus(item._id);
+                  }}
+                />
+                <BatchGroups
+                  isActive={currentTab === 3}
+                  tabLabel={'Batch Groups'}
+                  onTap={(item, index) => {
+                    seletedItem = item;
+                    getUserStatus(item._id);
+                  }}
+                />
+              </ScrollableTabView>
+            )}
           </View>
         </View>
         {userOptions()}
