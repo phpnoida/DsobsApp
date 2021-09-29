@@ -216,49 +216,56 @@ const StartGroupChat = ({route}) => {
     console.log('202-event');
     console.log('====================================');
 
-    socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
-      reconnectionAttempts: 2,
-    });
+    if (
+      socketRef == null ||
+      socketRef.current === null ||
+      socketRef.current === undefined
+    ) {
+      socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
+        reconnectionAttempts: 2,
+        transports: ['websocket'],
+        upgrade: false,
+      });
+    }
 
     socketRef.current.on('connect', () => {
       if (socketRef.current.connected) {
-        // console.log(socketRef.current.id); // "G5p5..."
-        // console.log('socketRef.current.connected', socketRef.current.connected);
         filterObject.groupId = groupId;
         setIsConnected(true);
         getOldMessages();
         setTimeout(() => {
           joinGroupRequest();
         }, 100);
+
+        socketRef.current.on('error', attempt => {
+          console.log('====================================');
+          console.log('errror', attempt);
+          console.log('====================================');
+        });
+
+        socketRef.current.on('disconnect', () => {
+          isUserConnected = false;
+          console.log('socket disconnected'); // undefined
+        });
+
+        socketRef.current.on('reconnect', attempt => {
+          console.log('====================================');
+          console.log('attempt', attempt);
+          console.log('====================================');
+        });
+        socketRef.current.on('reconnect_error', attempt => {
+          console.log('====================================');
+          console.log('reconnect_error', attempt);
+          console.log('====================================');
+          //socketRef.current.disconnect();
+          isUserConnected = false;
+        });
+        socketRef.current.on('reconnect_attempt', attempt => {
+          console.log('====================================');
+          console.log('reconnect_attempt', attempt);
+          console.log('====================================');
+        });
       }
-    });
-    socketRef.current.on('error', attempt => {
-      console.log('====================================');
-      console.log('errror', attempt);
-      console.log('====================================');
-    });
-
-    socketRef.current.on('disconnect', () => {
-      isUserConnected = false;
-      console.log('socket disconnected'); // undefined
-    });
-
-    socketRef.current.on('reconnect', attempt => {
-      console.log('====================================');
-      console.log('attempt', attempt);
-      console.log('====================================');
-    });
-    socketRef.current.on('reconnect_error', attempt => {
-      console.log('====================================');
-      console.log('reconnect_error', attempt);
-      console.log('====================================');
-      //socketRef.current.disconnect();
-      isUserConnected = false;
-    });
-    socketRef.current.on('reconnect_attempt', attempt => {
-      console.log('====================================');
-      console.log('reconnect_attempt', attempt);
-      console.log('====================================');
     });
 
     /********************
@@ -451,11 +458,18 @@ const StartGroupChat = ({route}) => {
         userId: global.userId,
       };
 
-      console.log('disconnectUser', payload);
       socketRef.current.emit('disconnect', payload);
 
       setTimeout(() => {
-        socketRef.current.disconnect();
+        socketRef?.current?.removeListener('connect');
+        socketRef?.current?.removeListener('error');
+        socketRef?.current?.removeListener('disconnect');
+        socketRef?.current?.removeListener('reconnect');
+        socketRef?.current?.removeListener('reconnect_error');
+        socketRef?.current?.removeListener('reconnect_attempt');
+        socketRef?.current?.removeListener('user-connected');
+        socketRef?.current?.removeListener('get-message');
+        socketRef?.current?.disconnect();
         socketRef.current = null;
         resetOldData();
         navigation.goBack();
@@ -2187,7 +2201,7 @@ const StartGroupChat = ({route}) => {
                 handleInputChat(
                   2,
                   inputValue,
-                  'AUDIO',
+                  'DOCUMENT',
                   item.fileName,
                   item.requestObject,
                 );
@@ -2195,7 +2209,7 @@ const StartGroupChat = ({route}) => {
                 handleInputChat(
                   2,
                   inputValue,
-                  'DOCUMENT',
+                  'AUDIO',
                   item.fileName,
                   item.requestObject,
                 );

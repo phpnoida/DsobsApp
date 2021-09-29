@@ -6,7 +6,7 @@ import {scale} from '../../theme/Scalling';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import ProgressImage from '../../component/ProgresImage';
 
-export const renderGroupItem = (item, index, onTap) => {
+export const renderGroupItem = (currentTab, item, index, onTap) => {
   return (
     <View key={index}>
       <TouchableOpacity
@@ -31,7 +31,7 @@ export const renderGroupItem = (item, index, onTap) => {
                 imageStyle={style.coverImage}
                 mode={'cover'}
               />
-              {item.newPost > 0 && (
+              {currentTab === 0 && item.unreadMessageCount > 0 && (
                 <View style={style.newPostContainer}>
                   <Text
                     numberOfLines={1}
@@ -41,7 +41,7 @@ export const renderGroupItem = (item, index, onTap) => {
                       g.colorWhite,
                       GlobalInclude.AppStyle.transform,
                     ]}>
-                    {item.newPost.toString()}
+                    {item.unreadMessageCount.toString()}
                   </Text>
                   <Text
                     numberOfLines={1}

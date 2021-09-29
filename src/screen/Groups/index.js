@@ -9,12 +9,11 @@ import {
   Keyboard,
   Alert,
   FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 
 import OptionsSheet from 'react-native-raw-bottom-sheet';
-import ScrollableTabView, {
-  ScrollableTabBar,
-} from 'react-native-scrollable-tab-view';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
 import GlobalInclude from '../../globalInclude/Globalinclude';
@@ -25,6 +24,7 @@ import grid from '../../theme/grid';
 import {IconType, APP_NAME} from '../../helper/Constants';
 
 import {
+  showProgess,
   generateMenuOption,
   uploadMediaButton,
   generateHeader,
@@ -35,66 +35,67 @@ import TopHeaderView from '../../component/TopHeaderView';
 import CommonButton from '../../component/CommonButton';
 import SingleSearchWithFilter from '../../component/SingleSearchWithFilter';
 import {renderGroupItem} from './GroupCommon';
-
-import MyGroups from './MyGroups';
-import DiscoverGroups from './DiscoverGroups';
-import BatchGroups from './BatchGroups';
 import {
   doJoinGroup,
   doCreateGroup,
   doGetUserStatusForGroup,
   doSearchGroup,
+  doGetDiscoverGroups,
+  doGetGroups,
+  doGetBatchGroups,
 } from '../../Actions/GroupActions';
-import {useDispatch} from 'react-redux';
-import {refreshScreen} from '../../reducer/GroupReducer';
 
-let responseMessage = '';
-let isSuccess = false;
-let initialPage = 0;
-let seletedItem = null;
-let searchQuery = '';
-let totalPages = 0;
-let currentPage = 1;
-
-const {height} = Dimensions.get('window');
-
-let filterObject = {
-  page: 1,
-  limit: 10,
-  q: '',
-  size: 10,
-};
+import _ from 'lodash';
+import io from 'socket.io-client';
 
 const PaginationStatus = {
   firstLoad: 0,
   waiting: 1,
   allLoaded: 2,
+  fetching: 3,
 };
 
+let filterObject = {
+  page: 1,
+  limit: 10,
+  q: '',
+};
+
+let totalPages = 0;
+let currentPage = 1;
+let searchQuery = '';
+let responseMessage = '';
+let isSuccess = false;
+let seletedItem = null;
+let firstLoad = true;
+let myGroupIds = [];
+let selectedTab = 0;
+let isSocketConnected = true;
+let messageIds = [];
+
+const {height} = Dimensions.get('window');
+
 const GroupsList = ({route, navigation}) => {
+  const socketRef = useRef();
   const refOptions = useRef();
   const refJoinGroup = useRef();
   const createGroupRef = useRef();
   const uploadRef = useRef();
 
-  const tabRef = useRef();
-  const dispatch = useDispatch();
-
-  const [filterQuery, setFilterQuery] = useState('');
-  const [selectedGroup, setSelectedGroup] = useState(null);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [filterQuery, setFilterQuery] = useState('');
   const [currentTab, setCurrentTab] = useState(0);
-
+  const [firstTimeLoad, setFirstTimeLoad] = useState(true);
+  const [postData, setPostData] = useState([]);
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
   );
-  const [filteredGroup, setFilteredGroup] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   /**
    * Create Group
    *
    */
-
   const [groupName, setGroupName] = useState('');
   const [aboutGroup, setAboutGroup] = useState('');
   const [mediaData, setMediaData] = useState(null);
@@ -102,12 +103,132 @@ const GroupsList = ({route, navigation}) => {
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState({});
 
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      connectSocket();
+    });
+    return () => {
+      socketRef?.current?.removeListener('connect');
+      socketRef?.current?.removeListener('error');
+      socketRef?.current?.removeListener('disconnect');
+      socketRef?.current?.removeListener('reconnect');
+      socketRef?.current?.removeListener('reconnect_error');
+      socketRef?.current?.removeListener('reconnect_attempt');
+      socketRef?.current?.removeListener('user-connected');
+      socketRef?.current?.removeListener('get-message');
+      socketRef?.current?.disconnect();
+      unsubscribe();
+    };
+  }, [navigation, openSelctedTab, connectSocket]);
+
+  const connectSocket = useCallback(() => {
+    console.log('====================================');
+    console.log('202-event');
+    console.log('====================================');
+
+    if (
+      socketRef == null ||
+      socketRef.current === null ||
+      socketRef.current === undefined
+    ) {
+      socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
+        reconnectionAttempts: 2,
+        transports: ['websocket'],
+        upgrade: false,
+      });
+    }
+
+    socketRef.current.on('connect', () => {
+      console.log('socketRef.current.connected', socketRef.current.connected);
+      if (socketRef.current.connected) {
+        resetField();
+        setCurrentTab(0);
+        openSelctedTab(0);
+        isSocketConnected = true;
+
+        socketRef.current.on('error', attempt => {
+          console.log('====================================');
+          console.log('errror', attempt);
+          console.log('====================================');
+          isSocketConnected = false;
+        });
+
+        socketRef.current.on('disconnect', () => {
+          console.log('socket disconnected'); // undefined
+          isSocketConnected = false;
+        });
+
+        socketRef.current.on('reconnect', attempt => {
+          console.log('====================================');
+          console.log('attempt', attempt);
+          console.log('====================================');
+        });
+        socketRef.current.on('reconnect_error', attempt => {
+          console.log('====================================');
+          console.log('reconnect_error', attempt);
+          console.log('====================================');
+          isSocketConnected = false;
+        });
+        socketRef.current.on('reconnect_attempt', attempt => {
+          console.log('====================================');
+          console.log('reconnect_attempt', attempt);
+          console.log('====================================');
+        });
+
+        socketRef.current.once('user-connected', event => {
+          console.log('====================================');
+          console.log('connected', event);
+          console.log('connected', event.status);
+          console.log('====================================');
+        });
+      }
+    });
+
+    // if (socketRef.current !== undefined && socketRef.current !== null) {
+    //   socketRef.current.on('get-message', event => {
+    //     if (event && event !== null && event !== undefined) {
+    //       let message = event.message;
+    //       console.log('====================================');
+    //       console.log('message', message);
+    //       console.log('====================================');
+    //       updateCountInGroup(message);
+    //     }
+    //   });
+    // }
+
+    /********************
+     * Specific Events
+     */
+  }, []);
+
+  useEffect(() => {
+    if (postData.length > 0) {
+      if (socketRef.current !== undefined && socketRef.current !== null) {
+        socketRef?.current?.removeListener('get-message');
+        socketRef.current.on('get-message', event => {
+          if (event && event !== null && event !== undefined) {
+            let message = event.message;
+            let exist = _.includes(messageIds, message._id);
+            if (!exist) {
+              console.log('====================================');
+              console.log('message', message);
+              console.log('====================================');
+              updateCountInGroup(message);
+            }
+          }
+        });
+      }
+    }
+
+    return () => {};
+  }, [postData, updateCountInGroup]);
+
   /**
    *
    * @API Section
    */
 
-  const searchGroupData = useCallback(() => {
+  const searchGroupData = useCallback(async () => {
     filterObject.q = searchQuery;
     doSearchGroup(
       filterObject,
@@ -115,167 +236,109 @@ const GroupsList = ({route, navigation}) => {
         manageResponse(response);
       },
       (code, error) => {
-        setFilteredGroup([]);
+        setPostData([]);
       },
     );
-  }, []);
+  }, [manageResponse]);
 
-  const manageResponse = response => {
-    if (response && response !== null) {
-      if (
-        response.data &&
-        response.data !== undefined &&
-        response.data !== null
-      ) {
-        let data = response.data;
-
-        console.log('data', data);
-
-        if (data.status) {
-          totalPages = data.totalPages;
-
-          if (searchQuery.length > 0) {
-            setFilteredGroup([...data.groups]);
-          } else {
-            setFilteredGroup([]);
-          }
-
-          setPaginationStatus(PaginationStatus.waiting);
-        }
-      }
-    }
-  };
-
-  const joinGroupRequest = () => {
-    if (selectedGroup === undefined || selectedGroup === null) {
-      return;
-    }
-    let groupId = selectedGroup._id;
-    global.loader_ref.show_loader(1);
-    doJoinGroup(
-      groupId,
+  const getGroupData = useCallback(() => {
+    doGetGroups(
+      filterObject,
       response => {
-        //You have successfully submitted your request to start a new group
-        global.loader_ref.show_loader(0);
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
-            if (data.status) {
-              isSuccess = true;
-              responseMessage =
-                'You have successfully submitted your request to join group';
-              setShowErrorMessage(true);
-              setTimeout(() => {
-                dispatch(refreshScreen());
-                setShowErrorMessage(false);
-              }, 2500);
-            } else {
-              responseMessage = 'Error while posting your request!';
-              setShowErrorMessage(true);
-              setTimeout(() => {
-                setShowErrorMessage(false);
-              }, 2500);
-            }
-          }
-        }
+        setFirstTimeLoad(false);
+        manageResponse(response);
       },
       (code, error) => {
-        console.log('error: ' + error);
-        console.log('code: ' + code);
-        global.loader_ref.show_loader(0);
+        console.log('====================================');
+        console.log('error,code', code, error);
+        console.log('====================================');
+        setFirstTimeLoad(false);
+        setPostData([]);
       },
     );
-  };
+  }, [manageResponse]);
 
-  const getUserStatus = groupId => {
-    global.loader_ref.show_loader(1);
-    doGetUserStatusForGroup(
-      groupId,
+  const getDiscoverGroups = useCallback(() => {
+    doGetDiscoverGroups(
+      filterObject,
       response => {
-        global.loader_ref.show_loader(0);
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
+        manageResponse(response);
+      },
+      (code, error) => {
+        console.log('====================================');
+        console.log('error,code', code, error);
+        console.log('====================================');
+        setFirstTimeLoad(false);
+        setPostData([]);
+      },
+    );
+  }, [manageResponse]);
 
-            if (data && data !== null && data !== undefined) {
-              if (data.status) {
-                //{"status": true, "userStatus": 1}
-                let userStatus = data.userStatus;
-                /*
-                      -1 = unjoin
-                      0 = pending
-                      1 = active
-                      2 = rejected
-                      3 = removed
-                    */
-                if (userStatus === 1) {
-                  navigation.navigate('StartGroupChat', {
-                    groupId: seletedItem._id,
-                    groupInfo: seletedItem,
-                  });
-                } else {
-                  seletedItem.status = userStatus;
-                  setSelectedGroup(seletedItem);
-                  if (
-                    refJoinGroup.current !== undefined &&
-                    refJoinGroup.current !== null
-                  ) {
-                    refJoinGroup.current.open();
-                  }
+  const getBatchGroups = useCallback(() => {
+    doGetBatchGroups(
+      filterObject,
+      response => {
+        setFirstTimeLoad(false);
+        manageResponse(response);
+      },
+      (code, error) => {
+        console.log('====================================');
+        console.log('error,code', code, error);
+        console.log('====================================');
+        setFirstTimeLoad(false);
+        setPostData([]);
+      },
+    );
+  }, [manageResponse]);
+
+  const manageResponse = useCallback(
+    response => {
+      if (response && response !== null) {
+        if (
+          response.data &&
+          response.data !== undefined &&
+          response.data !== null
+        ) {
+          let data = response.data;
+
+          if (data.status) {
+            let arrayItems = data.groups;
+
+            if (arrayItems.length > 0 && selectedTab === 0) {
+              let result = _.map(arrayItems, '_id');
+              let isAnyNew = false;
+              let unJoined = [];
+              result.forEach(element => {
+                let exist = _.includes(myGroupIds, element);
+                if (!exist) {
+                  unJoined.push(element);
+                  isAnyNew = true;
+                  myGroupIds.push(element);
                 }
+              });
+              if (isAnyNew) {
+                joinGroupWithSocket(unJoined);
               }
             }
-            console.log('====================================');
-            console.log('user status', data);
-            console.log('====================================');
+
+            if (firstLoad && arrayItems.length === 0 && selectedTab === 0) {
+              firstLoad = false;
+              setCurrentTab(1);
+              openSelctedTab(1);
+            } else {
+              if (filterObject.page === 1) {
+                setPostData(arrayItems);
+              } else {
+                setPostData([...postData, ...arrayItems]);
+              }
+              setPaginationStatus(PaginationStatus.waiting);
+            }
           }
         }
-      },
-      (code, error) => {
-        global.loader_ref.show_loader(0);
-        Alert.alert('something wrong', error);
-        console.log('====================================');
-        console.log('code ,error', code, error);
-        console.log('====================================');
-      },
-    );
-  };
-
-  const validateInput = () => {
-    if (groupName.trim() === '' || groupName.length === 0) {
-      setErrorMessage({groupName: 'This field is required'});
-    } else if (aboutGroup.trim() === '' || aboutGroup.length === 0) {
-      setErrorMessage({aboutGroup: 'This field is required'});
-    } else if (mediaData === undefined || mediaData === null) {
-      setErrorMessage({mediaData: 'This field is required'});
-    } else {
-      saveGroup();
-    }
-  };
-
-  const saveGroup = () => {
-    let requestObject = {
-      name: groupName,
-      description: aboutGroup,
-      profilePicture: mediaData.thumbnail,
-      firstComment: myComment,
-    };
-
-    console.log('====================================');
-    console.log('requestObject', JSON.stringify(requestObject));
-    console.log('====================================');
-    Keyboard.dismiss();
-
-    uploadPostData(requestObject);
-  };
+      }
+    },
+    [postData, openSelctedTab, joinGroupWithSocket],
+  );
 
   const uploadPostData = requestObject => {
     setSubmitting(true);
@@ -315,6 +378,114 @@ const GroupsList = ({route, navigation}) => {
       },
     );
   };
+
+  const joinGroupRequest = () => {
+    if (selectedGroup === undefined || selectedGroup === null) {
+      return;
+    }
+    let groupId = selectedGroup._id;
+    global.loader_ref.show_loader(1);
+    doJoinGroup(
+      groupId,
+      response => {
+        global.loader_ref.show_loader(0);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            if (data.status) {
+              isSuccess = true;
+              responseMessage =
+                'You have successfully submitted your request to join group';
+              setShowErrorMessage(true);
+              setTimeout(() => {
+                openSelctedTab(currentTab);
+                setShowErrorMessage(false);
+              }, 2500);
+            } else {
+              responseMessage = 'Error while posting your request!';
+              setShowErrorMessage(true);
+              setTimeout(() => {
+                setShowErrorMessage(false);
+              }, 2500);
+            }
+          }
+        }
+      },
+      (code, error) => {
+        console.log('error: ' + error);
+        console.log('code: ' + code);
+        global.loader_ref.show_loader(0);
+      },
+    );
+  };
+
+  const getUserStatus = groupId => {
+    global.loader_ref.show_loader(1);
+    doGetUserStatusForGroup(
+      groupId,
+      response => {
+        global.loader_ref.show_loader(0);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data && data !== null && data !== undefined) {
+              if (data.status) {
+                console.log('====================================');
+                console.log('seletedItem', seletedItem._id);
+                console.log('====================================');
+                //{"status": true, "userStatus": 1}
+                let userStatus = data.userStatus;
+                /*
+                      -1 = unjoin
+                      0 = pending
+                      1 = active
+                      2 = rejected
+                      3 = removed
+                    */
+                if (userStatus === 1) {
+                  let group = seletedItem;
+                  disconnectAllGroup();
+                  resetField();
+                  navigation.navigate('StartGroupChat', {
+                    groupId: group._id,
+                    groupInfo: group,
+                  });
+                } else {
+                  seletedItem.status = userStatus;
+                  setSelectedGroup(seletedItem);
+                  if (
+                    refJoinGroup.current !== undefined &&
+                    refJoinGroup.current !== null
+                  ) {
+                    refJoinGroup.current.open();
+                  }
+                }
+              }
+            }
+            console.log('====================================');
+            console.log('user status', data);
+            console.log('====================================');
+          }
+        }
+      },
+      (code, error) => {
+        global.loader_ref.show_loader(0);
+        Alert.alert('something wrong', error);
+        console.log('====================================');
+        console.log('code ,error', code, error);
+        console.log('====================================');
+      },
+    );
+  };
   /**
    *
    * @API Section
@@ -325,13 +496,6 @@ const GroupsList = ({route, navigation}) => {
    * Pagination
    *
    */
-  const onPaginate = () => {
-    if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
-      setPaginationStatus(PaginationStatus.waiting);
-      filterObject.page = filterObject.page + 1;
-      searchGroupData();
-    }
-  };
 
   const onEndReached = () => {
     if (totalPages <= currentPage) {
@@ -343,26 +507,129 @@ const GroupsList = ({route, navigation}) => {
     }
   };
 
+  const onPaginate = () => {
+    if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
+      setPaginationStatus(PaginationStatus.fetching);
+      filterObject.page = filterObject.page + 1;
+      openSelctedTab(currentTab);
+    }
+  };
+
   const handleRefresh = () => {
-    filterObject.page = 1;
-    totalPages = 0;
     setIsRefreshing(false);
     resetCount();
-    searchGroupData(filterObject);
+    openSelctedTab(currentTab);
   };
 
   const resetCount = () => {
     totalPages = 0;
+    currentPage = 1;
     filterObject = {};
-    filterObject.page = 0;
-    filterObject.size = 10;
-    filterObject.q = '';
+    filterObject.page = 1;
+    filterObject.limit = 10;
+  };
+
+  const resetField = () => {
+    totalPages = 0;
+    currentPage = 1;
+    searchQuery = '';
+    responseMessage = '';
+    isSuccess = false;
+    seletedItem = null;
+    firstLoad = true;
+    myGroupIds = [];
+    selectedTab = 0;
+    isSocketConnected = false;
   };
   /**
    *
    * Pagination
    *
    */
+
+  const joinGroupWithSocket = useCallback(unJoined => {
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      unJoined.forEach(element => {
+        let payload = {
+          groupId: element,
+          userId: global.userId,
+        };
+        setTimeout(() => {
+          socketRef.current.emit('subscribe-group', payload);
+        }, 100);
+      });
+    }
+  }, []);
+
+  const disconnectAllGroup = useCallback(() => {
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      myGroupIds.forEach(element => {
+        let payload = {
+          groupId: element,
+          userId: global.userId,
+        };
+        setTimeout(() => {
+          socketRef.current.emit('subscribe-group', payload);
+        }, 100);
+      });
+    }
+  }, []);
+
+  const updateCountInGroup = useCallback(
+    message => {
+      let oldData = postData;
+      let index = _.findIndex(oldData, function (item) {
+        return item._id === message.groupId;
+      });
+      if (index !== undefined && index !== null && index > -1) {
+        let newCount = oldData[index].unreadMessageCount + 1;
+        oldData[index].unreadMessageCount = newCount;
+        setPostData([...oldData]);
+      }
+    },
+    [postData],
+  );
+
+  const openSelctedTab = useCallback(
+    index => {
+      selectedTab = index;
+      resetCount();
+      setPostData([]);
+      setPaginationStatus(PaginationStatus.waiting);
+      if (index === 0) {
+        getGroupData();
+      } else if (index === 1) {
+        getDiscoverGroups();
+      } else if (index === 2) {
+        getBatchGroups();
+      }
+    },
+    [getGroupData, getDiscoverGroups, getBatchGroups],
+  );
+
+  const validateInput = () => {
+    if (groupName.trim() === '' || groupName.length === 0) {
+      setErrorMessage({groupName: 'This field is required'});
+    } else if (aboutGroup.trim() === '' || aboutGroup.length === 0) {
+      setErrorMessage({aboutGroup: 'This field is required'});
+    } else if (mediaData === undefined || mediaData === null) {
+      setErrorMessage({mediaData: 'This field is required'});
+    } else {
+      saveGroup();
+    }
+  };
+
+  const saveGroup = () => {
+    let requestObject = {
+      name: groupName,
+      description: aboutGroup,
+      profilePicture: mediaData.thumbnail,
+      firstComment: myComment,
+    };
+
+    Keyboard.dismiss();
+    uploadPostData(requestObject);
+  };
 
   const createNewGroup = () => {
     return (
@@ -606,9 +873,11 @@ const GroupsList = ({route, navigation}) => {
   };
 
   const renderItem = ({item, index}) => {
-    return renderGroupItem(item, index, () => {
+    return renderGroupItem(selectedTab, item, index, () => {
       seletedItem = item;
-      getUserStatus(item._id);
+      setTimeout(() => {
+        getUserStatus(item._id);
+      }, 100);
     });
   };
 
@@ -632,30 +901,109 @@ const GroupsList = ({route, navigation}) => {
       />
 
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
-        <View style={[GlobalInclude.AppStyle.fill]}>
-          <View style={[GlobalInclude.AppStyle.fill, g.pt10]}>
-            <View style={GlobalInclude.AppStyle.contentSpaceHorizonta}>
-              <SingleSearchWithFilter
-                placeholder={'Type more than three Characters'}
-                filterQuery={filterQuery}
-                changeText={text => {
-                  setFilterQuery(text);
-                  searchQuery = text;
-                  if (text.length > 3) {
-                    searchGroupData();
-                  }
-                }}
-                showGoButton={false}
-                onFilterPress={() => {}}
-                hideFilter={true}
-              />
-            </View>
+        {firstTimeLoad ? (
+          <View style={GlobalInclude.AppStyle.fillCenter}>
+            <ActivityIndicator
+              size={'large'}
+              color={GlobalInclude.Color.ColorPrimary}
+            />
+          </View>
+        ) : (
+          <View style={[GlobalInclude.AppStyle.fill]}>
+            <View style={[GlobalInclude.AppStyle.fill, g.pt10]}>
+              <View style={GlobalInclude.AppStyle.contentSpaceHorizonta}>
+                <SingleSearchWithFilter
+                  placeholder={'Type more than three Characters'}
+                  filterQuery={filterQuery}
+                  changeText={text => {
+                    setFilterQuery(text);
+                    searchQuery = text;
+                    if (text.length > 3) {
+                      resetCount();
+                      setPostData([]);
+                      searchGroupData();
+                    }
+                    if (text.trim().length === 0) {
+                      openSelctedTab(0);
+                    }
+                  }}
+                  showGoButton={false}
+                  onFilterPress={() => {}}
+                  hideFilter={true}
+                />
+              </View>
 
-            {filterQuery.trim().length > 3 ? (
+              <View style={[grid.rowdir, g.mt5, g.mb10]}>
+                <TouchableOpacity
+                  style={grid.col}
+                  activeOpacity={1}
+                  onPress={e => {
+                    e.preventDefault();
+                    setCurrentTab(0);
+                    openSelctedTab(0);
+                  }}>
+                  <Text
+                    style={[
+                      g.fs15,
+                      currentTab === 0 ? g.colorBlue : styles.colorInActive,
+                      g.FHNB,
+                      g.txtCenter,
+                      g.txtCenterVertical,
+                      grid.justifyContentCenter,
+                      grid.alignItems,
+                    ]}>
+                    My Groups
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={grid.col}
+                  activeOpacity={1}
+                  onPress={e => {
+                    e.preventDefault();
+                    setCurrentTab(1);
+                    openSelctedTab(1);
+                  }}>
+                  <Text
+                    style={[
+                      g.fs15,
+                      currentTab === 1 ? g.colorBlue : styles.colorInActive,
+                      g.FHNB,
+                      g.txtCenter,
+                      g.txtCenterVertical,
+                      grid.justifyContentCenter,
+                      grid.alignItems,
+                    ]}>
+                    Discover More
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={grid.col}
+                  activeOpacity={1}
+                  onPress={e => {
+                    e.preventDefault();
+                    setCurrentTab(2);
+                    openSelctedTab(2);
+                  }}>
+                  <Text
+                    style={[
+                      g.fs15,
+                      currentTab === 2 ? g.colorBlue : styles.colorInActive,
+                      g.FHNB,
+                      g.txtCenter,
+                      g.txtCenterVertical,
+                      grid.justifyContentCenter,
+                      grid.alignItems,
+                    ]}>
+                    Batch Groups
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               <FlatList
+                style={grid.col}
                 showsVerticalScrollIndicator={false}
-                extraData={filteredGroup}
-                data={filteredGroup}
+                extraData={postData}
+                data={postData}
                 onEndReachedThreshold={0.1}
                 onEndReached={onEndReached}
                 renderItem={renderItem}
@@ -663,7 +1011,7 @@ const GroupsList = ({route, navigation}) => {
                 contentContainerStyle={{
                   paddingStart: scale(15),
                   paddingEnd: scale(15),
-                  paddingBottom: scale(200),
+                  paddingBottom: scale(100),
                 }}
                 bounces={false}
                 keyExtractor={(v, i) => i.toString()}
@@ -672,58 +1020,11 @@ const GroupsList = ({route, navigation}) => {
                 onRefresh={handleRefresh}
                 handleRefresh={handleRefresh}
               />
-            ) : (
-              <ScrollableTabView
-                ref={tabRef}
-                underlineColor={'#ffffff'}
-                initialPage={initialPage}
-                tabBarActiveTextColor={GlobalInclude.Color.ColorPrimary}
-                tabBarInactiveTextColor={'#bababa'}
-                tabBarTextStyle={{
-                  fontSize: scale(15),
-                  fontFamily: 'Lato-Regular',
-                  margin: -5,
-                }}
-                onChangeTab={({i, ref, from}) => {
-                  if (i !== from) {
-                    console.log('====================================');
-                    console.log('700', i);
-                    console.log('====================================');
-                    setCurrentTab(i);
-                  }
-                }}
-                tabBarUnderlineStyle={styles.tabBarUnderlineStyle}
-                renderTabBar={() => (
-                  <ScrollableTabBar style={styles.tabBarStyle} />
-                )}>
-                <MyGroups
-                  isActive={currentTab === 1}
-                  tabLabel={'My Groups'}
-                  onTap={(item, index) => {
-                    seletedItem = item;
-                    getUserStatus(item._id);
-                  }}
-                />
-                <DiscoverGroups
-                  isActive={currentTab === 2}
-                  tabLabel={'Discover More'}
-                  onTap={(item, index) => {
-                    seletedItem = item;
-                    getUserStatus(item._id);
-                  }}
-                />
-                <BatchGroups
-                  isActive={currentTab === 3}
-                  tabLabel={'Batch Groups'}
-                  onTap={(item, index) => {
-                    seletedItem = item;
-                    getUserStatus(item._id);
-                  }}
-                />
-              </ScrollableTabView>
-            )}
+              {showProgess(paginationStatus === PaginationStatus.fetching)}
+            </View>
           </View>
-        </View>
+        )}
+
         {userOptions()}
         {createNewGroup()}
         {selectedGroup !== undefined && selectedGroup !== null && joinGroup()}
@@ -796,6 +1097,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Lato-Regular',
     justifyContent: 'center',
   },
+  colorInActive: {color: '#bababa'},
 });
 
 export default GroupsList;

@@ -391,7 +391,7 @@ class GroupChatItem extends PureComponent {
               g.txtLeft,
               customFont,
             ]}>
-            {metaData.fileName}
+            {metaData?.fileName}
           </Text>
           <View style={[grid.rowrow]}>
             <Text
@@ -402,7 +402,7 @@ class GroupChatItem extends PureComponent {
                 g.txtLeft,
                 g.fs12,
               ]}>
-              {Helpers.humanFileSize(metaData.fileSize)}
+              {Helpers.humanFileSize(metaData?.fileSize)}
             </Text>
             <Text
               style={[
@@ -414,7 +414,7 @@ class GroupChatItem extends PureComponent {
                 g.ml5,
                 {textTransform: 'uppercase'},
               ]}>
-              {Helpers.getExtention(metaData.fileName)}
+              {Helpers.getExtention(metaData?.fileName)}
             </Text>
           </View>
         </View>
@@ -508,6 +508,7 @@ class GroupChatItem extends PureComponent {
   }
   renderPdfComponent(source) {
     const {customFont, currentMessage} = this.props;
+    console.log('currentMessage', currentMessage);
     return (
       <View>
         <View style={styles.pdfMainContainer}>
@@ -530,7 +531,7 @@ class GroupChatItem extends PureComponent {
           />
         </View>
 
-        {currentMessage.media.metaData !== undefined &&
+        {currentMessage.media.extraObjects !== undefined &&
           currentMessage !== null && (
             <View style={g.p5}>
               <View style={grid.row}>
@@ -550,7 +551,7 @@ class GroupChatItem extends PureComponent {
                     g.txtLeft,
                     customFont,
                   ]}>
-                  {currentMessage.media.metaData.fileName}
+                  {currentMessage?.media?.extraObjects?.fileName}
                 </Text>
               </View>
               <View style={[grid.rowrow, g.mt5, g.ml10]}>
@@ -563,7 +564,7 @@ class GroupChatItem extends PureComponent {
                     g.fs12,
                   ]}>
                   {Helpers.humanFileSize(
-                    currentMessage.media.metaData.fileSize,
+                    currentMessage.media?.extraObjects?.fileSize,
                   )}
                 </Text>
                 <Text
@@ -576,7 +577,9 @@ class GroupChatItem extends PureComponent {
                     g.ml5,
                     {textTransform: 'uppercase'},
                   ]}>
-                  {Helpers.getExtention(currentMessage.media.metaData.fileName)}
+                  {Helpers.getExtention(
+                    currentMessage.media?.extraObjects?.fileName,
+                  )}
                 </Text>
               </View>
             </View>
