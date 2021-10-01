@@ -2,7 +2,6 @@ import React, {useState, useEffect} from 'react';
 import {
   View,
   StyleSheet,
-  Alert,
   SafeAreaView,
   Text,
   Dimensions,
@@ -16,6 +15,7 @@ import HeaderBar from '../../component/HeaderBar';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {Switch} from 'react-native-elements';
 import {showProgess} from '../../component/Common';
+import {doGetGroupSetting, doSetGroupSetting} from '../../Actions/GroupActions';
 
 const {width} = Dimensions.get('window');
 
@@ -28,18 +28,76 @@ const GroupSettings = ({route, navigation}) => {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
+    if (global.isConnected) {
+      getSettings();
+    }
     return () => {};
   }, []);
 
+  const getSettings = () => {
+    doGetGroupSetting(
+      response => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            if (data.status) {
+              if (data.settings !== undefined && data.settings !== null) {
+                let status =
+                  data.settings[0]?.unreadMessageNotificationSettings;
+                setEnableNotification(status === 1);
+              }
+            }
+          }
+        }
+      },
+      (error, message) => {
+        console.log('====================================');
+        console.log('error: ' + error, message);
+        console.log('====================================');
+      },
+    );
+  };
+
   const setUserSettings = () => {
     setIsSubmitting(true);
-    responseMessage = 'Updating information successfully!';
-    setShowModal(true);
-    setIsSubmitting(false);
-    setTimeout(() => {
-      setShowModal(false);
-      navigation.goBack();
-    }, 2000);
+    let params = {
+      status: enableNotification,
+    };
+    doSetGroupSetting(
+      params,
+      response => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            console.log('====================================');
+            console.log('response: ' + data);
+            console.log('====================================');
+            if (data.status) {
+              responseMessage = 'Updating information successfully!';
+              setShowModal(true);
+              setIsSubmitting(false);
+              setTimeout(() => {
+                setShowModal(false);
+                navigation.goBack();
+              }, 2000);
+            }
+          }
+        }
+      },
+      (error, message) => {
+        console.log('====================================');
+        console.log('error: ' + error, message);
+        console.log('====================================');
+      },
+    );
   };
 
   return (

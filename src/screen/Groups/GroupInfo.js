@@ -624,28 +624,29 @@ const GroupInfo = ({route, navigation}) => {
                   }
                 }}
               />
-
-              <PendingRequests
-                groupData={groupData}
-                tabLabel={
-                  groupData.pendingUser && groupData.pendingUser.length > 0
-                    ? `(${groupData.pendingUser.length})` +
-                      ' Pending Request(s)'
-                    : 'Pending Request(s)'
-                }
-                onTap={(item, selectedMode) => {
-                  selectedUser = item;
-                  mode = selectedMode;
-                  removeIndex(
-                    mode === 1
-                      ? 'Are you sure you want to accept it?'
-                      : 'Are you sure you want to reject it?',
-                    () => {
-                      updateUserRequest();
-                    },
-                  );
-                }}
-              />
+              {groupData.isAdmin && (
+                <PendingRequests
+                  groupData={groupData}
+                  tabLabel={
+                    groupData.pendingUser && groupData.pendingUser.length > 0
+                      ? `(${groupData.pendingUser.length})` +
+                        ' Pending Request(s)'
+                      : 'Pending Request(s)'
+                  }
+                  onTap={(item, selectedMode) => {
+                    selectedUser = item;
+                    mode = selectedMode;
+                    removeIndex(
+                      mode === 1
+                        ? 'Are you sure you want to accept it?'
+                        : 'Are you sure you want to reject it?',
+                      () => {
+                        updateUserRequest();
+                      },
+                    );
+                  }}
+                />
+              )}
             </ScrollableTabView>
           </ScrollView>
 

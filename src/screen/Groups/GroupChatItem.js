@@ -351,7 +351,7 @@ class GroupChatItem extends PureComponent {
   renderAudioComponent(source) {
     const {customFont, currentMessage} = this.props;
 
-    const {metaData} = currentMessage.media;
+    const {extraObjects} = currentMessage.media;
 
     return (
       <View style={[styles.audioMainContainer, grid.rowrow]}>
@@ -391,7 +391,7 @@ class GroupChatItem extends PureComponent {
               g.txtLeft,
               customFont,
             ]}>
-            {metaData?.fileName}
+            {extraObjects?.fileName}
           </Text>
           <View style={[grid.rowrow]}>
             <Text
@@ -402,7 +402,7 @@ class GroupChatItem extends PureComponent {
                 g.txtLeft,
                 g.fs12,
               ]}>
-              {Helpers.humanFileSize(metaData?.fileSize)}
+              {Helpers.humanFileSize(extraObjects?.fileSize)}
             </Text>
             <Text
               style={[
@@ -414,7 +414,7 @@ class GroupChatItem extends PureComponent {
                 g.ml5,
                 {textTransform: 'uppercase'},
               ]}>
-              {Helpers.getExtention(metaData?.fileName)}
+              {Helpers.getExtention(extraObjects?.fileName)}
             </Text>
           </View>
         </View>
@@ -422,7 +422,7 @@ class GroupChatItem extends PureComponent {
     );
   }
   renderVideoComponent(source, currentMessage) {
-    const {metaData} = currentMessage.media;
+    const {extraObjects} = currentMessage.media;
 
     return (
       <>
@@ -443,22 +443,22 @@ class GroupChatItem extends PureComponent {
           iconSize={scale(20)}
           showPlay={true}
         />
-        {metaData !== undefined && metaData !== null && (
+        {extraObjects !== undefined && extraObjects !== null && (
           <View style={g.p5}>
-            {metaData.title !== undefined &&
-              metaData.title !== null &&
-              metaData.title !== '' && (
+            {extraObjects.title !== undefined &&
+              extraObjects.title !== null &&
+              extraObjects.title !== '' && (
                 <Text style={[g.fs14, g.FHNB, g.colorBlue]} numberOfLines={1}>
-                  {metaData.title}
+                  {extraObjects.title}
                 </Text>
               )}
-            {metaData.description !== undefined &&
-              metaData.description !== null &&
-              metaData.description !== '' && (
+            {extraObjects.description !== undefined &&
+              extraObjects.description !== null &&
+              extraObjects.description !== '' && (
                 <Text
                   style={[g.fs12, g.FHNR, g.colordarkGray, g.mt2]}
                   numberOfLines={2}>
-                  {metaData.description}
+                  {extraObjects.description}
                 </Text>
               )}
 
@@ -674,6 +674,19 @@ class GroupChatItem extends PureComponent {
     );
   }
 
+  renderSystemMessage() {
+    const {currentMessage, customFont} = this.props;
+    return (
+      <View style={[styles.container]}>
+        <View>
+          <Text style={[styles.text, customFont]}>
+            {currentMessage.messageText}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   /**
    *
    * @Components
@@ -686,21 +699,24 @@ class GroupChatItem extends PureComponent {
 
     return (
       <View>
-        <View
-          style={[
-            g.pl5,
-            g.pr5,
-            {marginBottom: sameUser ? scale(5) : scale(10)},
-            {marginBottom: scale(5), zIndex: 3},
-          ]}>
-          <View style={[grid.rowdir, grid.justifyContentCenter]}>
-            {this.renderDay()}
+        {currentMessage.isSystem ? (
+          this.renderSystemMessage()
+        ) : (
+          <View
+            style={[
+              g.pl5,
+              g.pr5,
+              {marginBottom: sameUser ? scale(5) : scale(10)},
+              {marginBottom: scale(5), zIndex: 3},
+            ]}>
+            <View style={[grid.rowdir, grid.justifyContentCenter]}>
+              {this.renderDay()}
+            </View>
+            {position === 'right'
+              ? this.renderRightSide(currentMessage)
+              : this.renderLeftSide(currentMessage)}
           </View>
-
-          {position === 'right'
-            ? this.renderRightSide(currentMessage)
-            : this.renderLeftSide(currentMessage)}
-        </View>
+        )}
       </View>
     );
   }
@@ -815,6 +831,7 @@ const styles = StyleSheet.create({
     marginBottom: scale(10),
     backgroundColor: 'rgba(255,255,255,0.3)',
     paddingVertical: scale(8),
+    marginHorizontal: scale(20),
   },
   text: {
     backgroundColor: GlobalInclude.Color.ColorPrimary,

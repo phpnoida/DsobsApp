@@ -36,7 +36,7 @@ import CommonButton from '../../component/CommonButton';
 import {showMediaType, showImageThumb} from '../chat/ChatDelegates';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {getStatusBarHeight} from 'react-native-iphone-x-helper';
-import {IconType} from '../../helper/Constants';
+import {IconType, APP_NAME} from '../../helper/Constants';
 import ThreeDotsLoader from '../../helper/ThreeDotsLoader';
 import ChatItem from './GroupChatItem';
 import Helper from '../../helper/Helper';
@@ -99,6 +99,11 @@ const PaginationStatus = {
   waiting: 1,
   allLoaded: 2,
 };
+
+const transform =
+  Platform.OS === 'android'
+    ? [{scaleY: -1}, {perspective: 1280}]
+    : [{scaleY: -1}];
 
 const StartGroupChat = ({route}) => {
   const socketRef = useRef();
@@ -293,13 +298,12 @@ const StartGroupChat = ({route}) => {
         // console.log('====================================');
         // console.log('get-message', message);
         // console.log('====================================');
-
         if (author._id !== global.userId) {
+          readMessage(message._id);
           if (isFiltering) {
             newMessageList.push(message);
           } else {
             if (author._id !== global.userId) {
-              readMessage(message._id);
               if (showScrollToBottom) {
                 bottomUnread = bottomUnread + 1;
                 setBottomMessages(bottomUnread);
@@ -587,18 +591,19 @@ const StartGroupChat = ({route}) => {
         ) {
           let data = response.data;
 
-          // console.log('====================================');
-          // console.log('filterData', data);
-          // console.log('====================================');
+          console.log('====================================');
+          console.log('filterData', data);
+          console.log('====================================');
 
           if (data.status) {
             let array = data.data;
+            let firstComment = data.firstComment;
+
+            if (filterObject.page === 1) {
+              setGroupMembers(data.users);
+            }
 
             let unreadIds = _.map(_.filter(array, {isRead: false}), '_id');
-
-            console.log('====================================');
-            console.log('unreadIds', unreadIds);
-            console.log('====================================');
             if (unreadIds.length > 0) {
               updateReadMessages(unreadIds);
             }
@@ -611,6 +616,23 @@ const StartGroupChat = ({route}) => {
             totalPages = data.totalPages;
 
             if (array.length === 0) {
+              console.log('619');
+              if (
+                firstComment !== undefined &&
+                firstComment !== null &&
+                firstComment != ''
+              ) {
+                if (filterObject.page === 1) {
+                  let payload = {
+                    isSystem: true,
+                    isHidden: false,
+                    messageText: firstComment,
+                  };
+                  objArray.push(payload);
+                  setMessages([...objArray]);
+                }
+              }
+
               setPaginationStatus(PaginationStatus.allLoaded);
             } else {
               for (let i = 0; i < array.length; i++) {
@@ -707,9 +729,23 @@ const StartGroupChat = ({route}) => {
                 }
               } else {
                 if (filterObject.page === 1) {
-                  setGroupMembers(data.users);
                   setMessages([...objArray]);
                 } else {
+                  if (filterObject.page === totalPages) {
+                    if (
+                      firstComment !== undefined &&
+                      firstComment !== null &&
+                      firstComment != ''
+                    ) {
+                      console.log('728');
+                      let payload = {
+                        isSystem: true,
+                        isHidden: false,
+                        messageText: firstComment,
+                      };
+                      objArray.push(payload);
+                    }
+                  }
                   setMessages([...messages, ...objArray]);
                 }
               }
@@ -726,16 +762,23 @@ const StartGroupChat = ({route}) => {
   const setGroupMembers = members => {
     if (members !== undefined && members !== null) {
       let subTitle = '';
+      let found = false;
       members.forEach(element => {
         if (element._id !== global.userId) {
+          found = true;
           subTitle += Helper.capitalize(element.firstName) + ', ';
         }
       });
-      subTitle = subTitle.replace(/,\s*$/, '');
-      subTitle = subTitle + ', You';
-      setSubHeader(subTitle);
+
+      if (found) {
+        subTitle = subTitle.replace(/,\s*$/, '');
+        subTitle = subTitle + ', You';
+        setSubHeader(subTitle);
+      } else {
+        setSubHeader('You');
+      }
     } else {
-      setSubHeader('eemre');
+      setSubHeader(APP_NAME);
     }
   };
 
@@ -964,6 +1007,7 @@ const StartGroupChat = ({route}) => {
   };
 
   const onPaginate = () => {
+    console.log('989');
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
       setPaginationStatus(PaginationStatus.waiting);
       if (isFiltering) {
@@ -971,6 +1015,7 @@ const StartGroupChat = ({route}) => {
         currentPage = currentPage + 1;
         searchMessageContent();
       } else {
+        console.log('997');
         filterObject.page = filterObject.page + 1;
         currentPage = currentPage + 1;
         getOldMessages();
@@ -980,6 +1025,7 @@ const StartGroupChat = ({route}) => {
 
   const onEndReached = ({distanceFromEnd}) => {
     if ((hasScrolled || distanceFromEnd > 0) && distanceFromEnd <= 100) {
+      console.log('1015');
       if (totalPages <= currentPage) {
         setPaginationStatus(PaginationStatus.allLoaded);
         return;
@@ -987,6 +1033,8 @@ const StartGroupChat = ({route}) => {
       if (paginationStatus === PaginationStatus.waiting) {
         onPaginate();
       }
+    } else {
+      console.log('1024');
     }
   };
 
@@ -1057,7 +1105,11 @@ const StartGroupChat = ({route}) => {
       previousMessage,
       nextMessage,
       customFont,
-      position: item.authorId._id === global.userId ? 'right' : 'left',
+      position: item.isSystem
+        ? 'center'
+        : item.authorId._id === global.userId
+        ? 'right'
+        : 'left',
     };
 
     return (
@@ -1822,7 +1874,7 @@ const StartGroupChat = ({route}) => {
 
   const emptyComponent = () => {
     return (
-      <View>
+      <View style={transform}>
         <View style={GlobalInclude.AppStyle.fillCenter}>
           <Text
             style={[

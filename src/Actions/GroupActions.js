@@ -340,6 +340,37 @@ export function doSearchMessage(groupId, filterParams, callback, errCallback) {
   };
 }
 
+export function doGetGroupSetting(callback, errCallback) {
+  let requestPath = `${SERVER_PATH}group/settings`;
+  const request = axios
+    .get(requestPath, {headers: {Authorization: global.accessToken}})
+    .then(res => callback(res))
+    .catch(err => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function doSetGroupSetting(payload, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}group/settings`;
+  const request = axios
+    .patch(requestPath, payload, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
+    })
+    .then(res => callback(res))
+    .catch(err => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
 export function handleError(err, errCallback) {
   if (
     err.response &&

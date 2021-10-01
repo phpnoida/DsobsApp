@@ -70,7 +70,7 @@ let seletedItem = null;
 let firstLoad = true;
 let myGroupIds = [];
 let selectedTab = 0;
-let isSocketConnected = true;
+
 let messageIds = [];
 
 const {height} = Dimensions.get('window');
@@ -105,21 +105,27 @@ const GroupsList = ({route, navigation}) => {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
+      disconnectSocket();
       connectSocket();
     });
     return () => {
-      socketRef?.current?.removeListener('connect');
-      socketRef?.current?.removeListener('error');
-      socketRef?.current?.removeListener('disconnect');
-      socketRef?.current?.removeListener('reconnect');
-      socketRef?.current?.removeListener('reconnect_error');
-      socketRef?.current?.removeListener('reconnect_attempt');
-      socketRef?.current?.removeListener('user-connected');
-      socketRef?.current?.removeListener('get-message');
-      socketRef?.current?.disconnect();
       unsubscribe();
+      disconnectSocket();
     };
   }, [navigation, openSelctedTab, connectSocket]);
+
+  const disconnectSocket = () => {
+    socketRef?.current?.removeListener('connect');
+    socketRef?.current?.removeListener('error');
+    socketRef?.current?.removeListener('disconnect');
+    socketRef?.current?.removeListener('reconnect');
+    socketRef?.current?.removeListener('reconnect_error');
+    socketRef?.current?.removeListener('reconnect_attempt');
+    socketRef?.current?.removeListener('user-connected');
+    socketRef?.current?.removeListener('get-message');
+    socketRef?.current?.disconnect();
+    socketRef.current = null;
+  };
 
   const connectSocket = useCallback(() => {
     console.log('====================================');
@@ -137,25 +143,20 @@ const GroupsList = ({route, navigation}) => {
         upgrade: false,
       });
     }
-
+    console.log('socketRef.current.connected', socketRef.current.connected);
     socketRef.current.on('connect', () => {
-      console.log('socketRef.current.connected', socketRef.current.connected);
       if (socketRef.current.connected) {
         resetField();
         setCurrentTab(0);
         openSelctedTab(0);
-        isSocketConnected = true;
-
         socketRef.current.on('error', attempt => {
           console.log('====================================');
           console.log('errror', attempt);
           console.log('====================================');
-          isSocketConnected = false;
         });
 
         socketRef.current.on('disconnect', () => {
           console.log('socket disconnected'); // undefined
-          isSocketConnected = false;
         });
 
         socketRef.current.on('reconnect', attempt => {
@@ -167,7 +168,6 @@ const GroupsList = ({route, navigation}) => {
           console.log('====================================');
           console.log('reconnect_error', attempt);
           console.log('====================================');
-          isSocketConnected = false;
         });
         socketRef.current.on('reconnect_attempt', attempt => {
           console.log('====================================');
@@ -199,7 +199,7 @@ const GroupsList = ({route, navigation}) => {
     /********************
      * Specific Events
      */
-  }, []);
+  }, [openSelctedTab]);
 
   useEffect(() => {
     if (postData.length > 0) {
@@ -211,7 +211,7 @@ const GroupsList = ({route, navigation}) => {
             let exist = _.includes(messageIds, message._id);
             if (!exist) {
               console.log('====================================');
-              console.log('message', message);
+              console.log('useEffect-message-209', message);
               console.log('====================================');
               updateCountInGroup(message);
             }
@@ -304,6 +304,10 @@ const GroupsList = ({route, navigation}) => {
           if (data.status) {
             let arrayItems = data.groups;
 
+            // console.log('====================================');
+            // console.log('arrayItems', JSON.stringify(arrayItems));
+            // console.log('====================================');
+
             if (arrayItems.length > 0 && selectedTab === 0) {
               let result = _.map(arrayItems, '_id');
               let isAnyNew = false;
@@ -360,7 +364,7 @@ const GroupsList = ({route, navigation}) => {
               setShowErrorMessage(true);
               setTimeout(() => {
                 setShowErrorMessage(false);
-                navigation.goBack();
+                //navigation.goBack();
               }, 2500);
             } else {
               responseMessage = 'Error while posting your request!';
@@ -439,9 +443,6 @@ const GroupsList = ({route, navigation}) => {
 
             if (data && data !== null && data !== undefined) {
               if (data.status) {
-                console.log('====================================');
-                console.log('seletedItem', seletedItem._id);
-                console.log('====================================');
                 //{"status": true, "userStatus": 1}
                 let userStatus = data.userStatus;
                 /*
@@ -454,7 +455,8 @@ const GroupsList = ({route, navigation}) => {
                 if (userStatus === 1) {
                   let group = seletedItem;
                   disconnectAllGroup();
-                  resetField();
+                  disconnectSocket();
+                  //resetField();
                   navigation.navigate('StartGroupChat', {
                     groupId: group._id,
                     groupInfo: group,
@@ -539,7 +541,6 @@ const GroupsList = ({route, navigation}) => {
     firstLoad = true;
     myGroupIds = [];
     selectedTab = 0;
-    isSocketConnected = false;
   };
   /**
    *
@@ -563,15 +564,14 @@ const GroupsList = ({route, navigation}) => {
 
   const disconnectAllGroup = useCallback(() => {
     if (socketRef.current !== undefined && socketRef.current !== null) {
-      myGroupIds.forEach(element => {
+      myGroupIds.forEach((element, index) => {
         let payload = {
           groupId: element,
           userId: global.userId,
         };
-        setTimeout(() => {
-          socketRef.current.emit('subscribe-group', payload);
-        }, 100);
+        socketRef.current.emit('subscribe-group', payload);
       });
+      disconnectSocket();
     }
   }, []);
 
@@ -584,6 +584,9 @@ const GroupsList = ({route, navigation}) => {
       if (index !== undefined && index !== null && index > -1) {
         let newCount = oldData[index].unreadMessageCount + 1;
         oldData[index].unreadMessageCount = newCount;
+
+        oldData = _.orderBy(oldData, ['unreadMessageCount'], ['desc']);
+
         setPostData([...oldData]);
       }
     },
@@ -933,71 +936,73 @@ const GroupsList = ({route, navigation}) => {
                 />
               </View>
 
-              <View style={[grid.rowdir, g.mt5, g.mb10]}>
-                <TouchableOpacity
-                  style={grid.col}
-                  activeOpacity={1}
-                  onPress={e => {
-                    e.preventDefault();
-                    setCurrentTab(0);
-                    openSelctedTab(0);
-                  }}>
-                  <Text
-                    style={[
-                      g.fs15,
-                      currentTab === 0 ? g.colorBlue : styles.colorInActive,
-                      g.FHNB,
-                      g.txtCenter,
-                      g.txtCenterVertical,
-                      grid.justifyContentCenter,
-                      grid.alignItems,
-                    ]}>
-                    My Groups
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={grid.col}
-                  activeOpacity={1}
-                  onPress={e => {
-                    e.preventDefault();
-                    setCurrentTab(1);
-                    openSelctedTab(1);
-                  }}>
-                  <Text
-                    style={[
-                      g.fs15,
-                      currentTab === 1 ? g.colorBlue : styles.colorInActive,
-                      g.FHNB,
-                      g.txtCenter,
-                      g.txtCenterVertical,
-                      grid.justifyContentCenter,
-                      grid.alignItems,
-                    ]}>
-                    Discover More
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={grid.col}
-                  activeOpacity={1}
-                  onPress={e => {
-                    e.preventDefault();
-                    setCurrentTab(2);
-                    openSelctedTab(2);
-                  }}>
-                  <Text
-                    style={[
-                      g.fs15,
-                      currentTab === 2 ? g.colorBlue : styles.colorInActive,
-                      g.FHNB,
-                      g.txtCenter,
-                      g.txtCenterVertical,
-                      grid.justifyContentCenter,
-                      grid.alignItems,
-                    ]}>
-                    Batch Groups
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              {filterQuery.length === 0 && (
+                <View style={[grid.rowdir, g.mt5, g.mb10]}>
+                  <TouchableOpacity
+                    style={grid.col}
+                    activeOpacity={1}
+                    onPress={e => {
+                      e.preventDefault();
+                      setCurrentTab(0);
+                      openSelctedTab(0);
+                    }}>
+                    <Text
+                      style={[
+                        g.fs15,
+                        currentTab === 0 ? g.colorBlue : styles.colorInActive,
+                        g.FHNB,
+                        g.txtCenter,
+                        g.txtCenterVertical,
+                        grid.justifyContentCenter,
+                        grid.alignItems,
+                      ]}>
+                      My Groups
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={grid.col}
+                    activeOpacity={1}
+                    onPress={e => {
+                      e.preventDefault();
+                      setCurrentTab(1);
+                      openSelctedTab(1);
+                    }}>
+                    <Text
+                      style={[
+                        g.fs15,
+                        currentTab === 1 ? g.colorBlue : styles.colorInActive,
+                        g.FHNB,
+                        g.txtCenter,
+                        g.txtCenterVertical,
+                        grid.justifyContentCenter,
+                        grid.alignItems,
+                      ]}>
+                      Discover More
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={grid.col}
+                    activeOpacity={1}
+                    onPress={e => {
+                      e.preventDefault();
+                      setCurrentTab(2);
+                      openSelctedTab(2);
+                    }}>
+                    <Text
+                      style={[
+                        g.fs15,
+                        currentTab === 2 ? g.colorBlue : styles.colorInActive,
+                        g.FHNB,
+                        g.txtCenter,
+                        g.txtCenterVertical,
+                        grid.justifyContentCenter,
+                        grid.alignItems,
+                      ]}>
+                      Batch Groups
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
 
               <FlatList
                 style={grid.col}
