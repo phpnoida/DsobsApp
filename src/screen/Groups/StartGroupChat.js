@@ -33,7 +33,7 @@ import DocViewer from '../../component/DocViewer';
 import AudioPlayer from '../../component/AudioPlayer';
 import ImageViewer from '../../component/ImageViewer';
 import CommonButton from '../../component/CommonButton';
-import {showMediaType, showImageThumb} from '../chat/ChatDelegates';
+import {showImageThumb} from '../chat/ChatDelegates';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {getStatusBarHeight} from 'react-native-iphone-x-helper';
 import {IconType, APP_NAME} from '../../helper/Constants';
@@ -49,8 +49,10 @@ import {
   doGetGroupMessages,
   doReportMessage,
   doHideMessage,
+  doRemoveMessage,
   doGetReportedMessageInfo,
   doSearchMessage,
+  doAboutGroup,
 } from '../../Actions/GroupActions';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import io from 'socket.io-client';
@@ -78,11 +80,10 @@ let bottomUnread = 0;
 let newMessageList = [];
 let imageArray = [];
 let messagePosition = -1;
-
+let isLoadingEarlier = false;
 const scrollToBottomOffset = 200;
 
-let groupId = '',
-  groupInfo = null;
+let groupId = '';
 
 let filterObject = {
   page: 1,
@@ -125,6 +126,7 @@ const StartGroupChat = ({route}) => {
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [groupInfo, setGroupInfo] = useState(null);
 
   const [isFiltering, setIsFiltering] = useState(false);
   const [filterQuery, setFilterQuery] = useState('');
@@ -152,6 +154,7 @@ const StartGroupChat = ({route}) => {
   const [reportContent, setReportContent] = useState('');
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [showHideMessageAlert, setShowHideMessageAlert] = useState(false);
+  const [showRemoveMessageAlert, setShowRemoveMessageAlert] = useState(false);
   const [reportedMessageData, setReportedMessageData] = useState([]);
 
   /**
@@ -161,18 +164,11 @@ const StartGroupChat = ({route}) => {
 
   useEffect(() => {
     resetOldData();
+    resetCount();
+
     if (route.params !== undefined && route.params !== null) {
       groupId = route.params.groupId;
-      groupInfo = route.params.groupInfo;
-
-      if (groupInfo && groupInfo !== null && groupInfo !== undefined) {
-        setupGroupInfo();
-      }
-
-      if (groupId && groupId !== undefined && groupId !== null) {
-        resetCount();
-        connectSocket();
-      }
+      filterObject.groupId = groupId;
     }
 
     const handleAppStateChange = state => {
@@ -184,10 +180,10 @@ const StartGroupChat = ({route}) => {
         console.log('App has come to the foreground!');
       } else if (state === 'background' || state === 'inactive') {
         console.log('App gone to the background!');
-        if (!isBackTap) {
-          isBackTap = true;
-          disconnectUser();
-        }
+        // if (!isBackTap) {
+        //   isBackTap = true;
+        //   disconnectUser();
+        // }
       }
       appState.current = state;
     };
@@ -207,25 +203,30 @@ const StartGroupChat = ({route}) => {
 
     AppState.addEventListener('change', handleAppStateChange);
 
+    const unsubscribe = navigation.addListener('focus', () => {
+      getGroupData();
+    });
+
     return () => {
       if (backHandler !== undefined && backHandler !== null) {
         backHandler.remove();
       }
       AppState.removeEventListener('change', handleAppStateChange);
       disconnectUser();
+      unsubscribe();
     };
-  }, [route.params, connectSocket, disconnectUser, navigation]);
+  }, [route.params, disconnectUser, navigation, getGroupData]);
 
-  const connectSocket = useCallback(() => {
-    console.log('====================================');
-    console.log('202-event');
-    console.log('====================================');
-
+  useEffect(() => {
     if (
       socketRef == null ||
       socketRef.current === null ||
       socketRef.current === undefined
     ) {
+      console.log('====================================');
+      console.log('connect to socket');
+      console.log('====================================');
+
       socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
         reconnectionAttempts: 2,
         transports: ['websocket'],
@@ -235,7 +236,6 @@ const StartGroupChat = ({route}) => {
 
     socketRef.current.on('connect', () => {
       if (socketRef.current.connected) {
-        filterObject.groupId = groupId;
         setIsConnected(true);
         getOldMessages();
         setTimeout(() => {
@@ -243,9 +243,7 @@ const StartGroupChat = ({route}) => {
         }, 100);
 
         socketRef.current.on('error', attempt => {
-          console.log('====================================');
           console.log('errror', attempt);
-          console.log('====================================');
         });
 
         socketRef.current.on('disconnect', () => {
@@ -254,148 +252,124 @@ const StartGroupChat = ({route}) => {
         });
 
         socketRef.current.on('reconnect', attempt => {
-          console.log('====================================');
           console.log('attempt', attempt);
-          console.log('====================================');
         });
         socketRef.current.on('reconnect_error', attempt => {
-          console.log('====================================');
           console.log('reconnect_error', attempt);
-          console.log('====================================');
-          //socketRef.current.disconnect();
           isUserConnected = false;
         });
         socketRef.current.on('reconnect_attempt', attempt => {
-          console.log('====================================');
           console.log('reconnect_attempt', attempt);
-          console.log('====================================');
+        });
+
+        socketRef?.current?.removeListener('user-connected');
+        socketRef.current.on('user-connected', event => {
+          console.log('connected', event);
+          isUserConnected = JSON.parse(event.status);
+        });
+
+        console.log(' global.userId', global.userId);
+        socketRef?.current?.removeListener('removed-user');
+        socketRef.current.on('removed-user', event => {
+          if (event && event !== null && event !== undefined) {
+            if (
+              event.userId &&
+              event.userId !== null &&
+              event.userId !== undefined &&
+              event.userId === global.userId
+            ) {
+              blockMsg = 'Admin removed you from group!';
+              setIsConnected(false);
+              setTimeout(() => {
+                disconnectUser();
+              }, 5000);
+            }
+          }
+        });
+
+        socketRef?.current?.removeListener('removed-admin');
+        socketRef.current.on('removed-admin', event => {
+          if (event && event !== null && event !== undefined) {
+            if (
+              event.userId &&
+              event.userId !== null &&
+              event.userId !== undefined &&
+              event.userId === global.userId
+            ) {
+              getGroupData();
+              Alert.alert('Removed from admin', 'You are no longer admin!');
+            }
+          }
+        });
+
+        socketRef?.current?.removeListener('made-admin');
+        socketRef.current.on('made-admin', event => {
+          if (event && event !== null && event !== undefined) {
+            if (
+              event.userId &&
+              event.userId !== null &&
+              event.userId !== undefined &&
+              event.userId === global.userId
+            ) {
+              getGroupData();
+              Alert.alert('Made admin', 'You are now admin!');
+            }
+          }
         });
       }
     });
 
-    /********************
-     * Specific Events
-     */
-  }, [joinGroupRequest]);
+    return () => {};
+  }, [joinGroupRequest, getOldMessages, disconnectUser]);
 
   useEffect(() => {
-    /********************
-     * Specific Events
-     */
-
-    socketRef.current.on('user-connected', event => {
-      // console.log('====================================');
-      // console.log('connected', event);
-      // console.log('connected', event.status);
-      // console.log('====================================');
-      isUserConnected = JSON.parse(event.status);
-    });
-
-    socketRef.current.on('get-message', event => {
+    socketRef?.current?.removeListener('get-message');
+    socketRef?.current?.on('get-message', event => {
+      console.log('get-message', JSON.stringify(event));
       if (event && event !== null && event !== undefined) {
         let message = event.message;
         let author = message.authorId;
-        // console.log('====================================');
-        // console.log('get-message', message);
-        // console.log('====================================');
-        if (author._id !== global.userId) {
-          readMessage(message._id);
-          if (isFiltering) {
-            newMessageList.push(message);
-          } else {
-            if (author._id !== global.userId) {
-              if (showScrollToBottom) {
-                bottomUnread = bottomUnread + 1;
-                setBottomMessages(bottomUnread);
+        let oldData = messages;
+        var index = oldData.findIndex(x => x._id === message._id);
+        if (index < 0) {
+          if (author._id !== global.userId) {
+            readMessage(message._id);
+            if (isFiltering) {
+              newMessageList.push(message);
+            } else {
+              if (author._id !== global.userId) {
+                if (showScrollToBottom) {
+                  bottomUnread = bottomUnread + 1;
+                  setBottomMessages(bottomUnread);
+                }
+                console.log('337');
+                setMessages(previousMessages =>
+                  append(previousMessages, message),
+                );
               }
-              setMessages(previousMessages =>
-                append(previousMessages, message),
-              );
             }
           }
         }
       }
     });
 
-    socketRef.current.on('removed-user', event => {
-      if (event && event !== null && event !== undefined) {
-        if (
-          event.userId &&
-          event.userId !== null &&
-          event.userId !== undefined &&
-          event.userId === global.userId
-        ) {
-          blockMsg = 'Admin removed you from group!';
-          setIsConnected(false);
-          setTimeout(() => {
-            disconnectUser();
-          }, 5000);
-        }
-      }
-    });
-
-    socketRef.current.on('removed-admin', event => {
-      if (event && event !== null && event !== undefined) {
-      }
-    });
-
-    socketRef.current.on('removed-user', event => {
-      if (event && event !== null && event !== undefined) {
-        if (
-          event.userId &&
-          event.userId !== null &&
-          event.userId !== undefined &&
-          event.userId === global.userId
-        ) {
-          blockMsg = 'Admin removed you from group!';
-          setIsConnected(false);
-          setTimeout(() => {
-            disconnectUser();
-          }, 5000);
-        }
-      }
-    });
-
-    socketRef.current.on('made-admin', event => {
-      if (event && event !== null && event !== undefined) {
-        if (
-          event.userId &&
-          event.userId !== null &&
-          event.userId !== undefined &&
-          event.userId === global.userId
-        ) {
-          Alert.alert('Made admin', 'You are now admin!');
-        }
-      }
-    });
-
-    return () => {};
-  }, [showScrollToBottom, disconnectUser, isFiltering]);
-
-  useEffect(() => {
-    socketRef.current.on('get-edited-message', event => {
+    socketRef?.current?.removeListener('get-edited-message');
+    socketRef?.current?.on('get-edited-message', event => {
+      console.log('get-edited-message', JSON.stringify(event));
       if (event && event !== null && event !== undefined) {
         let message = event.message;
         let _id = message._id;
-        // console.log('====================================');
-        // console.log('edited', message);
-        // console.log('====================================');
-
         let oldData = messages;
         var index = oldData.findIndex(x => x._id === _id);
-
-        console.log('====================================');
-        console.log('index', index);
-        console.log('====================================');
-
         if (index > -1) {
           oldData[index] = message;
+          console.log('357');
           setMessages([...oldData]);
         }
       }
     });
     return () => {};
-  }, [messages]);
+  }, [messages, isFiltering, readMessage, showScrollToBottom]);
 
   const readMessage = useCallback(messageId => {
     if (socketRef.current !== undefined && socketRef.current !== null) {
@@ -434,6 +408,7 @@ const StartGroupChat = ({route}) => {
       console.log('sendMessage', JSON.stringify(object));
       console.log('====================================');
       socketRef.current.emit('send-message', object);
+
       object.createdAt = moment().unix();
       object.isHidden = false;
       object.isReported = false;
@@ -441,11 +416,21 @@ const StartGroupChat = ({route}) => {
         object.parentMessageId = selectedChatObject;
       }
 
+      if (inEditMode && selectedChatObject !== null) {
+        let oldData = messages;
+        var index = oldData.findIndex(x => x._id === selectedChatObject._id);
+        if (index > -1) {
+          oldData[index] = object;
+          console.log('415');
+          setMessages([...oldData]);
+        }
+      } else {
+        console.log('419');
+        setMessages(previousMessages => append(previousMessages, object));
+      }
       inEditMode = false;
-
       setIsReplayEditComment(false);
       setSelectedChatObject(null);
-      setMessages(previousMessages => append(previousMessages, object));
       setIsSending(false);
     }
   };
@@ -462,17 +447,10 @@ const StartGroupChat = ({route}) => {
         userId: global.userId,
       };
 
-      socketRef.current.emit('disconnect', payload);
+      socketRef.current.emit('user-disconnect', payload);
 
       setTimeout(() => {
-        socketRef?.current?.removeListener('connect');
-        socketRef?.current?.removeListener('error');
-        socketRef?.current?.removeListener('disconnect');
-        socketRef?.current?.removeListener('reconnect');
-        socketRef?.current?.removeListener('reconnect_error');
-        socketRef?.current?.removeListener('reconnect_attempt');
-        socketRef?.current?.removeListener('user-connected');
-        socketRef?.current?.removeListener('get-message');
+        disconnectAllEvents();
         socketRef?.current?.disconnect();
         socketRef.current = null;
         resetOldData();
@@ -480,6 +458,15 @@ const StartGroupChat = ({route}) => {
       }, 200);
     }
   }, [navigation]);
+
+  const disconnectAllEvents = () => {
+    socketRef?.current?.removeListener('user-connected');
+    socketRef?.current?.removeListener('get-message');
+    socketRef?.current?.removeListener('get-edited-message');
+    socketRef?.current?.removeListener('made-admin');
+    socketRef?.current?.removeListener('removed-admin');
+    socketRef?.current?.removeListener('removed-user');
+  };
 
   const resetOldData = () => {
     isBackTap = false;
@@ -495,80 +482,71 @@ const StartGroupChat = ({route}) => {
     imageArray = [];
   };
 
-  const updateReadMessages = messageIds => {
-    if (
-      messageIds !== undefined &&
-      messageIds !== null &&
-      messageIds.length > 0
-    ) {
-      messageIds.forEach(element => {
-        if (element !== undefined && element !== null) {
-          readMessage(element);
-        }
-      });
-    }
-  };
-
-  /**
-   *
-   * General
-   */
-
-  /**
-   *
-   * @UseEffects
-   */
-
-  /**
-   *
-   * @param {*} currentMessages
-   * @param {*} message
-   * @UseEffects
-   */
-
-  /**
-   *
-   * @ChatMethod
-   *
-   */
-
-  const setupGroupInfo = () => {
-    setHeader(groupInfo.name);
-    setHeaderImage({uri: groupInfo.profilePicture});
-  };
+  const updateReadMessages = useCallback(
+    messageIds => {
+      if (
+        messageIds !== undefined &&
+        messageIds !== null &&
+        messageIds.length > 0
+      ) {
+        messageIds.forEach(element => {
+          if (element !== undefined && element !== null) {
+            readMessage(element);
+          }
+        });
+      }
+    },
+    [readMessage],
+  );
 
   const resetCount = () => {
+    totalPages = 0;
+    currentPage = 1;
+
     filterObject = {};
     filterObject.page = 1;
     filterObject.limit = 10;
   };
 
-  const getOldMessages = () => {
+  const getOldMessages = useCallback(() => {
+    isLoadingEarlier = true;
     setIsRefreshing(true);
+    if (filterObject.page > 1) {
+      global.loader_ref.show_loader(1);
+    }
     doGetGroupMessages(
       filterObject,
       groupId,
       response => {
         setIsRefreshing(false);
-        manageResponse(response);
-        setIsFirstLoad(false);
+        manageResponse(response).then(() => {
+          global.loader_ref.show_loader(0);
+          setIsFirstLoad(false);
+          isLoadingEarlier = false;
+        });
       },
       (code, error) => {
+        global.loader_ref.show_loader(0);
         setIsRefreshing(false);
         setIsFirstLoad(false);
+        console.log('544');
         setMessages([]);
+        isLoadingEarlier = false;
       },
     );
-  };
+  }, [manageResponse]);
 
   const searchMessageContent = () => {
+    isLoadingEarlier = true;
     doSearchMessage(
       groupId,
       searchfilterObject,
       response => {
         setIsRefreshing(false);
-        manageResponse(response);
-        setIsFirstLoad(false);
+        manageResponse(response).then(() => {
+          setIsFirstLoad(false);
+          isLoadingEarlier = false;
+        });
       },
       (code, error) => {
         console.log('====================================');
@@ -576,99 +554,114 @@ const StartGroupChat = ({route}) => {
         console.log('====================================');
         setIsRefreshing(false);
         setIsFirstLoad(false);
-        setMessages([]);
+        console.log('565');
+        setFilterMessage([]);
       },
     );
   };
 
-  const manageResponse = response => {
-    try {
-      if (response && response !== null) {
-        if (
-          response.data &&
-          response.data !== undefined &&
-          response.data !== null
-        ) {
-          let data = response.data;
+  const manageResponse = useCallback(
+    response => {
+      return new Promise((resolve, reject) => {
+        try {
+          if (response && response !== null) {
+            if (
+              response.data &&
+              response.data !== undefined &&
+              response.data !== null
+            ) {
+              let data = response.data;
 
-          console.log('====================================');
-          console.log('filterData', data);
-          console.log('====================================');
+              if (data.status) {
+                let tmpArray = [];
+                let objArray = [];
+                let counter = 0;
+                let authorId = 0;
 
-          if (data.status) {
-            let array = data.data;
-            let firstComment = data.firstComment;
+                let array = data.data;
 
-            if (filterObject.page === 1) {
-              setGroupMembers(data.users);
-            }
+                console.log('arrayItem', JSON.stringify(array));
+                let unreadIds = _.map(_.filter(array, {isRead: false}), '_id');
+                let firstComment = data.firstComment;
+                if (!isFiltering) {
+                  totalPages = data.totalPages;
+                }
 
-            let unreadIds = _.map(_.filter(array, {isRead: false}), '_id');
-            if (unreadIds.length > 0) {
-              updateReadMessages(unreadIds);
-            }
-
-            let tmpArray = [];
-            let objArray = [];
-            let counter = 0;
-            let authorId = 0;
-
-            totalPages = data.totalPages;
-
-            if (array.length === 0) {
-              console.log('619');
-              if (
-                firstComment !== undefined &&
-                firstComment !== null &&
-                firstComment != ''
-              ) {
                 if (filterObject.page === 1) {
-                  let payload = {
-                    isSystem: true,
-                    isHidden: false,
-                    messageText: firstComment,
-                  };
-                  objArray.push(payload);
-                  setMessages([...objArray]);
+                  setGroupMembers(data.users);
                 }
-              }
-
-              setPaginationStatus(PaginationStatus.allLoaded);
-            } else {
-              for (let i = 0; i < array.length; i++) {
-                const element = array[i];
-                let media = element.media;
-                let mediaType = media.mediaType;
-                let tmpAuthorId = element.authorId._id;
-
-                if (authorId === 0) {
-                  authorId = tmpAuthorId;
+                if (unreadIds.length > 0) {
+                  updateReadMessages(unreadIds);
                 }
 
-                if (authorId === tmpAuthorId) {
-                  if (mediaType === 'IMAGE') {
-                    counter++;
-                    tmpArray.push(element);
-                  } else {
-                    if (counter > 3) {
-                      let request = {
-                        media: {
-                          mediaType: 'IMAGE_GROUP',
-                          metaData: {
-                            imageArray: tmpArray,
-                          },
-                        },
+                console.log('array.length', array.length);
+                if (array.length === 0) {
+                  if (
+                    firstComment !== undefined &&
+                    firstComment !== null &&
+                    firstComment !== ''
+                  ) {
+                    if (currentPage === 1) {
+                      let payload = {
+                        isSystem: true,
                         isHidden: false,
-                        messageText: '',
-                        isReported: false,
-                        createdAt: 1632213401,
-                        _id: '61499999b8ddad5e96cc3936',
-                        authorId: {
-                          _id: tmpArray[0].authorId._id,
-                          name: tmpArray[0].authorId.name,
-                        },
+                        messageText: firstComment,
                       };
-                      objArray.push(request);
+                      objArray.push(payload);
+
+                      if (isFiltering) {
+                        setFilterMessage([...objArray]);
+                      } else {
+                        setPaginationStatus(PaginationStatus.allLoaded);
+                        setMessages([...objArray]);
+                      }
+                    }
+                  }
+                  setTimeout(() => {
+                    resolve(true);
+                  }, 200);
+                } else {
+                  for (let i = 0; i < array.length; i++) {
+                    let element = array[i];
+                    let media = element?.media;
+                    let mediaType = media?.mediaType;
+                    let tmpAuthorId = element?.authorId?._id;
+
+                    if (authorId === 0) {
+                      authorId = tmpAuthorId;
+                    }
+
+                    if (authorId === tmpAuthorId) {
+                      if (mediaType === 'IMAGE') {
+                        counter++;
+                        tmpArray.push(element);
+                      } else {
+                        if (counter > 3) {
+                          objArray.push(imageGroupRequest(tmpArray));
+                          tmpArray = [];
+                          counter = 0;
+                        } else {
+                          tmpArray.forEach(child => {
+                            objArray.push(child);
+                          });
+                          tmpArray = [];
+                          counter = 0;
+                        }
+                        objArray.push(element);
+                      }
+                    } else {
+                      tmpArray.forEach(child => {
+                        objArray.push(child);
+                      });
+                      tmpArray = [];
+                      counter = 0;
+                      objArray.push(element);
+                    }
+                  }
+
+                  if (tmpArray.length > 0) {
+                    if (counter > 3) {
+                      objArray.push(imageGroupRequest(tmpArray));
                       tmpArray = [];
                       counter = 0;
                     } else {
@@ -678,85 +671,82 @@ const StartGroupChat = ({route}) => {
                       tmpArray = [];
                       counter = 0;
                     }
-                    objArray.push(element);
                   }
-                } else {
-                  counter = 0;
-                  tmpArray = [];
-                  objArray.push(element);
-                }
-              }
 
-              if (tmpArray.length > 0) {
-                if (counter > 3) {
-                  let request = {
-                    media: {
-                      mediaUrl: '',
-                      mediaType: 'IMAGE_GROUP',
-                      metaData: {
-                        imageArray: tmpArray,
-                      },
-                    },
-                    isHidden: false,
-                    messageText: '',
-                    isReported: false,
-                    createdAt: 1632213401,
-                    _id: '61499999b8ddad5e96cc3936',
-                    authorId: {
-                      _id: tmpArray[0].authorId._id,
-                      name: tmpArray[0].authorId.name,
-                    },
-                  };
-                  objArray.push(request);
-                  tmpArray = [];
-                  counter = 0;
-                } else {
-                  tmpArray.forEach(child => {
-                    objArray.push(child);
-                  });
-                  tmpArray = [];
-                  counter = 0;
-                }
-              }
-
-              //let msgList = objArray.reverse();
-
-              if (isFiltering) {
-                if (searchfilterObject.page === 1) {
-                  setFilterMessage([...objArray]);
-                } else {
-                  setFilterMessage([...filterMessage, ...objArray]);
-                }
-              } else {
-                if (filterObject.page === 1) {
-                  setMessages([...objArray]);
-                } else {
-                  if (filterObject.page === totalPages) {
-                    if (
-                      firstComment !== undefined &&
-                      firstComment !== null &&
-                      firstComment != ''
-                    ) {
-                      console.log('728');
-                      let payload = {
-                        isSystem: true,
-                        isHidden: false,
-                        messageText: firstComment,
-                      };
-                      objArray.push(payload);
+                  if (isFiltering) {
+                    if (searchfilterObject.page === 1) {
+                      setFilterMessage([...objArray]);
+                      setTimeout(() => {
+                        setPaginationStatus(PaginationStatus.waiting);
+                        resolve(true);
+                      }, 250);
+                    } else {
+                      setFilterMessage(old => [...old, ...objArray]);
+                      setTimeout(() => {
+                        setPaginationStatus(PaginationStatus.waiting);
+                        resolve(true);
+                      }, 250);
+                    }
+                  } else {
+                    if (filterObject.page === 1) {
+                      setMessages([...objArray]);
+                      setTimeout(() => {
+                        setPaginationStatus(PaginationStatus.waiting);
+                        resolve(true);
+                      }, 250);
+                    } else {
+                      if (filterObject.page === totalPages) {
+                        if (
+                          firstComment !== undefined &&
+                          firstComment !== null &&
+                          firstComment !== ''
+                        ) {
+                          let payload = {
+                            isSystem: true,
+                            isHidden: false,
+                            messageText: firstComment,
+                          };
+                          objArray.push(payload);
+                        }
+                      }
+                      setMessages(old => [...old, ...objArray]);
+                      setTimeout(() => {
+                        setPaginationStatus(PaginationStatus.waiting);
+                        resolve(true);
+                      }, 250);
                     }
                   }
-                  setMessages([...messages, ...objArray]);
                 }
               }
-              setPaginationStatus(PaginationStatus.waiting);
             }
           }
+        } catch (error) {
+          console.log('error in manage', error);
         }
-      }
-    } catch (error) {
-      console.log('error in manage', error);
-    }
+      });
+    },
+    [isFiltering, updateReadMessages],
+  );
+
+  const imageGroupRequest = tmpArray => {
+    let request = {
+      media: {
+        mediaType: 'IMAGE_GROUP',
+        metaData: {
+          imageArray: tmpArray,
+        },
+      },
+      isHidden: false,
+      messageText: '',
+      isReported: false,
+      createdAt: 1632213401,
+      _id: '61499999b8ddad5e96cc3936',
+      authorId: {
+        _id: tmpArray[0].authorId._id,
+        name: tmpArray[0].authorId.name,
+      },
+    };
+    return request;
   };
 
   const setGroupMembers = members => {
@@ -806,13 +796,11 @@ const StartGroupChat = ({route}) => {
               oldData[messagePosition].isReported = true;
 
               setTimeout(() => {
+                console.log('733');
                 setMessages([...oldData]);
                 setShowErrorMessage(false);
               }, 2500);
             }
-            console.log('====================================');
-            console.log('data', JSON.stringify(data));
-            console.log('====================================');
           }
         }
       },
@@ -840,16 +828,60 @@ const StartGroupChat = ({route}) => {
           ) {
             let data = response.data;
 
+            console.log('data', JSON.stringify(data));
+
             if (data.status) {
               responseMessage = 'Message hide successfully!';
-              setShowErrorMessage(true);
+
+              let oldData = messages;
+              oldData[messagePosition].isHideen = true;
+
               setTimeout(() => {
+                console.log('733');
+                setMessages([...oldData]);
                 setShowErrorMessage(false);
               }, 2500);
             }
-            console.log('====================================');
+          }
+        }
+      },
+      (code, error) => {
+        console.log('====================================');
+        console.log(code, error);
+        console.log('====================================');
+        global.loader_ref.show_loader(0);
+      },
+    );
+  };
+
+  const removeMessageFromList = () => {
+    global.loader_ref.show_loader(1);
+    doRemoveMessage(
+      groupId,
+      selectedChatObject._id,
+      response => {
+        global.loader_ref.show_loader(0);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
             console.log('data', JSON.stringify(data));
-            console.log('====================================');
+
+            if (data.status) {
+              responseMessage = 'Message removed successfully!';
+              setShowErrorMessage(true);
+              let oldData = messages;
+              oldData[messagePosition].isHideen = true;
+              setTimeout(() => {
+                console.log('733');
+                setMessages([...oldData]);
+                setShowErrorMessage(false);
+              }, 2500);
+            }
           }
         }
       },
@@ -887,9 +919,6 @@ const StartGroupChat = ({route}) => {
               ) {
                 reporetedMessageListRef.current.open();
               }
-              console.log('====================================');
-              console.log('Reporeted', JSON.stringify(reported));
-              console.log('====================================');
             }
           }
         }
@@ -902,6 +931,36 @@ const StartGroupChat = ({route}) => {
       },
     );
   };
+
+  const getGroupData = useCallback(() => {
+    doAboutGroup(
+      groupId,
+      response => {
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              let group = data.data;
+              console.log('group', group);
+              setGroupInfo(group);
+              setHeader(group.name);
+              setHeaderImage({uri: group.profilePicture});
+
+              var merge = _.merge(data.admins, data.superAdmins);
+              merge = _.merge(merge, data.users);
+              setGroupMembers(merge);
+            }
+          }
+        }
+      },
+      (code, error) => {},
+    );
+  }, []);
 
   /**
    *
@@ -952,7 +1011,6 @@ const StartGroupChat = ({route}) => {
       request.isEdited = true;
       request.messageId = selectedChatObject._id;
       postMessage(request);
-      inEditMode = false;
     } else if (isReplayEditComment) {
       let request = generateChatObject(input, media, mediaType, extraItem);
       request.depth = 1;
@@ -960,7 +1018,6 @@ const StartGroupChat = ({route}) => {
       postMessage(request);
     } else {
       let request = generateChatObject(input, media, mediaType, extraItem);
-      //postMsg(request);
       postMessage(request);
     }
   };
@@ -989,20 +1046,20 @@ const StartGroupChat = ({route}) => {
         contentOffset: {y: contentOffsetY},
       },
     } = event;
-
     if (contentOffsetY > scrollToBottomOffset) {
       setShowScrollToBottom(true);
       setHasScrolled(true);
     } else {
       if (contentOffsetY === 0) {
         newMessageList.forEach(element => {
+          console.log('913');
           setMessages(previousMessages => append(previousMessages, element));
         });
       }
       bottomUnread = 0;
       setBottomMessages(0);
       setShowScrollToBottom(false);
-      setHasScrolled(false);
+      setHasScrolled(true);
     }
   };
 
@@ -1024,8 +1081,15 @@ const StartGroupChat = ({route}) => {
   };
 
   const onEndReached = ({distanceFromEnd}) => {
-    if ((hasScrolled || distanceFromEnd > 0) && distanceFromEnd <= 100) {
-      console.log('1015');
+    console.log('hasScrolled', hasScrolled);
+    console.log('hasScrolled', distanceFromEnd);
+    console.log('hasScrolled', isLoadingEarlier);
+    if (
+      (hasScrolled || distanceFromEnd > 0) &&
+      distanceFromEnd <= 100 &&
+      !isLoadingEarlier
+    ) {
+      console.log('1015', paginationStatus, totalPages, currentPage);
       if (totalPages <= currentPage) {
         setPaginationStatus(PaginationStatus.allLoaded);
         return;
@@ -1045,7 +1109,7 @@ const StartGroupChat = ({route}) => {
       chatRef.current !== undefined &&
       chatRef.current !== null
     ) {
-      chatRef.current.scrollToEnd({animating: true});
+      chatRef.current.scrollToOffset({offset: 0, animated: true});
     }
   };
 
@@ -1115,30 +1179,37 @@ const StartGroupChat = ({route}) => {
     return (
       <ChatItem
         {...messageProps}
+        playVideo={() => {}}
         onPress={() => {
-          if (!item.delete) {
-            if (item.messageType === 5) {
-              documentItem = item.media;
-              setShowDocViewer(true);
-            } else if (item.messageType === 4) {
-              playAudio = item.media;
-              extraObjects = item.extraObjects;
-              setShowPlayer(!showPlayer);
-            } else if (item.messageType === 2) {
-              imageArray = [];
-              imageArray.push({
-                url: item.media,
-              });
-              setShowImageModal(true);
+          if (!item.isHidden) {
+            let mediaContent = '';
+            let messageType = '';
+
+            if (item.media !== undefined && item.media !== null) {
+              mediaContent = item.media.mediaUrl;
+              messageType = item.media.mediaType;
+
+              if (messageType === 'IMAGE') {
+                imageArray = [];
+                imageArray.push({
+                  url: mediaContent,
+                });
+                setShowImageModal(true);
+              } else if (messageType === 'AUDIO') {
+                playAudio = mediaContent;
+                extraObjects = item.media.extraObjects;
+                setShowPlayer(!showPlayer);
+              } else if (messageType === 'DOCUMENT') {
+                documentItem = mediaContent;
+                setShowDocViewer(true);
+              }
             }
           }
         }}
         onLongPress={() => {
           if (!item.isHidden) {
             setSelectedChatObject(item);
-
             messagePosition = index;
-
             setTimeout(() => {
               if (
                 chatObjRef.current !== undefined &&
@@ -1150,8 +1221,9 @@ const StartGroupChat = ({route}) => {
           }
         }}
         onTapUserName={() => {
+          console.log('1207');
           navigation.navigate('UserProfile', {
-            userId: item.user._id,
+            userId: item.authorId._id,
           });
         }}
         onReportPress={() => {
@@ -1211,7 +1283,7 @@ const StartGroupChat = ({route}) => {
         <EmojiSelector
           onEmojiSelected={emoji => {
             emojiRef.current.close();
-            handleInputChat(1, emoji, 6, '', null);
+            handleInputChat(1, emoji, 'EMOJI', '', null);
           }}
         />
       </OptionsSheet>
@@ -1356,6 +1428,7 @@ const StartGroupChat = ({route}) => {
                 <TouchableOpacity
                   activeOpacity={0.8}
                   onPress={() => {
+                    setFilterMessage([]);
                     setTimeout(() => {
                       searchfilterObject = {
                         page: 1,
@@ -1381,6 +1454,8 @@ const StartGroupChat = ({route}) => {
                   style={[grid.alignItems, grid.justifyContentCenter]}
                   onPress={() => {
                     fitlerText = '';
+                    resetCount();
+                    getOldMessages();
                     setIsFiltering(false);
                     searchfilterObject = {
                       page: 1,
@@ -1389,15 +1464,6 @@ const StartGroupChat = ({route}) => {
                     };
                     setIsConnected(true);
                     setShowSearch(false);
-
-                    if (newMessageList.length > 0) {
-                      newMessageList.forEach(element => {
-                        setMessages(previousMessages =>
-                          append(previousMessages, element),
-                        );
-                      });
-                      newMessageList = [];
-                    }
                   }}>
                   <GlobalInclude.BaseIcon
                     containerStyle={headerStyle.closeIcon}
@@ -1475,6 +1541,7 @@ const StartGroupChat = ({route}) => {
                     onPress={() => {
                       navigation.navigate('GroupInfo', {
                         groupId: groupId,
+                        socket: socketRef?.current,
                       });
                     }}
                     style={[grid.col, g.ml5, g.mr5, grid.justifyContentCenter]}>
@@ -1512,6 +1579,7 @@ const StartGroupChat = ({route}) => {
                 <TouchableOpacity
                   activeOpacity={0.9}
                   onPress={() => {
+                    setFilterMessage([]);
                     setShowSearch(true);
                   }}
                   style={{
@@ -1680,6 +1748,9 @@ const StartGroupChat = ({route}) => {
             ) {
               chatObjRef.current.close();
             }
+            setTimeout(() => {
+              setShowRemoveMessageAlert(true);
+            }, 220);
           }}
           style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
           <Text
@@ -1737,10 +1808,7 @@ const StartGroupChat = ({route}) => {
               grid.justifyContentCenter,
               grid.alignItems,
               g.p15,
-              selectedChatObject !== null &&
-              selectedChatObject.authorId._id === global.userId
-                ? {borderBottomWidth: 2, borderBottomColor: '#ebebe4'}
-                : {},
+              {borderBottomWidth: 2, borderBottomColor: '#ebebe4'},
             ]}>
             <Text
               style={[
@@ -1776,10 +1844,7 @@ const StartGroupChat = ({route}) => {
                   grid.justifyContentCenter,
                   grid.alignItems,
                   g.p15,
-                  selectedChatObject !== null &&
-                  selectedChatObject.authorId._id === global.userId
-                    ? {borderBottomWidth: 2, borderBottomColor: '#ebebe4'}
-                    : {},
+                  {borderBottomWidth: 2, borderBottomColor: '#ebebe4'},
                 ]}>
                 <Text
                   style={[
@@ -1874,8 +1939,8 @@ const StartGroupChat = ({route}) => {
 
   const emptyComponent = () => {
     return (
-      <View style={transform}>
-        <View style={GlobalInclude.AppStyle.fillCenter}>
+      <View style={[transform, {flex: 1}]}>
+        <View style={[GlobalInclude.AppStyle.fillCenter]}>
           <Text
             style={[
               g.colorBlack,
@@ -1918,26 +1983,25 @@ const StartGroupChat = ({route}) => {
             data={filterMessage}
             extraData={filterMessage}
             renderItem={renderChatItem}
+            keyExtractor={keyExtractor}
+            enableEmptySections
+            automaticallyAdjustContentInsets={false}
+            style={{flex: 1}}
+            contentContainerStyle={{flexGrow: 1, justifyContent: 'flex-start'}}
+            onScroll={handleOnScroll}
+            scrollEventThrottle={100}
+            onEndReached={onEndReached}
+            onEndReachedThreshold={0.1}
             removeClippedSubviews={Platform.OS !== 'web'}
             showsVerticalScrollIndicator={false}
-            keyExtractor={keyExtractor}
-            onEndReachedThreshold={0.1}
             maintainVisibleContentPosition={true}
             ListEmptyComponent={emptyComponent}
-            scrollEventThrottle={100}
             bounces={false}
             initialNumToRender={10}
             maxToRenderPerBatch={8}
             updateCellsBatchingPeriod={100}
-            automaticallyAdjustContentInsets={false}
-            initialListSize={5}
+            initialListSize={10}
             pageSize={1}
-            contentContainerStyle={{
-              paddingTop: scale(15),
-              paddingBottom: scale(20),
-            }}
-            onScroll={handleOnScroll}
-            onEndReached={onEndReached}
           />
         ) : (
           <FlatList
@@ -1946,26 +2010,25 @@ const StartGroupChat = ({route}) => {
             data={messages}
             extraData={messages}
             renderItem={renderChatItem}
+            keyExtractor={keyExtractor}
+            enableEmptySections
+            automaticallyAdjustContentInsets={false}
+            style={{flex: 1}}
+            contentContainerStyle={{flexGrow: 1, justifyContent: 'flex-start'}}
+            onScroll={handleOnScroll}
+            scrollEventThrottle={100}
+            onEndReached={onEndReached}
+            onEndReachedThreshold={0.1}
             removeClippedSubviews={Platform.OS !== 'web'}
             showsVerticalScrollIndicator={false}
-            keyExtractor={keyExtractor}
-            onEndReachedThreshold={0.1}
             maintainVisibleContentPosition={true}
             ListEmptyComponent={emptyComponent}
-            scrollEventThrottle={100}
             bounces={false}
             initialNumToRender={10}
             maxToRenderPerBatch={8}
             updateCellsBatchingPeriod={100}
-            automaticallyAdjustContentInsets={false}
-            initialListSize={5}
+            initialListSize={10}
             pageSize={1}
-            contentContainerStyle={{
-              paddingTop: scale(15),
-              paddingBottom: scale(20),
-            }}
-            onScroll={handleOnScroll}
-            onEndReached={onEndReached}
           />
         )}
 
@@ -2203,7 +2266,7 @@ const StartGroupChat = ({route}) => {
         hideTagInVideo={true}
         refRBSheet={uploadRef}
         media={{image: false, video: false, document: false, audio: false}}
-        supportMultiple={false}
+        supportMultiple={true}
         onPickMedia={media => {
           isOpenPicker = false;
           if (media !== undefined && media !== null) {
@@ -2229,13 +2292,25 @@ const StartGroupChat = ({route}) => {
                   element.iw = iWidth;
                   element.ih = iHeight;
                   global.loader_ref.show_loader(0);
-                  handleInputChat(
-                    2,
-                    inputValue,
-                    'IMAGE',
-                    item.fileName,
-                    element,
-                  );
+                  if (media.length > 1) {
+                    setTimeout(() => {
+                      handleInputChat(
+                        2,
+                        inputValue,
+                        'IMAGE',
+                        item.fileName,
+                        element,
+                      );
+                    }, 100);
+                  } else {
+                    handleInputChat(
+                      2,
+                      inputValue,
+                      'IMAGE',
+                      item.fileName,
+                      element,
+                    );
+                  }
                 });
               } else if (item.type === 2) {
                 global.loader_ref.show_loader(1);
@@ -2333,6 +2408,26 @@ const StartGroupChat = ({route}) => {
           }}
           closeAction={() => {
             setShowHideMessageAlert(false);
+          }}
+        />
+      )}
+
+      {showRemoveMessageAlert && (
+        <GlobalInclude.ModalAlert
+          status={showRemoveMessageAlert}
+          header={'Remove message'}
+          subHeader={'Are you sure you want to remove this message?'}
+          okButton={'Yes'}
+          cancelButton={'No'}
+          okAction={() => {
+            setShowRemoveMessageAlert(false);
+            removeMessageFromList();
+          }}
+          cancelAction={() => {
+            setShowRemoveMessageAlert(false);
+          }}
+          closeAction={() => {
+            setShowRemoveMessageAlert(false);
           }}
         />
       )}

@@ -69,6 +69,9 @@ const YoutubeItem = props => {
   }, [props.link]);
 
   const playYoutubeVideo = () => {
+    if (props.playVideo) {
+      props.playVideo();
+    }
     if (Helper.checkVideoUrl(props.link).type === 'vimeo') {
       RootNavigation.navigate('VideoPlayer', {
         playerLink: youtubeId,

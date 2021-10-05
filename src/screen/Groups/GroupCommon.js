@@ -43,16 +43,6 @@ export const renderGroupItem = (currentTab, item, index, onTap) => {
                     ]}>
                     {item.unreadMessageCount.toString()}
                   </Text>
-                  <Text
-                    numberOfLines={1}
-                    style={[
-                      g.FHNB,
-                      g.fs16,
-                      g.colorWhite,
-                      GlobalInclude.AppStyle.transform,
-                    ]}>
-                    New
-                  </Text>
                 </View>
               )}
             </View>
@@ -98,10 +88,12 @@ export const renderGroupItem = (currentTab, item, index, onTap) => {
 export const style = StyleSheet.create({
   imageStyle: {
     width: '100%',
-    height: scale(80),
+    height: scale(90),
     borderRadius: scale(10),
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
+    alignItems: 'center',
+    alignContent: 'center',
   },
   coverImage: {height: '100%', width: '100%'},
   grayColorText: {color: '#bababa'},
@@ -113,13 +105,15 @@ export const style = StyleSheet.create({
   },
   newPostContainer: {
     position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
     backgroundColor: 'rgba(62,62,62,0.6)',
-    paddingHorizontal: scale(13),
-    paddingVertical: scale(7),
-    ...grid.alignItems,
-    ...grid.justifyContentCenter,
+    height: scale(34),
+    width: scale(34),
+    borderRadius: scale(68),
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignContent: 'center',
+    top: scale(30),
+    right: 10,
   },
 });

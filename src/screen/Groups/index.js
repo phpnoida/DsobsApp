@@ -87,6 +87,7 @@ const GroupsList = ({route, navigation}) => {
   const [filterQuery, setFilterQuery] = useState('');
   const [currentTab, setCurrentTab] = useState(0);
   const [firstTimeLoad, setFirstTimeLoad] = useState(true);
+  const [showLoader, setShowLoader] = useState(false);
   const [postData, setPostData] = useState([]);
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
@@ -108,6 +109,10 @@ const GroupsList = ({route, navigation}) => {
       disconnectSocket();
       connectSocket();
     });
+
+    console.log('====================================');
+    console.log(' global.userId', global.userId);
+    console.log('====================================');
     return () => {
       unsubscribe();
       disconnectSocket();
@@ -183,19 +188,6 @@ const GroupsList = ({route, navigation}) => {
         });
       }
     });
-
-    // if (socketRef.current !== undefined && socketRef.current !== null) {
-    //   socketRef.current.on('get-message', event => {
-    //     if (event && event !== null && event !== undefined) {
-    //       let message = event.message;
-    //       console.log('====================================');
-    //       console.log('message', message);
-    //       console.log('====================================');
-    //       updateCountInGroup(message);
-    //     }
-    //   });
-    // }
-
     /********************
      * Specific Events
      */
@@ -245,10 +237,12 @@ const GroupsList = ({route, navigation}) => {
     doGetGroups(
       filterObject,
       response => {
+        setShowLoader(false);
         setFirstTimeLoad(false);
         manageResponse(response);
       },
       (code, error) => {
+        setShowLoader(false);
         console.log('====================================');
         console.log('error,code', code, error);
         console.log('====================================');
@@ -262,9 +256,11 @@ const GroupsList = ({route, navigation}) => {
     doGetDiscoverGroups(
       filterObject,
       response => {
+        setShowLoader(false);
         manageResponse(response);
       },
       (code, error) => {
+        setShowLoader(false);
         console.log('====================================');
         console.log('error,code', code, error);
         console.log('====================================');
@@ -278,10 +274,12 @@ const GroupsList = ({route, navigation}) => {
     doGetBatchGroups(
       filterObject,
       response => {
+        setShowLoader(false);
         setFirstTimeLoad(false);
         manageResponse(response);
       },
       (code, error) => {
+        setShowLoader(false);
         console.log('====================================');
         console.log('error,code', code, error);
         console.log('====================================');
@@ -304,9 +302,7 @@ const GroupsList = ({route, navigation}) => {
           if (data.status) {
             let arrayItems = data.groups;
 
-            // console.log('====================================');
-            // console.log('arrayItems', JSON.stringify(arrayItems));
-            // console.log('====================================');
+            console.log('JSON', JSON.stringify(arrayItems));
 
             if (arrayItems.length > 0 && selectedTab === 0) {
               let result = _.map(arrayItems, '_id');
@@ -331,9 +327,17 @@ const GroupsList = ({route, navigation}) => {
               openSelctedTab(1);
             } else {
               if (filterObject.page === 1) {
+                arrayItems = _.orderBy(
+                  arrayItems,
+                  ['unreadMessageCount'],
+                  ['desc'],
+                );
                 setPostData(arrayItems);
               } else {
-                setPostData([...postData, ...arrayItems]);
+                let oldData = postData;
+                var merge = _.merge(oldData, arrayItems);
+                merge = _.orderBy(merge, ['unreadMessageCount'], ['desc']);
+                setPostData([...merge]);
               }
               setPaginationStatus(PaginationStatus.waiting);
             }
@@ -364,7 +368,7 @@ const GroupsList = ({route, navigation}) => {
               setShowErrorMessage(true);
               setTimeout(() => {
                 setShowErrorMessage(false);
-                //navigation.goBack();
+                openSelctedTab(currentTab);
               }, 2500);
             } else {
               responseMessage = 'Error while posting your request!';
@@ -569,7 +573,7 @@ const GroupsList = ({route, navigation}) => {
           groupId: element,
           userId: global.userId,
         };
-        socketRef.current.emit('subscribe-group', payload);
+        socketRef.current.emit('user-disconnect', payload);
       });
       disconnectSocket();
     }
@@ -597,7 +601,8 @@ const GroupsList = ({route, navigation}) => {
     index => {
       selectedTab = index;
       resetCount();
-      setPostData([]);
+      //setPostData([]);
+      setShowLoader(true);
       setPaginationStatus(PaginationStatus.waiting);
       if (index === 0) {
         getGroupData();
@@ -631,7 +636,10 @@ const GroupsList = ({route, navigation}) => {
     };
 
     Keyboard.dismiss();
-    uploadPostData(requestObject);
+    createGroupRef?.current?.close();
+    setTimeout(() => {
+      uploadPostData(requestObject);
+    }, 200);
   };
 
   const createNewGroup = () => {
@@ -639,9 +647,13 @@ const GroupsList = ({route, navigation}) => {
       <OptionsSheet
         ref={createGroupRef}
         minClosingHeight={50}
-        height={height / 2 + 150}
+        height={height / 2 + 75}
         duration={200}
-        closeOnDragDown={true}
+        closeOnDragDown={false}
+        closeOnPressBack={true}
+        dragFromTopOnly={true}
+        keyboardAvoidingViewEnabled={true}
+        closeOnPressMask={true}
         customStyles={{
           container: GlobalInclude.AppStyle.sheetContainer,
         }}>
@@ -651,7 +663,7 @@ const GroupsList = ({route, navigation}) => {
             style={[grid.flex1]}
             showsVerticalScrollIndicator={false}>
             <View>
-              <View style={g.mb15}>
+              <View style={g.mb10}>
                 {generateHeader('Set Group Name', true)}
                 <TextInput
                   underlineColorAndroid="transparent"
@@ -677,7 +689,7 @@ const GroupsList = ({route, navigation}) => {
                 ) : null}
               </View>
 
-              <View style={g.mb15}>
+              <View style={g.mb10}>
                 {generateHeader('About Group', true)}
                 <TextInput
                   underlineColorAndroid="transparent"
@@ -704,7 +716,7 @@ const GroupsList = ({route, navigation}) => {
                 ) : null}
               </View>
 
-              <View style={g.mb15}>
+              <View style={g.mb10}>
                 {generateHeader('Upload Pic', true)}
                 {uploadMediaButton(
                   () => {
@@ -721,7 +733,7 @@ const GroupsList = ({route, navigation}) => {
                 ) : null}
               </View>
 
-              <View style={g.mb15}>
+              <View style={g.mb10}>
                 {generateHeader('Your first comment in the group', false)}
                 <TextInput
                   underlineColorAndroid="transparent"
@@ -791,7 +803,6 @@ const GroupsList = ({route, navigation}) => {
               ) {
                 createGroupRef.current.open();
               }
-              //navigation.navigate('CreateGroup');
             }, 220);
           })}
 
@@ -804,9 +815,6 @@ const GroupsList = ({route, navigation}) => {
 
           {generateMenuOption('About Groups', 'exclamationcircleo', 10, () => {
             refOptions.current.close();
-            // setTimeout(() => {
-            //   navigation.navigate('ChatEtiquette');
-            // }, 220);
           })}
         </View>
       </OptionsSheet>
@@ -838,6 +846,9 @@ const GroupsList = ({route, navigation}) => {
         title = 'Join Group (Request Rejected)';
         break;
       case 3:
+        title = 'Join Group (You Left)';
+        break;
+      case 4:
         title = 'Join Group (Member Removed)';
         break;
       default:
@@ -864,11 +875,11 @@ const GroupsList = ({route, navigation}) => {
               })
             : generateMenuOption(title, 'add-to-list', 9, () => {
                 refJoinGroup.current.close();
-                if (groupStatus === 2 || groupStatus === 3) {
-                  setTimeout(() => {
-                    joinGroupRequest();
-                  }, 200);
-                }
+                // if (groupStatus === 2 || groupStatus === 3) {
+                //   setTimeout(() => {
+                //     joinGroupRequest();
+                //   }, 200);
+                // }
               })}
         </View>
       </OptionsSheet>
@@ -882,6 +893,24 @@ const GroupsList = ({route, navigation}) => {
         getUserStatus(item._id);
       }, 100);
     });
+  };
+
+  const noDataComponent = () => {
+    return (
+      <View style={GlobalInclude.AppStyle.fillColCenter}>
+        <Text
+          style={[
+            g.colorBlack,
+            g.FHNM,
+            g.fs12,
+            g.textCenter,
+            grid.alignItems,
+            grid.justifyContentCenter,
+          ]}>
+          No Record Found
+        </Text>
+      </View>
+    );
   };
 
   return (
@@ -921,13 +950,16 @@ const GroupsList = ({route, navigation}) => {
                   changeText={text => {
                     setFilterQuery(text);
                     searchQuery = text;
+
                     if (text.length > 3) {
                       resetCount();
                       setPostData([]);
                       searchGroupData();
+                    } else if (text.length === 1) {
+                      setPostData([]);
                     }
                     if (text.trim().length === 0) {
-                      openSelctedTab(0);
+                      openSelctedTab(currentTab);
                     }
                   }}
                   showGoButton={false}
@@ -1004,27 +1036,36 @@ const GroupsList = ({route, navigation}) => {
                 </View>
               )}
 
-              <FlatList
-                style={grid.col}
-                showsVerticalScrollIndicator={false}
-                extraData={postData}
-                data={postData}
-                onEndReachedThreshold={0.1}
-                onEndReached={onEndReached}
-                renderItem={renderItem}
-                ListEmptyComponent={renderNoDataComponent}
-                contentContainerStyle={{
-                  paddingStart: scale(15),
-                  paddingEnd: scale(15),
-                  paddingBottom: scale(100),
-                }}
-                bounces={false}
-                keyExtractor={(v, i) => i.toString()}
-                scrollEventThrottle={16}
-                refreshing={isRefreshing}
-                onRefresh={handleRefresh}
-                handleRefresh={handleRefresh}
-              />
+              {showLoader ? (
+                <View style={GlobalInclude.AppStyle.fillCenter}>
+                  <ActivityIndicator
+                    size={'large'}
+                    color={GlobalInclude.Color.ColorPrimary}
+                  />
+                </View>
+              ) : (
+                <FlatList
+                  style={grid.col}
+                  showsVerticalScrollIndicator={false}
+                  extraData={postData}
+                  data={postData}
+                  onEndReachedThreshold={0.1}
+                  onEndReached={onEndReached}
+                  renderItem={renderItem}
+                  ListEmptyComponent={noDataComponent}
+                  contentContainerStyle={{
+                    flexGrow: 1,
+                    paddingStart: scale(15),
+                    paddingEnd: scale(15),
+                  }}
+                  bounces={false}
+                  keyExtractor={(v, i) => i.toString()}
+                  scrollEventThrottle={16}
+                  refreshing={isRefreshing}
+                  onRefresh={handleRefresh}
+                  handleRefresh={handleRefresh}
+                />
+              )}
               {showProgess(paginationStatus === PaginationStatus.fetching)}
             </View>
           </View>
@@ -1041,9 +1082,6 @@ const GroupsList = ({route, navigation}) => {
             okButton={isSuccess ? 'Okay' : `Contact ${APP_NAME}`}
             okAction={() => {
               setShowErrorMessage(!showErrorMessage);
-              if (isSuccess) {
-                navigation.goBack();
-              }
             }}
             closeAction={() => {
               setShowErrorMessage(!showErrorMessage);
@@ -1066,7 +1104,6 @@ const GroupsList = ({route, navigation}) => {
         onPickMedia={media => {
           uploadRef.current.close();
           if (media !== undefined && media !== null) {
-            console.log('media', JSON.stringify(media));
             setErrorMessage({});
             setMediaData(media[0]);
           }

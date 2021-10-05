@@ -1,0 +1,31 @@
+try {
+            val file = File.createTempFile("temp", name, reactApplicationContext.cacheDir)
+            file.deleteOnExit()
+            val stream = reactApplicationContext.contentResolver.openInputStream(uri)
+            return if (stream != null) {
+                val source = Okio.buffer(Okio.source(stream))
+                val sink = Okio.buffer(Okio.sink(file))
+
+                source.use { input ->
+                    sink.use { output ->
+                        output.writeAll(input)
+                    }
+                }
+
+                /*val source = stream.source().buffer()
+                val sink = Okio.sink(file)
+                sink.sink.writeAll(source)
+                sink.close()*/
+                //file.outputStream().use { stream.copyTo(it) }
+
+                file.absolutePath
+            } else {
+                uriString
+            }
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+
+        return uriString

@@ -48,34 +48,42 @@ class GroupChatItem extends PureComponent {
     return (
       <View style={grid.flex1}>
         {currentMessage.isReported && this.renderReported()}
-
-        <View style={[grid.row]}>
-          <View style={[grid.col, g.bgWhite, styles.bubbleLeft, g.p5]}>
-            <View style={[grid.row, g.mt3, g.mb2]}>
-              <View style={[grid.col]}>
-                {!this.isSameUser(currentMessage, previousMessage) && (
-                  <TouchableOpacity
-                    hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
-                    onPress={() => {
-                      onTapUserName();
-                    }}>
-                    <Text numberOfLines={1} style={[customFont, g.FHNB]}>
-                      {currentMessage.authorId.name}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-              <View style={[g.mr5, grid.justifyContentCenter, grid.alignItems]}>
-                {this.renderDateComponent(currentMessage, true)}
-              </View>
+        <View style={[grid.col, g.bgWhite, styles.bubbleLeft, g.p5]}>
+          <View style={[grid.row, g.mt3, g.mb2]}>
+            <View style={[grid.col]}>
+              {!this.isSameUser(currentMessage, previousMessage) && (
+                <TouchableOpacity
+                  style={{zIndex: 1}}
+                  hitSlop={{
+                    top: 20,
+                    bottom: 20,
+                    left: 20,
+                    right: 20,
+                  }}
+                  onPress={() => {
+                    onTapUserName();
+                  }}>
+                  <Text numberOfLines={1} style={[customFont, g.FHNB]}>
+                    {currentMessage.authorId.name}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
-            <View style={[g.mt5, g.mb5]}>
-              {this.renderItem(currentMessage, true)}
+            <View style={[g.mr5, grid.justifyContentCenter, grid.alignItems]}>
+              {this.renderDateComponent(currentMessage, true)}
             </View>
           </View>
-          {currentMessage.isEdited &&
-            !currentMessage.delete &&
-            this.renderEditView()}
+          <View style={[grid.row, g.mt3, g.mb2]}>
+            <View style={[grid.col]}>
+              <View style={[g.mt5, g.mb5]}>
+                {this.renderItem(currentMessage, true)}
+              </View>
+            </View>
+
+            {currentMessage.isEdited &&
+              !currentMessage.delete &&
+              this.renderEditView()}
+          </View>
         </View>
       </View>
     );
@@ -87,35 +95,39 @@ class GroupChatItem extends PureComponent {
     return (
       <View style={grid.flex1}>
         {currentMessage.isReported && this.renderReported()}
-        <View style={[grid.row]}>
-          {currentMessage.isEdited &&
-            !currentMessage.delete &&
-            this.renderEditView()}
-          <View style={[grid.col, g.bgGreenLight, styles.bubbleRight, g.p5]}>
-            <View style={[grid.row, g.mt3, g.mb2]}>
-              <View style={[grid.col]}>
-                {!this.isSameUser(currentMessage, previousMessage) && (
-                  <TouchableOpacity
-                    hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
-                    onPress={() => {
-                      onTapUserName();
-                    }}>
-                    <Text
-                      numberOfLines={1}
-                      style={[customFont, g.FHNB, g.colorBlack]}>
-                      {currentMessage.authorId.name}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-              <View style={[g.mr5, grid.justifyContentCenter, grid.alignItems]}>
-                {this.renderDateComponent(currentMessage, false)}
+
+        <View style={[grid.col, g.bgWhite, styles.bubbleRight, g.p5]}>
+          <View style={[grid.row, g.mt3, g.mb2]}>
+            <View style={[grid.col]}>
+              {!this.isSameUser(currentMessage, previousMessage) && (
+                <TouchableOpacity
+                  style={{zIndex: 1}}
+                  hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
+                  onPress={() => {
+                    onTapUserName();
+                  }}>
+                  <Text
+                    numberOfLines={1}
+                    style={[customFont, g.FHNB, g.colorBlack]}>
+                    {currentMessage.authorId.name}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            <View style={[g.mr5, grid.justifyContentCenter, grid.alignItems]}>
+              {this.renderDateComponent(currentMessage, false)}
+            </View>
+          </View>
+          <View style={[grid.row, g.mt3, g.mb2]}>
+            <View style={[grid.col]}>
+              <View style={[g.mt5, g.mb5]}>
+                {this.renderItem(currentMessage, false)}
               </View>
             </View>
 
-            <View style={[g.mt5, g.mb5]}>
-              {this.renderItem(currentMessage, false)}
-            </View>
+            {currentMessage.isEdited &&
+              !currentMessage.delete &&
+              this.renderEditView()}
           </View>
         </View>
       </View>
@@ -296,9 +308,9 @@ class GroupChatItem extends PureComponent {
           <Text
             numberOfLines={2}
             style={[customFont, g.FHNR, g.colorBlack, g.p3]}>
-            {currentMessage.media.mediaType === ''
-              ? currentMessage.messageText
-              : currentMessage.media.mediaType}
+            {parentMessage.media.mediaType === ''
+              ? parentMessage.messageText
+              : parentMessage.media.mediaType}
           </Text>
         </View>
         <View
@@ -427,6 +439,7 @@ class GroupChatItem extends PureComponent {
     return (
       <>
         <YoutubeView
+          playVideo={this.props.playVideo}
           link={source}
           containerWidth={width / 2}
           containerStyle={styles.youtubeVideo}

@@ -28,16 +28,15 @@ import {
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {IconType, APP_NAME} from '../../helper/Constants';
 import Helpers from '../../helper/Helper';
+import GroupMembers from './GroupMembers';
+import PendingRequests from './PendingRequests';
+
 import OptionsSheet from 'react-native-raw-bottom-sheet';
 import ScrollableTabView, {
   ScrollableTabBar,
 } from 'react-native-scrollable-tab-view';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {CommonActions} from '@react-navigation/native';
-
-import GroupMembers from './GroupMembers';
-import PendingRequests from './PendingRequests';
-
 import {
   doAboutGroup,
   doAcceptUserRequest,
@@ -47,15 +46,16 @@ import {
 } from '../../Actions/GroupActions';
 
 import io from 'socket.io-client';
+import _ from 'lodash';
 
 const {width, height} = Dimensions.get('window');
 
 let groupId = '';
 let responseMessage = '';
-let selectedUser = null;
 let mode = 1;
 let isSuccess = false;
 let isUserConnected = false;
+let isTabChanged = true;
 
 const GroupInfo = ({route, navigation}) => {
   const userInfoRef = useRef();
@@ -72,20 +72,109 @@ const GroupInfo = ({route, navigation}) => {
   const [aboutGroup, setAboutGroup] = useState('');
   const [errorMessage, setErrorMessage] = useState({});
   const [mediaData, setMediaData] = useState(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
     if (route.params !== undefined && route.params !== null) {
       groupId = route.params.groupId;
+      socketRef.current = route.params.socket;
     }
     getGroupData();
     return () => {};
   }, [getGroupData, route.params]);
+
+  useEffect(() => {
+    // if (
+    //   socketRef == null ||
+    //   socketRef.current === null ||
+    //   socketRef.current === undefined
+    // ) {
+    //   console.log('====================================');
+    //   console.log('connect to socket');
+    //   console.log('====================================');
+
+    //   socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
+    //     reconnectionAttempts: 2,
+    //     transports: ['websocket'],
+    //     upgrade: false,
+    //   });
+    // }
+    console.log('isConnected', socketRef.current.connected);
+    isUserConnected = socketRef.current.connected;
+    if (socketRef.current.connected) {
+      socketRef.current.on('error', attempt => {
+        console.log('errror', attempt);
+      });
+
+      socketRef?.current?.on('disconnect', () => {
+        isUserConnected = false;
+        console.log('socket disconnected'); // undefined
+      });
+
+      socketRef?.current?.on('reconnect', attempt => {
+        console.log('attempt', attempt);
+      });
+      socketRef?.current?.on('reconnect_error', attempt => {
+        console.log('reconnect_error', attempt);
+        isUserConnected = false;
+      });
+      socketRef?.current?.on('reconnect_attempt', attempt => {
+        console.log('reconnect_attempt', attempt);
+      });
+
+      socketRef?.current?.removeListener('user-connected');
+      socketRef?.current?.on('user-connected', event => {
+        console.log('connected', event);
+        isUserConnected = JSON.parse(event.status);
+      });
+
+      socketRef?.current?.removeListener('made-admin');
+      socketRef?.current?.on('made-admin', event => {
+        if (event && event !== null && event !== undefined) {
+          if (
+            event.userId &&
+            event.userId !== null &&
+            event.userId !== undefined &&
+            event.userId !== global.userId
+          ) {
+            getGroupData();
+          }
+        }
+      });
+
+      socketRef?.current?.removeListener('removed-user');
+      socketRef?.current?.on('removed-user', event => {
+        console.log('removed-user', event);
+        if (event && event !== null && event !== undefined) {
+          if (
+            event.userId &&
+            event.userId !== null &&
+            event.userId !== undefined &&
+            event.userId !== global.userId
+          ) {
+            getGroupData();
+          }
+        }
+      });
+    }
+    return () => {};
+  }, [getGroupData]);
+
+  const disconnectAllEvents = () => {
+    socketRef?.current?.removeListener('user-connected');
+    socketRef?.current?.removeListener('get-message');
+    socketRef?.current?.removeListener('get-edited-message');
+    socketRef?.current?.removeListener('made-admin');
+    socketRef?.current?.removeListener('removed-admin');
+    socketRef?.current?.removeListener('removed-user');
+  };
 
   const getGroupData = useCallback(() => {
     setIsLoading(true);
     doAboutGroup(
       groupId,
       response => {
+        isTabChanged = false;
         if (response && response !== null) {
           if (
             response.data &&
@@ -97,7 +186,17 @@ const GroupInfo = ({route, navigation}) => {
             if (data.status) {
               let group = data.data;
               if (group && group !== undefined && group !== null) {
-                connectSocket();
+                if (
+                  group.superAdmins !== undefined &&
+                  group.superAdmins !== null &&
+                  group.superAdmins.length > 0
+                ) {
+                  let item = group.superAdmins[0];
+                  if (item._id === global.userId) {
+                    setIsSuperAdmin(true);
+                  }
+                }
+
                 setMediaData(group.profilePicture);
                 setAboutGroup(group.description);
                 setGroupData(group);
@@ -108,40 +207,10 @@ const GroupInfo = ({route, navigation}) => {
         setIsLoading(false);
       },
       (code, error) => {
+        isTabChanged = false;
         setIsLoading(false);
       },
     );
-  }, [connectSocket]);
-
-  const connectSocket = useCallback(() => {
-    console.log('====================================');
-    console.log('202-event');
-    console.log('====================================');
-
-    socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
-      reconnectionAttempts: 2,
-    });
-
-    socketRef.current.on('connect', () => {
-      if (socketRef.current.connected) {
-        isUserConnected = true;
-      }
-    });
-    socketRef.current.on('error', attempt => {
-      isUserConnected = false;
-      console.log('====================================');
-      console.log('errror', attempt);
-      console.log('====================================');
-    });
-
-    socketRef.current.on('disconnect', () => {
-      isUserConnected = false;
-      console.log('socket disconnected'); // undefined
-    });
-
-    /********************
-     * Specific Events
-     */
   }, []);
 
   const emitAdminEvent = (userId, eventName) => {
@@ -176,12 +245,12 @@ const GroupInfo = ({route, navigation}) => {
     }
   };
 
-  const updateUserRequest = () => {
+  const updateUserRequest = userId => {
     setIsLoading(true);
     doAcceptUserRequest(
       mode,
       groupId,
-      selectedUser._id,
+      userId,
       response => {
         if (response && response !== null) {
           if (
@@ -217,11 +286,11 @@ const GroupInfo = ({route, navigation}) => {
     );
   };
 
-  const removeUser = moveHome => {
+  const removeUser = (moveHome, removeId) => {
     setIsLoading(true);
     doExitFromGroup(
       groupId,
-      selectedUser._id,
+      removeId,
       response => {
         if (response && response !== null) {
           if (
@@ -232,21 +301,22 @@ const GroupInfo = ({route, navigation}) => {
             let data = response.data;
 
             if (data.status) {
-              emitRemoveUserEvent(selectedUser._id);
+              emitRemoveUserEvent(removeId);
               isSuccess = true;
               responseMessage = 'Group information was successfully updated.';
               setShowErrorMessage(true);
               setTimeout(() => {
                 setShowErrorMessage(false);
                 if (moveHome) {
+                  disconnectAllEvents();
                   navigation.dispatch(
                     CommonActions.reset({
-                      index: 0,
-                      routes: [{name: 'Dashboard'}],
+                      index: 1,
+                      routes: [{name: 'GroupsList'}],
                     }),
                   );
                 } else {
-                  emitAdminEvent(selectedUserInfo._id, 'remove-user');
+                  emitAdminEvent(removeId, 'remove-user');
                   getGroupData();
                 }
               }, 2500);
@@ -388,8 +458,13 @@ const GroupInfo = ({route, navigation}) => {
   };
 
   const userInfoSheet = () => {
-    let isSuperAdmin = selectedUserInfo.isSuperAdmin;
-    let isAdmin = selectedUserInfo.isAdmin;
+    let isSameuser = selectedUserInfo._id === global.userId;
+    let selectedUserIsSuperAdmin =
+      selectedUserInfo._id === groupData.superAdmins[0]._id;
+
+    let isAlreadyAdmin = _.findIndex(groupData.admins, function (item) {
+      return item._id === selectedUserInfo._id;
+    });
 
     let maxAdminReached =
       groupData.admins !== undefined &&
@@ -419,51 +494,58 @@ const GroupInfo = ({route, navigation}) => {
               {Helpers.capitalize(Helpers.concatName(selectedUserInfo))}
             </Text>
           </View>
+          {isSameuser ? (
+            <Text style={[g.colordarkGray, g.fs15, g.FHNR, g.txtLeft]}>
+              Same User
+            </Text>
+          ) : selectedUserIsSuperAdmin ? (
+            <Text style={[g.colordarkGray, g.fs15, g.FHNR, g.txtLeft]}>
+              is Super admin
+            </Text>
+          ) : (
+            <>
+              {isAlreadyAdmin < 0 &&
+                !maxAdminReached &&
+                generateMenuOption('Make Admin', 'user-plus', 4, () => {
+                  userInfoRef.current.close();
+                  removeIndex(
+                    `Are you sure you want to make ${Helpers.capitalize(
+                      Helpers.concatName(selectedUserInfo),
+                    )} as admin?`,
+                    () => {
+                      mode = 1;
+                      updateAdminRequest();
+                    },
+                  );
+                })}
 
-          {!isSuperAdmin &&
-            !isAdmin &&
-            !maxAdminReached &&
-            generateMenuOption('Make Admin', 'user-plus', 4, () => {
-              userInfoRef.current.close();
-              removeIndex(
-                `Are you sure you want to make ${Helpers.capitalize(
-                  Helpers.concatName(selectedUserInfo),
-                )} as admin?`,
-                () => {
-                  mode = 1;
-                  updateAdminRequest();
-                },
-              );
-            })}
+              {isAlreadyAdmin > -1 &&
+                generateMenuOption('Remove Admin', 'account-remove', 1, () => {
+                  userInfoRef.current.close();
+                  removeIndex(
+                    `Are you sure you want to remove ${Helpers.capitalize(
+                      Helpers.concatName(selectedUserInfo),
+                    )} from admin?`,
+                    () => {
+                      mode = 2;
+                      updateAdminRequest();
+                    },
+                  );
+                })}
 
-          {!isSuperAdmin &&
-            isAdmin &&
-            generateMenuOption('Remove Admin', 'account-remove', 1, () => {
-              userInfoRef.current.close();
-              removeIndex(
-                `Are you sure you want to remove ${Helpers.capitalize(
-                  Helpers.concatName(selectedUserInfo),
-                )} from admin?`,
-                () => {
-                  mode = 2;
-                  updateAdminRequest();
-                },
-              );
-            })}
-
-          {!isSuperAdmin &&
-            generateMenuOption('Remove From Group', 'add-to-list', 9, () => {
-              userInfoRef.current.close();
-              removeIndex(
-                `Are you sure you want to remove ${Helpers.capitalize(
-                  Helpers.concatName(selectedUserInfo),
-                )} from group?`,
-                () => {
-                  selectedUser = selectedUserInfo;
-                  removeUser(false);
-                },
-              );
-            })}
+              {generateMenuOption('Remove From Group', 'add-to-list', 9, () => {
+                userInfoRef.current.close();
+                removeIndex(
+                  `Are you sure you want to remove ${Helpers.capitalize(
+                    Helpers.concatName(selectedUserInfo),
+                  )} from group?`,
+                  () => {
+                    removeUser(false, selectedUserInfo._id);
+                  },
+                );
+              })}
+            </>
+          )}
         </View>
       </OptionsSheet>
     );
@@ -605,6 +687,14 @@ const GroupInfo = ({route, navigation}) => {
                 fontFamily: 'Lato-Regular',
                 margin: -5,
               }}
+              onChangeTab={(i, from) => {
+                if (i !== from) {
+                  if (!isTabChanged) {
+                    isTabChanged = true;
+                    getGroupData();
+                  }
+                }
+              }}
               tabBarUnderlineStyle={styles.tabBarUnderlineStyle}
               renderTabBar={() => (
                 <ScrollableTabBar style={styles.tabBarStyle} />
@@ -634,14 +724,14 @@ const GroupInfo = ({route, navigation}) => {
                       : 'Pending Request(s)'
                   }
                   onTap={(item, selectedMode) => {
-                    selectedUser = item;
+                    setSelectedUserInfo(item);
                     mode = selectedMode;
                     removeIndex(
                       mode === 1
                         ? 'Are you sure you want to accept it?'
                         : 'Are you sure you want to reject it?',
                       () => {
-                        updateUserRequest();
+                        updateUserRequest(item._id);
                       },
                     );
                   }}
@@ -650,7 +740,7 @@ const GroupInfo = ({route, navigation}) => {
             </ScrollableTabView>
           </ScrollView>
 
-          {groupData !== undefined && groupData !== null && !groupData.isAdmin && (
+          {groupData !== undefined && groupData !== null && !isSuperAdmin && (
             <View style={[styles.filterButton, {marginBottom: scale(8)}]}>
               <CommonButton
                 title={'Exit Group'}
@@ -659,16 +749,33 @@ const GroupInfo = ({route, navigation}) => {
                   removeIndex(
                     'Are you sure you want to exit from group?',
                     () => {
-                      let users = groupData.users;
-                      for (let i = 0; i < users.length; i++) {
-                        const element = users[i];
-                        if (element._id === global.userId) {
-                          selectedUser = element;
-                          break;
+                      let adminUsers = groupData.admins;
+                      if (
+                        adminUsers &&
+                        adminUsers !== null &&
+                        adminUsers !== undefined
+                      ) {
+                        let index = _.findIndex(
+                          adminUsers,
+                          data => data._id === global.userId,
+                        );
+                        if (index > -1) {
+                          setSelectedUserInfo(adminUsers[index]);
+                          setTimeout(() => {
+                            removeUser(true, adminUsers[index]._id);
+                          }, 200);
+                        } else {
+                          let users = groupData.users;
+                          let newIndex = _.findIndex(
+                            users,
+                            data => data._id === global.userId,
+                          );
+                          setSelectedUserInfo(users[newIndex]);
+                          setTimeout(() => {
+                            removeUser(true, users[newIndex]._id);
+                          }, 200);
                         }
                       }
-
-                      removeUser(true);
                     },
                   );
                 }}

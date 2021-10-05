@@ -285,8 +285,34 @@ export function doReportMessage(
 export function doHideMessage(groupId, messageId, callback, errCallback) {
   let requestPath = `${SERVER_PATH}chat/hide-message/${groupId}/${messageId}`;
 
+  console.log('====================================');
+  console.log('requestPath', requestPath);
+  console.log('====================================');
+
   const request = axios
     .post(requestPath, null, {
+      headers: {
+        Authorization: global.accessToken,
+        'content-type': 'application/json',
+      },
+    })
+    .then(res => callback(res))
+    .catch(err => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
+export function doRemoveMessage(groupId, messageId, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}chat/message/${groupId}/${messageId}`;
+  console.log('====================================');
+  console.log('requestPath', requestPath);
+  console.log('====================================');
+
+  const request = axios
+    .delete(requestPath, {
       headers: {
         Authorization: global.accessToken,
         'content-type': 'application/json',

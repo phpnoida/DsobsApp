@@ -12,14 +12,18 @@ import {scale} from '../../theme/Scalling';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import ProgressImage from '../../component/ProgresImage';
 import Helpers from '../../helper/Helper';
+import _ from 'lodash';
 
 const GroupMembers = ({groupData, onTap}) => {
   const [groupAdmin, setGroupAdmin] = useState([]);
+  const [groupUsers, setGroupUsers] = useState([]);
 
   useEffect(() => {
     let adminArray = [];
 
     let superAdmin = groupData.superAdmins;
+
+    console.log('superAdmin', superAdmin);
     superAdmin[0].isSuperAdmin = true;
     superAdmin[0].isAdmin = true;
 
@@ -32,7 +36,18 @@ const GroupMembers = ({groupData, onTap}) => {
       adminArray.push(element);
     });
 
+    adminArray.sort((a, b) =>
+      a.batch > b.batch ? 1 : b.batch > a.batch ? -1 : 0,
+    );
+
+    let index = adminArray.findIndex(el => el.isSuperAdmin === true);
+
+    var placeholder = {};
+    var objectToMove = adminArray.splice(index, 1, placeholder)[0];
+    adminArray.splice(0, 0, objectToMove);
+    adminArray.splice(adminArray.indexOf(placeholder), 1);
     setGroupAdmin(adminArray);
+    setGroupUsers(groupData.users);
 
     return () => {};
   }, [groupData]);
@@ -160,12 +175,12 @@ const GroupMembers = ({groupData, onTap}) => {
         <View style={[g.ml5]}>
           {groupAdmin && groupAdmin.length > 0 && showTaggedUsers(groupAdmin)}
         </View>
-        {groupData.users && groupData.users.length > 0 && (
+        {groupUsers && groupUsers.length > 0 && (
           <>
             <Text style={[g.colordarkGray, g.fs14, g.FHNR, g.txtLeft]}>
               Group Member(s)
             </Text>
-            <View style={[g.ml5]}>{showTaggedUsers(groupData.users)}</View>
+            <View style={[g.ml5]}>{showTaggedUsers(groupUsers)}</View>
           </>
         )}
       </View>

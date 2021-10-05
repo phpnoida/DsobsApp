@@ -11,11 +11,11 @@ const AppWrapper = ({navigation}) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    async function bootstrap() {
-      await firestore().settings({
-        persistence: false, // disable offline persistence
-      });
-    }
+    // async function bootstrap() {
+    //   await firestore().settings({
+    //     persistence: false, // disable offline persistence
+    //   });
+    // }
 
     AsyncStorage.getItem('userDetails').then(details => {
       if (details && details !== null && details !== '') {
@@ -23,7 +23,7 @@ const AppWrapper = ({navigation}) => {
         global.userDetails = userDetails;
         if (global.userDetails !== undefined && global.userDetails !== null) {
           authentication(() => {
-            bootstrap();
+            //bootstrap();
           });
         }
       }

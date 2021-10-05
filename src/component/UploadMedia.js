@@ -151,7 +151,7 @@ const UploadMedia = ({
 
     if (currentModule === 'groups') {
       options.width = width;
-      options.height = 80;
+      options.height = 90;
     }
 
     ImagePicker.openCropper(options)
