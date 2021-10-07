@@ -127,7 +127,6 @@ const StartGroupChat = ({route}) => {
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState([]);
   const [groupInfo, setGroupInfo] = useState(null);
-
   const [isFiltering, setIsFiltering] = useState(false);
   const [filterQuery, setFilterQuery] = useState('');
   const [filterMessage, setFilterMessage] = useState([]);
@@ -150,12 +149,15 @@ const StartGroupChat = ({route}) => {
   const [bottomMessages, setBottomMessages] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [freshSearch, setFreshSearch] = useState(true);
 
   const [reportContent, setReportContent] = useState('');
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [showHideMessageAlert, setShowHideMessageAlert] = useState(false);
   const [showRemoveMessageAlert, setShowRemoveMessageAlert] = useState(false);
   const [reportedMessageData, setReportedMessageData] = useState([]);
+
+  const [tmpStatus, setTmpStatus] = useState(false);
 
   /**
    *
@@ -204,6 +206,7 @@ const StartGroupChat = ({route}) => {
     AppState.addEventListener('change', handleAppStateChange);
 
     const unsubscribe = navigation.addListener('focus', () => {
+      console.log('onFocus');
       getGroupData();
     });
 
@@ -229,8 +232,6 @@ const StartGroupChat = ({route}) => {
 
       socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
         reconnectionAttempts: 2,
-        transports: ['websocket'],
-        upgrade: false,
       });
     }
 
@@ -268,10 +269,11 @@ const StartGroupChat = ({route}) => {
           isUserConnected = JSON.parse(event.status);
         });
 
-        console.log(' global.userId', global.userId);
         socketRef?.current?.removeListener('removed-user');
         socketRef.current.on('removed-user', event => {
           if (event && event !== null && event !== undefined) {
+            console.log('event.userId', event.userId);
+            console.log('global.userId', global.userId);
             if (
               event.userId &&
               event.userId !== null &&
@@ -320,7 +322,7 @@ const StartGroupChat = ({route}) => {
     });
 
     return () => {};
-  }, [joinGroupRequest, getOldMessages, disconnectUser]);
+  }, [joinGroupRequest, getOldMessages, disconnectUser, getGroupData]);
 
   useEffect(() => {
     socketRef?.current?.removeListener('get-message');
@@ -368,6 +370,7 @@ const StartGroupChat = ({route}) => {
         }
       }
     });
+
     return () => {};
   }, [messages, isFiltering, readMessage, showScrollToBottom]);
 
@@ -407,7 +410,9 @@ const StartGroupChat = ({route}) => {
       console.log('====================================');
       console.log('sendMessage', JSON.stringify(object));
       console.log('====================================');
+
       socketRef.current.emit('send-message', object);
+      setTmpStatus(true);
 
       object.createdAt = moment().unix();
       object.isHidden = false;
@@ -542,6 +547,7 @@ const StartGroupChat = ({route}) => {
       groupId,
       searchfilterObject,
       response => {
+        setFreshSearch(false);
         setIsRefreshing(false);
         manageResponse(response).then(() => {
           setIsFirstLoad(false);
@@ -580,7 +586,7 @@ const StartGroupChat = ({route}) => {
 
                 let array = data.data;
 
-                console.log('arrayItem', JSON.stringify(array));
+                // console.log('arrayItem', JSON.stringify(array));
                 let unreadIds = _.map(_.filter(array, {isRead: false}), '_id');
                 let firstComment = data.firstComment;
                 if (!isFiltering) {
@@ -739,8 +745,8 @@ const StartGroupChat = ({route}) => {
       isHidden: false,
       messageText: '',
       isReported: false,
-      createdAt: 1632213401,
-      _id: '61499999b8ddad5e96cc3936',
+      createdAt: tmpArray[0].createdAt,
+      _id: tmpArray[0]._id,
       authorId: {
         _id: tmpArray[0].authorId._id,
         name: tmpArray[0].authorId.name,
@@ -789,14 +795,14 @@ const StartGroupChat = ({route}) => {
             let data = response.data;
 
             if (data.status) {
-              responseMessage = 'Information was successfully updated.';
+              responseMessage = 'Reported successfully!';
               setShowErrorMessage(true);
 
               let oldData = messages;
               oldData[messagePosition].isReported = true;
 
               setTimeout(() => {
-                console.log('733');
+                console.log('794');
                 setMessages([...oldData]);
                 setShowErrorMessage(false);
               }, 2500);
@@ -827,17 +833,13 @@ const StartGroupChat = ({route}) => {
             response.data !== null
           ) {
             let data = response.data;
-
-            console.log('data', JSON.stringify(data));
-
             if (data.status) {
-              responseMessage = 'Message hide successfully!';
-
+              responseMessage = 'Message hidden successfully!';
               let oldData = messages;
-              oldData[messagePosition].isHideen = true;
-
+              oldData[messagePosition].isHidden = true;
+              setShowErrorMessage(true);
               setTimeout(() => {
-                console.log('733');
+                console.log('835');
                 setMessages([...oldData]);
                 setShowErrorMessage(false);
               }, 2500);
@@ -856,6 +858,7 @@ const StartGroupChat = ({route}) => {
 
   const removeMessageFromList = () => {
     global.loader_ref.show_loader(1);
+
     doRemoveMessage(
       groupId,
       selectedChatObject._id,
@@ -875,9 +878,9 @@ const StartGroupChat = ({route}) => {
               responseMessage = 'Message removed successfully!';
               setShowErrorMessage(true);
               let oldData = messages;
-              oldData[messagePosition].isHideen = true;
+              oldData[messagePosition].isDeleted = 0;
               setTimeout(() => {
-                console.log('733');
+                console.log('876');
                 setMessages([...oldData]);
                 setShowErrorMessage(false);
               }, 2500);
@@ -946,14 +949,22 @@ const StartGroupChat = ({route}) => {
 
             if (data.status) {
               let group = data.data;
-              console.log('group', group);
-              setGroupInfo(group);
-              setHeader(group.name);
-              setHeaderImage({uri: group.profilePicture});
+              // console.log('group', group);
+              setGroupInfo(oldData => ({...oldData, ...group}));
+              try {
+                setHeader(group.name);
+                setHeaderImage({uri: group.profilePicture});
 
-              var merge = _.merge(data.admins, data.superAdmins);
-              merge = _.merge(merge, data.users);
-              setGroupMembers(merge);
+                let superAdmin = group.superAdmins;
+                let admins = group.admins;
+                let members = group.users;
+
+                let merged = [...admins, ...superAdmin];
+                merged = [...members, ...merged];
+                setGroupMembers([...merged]);
+              } catch (error) {
+                console.log('chatRef', error);
+              }
             }
           }
         }
@@ -1005,19 +1016,32 @@ const StartGroupChat = ({route}) => {
     };
   };
 
+  const guidGenerator = digits => {
+    let str = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVXZ';
+    let uuid = [];
+    for (let i = 0; i < digits; i++) {
+      uuid.push(str[Math.floor(Math.random() * str.length)]);
+    }
+    return uuid.join('');
+  };
+
   const handleInputChat = (type, input, mediaType, media, extraItem) => {
     if (inEditMode) {
       let request = generateChatObject(input, media, mediaType, extraItem);
       request.isEdited = true;
       request.messageId = selectedChatObject._id;
+      request.transactionId = guidGenerator(10);
+
       postMessage(request);
     } else if (isReplayEditComment) {
       let request = generateChatObject(input, media, mediaType, extraItem);
       request.depth = 1;
       request.parentMessageId = selectedChatObject._id;
+      request.transactionId = guidGenerator(10);
       postMessage(request);
     } else {
       let request = generateChatObject(input, media, mediaType, extraItem);
+      request.transactionId = guidGenerator(10);
       postMessage(request);
     }
   };
@@ -1453,6 +1477,7 @@ const StartGroupChat = ({route}) => {
                 <TouchableOpacity
                   style={[grid.alignItems, grid.justifyContentCenter]}
                   onPress={() => {
+                    setFreshSearch(true);
                     fitlerText = '';
                     resetCount();
                     getOldMessages();
@@ -1579,6 +1604,7 @@ const StartGroupChat = ({route}) => {
                 <TouchableOpacity
                   activeOpacity={0.9}
                   onPress={() => {
+                    setFreshSearch(true);
                     setFilterMessage([]);
                     setShowSearch(true);
                   }}
@@ -1703,83 +1729,18 @@ const StartGroupChat = ({route}) => {
     );
   };
 
-  const showUserPostOptions = () => {
-    return (
-      <View>
-        {selectedChatObject?.media?.mediaType === '' && (
-          <TouchableOpacity
-            onPress={() => {
-              if (
-                chatObjRef.current !== undefined &&
-                chatObjRef.current !== null
-              ) {
-                chatObjRef.current.close();
-              }
-              inEditMode = true;
-              setInputValue(selectedChatObject?.messageText);
-            }}
-            style={[
-              grid.justifyContentCenter,
-              grid.alignItems,
-              g.p15,
-              {
-                borderBottomWidth: 2,
-                borderBottomColor: '#ebebe4',
-              },
-            ]}>
-            <Text
-              style={[
-                g.fs18,
-                g.FHNM,
-                g.colorBlue,
-                grid.justifyContentCenter,
-                grid.alignItems,
-                g.txtCenterVertical,
-              ]}>
-              Edit
-            </Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity
-          onPress={() => {
-            if (
-              chatObjRef.current !== undefined &&
-              chatObjRef.current !== null
-            ) {
-              chatObjRef.current.close();
-            }
-            setTimeout(() => {
-              setShowRemoveMessageAlert(true);
-            }, 220);
-          }}
-          style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
-          <Text
-            style={[
-              g.fs18,
-              g.FHNM,
-              g.colorBlue,
-              grid.justifyContentCenter,
-              grid.alignItems,
-              g.txtCenterVertical,
-            ]}>
-            Remove Message
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
   const chatOptions = () => {
+    let lineStyle = {borderBottomWidth: 2, borderBottomColor: '#ebebe4'};
+    let isNormalUser = groupInfo !== null && !groupInfo.isAdmin;
+    let ownMessage =
+      selectedChatObject !== null &&
+      selectedChatObject.authorId._id === global.userId;
+
     return (
       <OptionsSheet
         ref={chatObjRef}
         minClosingHeight={50}
-        height={
-          selectedChatObject !== null &&
-          selectedChatObject.authorId._id === global.userId
-            ? 340
-            : 260
-        }
+        height={340}
         duration={200}
         closeOnDragDown={false}
         keyboardAvoidingViewEnabled={false}
@@ -1793,6 +1754,7 @@ const StartGroupChat = ({route}) => {
             backgroundColor: 'white',
             marginHorizontal: scale(10),
             borderRadius: 15,
+            paddingHorizontal: scale(5),
           }}>
           <TouchableOpacity
             onPress={() => {
@@ -1808,7 +1770,7 @@ const StartGroupChat = ({route}) => {
               grid.justifyContentCenter,
               grid.alignItems,
               g.p15,
-              {borderBottomWidth: 2, borderBottomColor: '#ebebe4'},
+              lineStyle,
             ]}>
             <Text
               style={[
@@ -1823,84 +1785,167 @@ const StartGroupChat = ({route}) => {
             </Text>
           </TouchableOpacity>
 
-          {selectedChatObject !== null &&
-            selectedChatObject.authorId._id !== global.userId && (
-              <TouchableOpacity
-                onPress={() => {
-                  if (
-                    chatObjRef.current !== undefined &&
-                    chatObjRef.current !== null
-                  ) {
-                    chatObjRef.current.close();
-                  }
-                  if (
-                    messageReportRef.current !== undefined &&
-                    messageReportRef.current !== null
-                  ) {
-                    messageReportRef.current.open();
-                  }
-                }}
-                style={[
-                  grid.justifyContentCenter,
-                  grid.alignItems,
-                  g.p15,
-                  {borderBottomWidth: 2, borderBottomColor: '#ebebe4'},
-                ]}>
-                <Text
-                  style={[
-                    g.fs18,
-                    g.FHNM,
-                    g.colorBlue,
-                    grid.justifyContentCenter,
-                    grid.alignItems,
-                    g.txtCenterVertical,
-                  ]}>
-                  Report Comment
-                </Text>
-              </TouchableOpacity>
-            )}
-
-          {selectedChatObject !== null &&
-            selectedChatObject.authorId._id !== global.userId &&
-            groupInfo !== undefined &&
-            groupInfo !== null &&
-            groupInfo.isUserAdmin && (
-              <TouchableOpacity
-                onPress={() => {
-                  if (
-                    chatObjRef.current !== undefined &&
-                    chatObjRef.current !== null
-                  ) {
-                    chatObjRef.current.close();
-                  }
-                  setShowHideMessageAlert(true);
-                }}
-                style={[
-                  grid.justifyContentCenter,
-                  grid.alignItems,
-                  g.p15,
-                  selectedChatObject !== null &&
-                  selectedChatObject.authorId._id === global.userId
-                    ? {borderBottomWidth: 2, borderBottomColor: '#ebebe4'}
-                    : {},
-                ]}>
-                <Text
-                  style={[
-                    g.fs18,
-                    g.FHNM,
-                    g.colorBlue,
-                    grid.justifyContentCenter,
-                    grid.alignItems,
-                    g.txtCenterVertical,
-                  ]}>
-                  Hide Comment
-                </Text>
-              </TouchableOpacity>
-            )}
-
-          {selectedChatObject !== null &&
-            selectedChatObject.authorId._id === global.userId &&
-            showUserPostOptions()}
+          {isNormalUser ? (
+            <>
+              {ownMessage ? (
+                <>
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (
+                        chatObjRef.current !== undefined &&
+                        chatObjRef.current !== null
+                      ) {
+                        chatObjRef.current.close();
+                      }
+                      setTimeout(() => {
+                        setShowRemoveMessageAlert(true);
+                      }, 220);
+                    }}
+                    style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
+                    <Text
+                      style={[
+                        g.fs18,
+                        g.FHNM,
+                        g.colorBlue,
+                        grid.justifyContentCenter,
+                        grid.alignItems,
+                        g.txtCenterVertical,
+                      ]}>
+                      Remove Message
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => {
+                    if (
+                      chatObjRef.current !== undefined &&
+                      chatObjRef.current !== null
+                    ) {
+                      chatObjRef.current.close();
+                    }
+                    if (
+                      messageReportRef.current !== undefined &&
+                      messageReportRef.current !== null
+                    ) {
+                      messageReportRef.current.open();
+                    }
+                  }}
+                  style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
+                  <Text
+                    style={[
+                      g.fs18,
+                      g.FHNM,
+                      g.colorBlue,
+                      grid.justifyContentCenter,
+                      grid.alignItems,
+                      g.txtCenterVertical,
+                    ]}>
+                    Report Comment
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </>
+          ) : (
+            <>
+              {ownMessage ? (
+                <>
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (
+                        chatObjRef.current !== undefined &&
+                        chatObjRef.current !== null
+                      ) {
+                        chatObjRef.current.close();
+                      }
+                      setTimeout(() => {
+                        setShowRemoveMessageAlert(true);
+                      }, 220);
+                    }}
+                    style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
+                    <Text
+                      style={[
+                        g.fs18,
+                        g.FHNM,
+                        g.colorBlue,
+                        grid.justifyContentCenter,
+                        grid.alignItems,
+                        g.txtCenterVertical,
+                      ]}>
+                      Remove Message
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (
+                        chatObjRef.current !== undefined &&
+                        chatObjRef.current !== null
+                      ) {
+                        chatObjRef.current.close();
+                      }
+                      if (
+                        messageReportRef.current !== undefined &&
+                        messageReportRef.current !== null
+                      ) {
+                        messageReportRef.current.open();
+                      }
+                    }}
+                    style={[
+                      grid.justifyContentCenter,
+                      grid.alignItems,
+                      g.p15,
+                      {borderBottomWidth: 2, borderBottomColor: '#ebebe4'},
+                    ]}>
+                    <Text
+                      style={[
+                        g.fs18,
+                        g.FHNM,
+                        g.colorBlue,
+                        grid.justifyContentCenter,
+                        grid.alignItems,
+                        g.txtCenterVertical,
+                      ]}>
+                      Report Comment
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (
+                        chatObjRef.current !== undefined &&
+                        chatObjRef.current !== null
+                      ) {
+                        chatObjRef.current.close();
+                      }
+                      setShowHideMessageAlert(true);
+                    }}
+                    style={[
+                      grid.justifyContentCenter,
+                      grid.alignItems,
+                      g.p15,
+                      selectedChatObject !== null &&
+                      selectedChatObject.authorId._id === global.userId
+                        ? {borderBottomWidth: 2, borderBottomColor: '#ebebe4'}
+                        : {},
+                    ]}>
+                    <Text
+                      style={[
+                        g.fs18,
+                        g.FHNM,
+                        g.colorBlue,
+                        grid.justifyContentCenter,
+                        grid.alignItems,
+                        g.txtCenterVertical,
+                      ]}>
+                      Hide Comment
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </>
+          )}
         </View>
 
         <TouchableOpacity
@@ -1957,6 +2002,29 @@ const StartGroupChat = ({route}) => {
     );
   };
 
+  const emptySearchComponent = () => {
+    if (freshSearch) {
+      return <></>;
+    }
+    return (
+      <View style={[transform, {flex: 1}]}>
+        <View style={[GlobalInclude.AppStyle.fillCenter]}>
+          <Text
+            style={[
+              g.colorBlack,
+              g.FHNM,
+              g.fs12,
+              g.textCenter,
+              grid.alignItems,
+              grid.justifyContentCenter,
+            ]}>
+            No Record Found
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
   /**
    *
    * UI Methods
@@ -1992,10 +2060,10 @@ const StartGroupChat = ({route}) => {
             scrollEventThrottle={100}
             onEndReached={onEndReached}
             onEndReachedThreshold={0.1}
+            ListEmptyComponent={emptySearchComponent}
             removeClippedSubviews={Platform.OS !== 'web'}
             showsVerticalScrollIndicator={false}
             maintainVisibleContentPosition={true}
-            ListEmptyComponent={emptyComponent}
             bounces={false}
             initialNumToRender={10}
             maxToRenderPerBatch={8}
@@ -2347,7 +2415,7 @@ const StartGroupChat = ({route}) => {
         }}
       />
       {emojiList()}
-      {chatOptions()}
+      {selectedChatObject !== null && chatOptions()}
 
       {reportUserMessage()}
       {showReportedInfo()}

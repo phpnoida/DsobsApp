@@ -44,7 +44,6 @@ const UploadMedia = ({
   currentModule,
 }) => {
   const videoRef = useRef();
-
   const [selectedLink, setSelectedLink] = useState('');
   const [selectedLinkTags, setSelectedLinkTags] = useState('');
   const [errorMessage, setErrorMessage] = useState({});

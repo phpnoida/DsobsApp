@@ -22,8 +22,6 @@ const GroupMembers = ({groupData, onTap}) => {
     let adminArray = [];
 
     let superAdmin = groupData.superAdmins;
-
-    console.log('superAdmin', superAdmin);
     superAdmin[0].isSuperAdmin = true;
     superAdmin[0].isAdmin = true;
 
@@ -47,6 +45,11 @@ const GroupMembers = ({groupData, onTap}) => {
     adminArray.splice(0, 0, objectToMove);
     adminArray.splice(adminArray.indexOf(placeholder), 1);
     setGroupAdmin(adminArray);
+
+    groupData.users.sort((a, b) =>
+      a.batch > b.batch ? 1 : b.batch > a.batch ? -1 : 0,
+    );
+
     setGroupUsers(groupData.users);
 
     return () => {};

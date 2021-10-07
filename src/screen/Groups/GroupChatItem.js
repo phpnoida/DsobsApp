@@ -96,7 +96,7 @@ class GroupChatItem extends PureComponent {
       <View style={grid.flex1}>
         {currentMessage.isReported && this.renderReported()}
 
-        <View style={[grid.col, g.bgWhite, styles.bubbleRight, g.p5]}>
+        <View style={[grid.col, g.bgGreenLight, styles.bubbleRight, g.p5]}>
           <View style={[grid.row, g.mt3, g.mb2]}>
             <View style={[grid.col]}>
               {!this.isSameUser(currentMessage, previousMessage) && (
@@ -126,7 +126,7 @@ class GroupChatItem extends PureComponent {
             </View>
 
             {currentMessage.isEdited &&
-              !currentMessage.delete &&
+              currentMessage.isDeleted === -1 &&
               this.renderEditView()}
           </View>
         </View>
@@ -178,6 +178,8 @@ class GroupChatItem extends PureComponent {
           this.renderReplyMessage(currentMessage, isLeft)}
 
         {currentMessage.isHidden ? (
+          <View>{this.renderHideMsg(isLeft)}</View>
+        ) : currentMessage.isDeleted > -1 ? (
           <View>{this.renderRemovedMsg(isLeft)}</View>
         ) : (
           <TouchableOpacity
@@ -230,7 +232,7 @@ class GroupChatItem extends PureComponent {
   }
 
   renderRemovedMsg(isLeft) {
-    const {customFont} = this.props;
+    const {customFont, currentMessage} = this.props;
     return (
       <View style={[grid.rowrow, grid.alignItems]}>
         <GlobalInclude.BaseIcon
@@ -249,7 +251,37 @@ class GroupChatItem extends PureComponent {
             g.txtCenterVertical,
             {textAlign: 'justify'},
           ]}>
-          Admin has removed this message
+          {currentMessage.isDeleted === 0
+            ? currentMessage?.authorId?._id === global.userId
+              ? 'You removed this message'
+              : `${currentMessage?.authorId?.name} removed message`
+            : 'Admin has removed this message'}
+        </Text>
+      </View>
+    );
+  }
+
+  renderHideMsg(isLeft) {
+    const {customFont, currentMessage} = this.props;
+    return (
+      <View style={[grid.rowrow, grid.alignItems]}>
+        <GlobalInclude.BaseIcon
+          containerStyle={{height: scale(13), width: scale(13)}}
+          iconColor={GlobalInclude.Color.ColorPrimary}
+          iconName={'block'}
+          iconSize={scale(12)}
+          iconType={IconType[9]}
+        />
+        <Text
+          style={[
+            customFont,
+            g.FHNR,
+            g.ml2,
+            g.colorBlack,
+            g.txtCenterVertical,
+            {textAlign: 'justify'},
+          ]}>
+          This message has been hidden
         </Text>
       </View>
     );
@@ -288,9 +320,10 @@ class GroupChatItem extends PureComponent {
         />
         <View
           style={[
+            g.ml5,
             g.mt5,
             g.mb5,
-            {marginRight: parentMessage.messageType === 1 ? 0 : scale(52)},
+            {marginRight: parentMessage.media.mediaType === '' ? 0 : scale(52)},
           ]}>
           <Text
             style={[
@@ -675,9 +708,6 @@ class GroupChatItem extends PureComponent {
     if (currentMessage.media !== undefined && currentMessage.media !== null) {
       mediaContent = currentMessage.media.metaData.imageArray;
     }
-    console.log('====================================');
-    console.log('mediaContent', JSON.stringify(mediaContent));
-    console.log('====================================');
     return (
       <GroupImages
         images={mediaContent}
@@ -857,7 +887,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   renderBorder: {
-    marginStart: scale(3),
     width: scale(3),
     borderRadius: 0,
     borderBottomLeftRadius: scale(10),
@@ -867,9 +896,7 @@ const styles = StyleSheet.create({
     marginTop: scale(3),
     borderRadius: scale(6),
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    paddingVertical: scale(3),
-    paddingEnd: scale(3),
+    backgroundColor: 'rgba(62,62,62,0.3)',
     width: '100%',
   },
   url: {

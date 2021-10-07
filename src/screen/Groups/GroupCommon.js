@@ -1,7 +1,6 @@
 import React from 'react';
 import {Text, View, TouchableOpacity, StyleSheet} from 'react-native';
 import g from '../../theme/global';
-import grid from '../../theme/grid';
 import {scale} from '../../theme/Scalling';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import ProgressImage from '../../component/ProgresImage';
@@ -88,7 +87,7 @@ export const renderGroupItem = (currentTab, item, index, onTap) => {
 export const style = StyleSheet.create({
   imageStyle: {
     width: '100%',
-    height: scale(90),
+    aspectRatio: 16 / 9,
     borderRadius: scale(10),
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,

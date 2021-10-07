@@ -300,6 +300,8 @@ const GroupInfo = ({route, navigation}) => {
           ) {
             let data = response.data;
 
+            console.log('data', data);
+
             if (data.status) {
               emitRemoveUserEvent(removeId);
               isSuccess = true;
@@ -455,6 +457,22 @@ const GroupInfo = ({route, navigation}) => {
       ],
       {cancelable: false},
     );
+  };
+
+  const isValidMedia = imageMedia => {
+    if (imageMedia !== undefined && imageMedia !== null) {
+      let info = imageMedia.imageInfo;
+      let cropRect = info.cropRect;
+      let ratio = cropRect.width / cropRect.height;
+
+      let result =
+        Math.abs(ratio - 4 / 3) < Math.abs(ratio - 16 / 9) ? '4:3' : '16:9';
+
+      if (result === '16:9') {
+        return true;
+      }
+      return false;
+    }
   };
 
   const userInfoSheet = () => {
@@ -822,10 +840,13 @@ const GroupInfo = ({route, navigation}) => {
         onPickMedia={media => {
           uploadRef.current.close();
           if (media !== undefined && media !== null) {
-            let requestObject = {
-              profilePicture: media[0].thumbnail,
-            };
-            updateGroupData(requestObject);
+            console.log('media', JSON.stringify(media));
+            if (!isValidMedia(media[0])) {
+              setErrorMessage({mediaData: 'Photo must be in 16:9 ratio'});
+            } else {
+              setErrorMessage({});
+              setMediaData(media[0]);
+            }
           }
         }}
       />
@@ -916,7 +937,7 @@ const styles = StyleSheet.create({
   },
   imageStyle: {
     width: '100%',
-    height: scale(80),
+    aspectRatio: 16 / 9,
     borderRadius: scale(10),
   },
   headerContainer: {

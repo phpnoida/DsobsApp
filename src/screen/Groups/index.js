@@ -85,7 +85,7 @@ const GroupsList = ({route, navigation}) => {
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [filterQuery, setFilterQuery] = useState('');
-  const [currentTab, setCurrentTab] = useState(0);
+  const [currentTab, setCurrentTab] = useState(-1);
   const [firstTimeLoad, setFirstTimeLoad] = useState(true);
   const [showLoader, setShowLoader] = useState(false);
   const [postData, setPostData] = useState([]);
@@ -110,9 +110,6 @@ const GroupsList = ({route, navigation}) => {
       connectSocket();
     });
 
-    console.log('====================================');
-    console.log(' global.userId', global.userId);
-    console.log('====================================');
     return () => {
       unsubscribe();
       disconnectSocket();
@@ -133,10 +130,6 @@ const GroupsList = ({route, navigation}) => {
   };
 
   const connectSocket = useCallback(() => {
-    console.log('====================================');
-    console.log('202-event');
-    console.log('====================================');
-
     if (
       socketRef == null ||
       socketRef.current === null ||
@@ -148,39 +141,40 @@ const GroupsList = ({route, navigation}) => {
         upgrade: false,
       });
     }
-    console.log('socketRef.current.connected', socketRef.current.connected);
-    socketRef.current.on('connect', () => {
-      if (socketRef.current.connected) {
+
+    socketRef?.current?.on('connect', () => {
+      if (socketRef?.current.connected) {
+        setCurrentTab(0);
         resetField();
         setCurrentTab(0);
         openSelctedTab(0);
-        socketRef.current.on('error', attempt => {
+        socketRef?.current.on('error', attempt => {
           console.log('====================================');
           console.log('errror', attempt);
           console.log('====================================');
         });
 
-        socketRef.current.on('disconnect', () => {
+        socketRef?.current.on('disconnect', () => {
           console.log('socket disconnected'); // undefined
         });
 
-        socketRef.current.on('reconnect', attempt => {
+        socketRef?.current.on('reconnect', attempt => {
           console.log('====================================');
           console.log('attempt', attempt);
           console.log('====================================');
         });
-        socketRef.current.on('reconnect_error', attempt => {
+        socketRef?.current.on('reconnect_error', attempt => {
           console.log('====================================');
           console.log('reconnect_error', attempt);
           console.log('====================================');
         });
-        socketRef.current.on('reconnect_attempt', attempt => {
+        socketRef?.current.on('reconnect_attempt', attempt => {
           console.log('====================================');
           console.log('reconnect_attempt', attempt);
           console.log('====================================');
         });
 
-        socketRef.current.once('user-connected', event => {
+        socketRef?.current.once('user-connected', event => {
           console.log('====================================');
           console.log('connected', event);
           console.log('connected', event.status);
@@ -197,7 +191,7 @@ const GroupsList = ({route, navigation}) => {
     if (postData.length > 0) {
       if (socketRef.current !== undefined && socketRef.current !== null) {
         socketRef?.current?.removeListener('get-message');
-        socketRef.current.on('get-message', event => {
+        socketRef?.current.on('get-message', event => {
           if (event && event !== null && event !== undefined) {
             let message = event.message;
             let exist = _.includes(messageIds, message._id);
@@ -297,50 +291,51 @@ const GroupsList = ({route, navigation}) => {
           response.data !== undefined &&
           response.data !== null
         ) {
-          let data = response.data;
+          try {
+            let data = response.data;
+            console.log('====================================');
+            console.log('data', data);
+            console.log('====================================');
+            if (data.status) {
+              let arrayItems = data.groups;
 
-          if (data.status) {
-            let arrayItems = data.groups;
-
-            console.log('JSON', JSON.stringify(arrayItems));
-
-            if (arrayItems.length > 0 && selectedTab === 0) {
-              let result = _.map(arrayItems, '_id');
-              let isAnyNew = false;
-              let unJoined = [];
-              result.forEach(element => {
-                let exist = _.includes(myGroupIds, element);
-                if (!exist) {
-                  unJoined.push(element);
-                  isAnyNew = true;
-                  myGroupIds.push(element);
+              if (arrayItems.length > 0 && selectedTab === 0) {
+                let result = _.map(arrayItems, '_id');
+                let isAnyNew = false;
+                let unJoined = [];
+                result.forEach(element => {
+                  let exist = _.includes(myGroupIds, element);
+                  if (!exist) {
+                    unJoined.push(element);
+                    isAnyNew = true;
+                    myGroupIds.push(element);
+                  }
+                });
+                if (isAnyNew) {
+                  joinGroupWithSocket(unJoined);
                 }
-              });
-              if (isAnyNew) {
-                joinGroupWithSocket(unJoined);
               }
-            }
 
-            if (firstLoad && arrayItems.length === 0 && selectedTab === 0) {
-              firstLoad = false;
-              setCurrentTab(1);
-              openSelctedTab(1);
-            } else {
-              if (filterObject.page === 1) {
-                arrayItems = _.orderBy(
-                  arrayItems,
-                  ['unreadMessageCount'],
-                  ['desc'],
-                );
-                setPostData(arrayItems);
+              if (firstLoad && arrayItems.length === 0 && selectedTab === 0) {
+                firstLoad = false;
+                setCurrentTab(1);
+                openSelctedTab(1);
               } else {
-                let oldData = postData;
-                var merge = _.merge(oldData, arrayItems);
-                merge = _.orderBy(merge, ['unreadMessageCount'], ['desc']);
-                setPostData([...merge]);
+                if (filterObject.page === 1) {
+                  setPostData([...arrayItems]);
+                } else {
+                  let oldData = postData;
+                  var merge = _.merge(oldData, arrayItems);
+
+                  setPostData([...merge]);
+                }
+                setPaginationStatus(PaginationStatus.waiting);
               }
-              setPaginationStatus(PaginationStatus.waiting);
             }
+          } catch (error) {
+            console.log('====================================');
+            console.log('error');
+            console.log('====================================');
           }
         }
       }
@@ -560,7 +555,7 @@ const GroupsList = ({route, navigation}) => {
           userId: global.userId,
         };
         setTimeout(() => {
-          socketRef.current.emit('subscribe-group', payload);
+          socketRef?.current?.emit('subscribe-group', payload);
         }, 100);
       });
     }
@@ -573,7 +568,7 @@ const GroupsList = ({route, navigation}) => {
           groupId: element,
           userId: global.userId,
         };
-        socketRef.current.emit('user-disconnect', payload);
+        socketRef?.current?.emit('user-disconnect', payload);
       });
       disconnectSocket();
     }
@@ -589,7 +584,12 @@ const GroupsList = ({route, navigation}) => {
         let newCount = oldData[index].unreadMessageCount + 1;
         oldData[index].unreadMessageCount = newCount;
 
-        oldData = _.orderBy(oldData, ['unreadMessageCount'], ['desc']);
+        // oldData = _.orderBy(oldData, ['unreadMessageCount'], ['desc']);
+
+        var placeholder = {};
+        var objectToMove = oldData.splice(index, 1, placeholder)[0];
+        oldData.splice(0, 0, objectToMove);
+        oldData.splice(oldData.indexOf(placeholder), 1);
 
         setPostData([...oldData]);
       }
@@ -614,6 +614,22 @@ const GroupsList = ({route, navigation}) => {
     },
     [getGroupData, getDiscoverGroups, getBatchGroups],
   );
+
+  const isValidMedia = imageMedia => {
+    if (imageMedia !== undefined && imageMedia !== null) {
+      let info = imageMedia.imageInfo;
+      let cropRect = info.cropRect;
+      let ratio = cropRect.width / cropRect.height;
+
+      let result =
+        Math.abs(ratio - 4 / 3) < Math.abs(ratio - 16 / 9) ? '4:3' : '16:9';
+
+      if (result === '16:9') {
+        return true;
+      }
+      return false;
+    }
+  };
 
   const validateInput = () => {
     if (groupName.trim() === '' || groupName.length === 0) {
@@ -875,11 +891,11 @@ const GroupsList = ({route, navigation}) => {
               })
             : generateMenuOption(title, 'add-to-list', 9, () => {
                 refJoinGroup.current.close();
-                // if (groupStatus === 2 || groupStatus === 3) {
-                //   setTimeout(() => {
-                //     joinGroupRequest();
-                //   }, 200);
-                // }
+                if (groupStatus === 2 || groupStatus === 3) {
+                  setTimeout(() => {
+                    joinGroupRequest();
+                  }, 200);
+                }
               })}
         </View>
       </OptionsSheet>
@@ -1093,7 +1109,6 @@ const GroupsList = ({route, navigation}) => {
       <UploadMedia
         navigation={navigation}
         refRBSheet={uploadRef}
-        currentModule={'groups'}
         media={{
           image: false,
           video: true,
@@ -1104,8 +1119,12 @@ const GroupsList = ({route, navigation}) => {
         onPickMedia={media => {
           uploadRef.current.close();
           if (media !== undefined && media !== null) {
-            setErrorMessage({});
-            setMediaData(media[0]);
+            if (!isValidMedia(media[0])) {
+              setErrorMessage({mediaData: 'Photo must be in 16:9 ratio'});
+            } else {
+              setErrorMessage({});
+              setMediaData(media[0]);
+            }
           }
         }}
       />
