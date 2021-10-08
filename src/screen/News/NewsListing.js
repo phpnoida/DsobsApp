@@ -647,7 +647,7 @@ const NewsListing = ({navigation}) => {
   return (
     <View style={GlobalInclude.AppStyle.fill}>
       <TopHeaderView
-        index={2}
+        index={6}
         navigation={navigation}
         label={'Post News'}
         showLabel={true}

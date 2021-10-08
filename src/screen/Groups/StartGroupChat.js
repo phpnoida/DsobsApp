@@ -271,9 +271,9 @@ const StartGroupChat = ({route}) => {
 
         socketRef?.current?.removeListener('removed-user');
         socketRef.current.on('removed-user', event => {
+          console.log('event.userId', event.userId);
+          console.log('global.userId', global.userId);
           if (event && event !== null && event !== undefined) {
-            console.log('event.userId', event.userId);
-            console.log('global.userId', global.userId);
             if (
               event.userId &&
               event.userId !== null &&
@@ -333,24 +333,16 @@ const StartGroupChat = ({route}) => {
         let author = message.authorId;
         let oldData = messages;
         var index = oldData.findIndex(x => x._id === message._id);
+        console.log('index', index);
         if (index < 0) {
           if (author._id !== global.userId) {
             readMessage(message._id);
-            if (isFiltering) {
-              newMessageList.push(message);
-            } else {
-              if (author._id !== global.userId) {
-                if (showScrollToBottom) {
-                  bottomUnread = bottomUnread + 1;
-                  setBottomMessages(bottomUnread);
-                }
-                console.log('337');
-                setMessages(previousMessages =>
-                  append(previousMessages, message),
-                );
-              }
-            }
           }
+          // if (showScrollToBottom) {
+          //   bottomUnread = bottomUnread + 1;
+          //   setBottomMessages(bottomUnread);
+          // }
+          setMessages(previousMessages => append(previousMessages, message));
         }
       }
     });
@@ -371,6 +363,35 @@ const StartGroupChat = ({route}) => {
       }
     });
 
+    socketRef?.current?.removeListener('message-hidden');
+    socketRef?.current?.on('message-hidden', event => {
+      console.log('message-hidden', JSON.stringify(event));
+      if (event && event !== null && event !== undefined) {
+        let message = event.messageId;
+        let oldData = messages;
+        var index = oldData.findIndex(x => x._id === message);
+        if (index > -1) {
+          oldData[index].isHidden = true;
+          setMessages([...oldData]);
+        }
+      }
+    });
+
+    socketRef?.current?.removeListener('message-removed');
+    socketRef?.current?.on('message-removed', event => {
+      console.log('message-removed', JSON.stringify(event));
+      if (event && event !== null && event !== undefined) {
+        let message = event.messageId;
+        let isDeleted = event.isDeleted;
+        let oldData = messages;
+        var index = oldData.findIndex(x => x._id === message);
+        if (index > -1) {
+          oldData[index].isDeleted = isDeleted;
+          setMessages([...oldData]);
+        }
+      }
+    });
+
     return () => {};
   }, [messages, isFiltering, readMessage, showScrollToBottom]);
 
@@ -384,6 +405,31 @@ const StartGroupChat = ({route}) => {
 
       console.log('readMessage', payload);
       socketRef.current.emit('read-message', payload);
+    }
+  }, []);
+
+  const removeMessageEvent = useCallback(messageId => {
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      let payload = {
+        groupId: groupId,
+        messageId: messageId,
+        authorId: global.userId,
+      };
+
+      console.log('remove-message', payload);
+      socketRef.current.emit('remove-message', payload);
+    }
+  }, []);
+
+  const hideMessageEvent = useCallback(messageId => {
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      let payload = {
+        groupId: groupId,
+        messageId: messageId,
+      };
+
+      console.log('hide-message', payload);
+      socketRef.current.emit('hide-message', payload);
     }
   }, []);
 
@@ -431,8 +477,9 @@ const StartGroupChat = ({route}) => {
         }
       } else {
         console.log('419');
-        setMessages(previousMessages => append(previousMessages, object));
+        // setMessages(previousMessages => append(previousMessages, object));
       }
+
       inEditMode = false;
       setIsReplayEditComment(false);
       setSelectedChatObject(null);
@@ -656,11 +703,17 @@ const StartGroupChat = ({route}) => {
                         objArray.push(element);
                       }
                     } else {
-                      tmpArray.forEach(child => {
-                        objArray.push(child);
-                      });
-                      tmpArray = [];
-                      counter = 0;
+                      if (counter > 3) {
+                        objArray.push(imageGroupRequest(tmpArray));
+                        tmpArray = [];
+                        counter = 0;
+                      } else {
+                        tmpArray.forEach(child => {
+                          objArray.push(child);
+                        });
+                        tmpArray = [];
+                        counter = 0;
+                      }
                       objArray.push(element);
                     }
                   }
@@ -834,6 +887,7 @@ const StartGroupChat = ({route}) => {
           ) {
             let data = response.data;
             if (data.status) {
+              hideMessageEvent(selectedChatObject._id);
               responseMessage = 'Message hidden successfully!';
               let oldData = messages;
               oldData[messagePosition].isHidden = true;
@@ -871,16 +925,13 @@ const StartGroupChat = ({route}) => {
             response.data !== null
           ) {
             let data = response.data;
-
-            console.log('data', JSON.stringify(data));
-
             if (data.status) {
+              removeMessageEvent(selectedChatObject._id);
               responseMessage = 'Message removed successfully!';
               setShowErrorMessage(true);
               let oldData = messages;
               oldData[messagePosition].isDeleted = 0;
               setTimeout(() => {
-                console.log('876');
                 setMessages([...oldData]);
                 setShowErrorMessage(false);
               }, 2500);
@@ -2044,7 +2095,7 @@ const StartGroupChat = ({route}) => {
               activeBackground={GlobalInclude.Color.ColorPrimary}
             />
           </View>
-        ) : isFiltering ? (
+        ) : showSearch ? (
           <FlatList
             ref={chatRef}
             inverted={-1}

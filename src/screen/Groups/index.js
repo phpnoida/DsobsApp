@@ -865,7 +865,7 @@ const GroupsList = ({route, navigation}) => {
         title = 'Join Group (You Left)';
         break;
       case 4:
-        title = 'Join Group (Member Removed)';
+        title = 'Admin has removed You';
         break;
       default:
         break;
@@ -891,7 +891,7 @@ const GroupsList = ({route, navigation}) => {
               })
             : generateMenuOption(title, 'add-to-list', 9, () => {
                 refJoinGroup.current.close();
-                if (groupStatus === 2 || groupStatus === 3) {
+                if (groupStatus === 3) {
                   setTimeout(() => {
                     joinGroupRequest();
                   }, 200);
@@ -933,7 +933,7 @@ const GroupsList = ({route, navigation}) => {
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
       <TopHeaderView
         navigation={navigation}
-        index={13}
+        index={3}
         customIcon={{
           containerStyle: {height: scale(24), width: scale(24)},
           iconColor: GlobalInclude.Color.ColorPrimary,

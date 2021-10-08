@@ -754,7 +754,7 @@ const YellowPages = ({navigation}) => {
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
       <TopHeaderView
         navigation={navigation}
-        index={5}
+        index={9}
         customIcon={{
           containerStyle: {height: scale(24), width: scale(24)},
           iconColor: GlobalInclude.Color.ColorPrimary,

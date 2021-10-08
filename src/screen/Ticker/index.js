@@ -935,7 +935,7 @@ const Ticker = ({route, navigation}) => {
       <OrientationLocker orientation={PORTRAIT} />
       <TopHeaderView
         navigation={navigation}
-        index={10}
+        index={2}
         customIcon={{
           containerStyle: {height: scale(24), width: scale(24)},
           iconColor: GlobalInclude.Color.ColorPrimary,

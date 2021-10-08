@@ -483,7 +483,7 @@ const SocialEvents = ({navigation}) => {
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
       <TopHeaderView
-        index={9}
+        index={8}
         navigation={navigation}
         label={'Post an Event'}
         showLabel={true}

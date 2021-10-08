@@ -19,7 +19,7 @@ const {width} = Dimensions.get('window');
 const Teachers = ({navigation}) => {
   return (
     <View style={GlobalInclude.AppStyle.fill}>
-      <TopHeaderView navigation={navigation} index={6} />
+      <TopHeaderView navigation={navigation} index={12} />
       <SafeAreaView
         style={[
           GlobalInclude.AppStyle.contentSpace,

@@ -102,7 +102,6 @@ class GroupChatItem extends PureComponent {
               {!this.isSameUser(currentMessage, previousMessage) && (
                 <TouchableOpacity
                   style={{zIndex: 1}}
-                  hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
                   onPress={() => {
                     onTapUserName();
                   }}>
@@ -118,7 +117,7 @@ class GroupChatItem extends PureComponent {
               {this.renderDateComponent(currentMessage, false)}
             </View>
           </View>
-          <View style={[grid.row, g.mt3, g.mb2]}>
+          <View style={[grid.row, g.mt5, g.mb2]}>
             <View style={[grid.col]}>
               <View style={[g.mt5, g.mb5]}>
                 {this.renderItem(currentMessage, false)}
@@ -254,7 +253,7 @@ class GroupChatItem extends PureComponent {
           {currentMessage.isDeleted === 0
             ? currentMessage?.authorId?._id === global.userId
               ? 'You removed this message'
-              : `${currentMessage?.authorId?.name} removed message`
+              : `${currentMessage?.authorId?.name} has removed message`
             : 'Admin has removed this message'}
         </Text>
       </View>
@@ -281,7 +280,7 @@ class GroupChatItem extends PureComponent {
             g.txtCenterVertical,
             {textAlign: 'justify'},
           ]}>
-          This message has been hidden
+          Admin has removed this message.
         </Text>
       </View>
     );

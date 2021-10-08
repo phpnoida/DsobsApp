@@ -746,49 +746,8 @@ const Dashboard = ({props, navigation}) => {
                 </TouchableOpacity>
               </View>
 
-              {/* row two */}
+              {/* Row two new */}
               <View style={[grid.rowdir, grid.justifyContentCenter, g.mt8]}>
-                <TouchableOpacity
-                  style={styles.whiteButtonHorizontal}
-                  activeOpacity={1}
-                  onPress={() => {
-                    //Alert.alert('Coming soon...');
-                    bottomSheet.close();
-                    setTimeout(() => {
-                      navigation.navigate('NewsListing');
-                    }, 200);
-                  }}>
-                  <Image
-                    source={GlobalInclude.Assets.News}
-                    resizeMode={'contain'}
-                    resizeMethod={'auto'}
-                    style={styles.menuIcon}
-                  />
-                  <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Dosco News</Text>
-                  </View>
-                </TouchableOpacity>
-                <View style={{margin: scale(5)}} />
-                <TouchableOpacity
-                  style={styles.whiteButtonHorizontal}
-                  activeOpacity={1}
-                  onPress={() => {
-                    bottomSheet.close();
-                    setTimeout(() => {
-                      navigation.navigate('Video');
-                    }, 200);
-                  }}>
-                  <Image
-                    source={GlobalInclude.Assets.Video}
-                    resizeMode={'contain'}
-                    resizeMethod={'auto'}
-                    style={styles.menuIcon}
-                  />
-                  <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Videos</Text>
-                  </View>
-                </TouchableOpacity>
-                <View style={{margin: scale(5)}} />
                 <TouchableOpacity
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
@@ -816,9 +775,30 @@ const Dashboard = ({props, navigation}) => {
                     <Text style={styles.menuStyle}>Common Room</Text>
                   </View>
                 </TouchableOpacity>
+                <View style={{margin: scale(5)}} />
+                <TouchableOpacity
+                  style={styles.whiteButtonHorizontal}
+                  activeOpacity={1}
+                  onPress={() => {
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('GroupsList');
+                    }, 200);
+                  }}>
+                  <Image
+                    source={GlobalInclude.Assets.Groups}
+                    resizeMode={'contain'}
+                    resizeMethod={'auto'}
+                    style={styles.menuIcon}
+                  />
+                  <View style={styles.menuText}>
+                    <Text style={styles.menuStyle}>Groups Chat</Text>
+                  </View>
+                </TouchableOpacity>
               </View>
+              {/* Row two new */}
 
-              {/* row three */}
+              {/* row three new */}
               <View style={[grid.rowdir, grid.justifyContentCenter, g.mt8]}>
                 <TouchableOpacity
                   style={styles.whiteButtonHorizontal}
@@ -868,6 +848,81 @@ const Dashboard = ({props, navigation}) => {
                   </View>
                 </TouchableOpacity>
               </View>
+              {/* row three new */}
+
+              {/* row two */}
+              <View style={[grid.rowdir, grid.justifyContentCenter, g.mt8]}>
+                <TouchableOpacity
+                  style={styles.whiteButtonHorizontal}
+                  activeOpacity={1}
+                  onPress={() => {
+                    //Alert.alert('Coming soon...');
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('NewsListing');
+                    }, 200);
+                  }}>
+                  <Image
+                    source={GlobalInclude.Assets.News}
+                    resizeMode={'contain'}
+                    resizeMethod={'auto'}
+                    style={styles.menuIcon}
+                  />
+                  <View style={styles.menuText}>
+                    <Text style={styles.menuStyle}>Dosco News</Text>
+                  </View>
+                </TouchableOpacity>
+                <View style={{margin: scale(5)}} />
+                <TouchableOpacity
+                  style={styles.whiteButtonHorizontal}
+                  activeOpacity={1}
+                  onPress={() => {
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('Video');
+                    }, 200);
+                  }}>
+                  <Image
+                    source={GlobalInclude.Assets.Video}
+                    resizeMode={'contain'}
+                    resizeMethod={'auto'}
+                    style={styles.menuIcon}
+                  />
+                  <View style={styles.menuText}>
+                    <Text style={styles.menuStyle}>Videos</Text>
+                  </View>
+                </TouchableOpacity>
+                <View style={{margin: scale(5)}} />
+                <TouchableOpacity
+                  style={styles.whiteButtonHorizontal}
+                  activeOpacity={1}
+                  onPress={() => {
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('SocialEvents');
+                    }, 200);
+                  }}>
+                  <Image
+                    source={GlobalInclude.Assets.Events}
+                    resizeMode={'contain'}
+                    resizeMethod={'auto'}
+                    tintColor={GlobalInclude.Color.ColorPrimary}
+                    style={[
+                      styles.menuIcon,
+                      {
+                        ...Platform.select({
+                          ios: {tintColor: GlobalInclude.Color.ColorPrimary},
+                        }),
+                      },
+                    ]}
+                  />
+                  <View style={styles.menuText}>
+                    <Text style={styles.menuStyle}>Events</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* row three */}
 
               {/* row five */}
               <View style={[grid.rowdir, grid.justifyContentCenter, g.mt8]}>
@@ -897,17 +952,17 @@ const Dashboard = ({props, navigation}) => {
                   onPress={() => {
                     bottomSheet.close();
                     setTimeout(() => {
-                      navigation.navigate('SocialEvents');
+                      navigation.navigate('Teachers');
                     }, 200);
                   }}>
                   <Image
-                    source={GlobalInclude.Assets.Events}
+                    source={GlobalInclude.Assets.Teacher}
                     resizeMode={'contain'}
                     resizeMethod={'auto'}
                     style={styles.menuIcon}
                   />
                   <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Events</Text>
+                    <Text style={styles.menuStyle}>Masters</Text>
                   </View>
                 </TouchableOpacity>
                 <View style={{margin: scale(5)}} />
@@ -958,68 +1013,6 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    bottomSheet.close();
-                    setTimeout(() => {
-                      navigation.navigate('CommonWebPage', {
-                        link: 'http://store.doonschool.com/',
-                      });
-                    }, 200);
-                  }}>
-                  <Image
-                    source={GlobalInclude.Assets.Store}
-                    resizeMode={'contain'}
-                    resizeMethod={'auto'}
-                    style={styles.menuIcon}
-                  />
-                  <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Store</Text>
-                  </View>
-                </TouchableOpacity>
-                <View style={{margin: scale(5)}} />
-                <TouchableOpacity
-                  style={styles.whiteButtonHorizontal}
-                  activeOpacity={1}
-                  onPress={() => {
-                    Alert.alert('Coming soon...');
-                  }}>
-                  <Image
-                    source={GlobalInclude.Assets.Offers}
-                    resizeMode={'contain'}
-                    resizeMethod={'auto'}
-                    style={styles.menuIcon}
-                  />
-                  <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Offers</Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-
-              {/* row six */}
-              <View style={[grid.rowdir, grid.justifyContentCenter, g.mt8]}>
-                <TouchableOpacity
-                  style={styles.whiteButtonHorizontal}
-                  activeOpacity={1}
-                  onPress={() => {
-                    bottomSheet.close();
-                    setTimeout(() => {
-                      navigation.navigate('Teachers');
-                    }, 200);
-                  }}>
-                  <Image
-                    source={GlobalInclude.Assets.Teacher}
-                    resizeMode={'contain'}
-                    resizeMethod={'auto'}
-                    style={styles.menuIcon}
-                  />
-                  <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Masters</Text>
-                  </View>
-                </TouchableOpacity>
-                <View style={{margin: scale(5)}} />
-                <TouchableOpacity
-                  style={styles.whiteButtonHorizontal}
-                  activeOpacity={1}
-                  onPress={() => {
                     Alert.alert('Coming soon...');
                   }}>
                   <Image
@@ -1039,20 +1032,23 @@ const Dashboard = ({props, navigation}) => {
                   onPress={() => {
                     bottomSheet.close();
                     setTimeout(() => {
-                      navigation.navigate('GroupsList');
+                      navigation.navigate('CommonWebPage', {
+                        link: 'http://store.doonschool.com/',
+                      });
                     }, 200);
                   }}>
                   <Image
-                    source={GlobalInclude.Assets.Groups}
+                    source={GlobalInclude.Assets.Store}
                     resizeMode={'contain'}
                     resizeMethod={'auto'}
                     style={styles.menuIcon}
                   />
                   <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Groups</Text>
+                    <Text style={styles.menuStyle}>Store</Text>
                   </View>
                 </TouchableOpacity>
               </View>
+
               <View style={{marginBottom: scale(45)}} />
             </View>
           </ScrollView>

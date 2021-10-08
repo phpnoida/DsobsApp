@@ -426,7 +426,7 @@ const SocialListing = ({navigation}) => {
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
       <TopHeaderView
-        index={7}
+        index={11}
         navigation={navigation}
         label={'Post a SW'}
         showLabel={true}

@@ -438,7 +438,7 @@ const GalleryListing = ({navigation}) => {
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
       <TopHeaderView
-        index={4}
+        index={5}
         navigation={navigation}
         label={'Send Photos'}
         showLabel={true}

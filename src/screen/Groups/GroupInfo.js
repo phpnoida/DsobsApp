@@ -238,6 +238,7 @@ const GroupInfo = ({route, navigation}) => {
       let payload = {
         groupId: groupId,
         userId: userId,
+        authorId: global.userId,
       };
 
       console.log('payload', payload);

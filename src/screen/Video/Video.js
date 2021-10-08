@@ -488,7 +488,7 @@ const Video = ({navigation}) => {
   return (
     <View style={GlobalInclude.AppStyle.fill}>
       <TopHeaderView
-        index={3}
+        index={7}
         navigation={navigation}
         label={'Post Video'}
         showLabel={true}
