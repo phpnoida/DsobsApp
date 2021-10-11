@@ -191,9 +191,13 @@ const StartGroupChat = ({route}) => {
     };
 
     const backAction = () => {
-      if (!isBackTap) {
-        isBackTap = true;
-        disconnectUser();
+      if (showSearch) {
+        resetSearch();
+      } else {
+        if (!isBackTap) {
+          isBackTap = true;
+          disconnectUser();
+        }
       }
       return true;
     };
@@ -1106,6 +1110,23 @@ const StartGroupChat = ({route}) => {
    * @CommonFunctions
    */
 
+  const resetSearch = () => {
+    setShowSearch(false);
+    setFilterQuery('');
+    setFreshSearch(true);
+    fitlerText = '';
+    resetCount();
+    getOldMessages();
+    setIsFiltering(false);
+    searchfilterObject = {
+      page: 1,
+      search: '',
+      limit: 10,
+    };
+    setIsConnected(true);
+    setShowSearch(false);
+  };
+
   const append = (currentMessages = [], message) => {
     if (!Array.isArray(message)) {
       message = [message];
@@ -1471,6 +1492,19 @@ const StartGroupChat = ({route}) => {
                 grid.alignItems,
                 {borderRadius: scale(6)},
               ]}>
+              <TouchableOpacity
+                style={headerStyle.closeIcon}
+                onPress={() => {
+                  resetSearch();
+                }}>
+                <GlobalInclude.BaseIcon
+                  containerStyle={headerStyle.searchIcon}
+                  iconColor={GlobalInclude.Color.ColorPrimary}
+                  iconName={'arrow-back'}
+                  iconSize={scale(24)}
+                  iconType={IconType[6]}
+                />
+              </TouchableOpacity>
               <GlobalInclude.BaseIcon
                 containerStyle={headerStyle.searchIcon}
                 iconColor={GlobalInclude.Color.ColorPrimary}
@@ -1528,18 +1562,7 @@ const StartGroupChat = ({route}) => {
                 <TouchableOpacity
                   style={[grid.alignItems, grid.justifyContentCenter]}
                   onPress={() => {
-                    setFreshSearch(true);
-                    fitlerText = '';
-                    resetCount();
-                    getOldMessages();
-                    setIsFiltering(false);
-                    searchfilterObject = {
-                      page: 1,
-                      search: '',
-                      limit: 10,
-                    };
-                    setIsConnected(true);
-                    setShowSearch(false);
+                    resetSearch();
                   }}>
                   <GlobalInclude.BaseIcon
                     containerStyle={headerStyle.closeIcon}
@@ -2151,7 +2174,7 @@ const StartGroupChat = ({route}) => {
           />
         )}
 
-        {!isFiltering && (
+        {!showSearch && (
           <KeyboardAvoidingView
             behavior={Platform.select({android: 'height', ios: 'padding'})}
             style={{marginBottom: scale(10)}}>

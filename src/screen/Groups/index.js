@@ -20,7 +20,7 @@ import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
-
+import {pickImage} from '../../helper/uploadImage';
 import {IconType, APP_NAME} from '../../helper/Constants';
 
 import {
@@ -736,9 +736,12 @@ const GroupsList = ({route, navigation}) => {
                 {generateHeader('Upload Pic', true)}
                 {uploadMediaButton(
                   () => {
-                    if (uploadRef.current !== null) {
-                      uploadRef.current.open();
-                    }
+                    // if (uploadRef.current !== null) {
+                    //   uploadRef.current.open();
+                    // }
+                    pickImage((data)=>{
+                      setMediaData(data);
+                    })
                   },
                   mediaData !== undefined && mediaData !== null
                     ? 'Image Uploaded successfully'

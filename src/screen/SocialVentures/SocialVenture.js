@@ -411,7 +411,7 @@ const SocialVenture = ({navigation}) => {
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
       <TopHeaderView
-        index={9}
+        index={10}
         navigation={navigation}
         label={'Post a Venture'}
         showLabel={true}

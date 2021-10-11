@@ -267,7 +267,9 @@ const Dashboard = ({props, navigation}) => {
             title: data.userName + "'s post",
           });
         }
-
+        break;
+      case 202:
+        navigation.navigate('GroupsList');
         break;
       case 1002:
         if (
@@ -793,6 +795,26 @@ const Dashboard = ({props, navigation}) => {
                   />
                   <View style={styles.menuText}>
                     <Text style={styles.menuStyle}>Groups Chat</Text>
+                  </View>
+                </TouchableOpacity>
+                <View style={{margin: scale(5)}} />
+                <TouchableOpacity
+                  style={styles.whiteButtonHorizontal}
+                  activeOpacity={1}
+                  onPress={() => {
+                    bottomSheet.close();
+                    setTimeout(() => {
+                      navigation.navigate('ChatUserList');
+                    }, 200);
+                  }}>
+                  <Image
+                    source={GlobalInclude.Assets.ChatBlue}
+                    resizeMode={'contain'}
+                    resizeMethod={'auto'}
+                    style={styles.menuIcon}
+                  />
+                  <View style={styles.menuText}>
+                    <Text style={styles.menuStyle}>Chat</Text>
                   </View>
                 </TouchableOpacity>
               </View>

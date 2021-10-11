@@ -302,7 +302,6 @@ const GroupInfo = ({route, navigation}) => {
             let data = response.data;
 
             console.log('data', data);
-
             if (data.status) {
               emitRemoveUserEvent(removeId);
               isSuccess = true;
@@ -319,7 +318,7 @@ const GroupInfo = ({route, navigation}) => {
                     }),
                   );
                 } else {
-                  emitAdminEvent(removeId, 'remove-user');
+                  //emitAdminEvent(removeId, 'remove-user');
                   getGroupData();
                 }
               }, 2500);
@@ -559,7 +558,11 @@ const GroupInfo = ({route, navigation}) => {
                     Helpers.concatName(selectedUserInfo),
                   )} from group?`,
                   () => {
-                    removeUser(false, selectedUserInfo._id);
+                    emitRemoveUserEvent(selectedUserInfo._id);
+                    setTimeout(() => {
+                      getGroupData();
+                    }, 200);
+                    //removeUser(false, selectedUserInfo._id);
                   },
                 );
               })}
@@ -781,7 +784,17 @@ const GroupInfo = ({route, navigation}) => {
                         if (index > -1) {
                           setSelectedUserInfo(adminUsers[index]);
                           setTimeout(() => {
-                            removeUser(true, adminUsers[index]._id);
+                            emitRemoveUserEvent(adminUsers[index]._id);
+                            setTimeout(() => {
+                              disconnectAllEvents();
+                              navigation.dispatch(
+                                CommonActions.reset({
+                                  index: 1,
+                                  routes: [{name: 'GroupsList'}],
+                                }),
+                              );
+                            }, 200);
+                            //removeUser(true, adminUsers[index]._id);
                           }, 200);
                         } else {
                           let users = groupData.users;
@@ -791,7 +804,17 @@ const GroupInfo = ({route, navigation}) => {
                           );
                           setSelectedUserInfo(users[newIndex]);
                           setTimeout(() => {
-                            removeUser(true, users[newIndex]._id);
+                            emitRemoveUserEvent(users[newIndex]._id);
+                            setTimeout(() => {
+                              disconnectAllEvents();
+                              navigation.dispatch(
+                                CommonActions.reset({
+                                  index: 1,
+                                  routes: [{name: 'GroupsList'}],
+                                }),
+                              );
+                            }, 200);
+                            //removeUser(true, users[newIndex]._id);
                           }, 200);
                         }
                       }
@@ -828,7 +851,6 @@ const GroupInfo = ({route, navigation}) => {
         userInfoSheet()}
 
       <UploadMedia
-        currentModule={'groups'}
         navigation={navigation}
         refRBSheet={uploadRef}
         media={{
@@ -845,8 +867,12 @@ const GroupInfo = ({route, navigation}) => {
             if (!isValidMedia(media[0])) {
               setErrorMessage({mediaData: 'Photo must be in 16:9 ratio'});
             } else {
-              setErrorMessage({});
-              setMediaData(media[0]);
+              if (media !== undefined && media !== null) {
+                let requestObject = {
+                  profilePicture: media[0].thumbnail,
+                };
+                updateGroupData(requestObject);
+              }
             }
           }
         }}

@@ -1008,7 +1008,7 @@ const ChatUserList = ({navigation}) => {
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
       <TopHeaderView
-        index={12}
+        index={4}
         navigation={navigation}
         label={'Chat'}
         showLabel={false}

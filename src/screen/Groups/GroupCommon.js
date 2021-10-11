@@ -104,7 +104,7 @@ export const style = StyleSheet.create({
   },
   newPostContainer: {
     position: 'absolute',
-    backgroundColor: 'rgba(62,62,62,0.6)',
+    backgroundColor: GlobalInclude.Color.ColorPrimaryLight,
     height: scale(34),
     width: scale(34),
     borderRadius: scale(68),
@@ -112,7 +112,7 @@ export const style = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     alignContent: 'center',
-    top: scale(30),
+    top: scale(15),
     right: 10,
   },
 });

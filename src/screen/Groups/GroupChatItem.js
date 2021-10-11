@@ -234,13 +234,13 @@ class GroupChatItem extends PureComponent {
     const {customFont, currentMessage} = this.props;
     return (
       <View style={[grid.rowrow, grid.alignItems]}>
-        <GlobalInclude.BaseIcon
+        {/* <GlobalInclude.BaseIcon
           containerStyle={{height: scale(13), width: scale(13)}}
           iconColor={GlobalInclude.Color.ColorPrimary}
           iconName={'block'}
           iconSize={scale(12)}
           iconType={IconType[9]}
-        />
+        /> */}
         <Text
           style={[
             customFont,
