@@ -24,69 +24,67 @@ const ModalAlert = props => {
   const {cancelButton} = props;
 
   return (
-    <View>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => {
-          setShowModal(!showModal);
-        }}
-        hardwareAccelerated={true}
-        visible={showModal}>
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <TouchableOpacity
-              onPress={() => {
-                setShowModal(!showModal);
-                props.closeAction();
-              }}
-              style={styles.buttonCircle}
-              background={TouchableNativeFeedback.SelectableBackground()}>
-              <Icon name="close" color={Color.ColorPrimary} size={24} />
-            </TouchableOpacity>
+    <Modal
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => {
+        setShowModal(!showModal);
+      }}
+      hardwareAccelerated={true}
+      visible={showModal}>
+      <View style={styles.centeredView}>
+        <View style={styles.modalView}>
+          <TouchableOpacity
+            onPress={() => {
+              setShowModal(!showModal);
+              props.closeAction();
+            }}
+            style={styles.buttonCircle}
+            background={TouchableNativeFeedback.SelectableBackground()}>
+            <Icon name="close" color={Color.ColorPrimary} size={24} />
+          </TouchableOpacity>
 
-            {header && <Text style={styles.headerText}>{header}</Text>}
-            {subHeader && <Text style={styles.modalText}>{subHeader}</Text>}
+          {header && <Text style={styles.headerText}>{header}</Text>}
+          {subHeader && <Text style={styles.modalText}>{subHeader}</Text>}
 
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignSelf: 'center',
-                marginTop: scale(6),
-              }}>
-              {okButton && okButton !== null && (
-                <TouchableOpacity
-                  onPress={() => {
-                    setShowModal(!showModal);
-                    props.okAction();
-                  }}
-                  style={styles.buttonBlue}
-                  background={TouchableNativeFeedback.SelectableBackground()}>
-                  <Text style={{color: '#ffffff', fontSize: scale(14)}}>
-                    {okButton}
-                  </Text>
-                </TouchableOpacity>
-              )}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignSelf: 'center',
+              marginTop: scale(6),
+            }}>
+            {okButton && okButton !== null && (
+              <TouchableOpacity
+                onPress={() => {
+                  setShowModal(!showModal);
+                  props.okAction();
+                }}
+                style={styles.buttonBlue}
+                background={TouchableNativeFeedback.SelectableBackground()}>
+                <Text style={{color: '#ffffff', fontSize: scale(14)}}>
+                  {okButton}
+                </Text>
+              </TouchableOpacity>
+            )}
 
-              {cancelButton && (
-                <TouchableOpacity
-                  onPress={() => {
-                    setShowModal(!showModal);
-                    props.cancelAction();
-                  }}
-                  style={styles.buttonBlue}
-                  background={TouchableNativeFeedback.SelectableBackground()}>
-                  <Text style={{color: '#ffffff', fontSize: scale(14)}}>
-                    {cancelButton}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
+            {cancelButton && (
+              <TouchableOpacity
+                onPress={() => {
+                  setShowModal(!showModal);
+                  props.cancelAction();
+                }}
+                style={styles.buttonBlue}
+                background={TouchableNativeFeedback.SelectableBackground()}>
+                <Text style={{color: '#ffffff', fontSize: scale(14)}}>
+                  {cancelButton}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
-      </Modal>
-    </View>
+      </View>
+    </Modal>
   );
 };
 
