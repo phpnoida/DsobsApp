@@ -39,7 +39,7 @@ const AppWrapper = ({navigation}) => {
   }, [onNotif]);
 
   const onRegister = token => {
-    //console.log('token.token', token.token);
+    console.log('token.token', token.token);
   };
 
   const onNotif = useCallback(

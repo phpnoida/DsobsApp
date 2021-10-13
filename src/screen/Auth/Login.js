@@ -30,6 +30,7 @@ import {URL_REGX, APP_NAME} from '../../helper/Constants';
 import {checkAndCreateUser} from '../../helper/ChatHelper';
 import {CommonActions} from '@react-navigation/native';
 import PushNotification from 'react-native-push-notification';
+import PushNotificationIos from '@react-native-community/push-notification-ios';
 import CommonButton from '../../component/CommonButton';
 import SmsRetriever from 'react-native-sms-retriever';
 import parsePhoneNumber, {AsYouType} from 'libphonenumber-js';
