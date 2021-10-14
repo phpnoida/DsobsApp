@@ -45,7 +45,7 @@ const AppWrapper = ({navigation}) => {
   const onNotif = useCallback(
     notification => {
       console.log('====================================');
-      console.log('notification', notification);
+      console.log('onNotif-AppWrapper-48', notification);
       console.log('====================================');
       if (notification && notification !== undefined && notification !== null) {
         if (notification.userInteraction) {

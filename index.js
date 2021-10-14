@@ -1,7 +1,26 @@
 import React from 'react';
 import {AppRegistry, LogBox} from 'react-native';
 import AppWrapper from './AppContext';
-//import AppWrapper from './src/screen/CollapsibleHeader';
 import {name as appName} from './app.json';
+import messaging from '@react-native-firebase/messaging';
+import Helper from './src/helper/Helper';
 LogBox.ignoreAllLogs();
-AppRegistry.registerComponent(appName, () => AppWrapper);
+
+messaging().setBackgroundMessageHandler(async remoteMessage => {
+  if (remoteMessage) {
+    global.notification = remoteMessage;
+    // global.isNotificationTap = true;
+    Helper.presentNotification('background-16', remoteMessage);
+  }
+});
+
+function HeadlessCheck({isHeadless}) {
+  if (isHeadless) {
+    // App has been launched in the background by iOS, ignore
+    return null;
+  }
+
+  return <AppWrapper />;
+}
+
+AppRegistry.registerComponent(appName, () => HeadlessCheck);

@@ -26,8 +26,10 @@ import PushNotification from 'react-native-push-notification';
 import {navigationRef, isReadyRef} from './src/helper/NavigationService';
 import {RootNavigators} from './src/route/Route';
 import {NavigationContainer} from '@react-navigation/native';
-
 import {sendPresenceStatus} from './src/Actions/CommonActions';
+import {useDispatch} from 'react-redux';
+import {refreshScreen} from './src/reducer/NotificationReducer';
+
 import Offline from './src/component/Offline';
 
 let baseRoute = 'AppTour';
@@ -36,8 +38,55 @@ const appVersion = DeviceInfo.getVersion();
 let appStateValue = '';
 
 const App = () => {
+  const dispatch = useDispatch();
+
   const [loadingComplete, setLoadingComplete] = useState(false);
   const [isConnected, setIsConnected] = useState(true);
+
+  useEffect(() => {
+    /**
+     *
+     * Notification start
+     *
+     */
+    if (Platform.OS === 'ios') {
+      requestUserPermission();
+      PushNotificationIOS.addEventListener('notification', notification => {
+        const isClicked = notification.getData().userInteraction === 1;
+
+        console.log('isClicked', isClicked);
+
+        if (isClicked) {
+          global.notification = notification;
+          setTimeout(() => {
+            dispatch(refreshScreen());
+          }, 100);
+        } else {
+          if (
+            notification.getData() !== undefined &&
+            notification.getData() !== null
+          ) {
+            let data = notification.getData();
+            let notificationObj = {};
+            notificationObj.data = data;
+            handleNotification('PushNotificationIOS', notificationObj);
+          }
+        }
+      });
+    } else {
+      PushNotification.popInitialNotification(notification => {
+        //console.log('Initial Notification', notification);
+        global.notification = notification;
+      });
+    }
+
+    /**
+     *
+     * Notification end
+     *
+     */
+    return () => {};
+  }, [dispatch]);
 
   useEffect(() => {
     SplashScreen.hide();
@@ -57,7 +106,6 @@ const App = () => {
         })
         .then(() => {
           setTimeout(() => {
-            console.log('appStateValue', appStateValue);
             if (appStateValue === 'active' && global.isLoggedIn) {
               _sendPresenceStatus();
             } else {
@@ -67,42 +115,23 @@ const App = () => {
         });
     });
 
-    /**
-     *
-     * Notification start
-     *
-     */
-    if (Platform.OS === 'ios') {
-      requestUserPermission();
-      PushNotificationIOS.addEventListener('notification', notification => {
-        console.log('PushNotificationIOS', notification.getData());
-        if (
-          notification.getData() !== undefined &&
-          notification.getData() !== null
-        ) {
-          let data = notification.getData();
-          let notificationObj = {};
-          notificationObj.data = data;
-          handleNotification('PushNotificationIOS', notificationObj);
-        }
-      });
-    } else {
-      PushNotification.popInitialNotification(notification => {
-        console.log('Initial Notification', notification);
-        global.notification = notification;
-      });
-    }
-    /**
-     *
-     * Notification end
-     *
-     */
+    // let details = {
+    //   id: new Date().getTime().toString(),
+    //   body: 'body',
+    //   title: 'title',
+    //   alertAction: 'view',
+    //   fireDate: getCorrectDate(),
+    //   repeats: false,
+    //   isCritical: true,
+    // };
+    // PushNotificationIOS.addNotificationRequest(details);
 
     return () => {
+      //onMessage;
       unsubscribe();
       AppState.removeEventListener('change', _handleAppStateChange);
     };
-  }, [_handleAppStateChange, _sendPresenceStatus]);
+  }, [_handleAppStateChange, _sendPresenceStatus, dispatch]);
 
   const _handleAppStateChange = useCallback(nextState => {
     appStateValue = nextState;
@@ -183,7 +212,7 @@ const App = () => {
   async function requestUserPermission() {
     PushNotificationIOS.checkPermissions(status => {
       console.log('====================================');
-      console.log(status.authorizationStatus);
+      console.log('statuys', status);
       console.log('====================================');
     });
   }

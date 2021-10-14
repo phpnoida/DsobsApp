@@ -30,7 +30,7 @@ import {URL_REGX, APP_NAME} from '../../helper/Constants';
 import {checkAndCreateUser} from '../../helper/ChatHelper';
 import {CommonActions} from '@react-navigation/native';
 import PushNotification from 'react-native-push-notification';
-import PushNotificationIos from '@react-native-community/push-notification-ios';
+import messaging from '@react-native-firebase/messaging';
 import CommonButton from '../../component/CommonButton';
 import SmsRetriever from 'react-native-sms-retriever';
 import parsePhoneNumber, {AsYouType} from 'libphonenumber-js';
@@ -345,7 +345,12 @@ const Login = ({navigation}) => {
     global.isLoggedIn = true;
     clearInterval(timerInterval);
 
-    PushNotification.subscribeToTopic(fcmTopic);
+    if (Platform.OS === 'ios') {
+      messaging().subscribeToTopic(fcmTopic);
+    } else {
+      PushNotification.subscribeToTopic(fcmTopic);
+    }
+
     AsyncStorage.setItem('loggedIn', '1').then(() => {
       AsyncStorage.setItem('tokens', JSON.stringify(tokens)).then(() => {
         AsyncStorage.setItem('userDetails', JSON.stringify(userDetails)).then(
