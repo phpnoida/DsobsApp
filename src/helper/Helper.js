@@ -193,9 +193,15 @@ const Helpers = {
 
     return undefined;
   },
+  getCorrectDate: function () {
+    const date = new Date();
+    date.setDate(date.getDate());
+    date.setSeconds(date.getSeconds() + 30);
+    return date;
+  },
   presentNotification: function (from, notification) {
     console.log('from', from);
-    //console.log('notification', notification.data);
+    // console.log('notification', notification.data);
 
     const title = notification.data.title;
     const body = notification.data.body;
@@ -232,22 +238,17 @@ const Helpers = {
         }
       });
     } else if (Platform.OS === 'ios') {
-      // let details = {
-      //   alertBody: body,
-      //   alertTitle: title,
-      //   alertAction: 'view',
-      //   userInfo: notification.data,
-      // };
       let details = {
         id: new Date().getTime().toString(),
         body: body,
         title: title,
-        alertAction: 'view',
-        userInfo: notification.data,
+        userInfo: {data: JSON.stringify(notification.data)},
       };
       console.log('nextAppState', global.nextAppState);
 
       if (global.nextAppState === 'active') {
+        global.isForeGround = true;
+        PushNotificationIOS.removeAllPendingNotificationRequests();
         PushNotificationIOS.addNotificationRequest(details);
       }
     }

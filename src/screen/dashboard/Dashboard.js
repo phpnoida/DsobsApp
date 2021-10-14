@@ -120,7 +120,6 @@ const Dashboard = ({props, navigation}) => {
       Orientation.lockToPortrait();
       addUser(global.userId, global.userDetails, () => {});
       checkUserExist(global.userId, false).then(detailis => {
-        console.log('detailis', detailis);
         setUserData(detailis);
         let object = {
           platform: Platform.OS,
@@ -166,10 +165,6 @@ const Dashboard = ({props, navigation}) => {
               response.response !== null
             ) {
               let data = response.data;
-
-              console.log('====================================');
-              console.log('PopNotifications', data);
-              console.log('====================================');
               if (data.status) {
                 if (data.data.length > 0) {
                   setNotificationList([...data.data]);
@@ -189,7 +184,13 @@ const Dashboard = ({props, navigation}) => {
   const validatePushNotification = useCallback(() => {
     if (global.notification !== undefined && global.notification !== null) {
       let data = global.notification.data;
-      //console.log('validatePushNotification', data);
+      if (global.isForeGround) {
+        global.isForeGround = false;
+        if (Platform.OS === 'ios') {
+          data = JSON.parse(global.notification.data.data);
+        }
+      }
+      console.log('validatePushNotification', data);
       let linkUrl = data.linkUrl;
       if (linkUrl && linkUrl !== null && linkUrl !== '') {
         global.notification = null;
@@ -1052,12 +1053,13 @@ const Dashboard = ({props, navigation}) => {
                   style={styles.whiteButtonHorizontal}
                   activeOpacity={1}
                   onPress={() => {
-                    bottomSheet.close();
-                    setTimeout(() => {
-                      navigation.navigate('CommonWebPage', {
-                        link: 'http://store.doonschool.com/',
-                      });
-                    }, 200);
+                    Alert.alert('Coming soon...');
+                    // bottomSheet.close();
+                    // setTimeout(() => {
+                    //   navigation.navigate('CommonWebPage', {
+                    //     link: 'http://store.doonschool.com/',
+                    //   });
+                    // }, 200);
                   }}>
                   <Image
                     source={GlobalInclude.Assets.Store}

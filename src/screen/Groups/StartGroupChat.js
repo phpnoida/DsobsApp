@@ -2130,194 +2130,260 @@ const StartGroupChat = ({route}) => {
       {showProgess(isFirstLoad)}
       {showScrollToBottom ? renderScrollToBottomWrapper() : null}
       <SafeAreaView style={[GlobalInclude.AppStyle.topSpace, g.bggray3]}>
-        <View style={GlobalInclude.AppStyle.fill}>
-          {isFirstLoad ? (
-            <View style={[GlobalInclude.AppStyle.fillCenter]}>
-              <ThreeDotsLoader
-                size={scale(12)}
-                activeBackground={GlobalInclude.Color.ColorPrimary}
-              />
+        <KeyboardAvoidingView
+          keyboardVerticalOffset={Platform.select({
+            ios: () => -30,
+          })()}
+          behavior={Platform.select({android: 'height', ios: 'padding'})}
+          style={{marginBottom: scale(10), flex: 1}}>
+          <View style={grid.flex1}>
+            <View style={grid.flex1}>
+              {isFirstLoad ? (
+                <View style={[GlobalInclude.AppStyle.fillCenter]}>
+                  <ThreeDotsLoader
+                    size={scale(12)}
+                    activeBackground={GlobalInclude.Color.ColorPrimary}
+                  />
+                </View>
+              ) : showSearch ? (
+                <FlatList
+                  ref={chatRef}
+                  inverted={-1}
+                  data={filterMessage}
+                  extraData={filterMessage}
+                  renderItem={renderChatItem}
+                  keyExtractor={keyExtractor}
+                  enableEmptySections
+                  automaticallyAdjustContentInsets={false}
+                  style={{flex: 1}}
+                  contentContainerStyle={{
+                    flexGrow: 1,
+                    justifyContent: 'flex-start',
+                  }}
+                  onScroll={handleOnScroll}
+                  scrollEventThrottle={100}
+                  onEndReached={onEndReached}
+                  onEndReachedThreshold={0.1}
+                  ListEmptyComponent={emptySearchComponent}
+                  removeClippedSubviews={Platform.OS !== 'web'}
+                  showsVerticalScrollIndicator={false}
+                  maintainVisibleContentPosition={{
+                    minIndexForVisible: 0,
+                  }}
+                  bounces={false}
+                  initialNumToRender={10}
+                  maxToRenderPerBatch={8}
+                  updateCellsBatchingPeriod={100}
+                  initialListSize={10}
+                  pageSize={1}
+                />
+              ) : (
+                <FlatList
+                  ref={chatRef}
+                  inverted={-1}
+                  data={messages}
+                  extraData={messages}
+                  renderItem={renderChatItem}
+                  keyExtractor={keyExtractor}
+                  enableEmptySections
+                  automaticallyAdjustContentInsets={false}
+                  style={{flex: 1}}
+                  contentContainerStyle={{
+                    flexGrow: 1,
+                    justifyContent: 'flex-start',
+                  }}
+                  onScroll={handleOnScroll}
+                  scrollEventThrottle={100}
+                  onEndReached={onEndReached}
+                  onEndReachedThreshold={0.1}
+                  removeClippedSubviews={Platform.OS !== 'web'}
+                  showsVerticalScrollIndicator={false}
+                  maintainVisibleContentPosition={{
+                    minIndexForVisible: 0,
+                  }}
+                  ListEmptyComponent={emptyComponent}
+                  bounces={false}
+                  initialNumToRender={10}
+                  maxToRenderPerBatch={8}
+                  updateCellsBatchingPeriod={100}
+                  initialListSize={10}
+                  pageSize={1}
+                />
+              )}
             </View>
-          ) : showSearch ? (
-            <FlatList
-              ref={chatRef}
-              inverted={-1}
-              data={filterMessage}
-              extraData={filterMessage}
-              renderItem={renderChatItem}
-              keyExtractor={keyExtractor}
-              enableEmptySections
-              automaticallyAdjustContentInsets={false}
-              style={{flex: 1}}
-              contentContainerStyle={{
-                flexGrow: 1,
-                justifyContent: 'flex-start',
-              }}
-              onScroll={handleOnScroll}
-              scrollEventThrottle={100}
-              onEndReached={onEndReached}
-              onEndReachedThreshold={0.1}
-              ListEmptyComponent={emptySearchComponent}
-              removeClippedSubviews={Platform.OS !== 'web'}
-              showsVerticalScrollIndicator={false}
-              maintainVisibleContentPosition={{
-                minIndexForVisible: 0,
-              }}
-              bounces={false}
-              initialNumToRender={10}
-              maxToRenderPerBatch={8}
-              updateCellsBatchingPeriod={100}
-              initialListSize={10}
-              pageSize={1}
-            />
-          ) : (
-            <FlatList
-              ref={chatRef}
-              inverted={-1}
-              data={messages}
-              extraData={messages}
-              renderItem={renderChatItem}
-              keyExtractor={keyExtractor}
-              enableEmptySections
-              automaticallyAdjustContentInsets={false}
-              style={{flex: 1}}
-              contentContainerStyle={{
-                flexGrow: 1,
-                justifyContent: 'flex-start',
-              }}
-              onScroll={handleOnScroll}
-              scrollEventThrottle={100}
-              onEndReached={onEndReached}
-              onEndReachedThreshold={0.1}
-              removeClippedSubviews={Platform.OS !== 'web'}
-              showsVerticalScrollIndicator={false}
-              maintainVisibleContentPosition={{
-                minIndexForVisible: 0,
-              }}
-              ListEmptyComponent={emptyComponent}
-              bounces={false}
-              initialNumToRender={10}
-              maxToRenderPerBatch={8}
-              updateCellsBatchingPeriod={100}
-              initialListSize={10}
-              pageSize={1}
-            />
-          )}
-
-          {!showSearch && (
-            <KeyboardAvoidingView
-              behavior={Platform.select({android: 'height', ios: 'padding'})}
-              style={{marginBottom: scale(10)}}>
-              {isConnected ? (
-                <View style={styles.footer}>
-                  <View
-                    style={{
-                      backgroundColor: '#fff',
-                      flexDirection: 'row',
-                      flex: 1,
-                      borderRadius: isReplayEditComment ? scale(10) : scale(30),
-                    }}>
+            {!showSearch && (
+              <KeyboardAvoidingView
+                keyboardVerticalOffset={Platform.select({
+                  ios: () => -30,
+                })()}
+                behavior={Platform.select({android: 'height', ios: 'padding'})}>
+                {isConnected ? (
+                  <View style={styles.footer}>
                     <View
-                      style={[
-                        grid.flex1,
-                        isReplayEditComment && [g.pt5, g.pb5],
-                      ]}>
-                      {isReplayEditComment && (
-                        <View style={grid.rowdir}>
-                          <View
-                            style={[
-                              styles.replayContainer,
-                              g.ml10,
-                              g.mr10,
-                              grid.col,
-                            ]}>
+                      style={{
+                        backgroundColor: '#fff',
+                        flexDirection: 'row',
+                        flex: 1,
+                        borderRadius: isReplayEditComment
+                          ? scale(10)
+                          : scale(30),
+                      }}>
+                      <View
+                        style={[
+                          grid.flex1,
+                          isReplayEditComment && [g.pt5, g.pb5],
+                        ]}>
+                        {isReplayEditComment && (
+                          <View style={grid.rowdir}>
                             <View
                               style={[
-                                styles.renderBorder,
-                                {
-                                  backgroundColor:
-                                    GlobalInclude.Color.ColorPrimary,
-                                },
-                              ]}
-                            />
-                            <View style={[g.pl10, g.pt3, g.pr10, g.pb3]}>
-                              <Text
+                                styles.replayContainer,
+                                g.ml10,
+                                g.mr10,
+                                grid.col,
+                              ]}>
+                              <View
                                 style={[
-                                  g.fs12,
-                                  g.FHNB,
-                                  g.colorBlue,
-                                  grid.justifyContentCenter,
-                                  grid.alignItems,
-                                  g.txtCenterVertical,
-                                  g.mb5,
-                                ]}>
-                                {'Replying To:'}
-                              </Text>
-                              <Text style={[g.fs14, g.FHNB, g.colorBlack]}>
-                                {Helper.capitalize(
-                                  selectedChatObject.authorId.name,
-                                )}
-                              </Text>
-                              <View style={[g.mt2, g.mb2]} />
-                              <Text
-                                numberOfLines={1}
-                                style={[g.fs12, g.FHNR, g.colorBlack]}>
-                                {selectedChatObject.media.mediaType === 1
-                                  ? selectedChatObject.message
-                                  : selectedChatObject.media.mediaType}
-                              </Text>
+                                  styles.renderBorder,
+                                  {
+                                    backgroundColor:
+                                      GlobalInclude.Color.ColorPrimary,
+                                  },
+                                ]}
+                              />
+                              <View style={[g.pl10, g.pt3, g.pr10, g.pb3]}>
+                                <Text
+                                  style={[
+                                    g.fs12,
+                                    g.FHNB,
+                                    g.colorBlue,
+                                    grid.justifyContentCenter,
+                                    grid.alignItems,
+                                    g.txtCenterVertical,
+                                    g.mb5,
+                                  ]}>
+                                  {'Replying To:'}
+                                </Text>
+                                <Text style={[g.fs14, g.FHNB, g.colorBlack]}>
+                                  {Helper.capitalize(
+                                    selectedChatObject.authorId.name,
+                                  )}
+                                </Text>
+                                <View style={[g.mt2, g.mb2]} />
+                                <Text
+                                  numberOfLines={1}
+                                  style={[g.fs12, g.FHNR, g.colorBlack]}>
+                                  {selectedChatObject.media.mediaType === 1
+                                    ? selectedChatObject.message
+                                    : selectedChatObject.media.mediaType}
+                                </Text>
+                              </View>
                             </View>
-                          </View>
-                          <View style={[g.mt2, g.mr5]}>
-                            {showImageThumb(
-                              selectedChatObject.media.mediaUrl,
-                              selectedChatObject.media.mediaType === 'IMAGE'
-                                ? 2
-                                : selectedChatObject.media.mediaType === 'VIDEO'
-                                ? 3
-                                : 4,
-                            )}
-                          </View>
+                            <View style={[g.mt2, g.mr5]}>
+                              {showImageThumb(
+                                selectedChatObject.media.mediaUrl,
+                                selectedChatObject.media.mediaType === 'IMAGE'
+                                  ? 2
+                                  : selectedChatObject.media.mediaType ===
+                                    'VIDEO'
+                                  ? 3
+                                  : 4,
+                              )}
+                            </View>
 
-                          {/* part two */}
-                          <TouchableOpacity
-                            onPress={() => {
-                              setIsReplayEditComment(false);
-                              setSelectedChatObject(null);
-                            }}
-                            style={styles.closeComment}>
-                            <GlobalInclude.BaseIcon
-                              containerStyle={{
-                                height: scale(14),
-                                width: scale(14),
+                            {/* part two */}
+                            <TouchableOpacity
+                              onPress={() => {
+                                setIsReplayEditComment(false);
+                                setSelectedChatObject(null);
                               }}
-                              iconColor={'#fff'}
-                              iconName={'close'}
-                              iconSize={scale(14)}
-                              iconType={IconType[6]}
-                            />
-                          </TouchableOpacity>
-                        </View>
-                      )}
+                              style={styles.closeComment}>
+                              <GlobalInclude.BaseIcon
+                                containerStyle={{
+                                  height: scale(14),
+                                  width: scale(14),
+                                }}
+                                iconColor={'#fff'}
+                                iconName={'close'}
+                                iconSize={scale(14)}
+                                iconType={IconType[6]}
+                              />
+                            </TouchableOpacity>
+                          </View>
+                        )}
 
-                      {/* row two */}
-                      <View style={[grid.rowdir]}>
-                        <Animatable.View
-                          ref={animRef}
-                          useNativeDriver={true}
-                          style={{
-                            width: emojiIconWidth,
-                            height: scale(40),
-                            borderRadius: scale(10),
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            alignSelf: 'center',
-                          }}
-                          easing={'linear'}>
+                        {/* row two */}
+                        <View style={[grid.rowdir]}>
+                          <Animatable.View
+                            ref={animRef}
+                            useNativeDriver={true}
+                            style={{
+                              width: emojiIconWidth,
+                              height: scale(40),
+                              borderRadius: scale(10),
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              alignSelf: 'center',
+                            }}
+                            easing={'linear'}>
+                            <TouchableOpacity
+                              onPress={() => {
+                                if (
+                                  emojiRef !== undefined &&
+                                  emojiRef !== null
+                                ) {
+                                  emojiRef.current.open();
+                                }
+                              }}
+                              style={[styles.commentButton]}>
+                              <GlobalInclude.BaseIcon
+                                containerStyle={{
+                                  height: scale(20),
+                                  width: scale(20),
+                                }}
+                                iconColor={GlobalInclude.Color.ColorPrimary}
+                                iconName={'sticker-emoji'}
+                                iconSize={scale(20)}
+                                iconType={IconType[1]}
+                              />
+                            </TouchableOpacity>
+                          </Animatable.View>
+                          <TextInput
+                            autoCapitalize={'sentences'}
+                            underlineColorAndroid="transparent"
+                            style={[
+                              styles.inputContainer,
+                              styles.inputView,
+                              grid.alignItems,
+                            ]}
+                            keyboardType={'default'}
+                            value={inputValue}
+                            multiline={true}
+                            placeholder="Enter text here"
+                            onChangeText={input => {
+                              setInputValue(input);
+
+                              if (input.length > 0 && !isStickerShowing) {
+                                isStickerShowing = true;
+                                setEmojiIconWidth(0);
+                                animRef.current.slideOutLeft().then(() => {});
+                              } else if (
+                                input.length === 0 &&
+                                isStickerShowing
+                              ) {
+                                inEditMode = false;
+                                isStickerShowing = false;
+                                setEmojiIconWidth(scale(40));
+                                animRef.current.slideInLeft().then(() => {});
+                              }
+                            }}
+                            placeholderTextColor={'#b2b2b2'}
+                          />
                           <TouchableOpacity
                             onPress={() => {
-                              if (emojiRef !== undefined && emojiRef !== null) {
-                                emojiRef.current.open();
+                              if (uploadRef.current !== null) {
+                                isOpenPicker = true;
+                                uploadRef.current.open();
                               }
                             }}
                             style={[styles.commentButton]}>
@@ -2327,122 +2393,81 @@ const StartGroupChat = ({route}) => {
                                 width: scale(20),
                               }}
                               iconColor={GlobalInclude.Color.ColorPrimary}
-                              iconName={'sticker-emoji'}
+                              iconName={'attach-file'}
                               iconSize={scale(20)}
-                              iconType={IconType[1]}
+                              iconType={IconType[0]}
                             />
                           </TouchableOpacity>
-                        </Animatable.View>
-                        <TextInput
-                          autoCapitalize={'sentences'}
-                          underlineColorAndroid="transparent"
-                          style={[styles.inputContainer, styles.inputView]}
-                          keyboardType={'default'}
-                          value={inputValue}
-                          multiline={true}
-                          placeholder="Enter text here"
-                          onChangeText={input => {
-                            setInputValue(input);
-
-                            if (input.length > 0 && !isStickerShowing) {
-                              isStickerShowing = true;
-                              setEmojiIconWidth(0);
-                              animRef.current.slideOutLeft().then(() => {});
-                            } else if (input.length === 0 && isStickerShowing) {
-                              inEditMode = false;
-                              isStickerShowing = false;
-                              setEmojiIconWidth(scale(40));
-                              animRef.current.slideInLeft().then(() => {});
-                            }
-                          }}
-                          placeholderTextColor={'#b2b2b2'}
-                        />
-                        <TouchableOpacity
-                          onPress={() => {
-                            if (uploadRef.current !== null) {
-                              isOpenPicker = true;
-                              uploadRef.current.open();
-                            }
-                          }}
-                          style={[styles.commentButton]}>
-                          <GlobalInclude.BaseIcon
-                            containerStyle={{
-                              height: scale(20),
-                              width: scale(20),
-                            }}
-                            iconColor={GlobalInclude.Color.ColorPrimary}
-                            iconName={'attach-file'}
-                            iconSize={scale(20)}
-                            iconType={IconType[0]}
-                          />
-                        </TouchableOpacity>
+                        </View>
+                        {/* row two */}
                       </View>
-                      {/* row two */}
+                    </View>
+                    {inputValue.trim().length > 0 && (
+                      <Animatable.View
+                        useNativeDriver={true}
+                        animation={'slideInRight'}
+                        style={[
+                          g.ml5,
+                          styles.commentButton,
+                          inputValue.trim().length > 0
+                            ? styles.enableButton
+                            : styles.disbleButton,
+                        ]}>
+                        <TouchableOpacity
+                          style={[styles.commentButton, styles.enableButton]}
+                          onPress={() => {
+                            handleInputChat(1, inputValue, '', '', '');
+                          }}>
+                          {isSending ? (
+                            <ActivityIndicator size={'small'} color={'#fff'} />
+                          ) : (
+                            <GlobalInclude.BaseIcon
+                              containerStyle={{
+                                height: scale(20),
+                                width: scale(20),
+                              }}
+                              iconColor={
+                                inputValue.trim().length > 0
+                                  ? '#fff'
+                                  : '#b2b2b2'
+                              }
+                              iconName={'send-o'}
+                              iconSize={scale(20)}
+                              iconType={IconType[4]}
+                            />
+                          )}
+                        </TouchableOpacity>
+                      </Animatable.View>
+                    )}
+                  </View>
+                ) : (
+                  <View style={styles.footer}>
+                    <View
+                      style={[
+                        styles.whiteCurvedBox,
+                        g.p10,
+                        grid.alignItems,
+                        grid.justifyContentCenter,
+                        g.ml15,
+                        g.mr15,
+                      ]}>
+                      <Text
+                        style={[
+                          g.colorBlue,
+                          g.fs12,
+                          g.FHNR,
+                          g.txtCenter,
+                          g.txtCenterVertical,
+                        ]}>
+                        {blockMsg === '' ? 'Connecting...' : blockMsg}
+                      </Text>
                     </View>
                   </View>
-                  {inputValue.trim().length > 0 && (
-                    <Animatable.View
-                      useNativeDriver={true}
-                      animation={'slideInRight'}
-                      style={[
-                        g.ml5,
-                        styles.commentButton,
-                        inputValue.trim().length > 0
-                          ? styles.enableButton
-                          : styles.disbleButton,
-                      ]}>
-                      <TouchableOpacity
-                        style={[styles.commentButton, styles.enableButton]}
-                        onPress={() => {
-                          handleInputChat(1, inputValue, '', '', '');
-                        }}>
-                        {isSending ? (
-                          <ActivityIndicator size={'small'} color={'#fff'} />
-                        ) : (
-                          <GlobalInclude.BaseIcon
-                            containerStyle={{
-                              height: scale(20),
-                              width: scale(20),
-                            }}
-                            iconColor={
-                              inputValue.trim().length > 0 ? '#fff' : '#b2b2b2'
-                            }
-                            iconName={'send-o'}
-                            iconSize={scale(20)}
-                            iconType={IconType[4]}
-                          />
-                        )}
-                      </TouchableOpacity>
-                    </Animatable.View>
-                  )}
-                </View>
-              ) : (
-                <View style={styles.footer}>
-                  <View
-                    style={[
-                      styles.whiteCurvedBox,
-                      g.p10,
-                      grid.alignItems,
-                      grid.justifyContentCenter,
-                      g.ml15,
-                      g.mr15,
-                    ]}>
-                    <Text
-                      style={[
-                        g.colorBlue,
-                        g.fs12,
-                        g.FHNR,
-                        g.txtCenter,
-                        g.txtCenterVertical,
-                      ]}>
-                      {blockMsg === '' ? 'Connecting...' : blockMsg}
-                    </Text>
-                  </View>
-                </View>
-              )}
-            </KeyboardAvoidingView>
-          )}
-        </View>
+                )}
+              </KeyboardAvoidingView>
+            )}
+          </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
       <UploadMedia
         hideTagInVideo={true}

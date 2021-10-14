@@ -4,7 +4,7 @@ import PushNotificationIOS from '@react-native-community/push-notification-ios';
 
 class NotificationHandler {
   onNotification(notification) {
-    console.log('NotificationHandler', notification);
+    //console.log('NotificationHandler', notification);
     if (Platform.OS === 'ios') {
       notification.finish(PushNotificationIOS.FetchResult.NoData);
     }
