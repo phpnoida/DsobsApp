@@ -48,7 +48,6 @@ import Settings from '../screen/Ticker/Settings/';
 import Etiquette from '../screen/Ticker/Etiquette';
 import MyPreviousPost from '../screen/Ticker/MyPreviousPost';
 import Comments from '../screen/Ticker/Comments';
-import ImageDemo from '../ImageDemo';
 import JobListing from '../screen/jobs/';
 import AddJobPost from '../screen/jobs/PostJob';
 import JobDetails from '../screen/jobs/JobDetails/';
@@ -67,6 +66,12 @@ import CreateGroup from '../screen/Groups/CreateGroup';
 import GroupSettings from '../screen/Groups/GroupSettings';
 import StartGroupChat from '../screen/Groups/StartGroupChat';
 import GroupInfo from '../screen/Groups/GroupInfo';
+
+// Socket chat
+import ChatList from '../screen/socketChat/listing';
+import CreateChat from '../screen/socketChat/createChat';
+import MakeChat from '../screen/socketChat/chat';
+import GroupChatInfo from '../screen/socketChat/chat/GroupChatInfo';
 
 const Stack = createStackNavigator();
 
@@ -402,6 +407,27 @@ export const RootNavigators = baseRoute => {
       <Stack.Screen
         name="GroupInfo"
         component={GroupInfo}
+        options={{headerShown: false}}
+      />
+
+      <Stack.Screen
+        name="ChatList"
+        component={ChatList}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="CreateChat"
+        component={CreateChat}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="MakeChat"
+        component={MakeChat}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="GroupChatInfo"
+        component={GroupChatInfo}
         options={{headerShown: false}}
       />
     </Stack.Navigator>
