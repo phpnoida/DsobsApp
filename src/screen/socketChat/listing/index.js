@@ -27,6 +27,7 @@ import Highlighter from '../../../component/HighlightWord';
 import {CommonActions} from '@react-navigation/native';
 import {doGetChats} from '../../../Actions/SocketChatActions';
 import _ from 'lodash';
+import io from 'socket.io-client';
 
 const PaginationStatus = {
   firstLoad: 0,
@@ -46,6 +47,7 @@ let searchQuery = '';
 
 const ChatList = ({navigation}) => {
   const refOptions = useRef();
+  const socketRef = useRef();
 
   const [firstTimeLoad, setFirstTimeLoad] = useState(true);
   const [showLoader, setShowLoader] = useState(false);
@@ -55,6 +57,145 @@ const ChatList = ({navigation}) => {
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.allLoaded,
   );
+
+  /**
+   * Socket section
+   */
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      disconnectSocket();
+      connectSocket();
+    });
+
+    const backAction = () => {
+      disconnectSocket();
+      navigation.goBack();
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => {
+      if (backHandler !== undefined && backHandler !== null) {
+        backHandler.remove();
+      }
+      unsubscribe();
+      disconnectSocket();
+    };
+  }, [navigation, connectSocket]);
+
+  const connectSocket = useCallback(() => {
+    if (
+      socketRef == null ||
+      socketRef.current === null ||
+      socketRef.current === undefined
+    ) {
+      socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
+        reconnectionAttempts: 2,
+        transports: ['websocket'],
+        upgrade: false,
+      });
+    }
+
+    socketRef?.current?.on('connect', () => {
+      if (socketRef?.current.connected) {
+        joinSocketEvent();
+        socketRef?.current.on('error', attempt => {
+          console.log('errror', attempt);
+        });
+
+        socketRef?.current.on('disconnect', () => {
+          console.log('socket disconnected'); // undefined
+        });
+
+        socketRef?.current.on('reconnect', attempt => {
+          console.log('attempt', attempt);
+        });
+        socketRef?.current.on('reconnect_error', attempt => {
+          console.log('reconnect_error', attempt);
+        });
+        socketRef?.current.on('reconnect_attempt', attempt => {
+          console.log('reconnect_attempt', attempt);
+        });
+
+        socketRef?.current.once('user-connected', event => {
+          console.log('connected', event);
+          console.log('connected', event.status);
+        });
+
+        socketRef?.current?.removeListener('chat-user-subscribe');
+        socketRef?.current.on('chat-user-subscribe', event => {
+          console.log('connected', event);
+        });
+      }
+    });
+    /********************
+     * Specific Events
+     */
+  }, [joinSocketEvent]);
+
+  useEffect(() => {
+    socketRef?.current?.removeListener('chat-created-list');
+    socketRef?.current?.on('chat-created-list', event => {
+      console.log('created-list', JSON.stringify(event));
+      if (event && event !== null && event !== undefined) {
+        if (event.status) {
+          let chat = event.chat;
+          let _id = chat._id;
+          let exist = _.includes(postData, _id);
+          if (!exist) {
+            console.log('====================================');
+            console.log('New Chat Added');
+            console.log('====================================');
+            mergeGroups(chat);
+          }
+        }
+      }
+    });
+    return () => {};
+  }, [postData, mergeGroups]);
+
+  const mergeGroups = useCallback(
+    chat => {
+      let oldData = postData;
+
+      oldData.push(chat);
+      setPostData([...oldData]);
+    },
+    [postData],
+  );
+
+  const disconnectSocket = () => {
+    socketRef?.current?.removeListener('connect');
+    socketRef?.current?.removeListener('error');
+    socketRef?.current?.removeListener('disconnect');
+    socketRef?.current?.removeListener('reconnect');
+    socketRef?.current?.removeListener('reconnect_error');
+    socketRef?.current?.removeListener('reconnect_attempt');
+    socketRef?.current?.removeListener('user-connected');
+    socketRef?.current?.removeListener('chat-subscribe-user');
+    socketRef?.current?.removeListener('chat-created-list');
+    socketRef?.current?.disconnect();
+    socketRef.current = null;
+  };
+
+  const joinSocketEvent = useCallback(() => {
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      let payload = {
+        userId: global.userId,
+      };
+      console.log('payload', payload);
+      socketRef?.current?.emit('chat-subscribe-user', payload);
+    }
+  }, []);
+
+  /**
+   * Socket section
+   */
 
   useEffect(() => {
     getGroupData();
@@ -190,7 +331,7 @@ const ChatList = ({navigation}) => {
             () => {
               refOptions.current.close();
               setTimeout(() => {
-                navigation.navigate('CreateChat');
+                navigation.navigate('CreateChat', {socket: socketRef?.current});
               }, 220);
             },
           )}
@@ -498,8 +639,13 @@ const ChatList = ({navigation}) => {
             refOptions.current.open();
           }
         }}
-        customDelegate={() => {}}
-        openNewPage={page => {}}
+        customDelegate={() => {
+          disconnectSocket();
+        }}
+        openNewPage={page => {
+          disconnectSocket();
+          navigation.navigate(page);
+        }}
       />
       <SafeAreaView style={GlobalInclude.AppStyle.fill}>
         <View style={GlobalInclude.AppStyle.fill}>
@@ -566,7 +712,7 @@ const ChatList = ({navigation}) => {
             activeOpacity={1}
             onPress={() => {
               setTimeout(() => {
-                navigation.navigate('CreateChat');
+                navigation.navigate('CreateChat', {socket: socketRef?.current});
               }, 220);
             }}
             style={[grid.alignItems, grid.justifyContentCenter]}>

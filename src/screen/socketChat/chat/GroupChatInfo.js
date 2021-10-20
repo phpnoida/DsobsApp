@@ -39,11 +39,13 @@ let groupAdmin = '';
 let responseMessage = '';
 let groupId = '';
 let isSuccess = false;
+let isUserConnected = false;
 
 const GroupChatInfo = ({route, navigation}) => {
   const uploadRef = useRef();
   const userSelector = useRef();
   const groupTitleRef = useRef();
+  const socketRef = useRef();
 
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -61,6 +63,53 @@ const GroupChatInfo = ({route, navigation}) => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [searchUserQuery, setSearchUserQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    if (route.params !== undefined && route.params !== null) {
+      socketRef.current = route.params.socket;
+    }
+
+    console.log('isConnected', socketRef.current.connected);
+    isUserConnected = socketRef.current.connected;
+    if (socketRef.current.connected) {
+      socketRef.current.on('error', attempt => {
+        console.log('errror', attempt);
+      });
+
+      socketRef?.current?.on('disconnect', () => {
+        isUserConnected = false;
+        console.log('socket disconnected'); // undefined
+      });
+
+      socketRef?.current?.on('reconnect', attempt => {
+        console.log('attempt', attempt);
+      });
+      socketRef?.current?.on('reconnect_error', attempt => {
+        console.log('reconnect_error', attempt);
+        isUserConnected = false;
+      });
+      socketRef?.current?.on('reconnect_attempt', attempt => {
+        console.log('reconnect_attempt', attempt);
+      });
+
+      socketRef?.current?.removeListener('user-connected');
+      socketRef?.current?.on('user-connected', event => {
+        console.log('connected', event);
+        isUserConnected = JSON.parse(event.status);
+      });
+
+      socketRef?.current?.removeListener('chat-added-user');
+      socketRef?.current?.on('chat-added-user', event => {
+        if (event && event !== null && event !== undefined) {
+          console.log('connected', event);
+          if (event.status) {
+            getGroupData();
+          }
+        }
+      });
+    }
+    return () => {};
+  }, [route.params, getGroupData]);
 
   useEffect(() => {
     if (route.params !== undefined && route.params !== null) {
@@ -82,11 +131,12 @@ const GroupChatInfo = ({route, navigation}) => {
             response.data !== null
           ) {
             let data = response.data;
+            console.log('gourpDasta', JSON.stringify(data));
             if (data.status) {
               let group = data.data;
               if (group && group !== undefined && group !== null) {
                 let item = group.superAdmins[0];
-                item.groupAdmin = true;
+                groupAdmin = item._id;
                 if (item._id === global.userId) {
                   setIsSuperAdmin(true);
                 }
@@ -94,8 +144,16 @@ const GroupChatInfo = ({route, navigation}) => {
                 setGroupName(Helpers.capitalize(group.name));
                 setGroupData(group);
 
-                let tmpArray = _.merge(group.superAdmins, group.users);
-                sortUsers(tmpArray);
+                let members = [];
+
+                let superAdmin = group.superAdmins;
+                members.push(superAdmin[0]);
+
+                group.users.forEach(element => {
+                  members.push(element);
+                });
+
+                sortUsers(members);
               }
             }
           }
@@ -196,24 +254,19 @@ const GroupChatInfo = ({route, navigation}) => {
   };
 
   const updateGroupInfo = async () => {
-    setIsUpdating(true);
-
-    let isAnyMemberDisabled = false;
-    let disabledUserMessage = '';
-    let disabledIds = [];
     let userIds = [];
-
+    setIsUpdating(true);
     if (newMembers.length > 0) {
-      newMembers.forEach(member => {
-        userIds.push(member._id);
-      });
-      completeUpdateProcess(newMembers, false);
+      if (socketRef?.current !== undefined && socketRef?.current !== null) {
+        let payload = {
+          chatId: groupId,
+          usersId: newMembers,
+        };
+        console.log('payload', payload);
+        socketRef.current.emit('chat-add-user', payload);
+      }
     }
   };
-
-  const completeUpdateProcess = async (newMember, needCheck) => {};
-
-  const updateObject = (requestObject, needCheck, newMember) => {};
 
   const removeIndex = callBack => {
     Alert.alert(
@@ -457,7 +510,20 @@ const GroupChatInfo = ({route, navigation}) => {
             {groupData.isAdmin && item._id !== global.userId && (
               <TouchableOpacity
                 onPress={() => {
-                  removeIndex(() => {});
+                  removeIndex(() => {
+                    var isExist = removedMembers.findIndex(x => x === item._id);
+                    if (isExist < 0) {
+                      removedMembers.push(item._id);
+                      let oldData = groupMembers;
+                      var findIndex = oldData.findIndex(
+                        x => x._id === item._id,
+                      );
+                      if (findIndex > -1) {
+                        oldData.splice(findIndex, 1);
+                      }
+                      setGroupMembers([...oldData]);
+                    }
+                  });
                 }}
                 style={[grid.alignItems, grid.justifyContentCenter]}>
                 <GlobalInclude.BaseIcon
@@ -850,24 +916,10 @@ const GroupChatInfo = ({route, navigation}) => {
               selectedUsers.forEach(element => {
                 var index = oldData.findIndex(x => x._id === element._id);
                 if (index < 0) {
-                  let detail = {};
-                  detail._id = element._id;
-                  detail.profileImg = element.profileImg;
-                  detail.lastName = element.lastName;
-                  detail.batch = element.batch;
-                  detail.firstName = element.firstName;
-                  detail.profession = element.profession;
-                  detail.prefix = element.prefix;
-                  detail.isOnline = true;
-                  detail.isAdmin = true;
-                  detail.color = Helpers.getRandomLightColor();
-
-                  oldData.push(detail);
-                  element.enableNotification = true;
-                  newMembers.push(element);
-
+                  oldData.push(element);
+                  newMembers.push(element._id);
                   var isExist = removedMembers.findIndex(
-                    x => x._id === element._id,
+                    x => x === element._id,
                   );
                   if (isExist > -1) {
                     removedMembers.splice(isExist, 1);

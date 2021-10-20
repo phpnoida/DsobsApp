@@ -202,7 +202,7 @@ const MakeChat = ({route}) => {
       //AppState.addEventListener('remove', handleAppStateChange);
       unsubscribe();
     };
-  }, [navigation, getGroupData, route.params, disconnectUser]);
+  }, [navigation, getGroupData, route.params, disconnectUser, getOldMessages]);
 
   /**
    * Socket
@@ -1116,6 +1116,7 @@ const MakeChat = ({route}) => {
                     onPress={() => {
                       navigation.navigate('GroupChatInfo', {
                         groupId: groupId,
+                        socket: socketRef?.current,
                       });
                     }}
                     style={[grid.col, g.ml5, g.mr5, grid.justifyContentCenter]}>

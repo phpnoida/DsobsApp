@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   SafeAreaView,
@@ -31,9 +31,13 @@ let searchVal = '';
 let lastIndex = 1;
 let responseMessage = '';
 let isSuccess = false;
+let isUserConnected = false;
+let groupId = '';
 
-const CreateChat = ({navigation}) => {
-  const [chatType, setchatType] = useState(2);
+const CreateChat = ({route, navigation}) => {
+  const socketRef = useRef();
+
+  const [chatType, setchatType] = useState(0);
   const [searchedUser, setSearchedUser] = useState([]);
   const [searchUserName, setSearchUserName] = useState('');
   const [groupName, setGroupName] = useState('');
@@ -42,6 +46,59 @@ const CreateChat = ({navigation}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
 
+  useEffect(() => {
+    if (route.params !== undefined && route.params !== null) {
+      socketRef.current = route.params.socket;
+    }
+
+    console.log('isConnected', socketRef.current.connected);
+    isUserConnected = socketRef.current.connected;
+    if (socketRef.current.connected) {
+      socketRef.current.on('error', attempt => {
+        console.log('errror', attempt);
+      });
+
+      socketRef?.current?.on('disconnect', () => {
+        isUserConnected = false;
+        console.log('socket disconnected'); // undefined
+      });
+
+      socketRef?.current?.on('reconnect', attempt => {
+        console.log('attempt', attempt);
+      });
+      socketRef?.current?.on('reconnect_error', attempt => {
+        console.log('reconnect_error', attempt);
+        isUserConnected = false;
+      });
+      socketRef?.current?.on('reconnect_attempt', attempt => {
+        console.log('reconnect_attempt', attempt);
+      });
+
+      socketRef?.current?.removeListener('user-connected');
+      socketRef?.current?.on('user-connected', event => {
+        console.log('connected', event);
+        isUserConnected = JSON.parse(event.status);
+      });
+
+      socketRef?.current?.removeListener('chat-created');
+      socketRef?.current?.on('chat-created', event => {
+        console.log('chat-created', event);
+        if (event && event !== null && event !== undefined) {
+          console.log('connected', event);
+          //{"chat": {"__v": 0, "_id": "616ff0e265ae7477aca542cf", "chatType": true, "createdAt": "2021-10-20T10:35:14.110Z", "hasHiddenMessage": false, "hasMessageReported": false, "lastUpdate": 1634725426, "mutedUsers": [], "name": "event check", "status": true, "totalReports": 0, "updatedAt": "2021-10-20T10:35:14.110Z", "users": [[Object], [Object]]}, "status": true}
+          if (event.status) {
+            let chatObj = event.chat;
+            if (chatObj && chatObj !== null && chatObj !== undefined) {
+              groupId = chatObj._id;
+              groupCreated();
+            }
+          }
+        }
+      });
+    }
+    return () => {};
+  }, [route.params]);
+
   const createGroup = async () => {
     let userIds = [];
 
@@ -49,53 +106,69 @@ const CreateChat = ({navigation}) => {
       userIds.push(item._id);
     });
 
-    let payload = {
-      name: groupName,
-      description: '',
-      profilePicture: '',
-      chatType: 1, //0 - indiv , 1 = group
-      users: userIds,
-    };
-    setIsLoading(true);
-    doCreateGroup(
-      payload,
-      response => {
-        setIsLoading(false);
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
+    if (socketRef?.current !== undefined && socketRef?.current !== null) {
+      let payload = {
+        _id: global.userId,
+        userId: global.userId,
+        chatType: chatType,
+        users: userIds,
+        name: groupName,
+      };
 
-            console.log('data', data);
-            if (data.status) {
-              isSuccess = true;
-              responseMessage =
-                'You have successfully submitted your request to start a new group';
-              setShowErrorMessage(true);
-              setTimeout(() => {
-                setShowErrorMessage(false);
-              }, 2500);
-            } else {
-              responseMessage = 'Error while posting your request!';
-              setShowErrorMessage(true);
-              setTimeout(() => {
-                setShowErrorMessage(false);
-              }, 2500);
-            }
-          }
-        }
-      },
-      (code, error) => {
-        console.log('====================================');
-        console.log(code, error);
-        console.log('====================================');
-        setIsLoading(false);
-        //Alert.alert('Something went wrong', error);
-      },
-    );
+      console.log('payload', payload);
+      socketRef.current.emit('chat-create', payload);
+      setIsLoading(true);
+    }
+
+    // doCreateGroup(
+    //   payload,
+    //   response => {
+    //     setIsLoading(false);
+    //     if (response && response !== null) {
+    //       if (
+    //         response.data &&
+    //         response.data !== undefined &&
+    //         response.data !== null
+    //       ) {
+    //         let data = response.data;
+
+    //         console.log('data', data);
+    //         if (data.status) {
+    //           isSuccess = true;
+    //           responseMessage =
+    //             'You have successfully submitted your request to start a new group';
+    //           setShowErrorMessage(true);
+    //           setTimeout(() => {
+    //             setShowErrorMessage(false);
+    //           }, 2500);
+    //         } else {
+    //           responseMessage = 'Error while posting your request!';
+    //           setShowErrorMessage(true);
+    //           setTimeout(() => {
+    //             setShowErrorMessage(false);
+    //           }, 2500);
+    //         }
+    //       }
+    //     }
+    //   },
+    //   (code, error) => {
+    //     console.log('====================================');
+    //     console.log(code, error);
+    //     console.log('====================================');
+    //     setIsLoading(false);
+    //     //Alert.alert('Something went wrong', error);
+    //   },
+    // );
+  };
+
+  const groupCreated = () => {
+    setIsLoading(false);
+    isSuccess = true;
+    responseMessage = 'You have successfully created a new group';
+    setShowErrorMessage(true);
+    // setTimeout(() => {
+    //   setShowErrorMessage(false);
+    // }, 2500);
   };
 
   // Filter section
@@ -195,7 +268,7 @@ const CreateChat = ({navigation}) => {
                     activeOpacity={1}
                     style={{
                       backgroundColor:
-                        chatType === 1
+                        chatType === 0
                           ? GlobalInclude.Color.ColorPrimary
                           : '#f8f8f8',
                       textAlign: 'center',
@@ -206,16 +279,16 @@ const CreateChat = ({navigation}) => {
                       justifyContent: 'center',
                     }}
                     onPress={() => {
-                      //   setSearchUserName('');
-                      //   setSearchedUser([]);
-                      //   setSelectedUser([]);
-                      //   setchatType(1);
+                      setSearchUserName('');
+                      setSearchedUser([]);
+                      setSelectedUser([]);
+                      setchatType(0);
                     }}>
                     <Text
                       style={{
                         fontSize: scale(14),
                         color:
-                          chatType === 1
+                          chatType === 0
                             ? '#ffffff'
                             : GlobalInclude.Color.ColorPrimary,
                         fontFamily: 'Lato-Regular',
@@ -231,7 +304,7 @@ const CreateChat = ({navigation}) => {
                     activeOpacity={1}
                     style={{
                       backgroundColor:
-                        chatType === 2
+                        chatType === 1
                           ? GlobalInclude.Color.ColorPrimary
                           : '#f8f8f8',
                       textAlign: 'center',
@@ -245,13 +318,13 @@ const CreateChat = ({navigation}) => {
                       setSearchUserName('');
                       setSearchedUser([]);
                       setSelectedUser([]);
-                      setchatType(2);
+                      setchatType(1);
                     }}>
                     <Text
                       style={{
                         fontSize: scale(14),
                         color:
-                          chatType === 2
+                          chatType === 1
                             ? '#ffffff'
                             : GlobalInclude.Color.ColorPrimary,
                         fontFamily: 'Lato-Regular',
@@ -264,7 +337,7 @@ const CreateChat = ({navigation}) => {
               </View>
 
               <View style={[g.mt10, g.mb5]} />
-              {chatType === 1 ? (
+              {chatType === 0 ? (
                 <View>
                   <Text
                     numberOfLines={2}
@@ -326,7 +399,7 @@ const CreateChat = ({navigation}) => {
                 <AutoSuggestUser
                   searchedUser={searchedUser}
                   onPress={(row, index) => {
-                    if (chatType === 1) {
+                    if (chatType === 0) {
                       let itemArray = [];
                       itemArray.push(row);
                       setSelectedUser([...itemArray]);
@@ -482,6 +555,12 @@ const CreateChat = ({navigation}) => {
             okButton={isSuccess ? 'Okay' : `Contact ${APP_NAME}`}
             okAction={() => {
               setShowErrorMessage(!showErrorMessage);
+              if (isSuccess) {
+                let payload = {
+                  groupId: groupId,
+                };
+                navigation.replace('MakeChat', payload);
+              }
             }}
             closeAction={() => {
               setShowErrorMessage(!showErrorMessage);
