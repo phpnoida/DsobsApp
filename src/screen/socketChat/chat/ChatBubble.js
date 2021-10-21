@@ -400,9 +400,10 @@ class ChatItem extends PureComponent {
         />
         <View
           style={[
+            g.ml5,
             g.mt5,
             g.mb5,
-            {marginRight: currentMessage.messageType === 1 ? 0 : scale(52)},
+            {marginRight: parentMessage.media.mediaType === '' ? 0 : scale(52)},
           ]}>
           <Text
             style={[
@@ -412,10 +413,10 @@ class ChatItem extends PureComponent {
               g.p3,
               GlobalInclude.AppStyle.transform,
             ]}>
-            {currentMessage.replay.user._id === global.userId &&
-            currentMessage.user._id === global.userId
+            {parentMessage.authorId._id === global.userId &&
+            currentMessage.authorId._id === global.userId
               ? 'You'
-              : Helper.concatName(currentMessage.replay.user)}
+              : parentMessage.authorId.firstName}
           </Text>
           <Text
             numberOfLines={2}
@@ -553,7 +554,9 @@ class ChatItem extends PureComponent {
           Object.keys(currentMessage.parentMessageId).length > 0 &&
           this.renderReplyMessage(currentMessage, isLeft)}
         {currentMessage.isHidden ? (
-          <View style={style}>{this.renderRemovedMsg(isLeft)}</View>
+          <View style={style}>{this.renderHideMsg(isLeft)}</View>
+        ) : currentMessage.isDeleted > -1 ? (
+          <View>{this.renderRemovedMsg(isLeft)}</View>
         ) : (
           <TouchableOpacity
             onPress={onPress}
@@ -581,7 +584,7 @@ class ChatItem extends PureComponent {
             ) : null}
             {messageContent !== null &&
               messageContent !== undefined &&
-              messageContent.trim().length > 0 &&
+              messageContent?.trim().length > 0 &&
               messageType !== 'EMOJI' && (
                 <View
                   style={[
@@ -615,8 +618,35 @@ class ChatItem extends PureComponent {
       </View>
     );
   }
+
+  renderHideMsg(isLeft) {
+    const {customFont, currentMessage} = this.props;
+    return (
+      <View style={[grid.rowrow, grid.alignItems]}>
+        <GlobalInclude.BaseIcon
+          containerStyle={{height: scale(13), width: scale(13)}}
+          iconColor={GlobalInclude.Color.ColorPrimary}
+          iconName={'block'}
+          iconSize={scale(12)}
+          iconType={IconType[9]}
+        />
+        <Text
+          style={[
+            customFont,
+            g.FHNR,
+            g.ml2,
+            g.colorBlack,
+            g.txtCenterVertical,
+            {textAlign: 'justify'},
+          ]}>
+          Admin has removed this message.
+        </Text>
+      </View>
+    );
+  }
+
   renderRemovedMsg(isLeft) {
-    const {customFont} = this.props;
+    const {customFont, currentMessage} = this.props;
     return (
       <View style={[grid.rowrow, grid.alignItems, grid.justifyContentCenter]}>
         <GlobalInclude.BaseIcon
@@ -635,7 +665,11 @@ class ChatItem extends PureComponent {
             g.txtCenterVertical,
             {textAlign: 'justify'},
           ]}>
-          This message has been deleted
+          {currentMessage.isDeleted === 0
+            ? currentMessage?.authorId?._id === global.userId
+              ? 'You removed this message'
+              : `${currentMessage?.authorId?.firstName} has removed message`
+            : 'Admin has removed this message'}
         </Text>
       </View>
     );

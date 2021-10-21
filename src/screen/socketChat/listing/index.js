@@ -665,6 +665,23 @@ const ChatList = ({navigation}) => {
                     filterQuery={filterQuery}
                     changeText={text => {
                       setFilterQuery(text);
+                      if (text.length > 2) {
+                        setPostData([]);
+                        setTimeout(() => {
+                          resetCount();
+                          filterObject.search = text;
+                          getGroupData();
+                        }, 200);
+                      }
+                      if (text.length === 0 && searchQuery.length > 0) {
+                        setPostData([]);
+                        setTimeout(() => {
+                          resetCount();
+                          filterObject.search = '';
+                          getGroupData();
+                        }, 200);
+                      }
+                      searchQuery = text;
                     }}
                     showGoButton={false}
                     onFilterPress={() => {}}

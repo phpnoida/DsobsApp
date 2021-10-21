@@ -49,7 +49,9 @@ import {getScrappedData} from '../../../Actions/CommonActions';
 import {
   doAboutGroup,
   doGetGroupMessages,
+  doSearchMessage,
 } from '../../../Actions/SocketChatActions';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import io from 'socket.io-client';
 import moment from 'moment';
 import _ from 'lodash';
@@ -451,7 +453,7 @@ const MakeChat = ({route}) => {
       animRef.current.slideInLeft().then(() => {});
       Keyboard.dismiss();
 
-      console.log('object', JSON.stringify(object));
+      console.log('post Msg Object', JSON.stringify(object));
       socketRef?.current?.emit('chat-send-message', object);
 
       if (isReplayEditComment) {
@@ -589,6 +591,27 @@ const MakeChat = ({route}) => {
     );
   }, [manageResponse]);
 
+  const searchMessageContent = () => {
+    isLoadingEarlier = true;
+    doSearchMessage(
+      groupId,
+      searchfilterObject,
+      response => {
+        setFreshSearch(false);
+        setIsRefreshing(false);
+        manageResponse(response).then(() => {
+          setIsFirstLoad(false);
+          isLoadingEarlier = false;
+        });
+      },
+      (code, error) => {
+        setIsRefreshing(false);
+        setIsFirstLoad(false);
+        setFilterMessage([]);
+      },
+    );
+  };
+
   const manageResponse = useCallback(
     response => {
       return new Promise((resolve, reject) => {
@@ -619,24 +642,45 @@ const MakeChat = ({route}) => {
 
                 if (array.length === 0) {
                   if (currentPage === 1) {
-                    setPaginationStatus(PaginationStatus.allLoaded);
+                    if (isFiltering) {
+                      setFilterMessage([]);
+                    } else {
+                      setPaginationStatus(PaginationStatus.allLoaded);
+                      setMessages([]);
+                    }
                   }
                   setTimeout(() => {
                     resolve(true);
                   }, 200);
                 } else {
-                  if (filterObject.page === 1) {
-                    setMessages([...array]);
-                    setTimeout(() => {
-                      setPaginationStatus(PaginationStatus.waiting);
-                      resolve(true);
-                    }, 250);
+                  if (isFiltering) {
+                    if (searchfilterObject.page === 1) {
+                      setFilterMessage([...array]);
+                      setTimeout(() => {
+                        setPaginationStatus(PaginationStatus.waiting);
+                        resolve(true);
+                      }, 250);
+                    } else {
+                      setFilterMessage(old => [...old, ...array]);
+                      setTimeout(() => {
+                        setPaginationStatus(PaginationStatus.waiting);
+                        resolve(true);
+                      }, 250);
+                    }
                   } else {
-                    setMessages(old => [...old, ...array]);
-                    setTimeout(() => {
-                      setPaginationStatus(PaginationStatus.waiting);
-                      resolve(true);
-                    }, 250);
+                    if (filterObject.page === 1) {
+                      setMessages([...array]);
+                      setTimeout(() => {
+                        setPaginationStatus(PaginationStatus.waiting);
+                        resolve(true);
+                      }, 250);
+                    } else {
+                      setMessages(old => [...old, ...array]);
+                      setTimeout(() => {
+                        setPaginationStatus(PaginationStatus.waiting);
+                        resolve(true);
+                      }, 250);
+                    }
                   }
                 }
               }
@@ -647,8 +691,70 @@ const MakeChat = ({route}) => {
         }
       });
     },
-    [updateReadMessages],
+    [updateReadMessages, isFiltering],
   );
+
+  const sendReport = requestObject => {
+    // global.loader_ref.show_loader(1);
+    // doReportMessage(
+    //   groupId,
+    //   selectedChatObject._id,
+    //   requestObject,
+    //   response => {
+    //     global.loader_ref.show_loader(0);
+    //     if (response && response !== null) {
+    //       if (
+    //         response.data &&
+    //         response.data !== undefined &&
+    //         response.data !== null
+    //       ) {
+    //         let data = response.data;
+    //         if (data.status) {
+    //           responseMessage = 'Reported successfully!';
+    //           setShowErrorMessage(true);
+    //           let oldData = messages;
+    //           oldData[messagePosition].isReported = true;
+    //           setTimeout(() => {
+    //             console.log('794');
+    //             setMessages([...oldData]);
+    //             setShowErrorMessage(false);
+    //           }, 2500);
+    //         }
+    //       }
+    //     }
+    //   },
+    //   (code, error) => {
+    //     console.log('====================================');
+    //     console.log(code, error);
+    //     console.log('====================================');
+    //     global.loader_ref.show_loader(0);
+    //   },
+    // );
+  };
+
+  const removeMessageFromList = () => {
+    removeMessageEvent(selectedChatObject._id);
+    responseMessage = 'Message removed successfully!';
+    setShowErrorMessage(true);
+    let oldData = messages;
+    oldData[messagePosition].isDeleted = 0;
+    setTimeout(() => {
+      setMessages([...oldData]);
+      setShowErrorMessage(false);
+    }, 2500);
+  };
+
+  const hideMessageFromList = () => {
+    hideMessageEvent(selectedChatObject._id);
+    responseMessage = 'Message hidden successfully!';
+    let oldData = messages;
+    oldData[messagePosition].isHidden = true;
+    setShowErrorMessage(true);
+    setTimeout(() => {
+      setMessages([...oldData]);
+      setShowErrorMessage(false);
+    }, 2500);
+  };
 
   /**
    *
@@ -660,9 +766,9 @@ const MakeChat = ({route}) => {
       chatId: groupId,
       authorId: {
         _id: global.userId,
-        name: `${Helper.capitalize(Helper.concatName(global.userDetails))} - ${
-          global.userDetails.batch
-        }`,
+        lastName: global.userDetails.lastName,
+        firstName: global.userDetails.firstName,
+        batch: global.userDetails.batch,
         profileImg: global.userDetails.profileImg,
       },
       messageText: input,
@@ -776,8 +882,16 @@ const MakeChat = ({route}) => {
   const onPaginate = () => {
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
       setPaginationStatus(PaginationStatus.waiting);
-      filterObject.page = filterObject.page + 1;
-      currentPage = currentPage + 1;
+      if (isFiltering) {
+        searchfilterObject.page = searchfilterObject.page + 1;
+        currentPage = currentPage + 1;
+        searchMessageContent();
+      } else {
+        console.log('997');
+        filterObject.page = filterObject.page + 1;
+        currentPage = currentPage + 1;
+        getOldMessages();
+      }
     }
   };
 
@@ -822,6 +936,304 @@ const MakeChat = ({route}) => {
    * @UIMethods
    *
    */
+
+  const reportUserMessage = () => {
+    return (
+      <OptionsSheet
+        ref={messageReportRef}
+        minClosingHeight={50}
+        height={height / 2 - 100}
+        duration={200}
+        closeOnDragDown={true}
+        customStyles={{
+          container: GlobalInclude.AppStyle.sheetContainer,
+        }}>
+        <KeyboardAwareScrollView
+          keyboardShouldPersistTaps={'handled'}
+          style={grid.flex1}
+          showsVerticalScrollIndicator={false}>
+          <View style={grid.flex1}>
+            <View style={g.mb15}>
+              {generateHeader('Report Text', true)}
+              <TextInput
+                underlineColorAndroid="transparent"
+                numberOfLines={6}
+                style={styles.commentInput}
+                value={reportContent}
+                keyboardType={'default'}
+                autoCapitalize={'words'}
+                multiline={true}
+                blurOnSubmit={true}
+                maxLength={500}
+                onSubmitEditing={() => {
+                  Keyboard.dismiss();
+                }}
+                returnKeyType="done"
+                placeholder={'Type here'}
+                onChangeText={value => {
+                  setReportContent(value);
+                }}
+              />
+            </View>
+          </View>
+          <CommonButton
+            title={'Save'}
+            showLoader={false}
+            onPress={() => {
+              if (
+                reportContent.trim() === '' ||
+                reportContent.trim().length === 0
+              ) {
+                Alert.alert('Erorr', 'Report content is required');
+              } else {
+                let requestObject = {
+                  reportTxt: reportContent,
+                };
+                sendReport(requestObject);
+              }
+              messageReportRef.current.close();
+            }}
+          />
+        </KeyboardAwareScrollView>
+      </OptionsSheet>
+    );
+  };
+
+  const chatOptions = () => {
+    let lineStyle = {borderBottomWidth: 2, borderBottomColor: '#ebebe4'};
+    let isNormalUser = groupInfo !== null && !groupInfo.isAdmin;
+    let ownMessage =
+      selectedChatObject !== null &&
+      selectedChatObject.authorId._id === global.userId;
+
+    return (
+      <OptionsSheet
+        ref={chatObjRef}
+        minClosingHeight={50}
+        height={340}
+        duration={200}
+        closeOnDragDown={false}
+        keyboardAvoidingViewEnabled={false}
+        customStyles={{
+          container: {
+            backgroundColor: 'transparent',
+          },
+        }}>
+        <View
+          style={{
+            backgroundColor: 'white',
+            marginHorizontal: scale(10),
+            borderRadius: 15,
+            paddingHorizontal: scale(5),
+          }}>
+          <TouchableOpacity
+            onPress={() => {
+              if (
+                chatObjRef.current !== undefined &&
+                chatObjRef.current !== null
+              ) {
+                chatObjRef.current.close();
+              }
+              setIsReplayEditComment(true);
+            }}
+            style={[
+              grid.justifyContentCenter,
+              grid.alignItems,
+              g.p15,
+              lineStyle,
+            ]}>
+            <Text
+              style={[
+                g.fs18,
+                g.FHNM,
+                g.colorBlue,
+                grid.justifyContentCenter,
+                grid.alignItems,
+                g.txtCenterVertical,
+              ]}>
+              Reply
+            </Text>
+          </TouchableOpacity>
+
+          {isNormalUser ? (
+            <>
+              {ownMessage ? (
+                <>
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (
+                        chatObjRef.current !== undefined &&
+                        chatObjRef.current !== null
+                      ) {
+                        chatObjRef.current.close();
+                      }
+                      setTimeout(() => {
+                        setShowRemoveMessageAlert(true);
+                      }, 220);
+                    }}
+                    style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
+                    <Text
+                      style={[
+                        g.fs18,
+                        g.FHNM,
+                        g.colorBlue,
+                        grid.justifyContentCenter,
+                        grid.alignItems,
+                        g.txtCenterVertical,
+                      ]}>
+                      Remove Message
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <></>
+              )}
+            </>
+          ) : (
+            <>
+              {ownMessage ? (
+                <>
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (
+                        chatObjRef.current !== undefined &&
+                        chatObjRef.current !== null
+                      ) {
+                        chatObjRef.current.close();
+                      }
+                      setTimeout(() => {
+                        setShowRemoveMessageAlert(true);
+                      }, 220);
+                    }}
+                    style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
+                    <Text
+                      style={[
+                        g.fs18,
+                        g.FHNM,
+                        g.colorBlue,
+                        grid.justifyContentCenter,
+                        grid.alignItems,
+                        g.txtCenterVertical,
+                      ]}>
+                      Remove Message
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (
+                        chatObjRef.current !== undefined &&
+                        chatObjRef.current !== null
+                      ) {
+                        chatObjRef.current.close();
+                      }
+                      setTimeout(
+                        () => {
+                          if (
+                            messageReportRef.current !== undefined &&
+                            messageReportRef.current !== null
+                          ) {
+                            messageReportRef.current.open();
+                          }
+                        },
+                        Platform.OS === 'ios' ? 200 : 0,
+                      );
+                    }}
+                    style={[
+                      grid.justifyContentCenter,
+                      grid.alignItems,
+                      g.p15,
+                      {borderBottomWidth: 2, borderBottomColor: '#ebebe4'},
+                    ]}>
+                    <Text
+                      style={[
+                        g.fs18,
+                        g.FHNM,
+                        g.colorBlue,
+                        grid.justifyContentCenter,
+                        grid.alignItems,
+                        g.txtCenterVertical,
+                      ]}>
+                      Report Comment
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (
+                        chatObjRef.current !== undefined &&
+                        chatObjRef.current !== null
+                      ) {
+                        chatObjRef.current.close();
+                      }
+                      setTimeout(
+                        () => {
+                          setShowHideMessageAlert(true);
+                        },
+                        Platform.OS === 'ios' ? 200 : 0,
+                      );
+                    }}
+                    style={[
+                      grid.justifyContentCenter,
+                      grid.alignItems,
+                      g.p15,
+                      selectedChatObject !== null &&
+                      selectedChatObject.authorId._id === global.userId
+                        ? {borderBottomWidth: 2, borderBottomColor: '#ebebe4'}
+                        : {},
+                    ]}>
+                    <Text
+                      style={[
+                        g.fs18,
+                        g.FHNM,
+                        g.colorBlue,
+                        grid.justifyContentCenter,
+                        grid.alignItems,
+                        g.txtCenterVertical,
+                      ]}>
+                      Hide Comment
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </>
+          )}
+        </View>
+
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => {
+            if (
+              chatObjRef.current !== undefined &&
+              chatObjRef.current !== null
+            ) {
+              chatObjRef.current.close();
+            }
+          }}
+          style={{
+            backgroundColor: 'white',
+            marginHorizontal: scale(10),
+            borderRadius: 15,
+            marginVertical: scale(10),
+          }}>
+          <View style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
+            <Text
+              style={[
+                g.fs18,
+                g.FHNM,
+                g.colorBlue,
+                grid.justifyContentCenter,
+                grid.alignItems,
+                g.txtCenterVertical,
+              ]}>
+              Close
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </OptionsSheet>
+    );
+  };
 
   const renderChatItem = ({item, index}) => {
     const previousMessage = messages[index + 1] || {};
@@ -963,12 +1375,7 @@ const MakeChat = ({route}) => {
         <View style={headerStyle.container}>
           {showSearch ? (
             <View
-              style={[
-                grid.rowdir,
-                g.bglightGray,
-                grid.alignItems,
-                {borderRadius: scale(6)},
-              ]}>
+              style={[grid.rowdir, grid.alignItems, {borderRadius: scale(6)}]}>
               <TouchableOpacity
                 style={headerStyle.closeIcon}
                 onPress={() => {
@@ -982,73 +1389,83 @@ const MakeChat = ({route}) => {
                   iconType={IconType[6]}
                 />
               </TouchableOpacity>
-              <GlobalInclude.BaseIcon
-                containerStyle={headerStyle.searchIcon}
-                iconColor={GlobalInclude.Color.ColorPrimary}
-                iconName={'search'}
-                iconSize={scale(24)}
-                iconType={IconType[8]}
-              />
-              <View style={[grid.col]}>
-                <TextInput
-                  autoCapitalize={'sentences'}
-                  underlineColorAndroid="transparent"
-                  style={[
-                    g.inputWhite,
-                    g.mb0,
-                    {borderTopLeftRadius: 0, borderBottomLeftRadius: 0},
-                  ]}
-                  keyboardType={'default'}
-                  value={filterQuery}
-                  multiline={false}
-                  placeholder="Enter text here"
-                  onChangeText={input => {
-                    fitlerText = input;
-                    setFilterQuery(input);
-                    setIsFiltering(input.length > 0);
-                  }}
-                  placeholderTextColor={'#b2b2b2'}
+              <View
+                style={[
+                  grid.col,
+                  grid.rowdir,
+                  g.bglightGray,
+                  grid.alignItems,
+                  {borderRadius: scale(6)},
+                ]}>
+                <GlobalInclude.BaseIcon
+                  containerStyle={headerStyle.searchIcon}
+                  iconColor={GlobalInclude.Color.ColorPrimary}
+                  iconName={'search'}
+                  iconSize={scale(24)}
+                  iconType={IconType[8]}
                 />
-              </View>
-              {filterQuery.length > 0 ? (
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    setFilterMessage([]);
-                    setTimeout(() => {
-                      searchfilterObject = {
-                        page: 1,
-                        search: fitlerText,
-                        limit: 10,
-                      };
-                    }, 200);
-                  }}
-                  style={[
-                    g.br3,
-                    grid.alignItems,
-                    grid.justifyContentCenter,
-                    g.bgBlue,
-                    g.pl5,
-                    g.pr5,
-                    {height: scale(30)},
-                  ]}>
-                  <Text style={[g.colorWhite, g.FHNM, g.fs16]}>Search</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  style={[grid.alignItems, grid.justifyContentCenter]}
-                  onPress={() => {
-                    resetSearch();
-                  }}>
-                  <GlobalInclude.BaseIcon
-                    containerStyle={headerStyle.closeIcon}
-                    iconColor={GlobalInclude.Color.ColorPrimary}
-                    iconName={'close'}
-                    iconSize={scale(24)}
-                    iconType={IconType[8]}
+                <View style={[grid.col]}>
+                  <TextInput
+                    autoCapitalize={'sentences'}
+                    underlineColorAndroid="transparent"
+                    style={[
+                      g.inputWhite,
+                      g.mb0,
+                      {borderTopLeftRadius: 0, borderBottomLeftRadius: 0},
+                    ]}
+                    keyboardType={'default'}
+                    value={filterQuery}
+                    multiline={false}
+                    placeholder="Enter text here"
+                    onChangeText={input => {
+                      fitlerText = input;
+                      setFilterQuery(input);
+                      setIsFiltering(input.length > 0);
+                    }}
+                    placeholderTextColor={'#b2b2b2'}
                   />
-                </TouchableOpacity>
-              )}
+                </View>
+                {filterQuery.length > 0 ? (
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      setFilterMessage([]);
+                      setTimeout(() => {
+                        searchfilterObject = {
+                          page: 1,
+                          search: fitlerText,
+                          limit: 10,
+                        };
+                        searchMessageContent();
+                      }, 200);
+                    }}
+                    style={[
+                      g.br3,
+                      grid.alignItems,
+                      grid.justifyContentCenter,
+                      g.bgBlue,
+                      g.pl5,
+                      g.pr5,
+                      {height: scale(30)},
+                    ]}>
+                    <Text style={[g.colorWhite, g.FHNM, g.fs16]}>Search</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={[grid.alignItems, grid.justifyContentCenter]}
+                    onPress={() => {
+                      resetSearch();
+                    }}>
+                    <GlobalInclude.BaseIcon
+                      containerStyle={headerStyle.closeIcon}
+                      iconColor={GlobalInclude.Color.ColorPrimary}
+                      iconName={'close'}
+                      iconSize={scale(24)}
+                      iconType={IconType[8]}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           ) : (
             <View style={GlobalInclude.AppStyle.fillRow}>
@@ -1241,6 +1658,33 @@ const MakeChat = ({route}) => {
     );
   };
 
+  const emptySearchComponent = () => {
+    if (freshSearch) {
+      return <></>;
+    }
+    return (
+      <View
+        style={{
+          flex: 1,
+          transform: [{scaleY: -1}],
+        }}>
+        <View style={[GlobalInclude.AppStyle.fillCenter]}>
+          <Text
+            style={[
+              g.colorBlack,
+              g.FHNM,
+              g.fs12,
+              g.txtCenter,
+              grid.alignItems,
+              grid.justifyContentCenter,
+            ]}>
+            No Record Found
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
   /**
    *
    * UI Methods
@@ -1262,6 +1706,38 @@ const MakeChat = ({route}) => {
                   activeBackground={GlobalInclude.Color.ColorPrimary}
                 />
               </View>
+            ) : showSearch ? (
+              <FlatList
+                ref={chatRef}
+                inverted={-1}
+                data={filterMessage}
+                extraData={filterMessage}
+                renderItem={renderChatItem}
+                keyExtractor={keyExtractor}
+                enableEmptySections
+                automaticallyAdjustContentInsets={false}
+                style={{flex: 1}}
+                contentContainerStyle={{
+                  flexGrow: 1,
+                  justifyContent: 'flex-start',
+                }}
+                onScroll={handleOnScroll}
+                scrollEventThrottle={100}
+                onEndReached={onEndReached}
+                onEndReachedThreshold={0.1}
+                ListEmptyComponent={emptySearchComponent}
+                removeClippedSubviews={Platform.OS !== 'web'}
+                showsVerticalScrollIndicator={false}
+                maintainVisibleContentPosition={{
+                  minIndexForVisible: 0,
+                }}
+                bounces={false}
+                initialNumToRender={10}
+                maxToRenderPerBatch={8}
+                updateCellsBatchingPeriod={100}
+                initialListSize={10}
+                pageSize={1}
+              />
             ) : (
               <FlatList
                 ref={chatRef}
@@ -1350,7 +1826,7 @@ const MakeChat = ({route}) => {
                               </Text>
                               <Text style={[g.fs14, g.FHNB, g.colorBlack]}>
                                 {Helper.capitalize(
-                                  selectedChatObject.authorId.name,
+                                  selectedChatObject.authorId.firstName,
                                 )}
                               </Text>
                               <View style={[g.mt2, g.mb2]} />
@@ -1627,9 +2103,8 @@ const MakeChat = ({route}) => {
       />
       {emojiList()}
 
-      {/* {selectedChatObject !== null && chatOptions()}
+      {selectedChatObject !== null && chatOptions()}
       {reportUserMessage()}
-      {showReportedInfo()} */}
 
       {showDocViewer && (
         <DocViewer
@@ -1680,7 +2155,7 @@ const MakeChat = ({route}) => {
           cancelButton={'No'}
           okAction={() => {
             setShowHideMessageAlert(false);
-            //hideMessageFromList();
+            hideMessageFromList();
           }}
           cancelAction={() => {
             setShowHideMessageAlert(false);
@@ -1700,7 +2175,7 @@ const MakeChat = ({route}) => {
           cancelButton={'No'}
           okAction={() => {
             setShowRemoveMessageAlert(false);
-            //removeMessageFromList();
+            removeMessageFromList();
           }}
           cancelAction={() => {
             setShowRemoveMessageAlert(false);

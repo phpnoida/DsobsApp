@@ -65,6 +65,8 @@ const GroupChatInfo = ({route, navigation}) => {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
+    removedMembers = [];
+    newMembers = [];
     if (route.params !== undefined && route.params !== null) {
       socketRef.current = route.params.socket;
     }
@@ -107,6 +109,16 @@ const GroupChatInfo = ({route, navigation}) => {
           }
         }
       });
+
+      socketRef?.current?.removeListener('chat-removed-user');
+      socketRef?.current?.on('chat-removed-user', event => {
+        if (event && event !== null && event !== undefined) {
+          console.log('removed', event);
+          if (event.status) {
+            getGroupData();
+          }
+        }
+      });
     }
     return () => {};
   }, [route.params, getGroupData]);
@@ -120,6 +132,8 @@ const GroupChatInfo = ({route, navigation}) => {
   }, [getGroupData, route.params]);
 
   const getGroupData = useCallback(() => {
+    removedMembers = [];
+    newMembers = [];
     setIsLoading(true);
     doAboutGroup(
       groupId,
@@ -254,7 +268,6 @@ const GroupChatInfo = ({route, navigation}) => {
   };
 
   const updateGroupInfo = async () => {
-    let userIds = [];
     setIsUpdating(true);
     if (newMembers.length > 0) {
       if (socketRef?.current !== undefined && socketRef?.current !== null) {
@@ -266,6 +279,19 @@ const GroupChatInfo = ({route, navigation}) => {
         socketRef.current.emit('chat-add-user', payload);
       }
     }
+    setTimeout(() => {
+      if (removedMembers.length > 0) {
+        if (socketRef?.current !== undefined && socketRef?.current !== null) {
+          let payload = {
+            chatId: groupId,
+            usersId: removedMembers,
+          };
+          console.log('remove', payload);
+          socketRef.current.emit('chat-remove-user', payload);
+        }
+      }
+    }, 1000);
+    setIsUpdating(false);
   };
 
   const removeIndex = callBack => {
