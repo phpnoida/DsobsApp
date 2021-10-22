@@ -23,8 +23,6 @@ import {generateMenuOption, showProgess} from '../../../component/Common';
 import {IconType, APP_NAME} from '../../../helper/Constants';
 import Helper from '../../../helper/Helper';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
-import Highlighter from '../../../component/HighlightWord';
-import {CommonActions} from '@react-navigation/native';
 import {doGetChats} from '../../../Actions/SocketChatActions';
 import _ from 'lodash';
 import io from 'socket.io-client';
@@ -44,6 +42,8 @@ let filterObject = {
 let totalPages = 0;
 let currentPage = 1;
 let searchQuery = '';
+let myGroupIds = [];
+let messageIds = [];
 
 const ChatList = ({navigation}) => {
   const refOptions = useRef();
@@ -193,6 +193,78 @@ const ChatList = ({navigation}) => {
     }
   }, []);
 
+  const joinGroupWithSocket = useCallback(unJoined => {
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      unJoined.forEach(element => {
+        let payload = {
+          chatId: element,
+          userId: global.userId,
+        };
+        setTimeout(() => {
+          socketRef?.current?.emit('chat-subscribe-chat', payload);
+        }, 100);
+      });
+    }
+  }, []);
+
+  const disconnectAllGroup = useCallback(() => {
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      myGroupIds.forEach((element, index) => {
+        let payload = {
+          groupId: element,
+          userId: global.userId,
+        };
+        socketRef?.current?.emit('user-disconnect', payload);
+      });
+      disconnectSocket();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (postData.length > 0) {
+      if (socketRef.current !== undefined && socketRef.current !== null) {
+        socketRef?.current?.removeListener('chat-get-message');
+        socketRef?.current.on('chat-get-message', event => {
+          if (event && event !== null && event !== undefined) {
+            let message = event.message;
+            let exist = _.includes(messageIds, message._id);
+            if (!exist) {
+              console.log('====================================');
+              console.log('useEffect-message-209', message);
+              console.log('====================================');
+              updateCountInGroup(message);
+            }
+          }
+        });
+      }
+    }
+
+    return () => {};
+  }, [postData, updateCountInGroup]);
+
+  const updateCountInGroup = useCallback(
+    message => {
+      let oldData = postData;
+      let index = _.findIndex(oldData, function (item) {
+        return item._id === message.chatId;
+      });
+      if (index !== undefined && index !== null && index > -1) {
+        let newCount = oldData[index].unreadMessageCount + 1;
+        oldData[index].unreadMessageCount = newCount;
+
+        // oldData = _.orderBy(oldData, ['unreadMessageCount'], ['desc']);
+
+        var placeholder = {};
+        var objectToMove = oldData.splice(index, 1, placeholder)[0];
+        oldData.splice(0, 0, objectToMove);
+        oldData.splice(oldData.indexOf(placeholder), 1);
+
+        setPostData([...oldData]);
+      }
+    },
+    [postData],
+  );
+
   /**
    * Socket section
    */
@@ -246,7 +318,22 @@ const ChatList = ({navigation}) => {
             if (data.status) {
               let arrayItems = data.groups;
 
-              console.log('arrayItems', arrayItems);
+              let result = _.map(arrayItems, '_id');
+              let isAnyNew = false;
+              let unJoined = [];
+              result.forEach(element => {
+                let exist = _.includes(myGroupIds, element);
+                if (!exist) {
+                  unJoined.push(element);
+                  isAnyNew = true;
+                  myGroupIds.push(element);
+                }
+              });
+              if (isAnyNew) {
+                joinGroupWithSocket(unJoined);
+              }
+
+              // console.log('arrayItems', JSON.stringify(arrayItems));
 
               if (filterObject.page === 1) {
                 setPostData([...arrayItems]);
@@ -378,31 +465,54 @@ const ChatList = ({navigation}) => {
 
     let mediaIcon = null;
     let mediaIconType = null;
+    let lastMsg = item.lastMessage;
+    let lastMsgTime = 0;
+    let messageText = '';
+    let totalLines = 2;
 
-    // if (item.lastMessageType === 2) {
-    //   mediaIcon = 'camera';
-    //   mediaIconType = 'feather';
-    // } else if (item.lastMessageType === 3) {
-    //   mediaIcon = 'video';
-    //   mediaIconType = 'feather';
-    // } else if (item.lastMessageType === 4) {
-    //   mediaIcon = 'audiotrack';
-    //   mediaIconType = 'material-icon';
-    // } else if (item.lastMessageType === 5) {
-    //   mediaIcon = 'file-pdf-o';
-    //   mediaIconType = 'font-awesome';
-    // }
+    if (lastMsg !== undefined && lastMsg !== null) {
+      lastMsgTime = lastMsg.createdAt;
+
+      if (item.chatType === 1) {
+        messageText = `${Helper.capitalize(lastMsg.authorId.firstName)}: ${
+          lastMsg.messageText
+        }`;
+      } else {
+        messageText = lastMsg.messageText;
+      }
+
+      if (lastMsg?.media?.mediaType === 'IMAGE') {
+        mediaIcon = 'camera';
+        mediaIconType = 'feather';
+        totalLines = 1;
+      } else if (lastMsg?.media?.mediaType === 'VIDEO') {
+        mediaIcon = 'video';
+        mediaIconType = 'feather';
+        totalLines = 1;
+      } else if (lastMsg?.media?.mediaType === 'AUDIO') {
+        mediaIcon = 'audiotrack';
+        mediaIconType = 'material-icon';
+        totalLines = 1;
+      } else if (lastMsg?.media?.mediaType === 'DOCUMENT') {
+        mediaIcon = 'file-pdf-o';
+        mediaIconType = 'font-awesome';
+        totalLines = 1;
+      }
+    }
 
     return (
       <TouchableOpacity
         activeOpacity={0.9}
         onPress={() => {
+          disconnectAllGroup();
+          disconnectSocket();
+
           console.log('item', item);
           let payload = {
             groupId: item._id,
             chatType: 0,
           };
-          navigation.replace('MakeChat', payload);
+          navigation.navigate('MakeChat', payload);
         }}
         onLongPress={() => {
           // setSelectedItem(item);
@@ -498,14 +608,14 @@ const ChatList = ({navigation}) => {
                 </Text>
               )}
             </View>
-            {item.lastMessageTime > 0 && (
+            {lastMsgTime > 0 && (
               <Text
                 style={[
                   g.fs13,
                   g.FHNM,
                   item.unreadMessageCount > 0 ? g.colorBlue : g.colordarkGray,
                 ]}>
-                {Helper.getChatDate(item.lastMessageTime)}
+                {Helper.getChatDate(lastMsgTime * 1000)}
               </Text>
             )}
           </View>
@@ -523,11 +633,11 @@ const ChatList = ({navigation}) => {
                     />
                   </View>
                 )}
-                {item.lastMessage !== undefined &&
-                item.lastMessage !== null &&
-                item.lastMessage !== '' ? (
+                {messageText !== undefined &&
+                messageText !== null &&
+                messageText !== '' ? (
                   <Text
-                    numberOfLines={item.lastMessageType === 1 ? 2 : 1}
+                    numberOfLines={totalLines}
                     style={[
                       g.fs12,
                       g.FHNR,
@@ -535,8 +645,7 @@ const ChatList = ({navigation}) => {
                       g.txtCenterVertical,
                       g.textJustify,
                     ]}>
-                    {/* {isExited ? 'You left' : lastMessage} */}
-                    Last Messages
+                    {messageText}
                   </Text>
                 ) : (
                   <Text

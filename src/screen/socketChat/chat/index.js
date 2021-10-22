@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-} from 'react';
+import React, {useState, useCallback, useEffect, useRef} from 'react';
 import {
   View,
   StyleSheet,
@@ -19,7 +13,6 @@ import {
   Keyboard,
   BackHandler,
   Dimensions,
-  ScrollView,
   AppState,
   Alert,
   SafeAreaView,
@@ -53,7 +46,6 @@ import {
 } from '../../../Actions/SocketChatActions';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import io from 'socket.io-client';
-import moment from 'moment';
 import _ from 'lodash';
 
 const {height, width} = Dimensions.get('window');
@@ -79,6 +71,7 @@ let imageArray = [];
 let messagePosition = -1;
 let isLoadingEarlier = false;
 let chatType = 0;
+let userStatusForChat = 1;
 const scrollToBottomOffset = 200;
 
 let groupId = '';
@@ -100,7 +93,7 @@ const PaginationStatus = {
   allLoaded: 2,
 };
 
-const MakeChat = ({route}) => {
+const MakeChat = ({route, navigation}) => {
   const socketRef = useRef();
   const appState = useRef(AppState.currentState);
   const uploadRef = useRef();
@@ -109,14 +102,10 @@ const MakeChat = ({route}) => {
   const chatObjRef = useRef();
   const chatRef = useRef();
   const messageReportRef = useRef();
-  const reporetedMessageListRef = useRef();
-
-  const navigation = useNavigation();
 
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
   );
-
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
@@ -150,7 +139,6 @@ const MakeChat = ({route}) => {
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [showHideMessageAlert, setShowHideMessageAlert] = useState(false);
   const [showRemoveMessageAlert, setShowRemoveMessageAlert] = useState(false);
-  const [reportedMessageData, setReportedMessageData] = useState([]);
 
   useEffect(() => {
     resetOldData();
@@ -222,7 +210,6 @@ const MakeChat = ({route}) => {
       console.log('====================================');
       console.log('connect to socket');
       console.log('====================================');
-
       socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
         reconnectionAttempts: 2,
       });
@@ -265,7 +252,6 @@ const MakeChat = ({route}) => {
         socketRef.current.on('chat-removed-user', event => {
           console.log('chat-removed-user', event);
           if (event && event !== null && event !== undefined) {
-            //{"chatId": "61725b63bfceed78e078fa5c", "message": "User Removed", "status": true, "userId": ["602a65dca1714c5bd918612e", "60153bb047dc7c574d2b9b3e"]}
             if (
               event.userId &&
               event.userId !== null &&
@@ -308,7 +294,11 @@ const MakeChat = ({route}) => {
         var index = oldData.findIndex(x => x._id === message._id);
         if (index < 0) {
           if (author._id !== global.userId) {
-            readMessage(message._id);
+            readMessage([message._id]);
+          }
+          if (showScrollToBottom) {
+            bottomUnread = bottomUnread + 1;
+            setBottomMessages(bottomUnread);
           }
           setMessages(previousMessages => append(previousMessages, message));
         }
@@ -362,7 +352,7 @@ const MakeChat = ({route}) => {
   const readMessage = useCallback(messageId => {
     if (socketRef.current !== undefined && socketRef.current !== null) {
       let payload = {
-        groupId: groupId,
+        chatId: groupId,
         userId: global.userId,
         messageId: messageId,
       };
@@ -416,11 +406,7 @@ const MakeChat = ({route}) => {
         messageIds !== null &&
         messageIds.length > 0
       ) {
-        messageIds.forEach(element => {
-          if (element !== undefined && element !== null) {
-            readMessage(element);
-          }
-        });
+        readMessage(messageIds);
       }
     },
     [readMessage],
@@ -457,6 +443,9 @@ const MakeChat = ({route}) => {
     socketRef?.current?.removeListener('chat-made-admin');
     socketRef?.current?.removeListener('chat-removed-admin');
     socketRef?.current?.removeListener('chat-removed-user');
+    socketRef?.current?.removeListener('chat-updated');
+    socketRef?.current?.removeListener('chat-message-hidden');
+    socketRef?.current?.removeListener('chat-message-removed');
   };
 
   /**
@@ -529,28 +518,33 @@ const MakeChat = ({route}) => {
           ) {
             let data = response.data;
 
-            if (data.status) {
-              let group = data.data;
-
-              console.log('group', group);
-
-              setGroupInfo(oldData => ({...oldData, ...group}));
-              try {
-                if (group.chatType === 1) {
-                  setHeader(group.name);
-                  setHeaderImage({uri: group.profilePicture});
-                  let superAdmin = group.superAdmins;
-                  let members = group.users;
+            try {
+              // console.log('getGroupData', JSON.stringify(data));
+              if (data.status) {
+                let info = data.data;
+                setGroupInfo(info);
+                if (info.chatType === 1) {
+                  let superAdmin = info.superAdmins;
+                  let members = info.users;
                   let merged = [...members, ...superAdmin];
+                  setHeader(info.name);
+                  setHeaderImage({uri: info.profilePicture});
                   setGroupMembers([...merged]);
-                } else if (group.chatType === 0) {
-                  let user = group.users;
-                  setHeader(`${user?.firstName} ${user?.lastName} `);
-                  setHeaderImage({uri: user?.profileImg});
+                } else if (info.chatType === 0) {
+                  let user = info.users;
+                  let index = user.findIndex(x => x.id._id !== global.userId);
+                  if (index > -1) {
+                    var opponentInfo = user[index].id;
+                    setHeader(
+                      `${opponentInfo?.firstName} ${opponentInfo?.lastName} `,
+                    );
+                    setSubHeader(`Batch: ${opponentInfo?.batch}`);
+                    setHeaderImage({uri: opponentInfo?.profileImg});
+                  }
                 }
-              } catch (error) {
-                console.log('chatRef', error);
               }
+            } catch (error) {
+              console.log('error', error);
             }
           }
         }
@@ -648,7 +642,7 @@ const MakeChat = ({route}) => {
               response.data !== null
             ) {
               let data = response.data;
-              console.log('data', JSON.stringify(data));
+              console.log('groupMsgs', JSON.stringify(data));
               if (data.status) {
                 let array = data.data;
                 let unreadIds = _.map(_.filter(array, {isRead: false}), '_id');
@@ -659,36 +653,15 @@ const MakeChat = ({route}) => {
                 }
 
                 if (filterObject.page === 1) {
-                  if (
-                    data.userStatusForChat &&
-                    data.userStatusForChat !== undefined
-                  ) {
-                    if (data.userStatusForChat === 0) {
-                      blockMsg = 'You left';
-                      setIsConnected(false);
-                    } else if (data.userStatusForChat === 2) {
-                      blockMsg = 'You have been removed by admin!';
-                      setIsConnected(false);
-                    }
+                  userStatusForChat = data.userStatusForChat;
+                  if (data.userStatusForChat === 0) {
+                    blockMsg = 'You left';
+                    setIsConnected(false);
+                  } else if (data.userStatusForChat === 2) {
+                    blockMsg = 'You have been removed by admin!';
+                    setIsConnected(false);
                   }
                   chatType = data.chatType;
-                  try {
-                    if (data.chatType === 1) {
-                      // setHeader(data.name);
-                      // setHeaderImage({uri: data.profilePicture});
-                      // let superAdmin = data.superAdmins;
-                      // let members = data.users;
-                      // let merged = [...members, ...superAdmin];
-                      setGroupMembers(data.users);
-                    } else if (data.chatType === 0) {
-                      let user = data.users;
-                      setHeader(`${user?.firstName} ${user?.lastName} `);
-                      setSubHeader(`Batch: ${user?.batch}`);
-                      setHeaderImage({uri: user?.profileImg});
-                    }
-                  } catch (error) {
-                    console.log('chatRef', error);
-                  }
                 }
 
                 if (unreadIds.length > 0) {
@@ -748,44 +721,6 @@ const MakeChat = ({route}) => {
     },
     [updateReadMessages, isFiltering],
   );
-
-  const sendReport = requestObject => {
-    // global.loader_ref.show_loader(1);
-    // doReportMessage(
-    //   groupId,
-    //   selectedChatObject._id,
-    //   requestObject,
-    //   response => {
-    //     global.loader_ref.show_loader(0);
-    //     if (response && response !== null) {
-    //       if (
-    //         response.data &&
-    //         response.data !== undefined &&
-    //         response.data !== null
-    //       ) {
-    //         let data = response.data;
-    //         if (data.status) {
-    //           responseMessage = 'Reported successfully!';
-    //           setShowErrorMessage(true);
-    //           let oldData = messages;
-    //           oldData[messagePosition].isReported = true;
-    //           setTimeout(() => {
-    //             console.log('794');
-    //             setMessages([...oldData]);
-    //             setShowErrorMessage(false);
-    //           }, 2500);
-    //         }
-    //       }
-    //     }
-    //   },
-    //   (code, error) => {
-    //     console.log('====================================');
-    //     console.log(code, error);
-    //     console.log('====================================');
-    //     global.loader_ref.show_loader(0);
-    //   },
-    // );
-  };
 
   const removeMessageFromList = () => {
     removeMessageEvent(selectedChatObject._id);
@@ -923,7 +858,6 @@ const MakeChat = ({route}) => {
     } else {
       if (contentOffsetY === 0) {
         newMessageList.forEach(element => {
-          console.log('913');
           setMessages(previousMessages => append(previousMessages, element));
         });
       }
@@ -991,68 +925,6 @@ const MakeChat = ({route}) => {
    * @UIMethods
    *
    */
-
-  const reportUserMessage = () => {
-    return (
-      <OptionsSheet
-        ref={messageReportRef}
-        minClosingHeight={50}
-        height={height / 2 - 100}
-        duration={200}
-        closeOnDragDown={true}
-        customStyles={{
-          container: GlobalInclude.AppStyle.sheetContainer,
-        }}>
-        <KeyboardAwareScrollView
-          keyboardShouldPersistTaps={'handled'}
-          style={grid.flex1}
-          showsVerticalScrollIndicator={false}>
-          <View style={grid.flex1}>
-            <View style={g.mb15}>
-              {generateHeader('Report Text', true)}
-              <TextInput
-                underlineColorAndroid="transparent"
-                numberOfLines={6}
-                style={styles.commentInput}
-                value={reportContent}
-                keyboardType={'default'}
-                autoCapitalize={'words'}
-                multiline={true}
-                blurOnSubmit={true}
-                maxLength={500}
-                onSubmitEditing={() => {
-                  Keyboard.dismiss();
-                }}
-                returnKeyType="done"
-                placeholder={'Type here'}
-                onChangeText={value => {
-                  setReportContent(value);
-                }}
-              />
-            </View>
-          </View>
-          <CommonButton
-            title={'Save'}
-            showLoader={false}
-            onPress={() => {
-              if (
-                reportContent.trim() === '' ||
-                reportContent.trim().length === 0
-              ) {
-                Alert.alert('Erorr', 'Report content is required');
-              } else {
-                let requestObject = {
-                  reportTxt: reportContent,
-                };
-                sendReport(requestObject);
-              }
-              messageReportRef.current.close();
-            }}
-          />
-        </KeyboardAwareScrollView>
-      </OptionsSheet>
-    );
-  };
 
   const chatOptions = () => {
     let lineStyle = {borderBottomWidth: 2, borderBottomColor: '#ebebe4'};
@@ -1590,6 +1462,7 @@ const MakeChat = ({route}) => {
                         navigation.navigate('GroupChatInfo', {
                           groupId: groupId,
                           socket: socketRef?.current,
+                          userStatusForChat: userStatusForChat,
                         });
                       } else {
                         navigation.navigate('UserProfileInfo', {
@@ -2166,7 +2039,6 @@ const MakeChat = ({route}) => {
       {emojiList()}
 
       {selectedChatObject !== null && chatOptions()}
-      {reportUserMessage()}
 
       {showDocViewer && (
         <DocViewer

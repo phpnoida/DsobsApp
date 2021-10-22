@@ -28,6 +28,7 @@ import OptionsSheet from 'react-native-raw-bottom-sheet';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {getDirectory} from '../../../Actions/DirectoryActions';
 import {doAboutGroup} from '../../../Actions/SocketChatActions';
+import {CommonActions} from '@react-navigation/native';
 
 const {width, height} = Dimensions.get('window');
 
@@ -37,6 +38,7 @@ let newMembers = [];
 let groupAdmin = '';
 let responseMessage = '';
 let groupId = '';
+let userStatusForChat = '';
 let isSuccess = false;
 let isUserConnected = false;
 
@@ -65,6 +67,7 @@ const GroupChatInfo = ({route, navigation}) => {
     newMembers = [];
     if (route.params !== undefined && route.params !== null) {
       socketRef.current = route.params.socket;
+      userStatusForChat = route.params.userStatusForChat;
     }
 
     console.log('isConnected', socketRef.current.connected);
@@ -111,9 +114,27 @@ const GroupChatInfo = ({route, navigation}) => {
       socketRef?.current?.on('chat-removed-user', event => {
         if (event && event !== null && event !== undefined) {
           console.log('removed', event);
+
           setIsUpdating(false);
           if (event.status) {
-            getGroupData();
+            if (
+              event.userId &&
+              event.userId !== undefined &&
+              event.userId !== null
+            ) {
+              let index = event.userId.findIndex(x => x === global.userId);
+              if (index > -1) {
+                disconnectAllEvents();
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 1,
+                    routes: [{name: 'ChatList'}],
+                  }),
+                );
+              } else {
+                getGroupData();
+              }
+            }
           }
         }
       });
@@ -130,7 +151,13 @@ const GroupChatInfo = ({route, navigation}) => {
       });
     }
     return () => {};
-  }, [route.params, getGroupData]);
+  }, [route.params, getGroupData, navigation]);
+
+  const disconnectAllEvents = () => {
+    socketRef?.current?.removeListener('chat-removed-user');
+    socketRef?.current?.removeListener('chat-added-user');
+    socketRef?.current?.removeListener('chat-updated');
+  };
 
   useEffect(() => {
     if (route.params !== undefined && route.params !== null) {
@@ -265,6 +292,30 @@ const GroupChatInfo = ({route, navigation}) => {
       console.log('update data', payload);
       socketRef.current.emit('chat-update', payload);
     }
+  };
+
+  const exitGroup = () => {
+    Alert.alert('Exit from group', 'Are you sure you want to exit?', [
+      {
+        text: 'Cancel',
+        onPress: () => {},
+        style: 'cancel',
+      },
+      {
+        text: 'Yes',
+        onPress: () => {
+          if (socketRef?.current !== undefined && socketRef?.current !== null) {
+            let payload = {
+              authorId: global.userId,
+              chatId: groupId,
+              usersId: [global.userId],
+            };
+            console.log('remove', payload);
+            socketRef.current.emit('chat-remove-user', payload);
+          }
+        },
+      },
+    ]);
   };
 
   const removeIndex = callBack => {
@@ -744,7 +795,7 @@ const GroupChatInfo = ({route, navigation}) => {
                 </View>
               </ScrollView>
             </View>
-            {groupData.isAdmin && (
+            {groupData.isAdmin ? (
               <View style={[styles.filterButton, g.mb10]}>
                 <CommonButton
                   showLoader={isUpdating}
@@ -756,7 +807,17 @@ const GroupChatInfo = ({route, navigation}) => {
                   }}
                 />
               </View>
-            )}
+            ) : userStatusForChat === 1 ? (
+              <View style={[styles.filterButton, g.mb10]}>
+                <CommonButton
+                  showLoader={isUpdating}
+                  title={'Exit Group'}
+                  onPress={() => {
+                    exitGroup();
+                  }}
+                />
+              </View>
+            ) : null}
           </View>
         )}
       </SafeAreaView>

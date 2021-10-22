@@ -51,10 +51,10 @@ const UserProfileInfo = ({route, navigation}) => {
               let group = data.data;
               if (group && group !== undefined && group !== null) {
                 let users = group.users;
-                let userInfo = users.users;
-                var index = userInfo.findIndex(x => x.id._id !== global.userId);
+
+                var index = users.findIndex(x => x.id._id !== global.userId);
                 if (index > -1) {
-                  setOpponentInfo(userInfo[index].id);
+                  setOpponentInfo(users[index].id);
                 }
                 setProfileData(group);
               }
