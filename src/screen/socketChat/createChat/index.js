@@ -163,12 +163,16 @@ const CreateChat = ({route, navigation}) => {
 
   const groupCreated = () => {
     setIsLoading(false);
-    isSuccess = true;
-    responseMessage = 'You have successfully created a new group';
-    setShowErrorMessage(true);
-    // setTimeout(() => {
-    //   setShowErrorMessage(false);
-    // }, 2500);
+    if (chatType === 1) {
+      isSuccess = true;
+      responseMessage = 'You have successfully created a new group';
+      setShowErrorMessage(true);
+    } else {
+      let payload = {
+        groupId: groupId,
+      };
+      navigation.replace('MakeChat', payload);
+    }
   };
 
   // Filter section

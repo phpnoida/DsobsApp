@@ -19,7 +19,7 @@ import HeaderBar from '../../../component/HeaderBar';
 import UploadMedia from '../../../component/UploadMedia';
 import CommonButton from '../../../component/CommonButton';
 import AutoSuggestUser from '../../../component/AutoSuggestUser';
-import {generateHeader, showUser} from '../../../component/Common';
+import {generateHeader} from '../../../component/Common';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import {IconType, APP_NAME} from '../../../helper/Constants';
 import {showProgess} from '../../../component/Common';
@@ -27,8 +27,7 @@ import Helpers from '../../../helper/Helper';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {getDirectory} from '../../../Actions/DirectoryActions';
-import {doAboutGroup, doUpdateGroup} from '../../../Actions/SocketChatActions';
-import _ from 'lodash';
+import {doAboutGroup} from '../../../Actions/SocketChatActions';
 
 const {width, height} = Dimensions.get('window');
 
@@ -55,9 +54,6 @@ const GroupChatInfo = ({route, navigation}) => {
   const [groupImage, setGroupImage] = useState('');
   const [groupMembers, setGroupMembers] = useState([]);
   const [errorMessage, setErrorMessage] = useState({});
-
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-
   /**search */
   const [searchedUser, setSearchedUser] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -104,6 +100,7 @@ const GroupChatInfo = ({route, navigation}) => {
       socketRef?.current?.on('chat-added-user', event => {
         if (event && event !== null && event !== undefined) {
           console.log('connected', event);
+          setIsUpdating(false);
           if (event.status) {
             getGroupData();
           }
@@ -114,6 +111,18 @@ const GroupChatInfo = ({route, navigation}) => {
       socketRef?.current?.on('chat-removed-user', event => {
         if (event && event !== null && event !== undefined) {
           console.log('removed', event);
+          setIsUpdating(false);
+          if (event.status) {
+            getGroupData();
+          }
+        }
+      });
+
+      socketRef?.current?.removeListener('chat-updated');
+      socketRef.current.on('chat-updated', event => {
+        setIsUpdating(false);
+        console.log('chat-updated', event);
+        if (event && event !== null && event !== undefined) {
           if (event.status) {
             getGroupData();
           }
@@ -151,9 +160,7 @@ const GroupChatInfo = ({route, navigation}) => {
               if (group && group !== undefined && group !== null) {
                 let item = group.superAdmins[0];
                 groupAdmin = item._id;
-                if (item._id === global.userId) {
-                  setIsSuperAdmin(true);
-                }
+
                 setGroupImage(group.profilePicture);
                 setGroupName(Helpers.capitalize(group.name));
                 setGroupData(group);
@@ -179,50 +186,6 @@ const GroupChatInfo = ({route, navigation}) => {
       },
     );
   }, []);
-
-  const updateGroupData = requestObject => {
-    global.loader_ref.show_loader(1);
-    doUpdateGroup(
-      groupId,
-      requestObject,
-      response => {
-        global.loader_ref.show_loader(0);
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
-            console.log('data', data);
-            if (data.status) {
-              isSuccess = true;
-              responseMessage =
-                'You have successfully updated group information';
-              setShowErrorMessage(true);
-              setTimeout(() => {
-                setShowErrorMessage(false);
-                getGroupData();
-              }, 2500);
-            } else {
-              responseMessage = 'Error while updating your request!';
-              setShowErrorMessage(true);
-              setTimeout(() => {
-                setShowErrorMessage(false);
-              }, 2500);
-            }
-          }
-        }
-      },
-      (code, error) => {
-        console.log('====================================');
-        console.log(code, error);
-        console.log('====================================');
-        //setSubmitting(false);
-        Alert.alert('Something went wrong', error);
-      },
-    );
-  };
 
   const sortUsers = data => {
     data.sort((a, b) => (a.batch > b.batch ? 1 : b.batch > a.batch ? -1 : 0));
@@ -268,30 +231,40 @@ const GroupChatInfo = ({route, navigation}) => {
   };
 
   const updateGroupInfo = async () => {
-    setIsUpdating(true);
-    if (newMembers.length > 0) {
-      if (socketRef?.current !== undefined && socketRef?.current !== null) {
-        let payload = {
-          chatId: groupId,
-          usersId: newMembers,
-        };
-        console.log('payload', payload);
-        socketRef.current.emit('chat-add-user', payload);
-      }
-    }
-    setTimeout(() => {
-      if (removedMembers.length > 0) {
-        if (socketRef?.current !== undefined && socketRef?.current !== null) {
-          let payload = {
-            chatId: groupId,
-            usersId: removedMembers,
-          };
-          console.log('remove', payload);
-          socketRef.current.emit('chat-remove-user', payload);
+    if (newMembers.length > 0 || removedMembers.length > 0) {
+      setIsUpdating(true);
+      setTimeout(() => {
+        if (newMembers.length > 0) {
+          if (socketRef?.current !== undefined && socketRef?.current !== null) {
+            let payload = {
+              chatId: groupId,
+              usersId: newMembers,
+            };
+            console.log('add', payload);
+            socketRef.current.emit('chat-add-user', payload);
+          }
         }
-      }
-    }, 1000);
-    setIsUpdating(false);
+        if (removedMembers.length > 0) {
+          if (socketRef?.current !== undefined && socketRef?.current !== null) {
+            let payload = {
+              authorId: global.userId,
+              chatId: groupId,
+              usersId: removedMembers,
+            };
+            console.log('remove', payload);
+            socketRef.current.emit('chat-remove-user', payload);
+          }
+        }
+      }, 1000);
+    }
+  };
+
+  const updateGroupDetail = async payload => {
+    setIsUpdating(true);
+    if (socketRef?.current !== undefined && socketRef?.current !== null) {
+      console.log('update data', payload);
+      socketRef.current.emit('chat-update', payload);
+    }
   };
 
   const removeIndex = callBack => {
@@ -575,7 +548,9 @@ const GroupChatInfo = ({route, navigation}) => {
       {groupData !== null && groupData.isAdmin ? (
         <HeaderBar
           title={
-            groupData !== null ? `${Helpers.capitalize(groupName)}` : APP_NAME
+            groupData !== null && groupName !== ''
+              ? `${Helpers.capitalize(groupName)}`
+              : APP_NAME
           }
           customIcon={{
             containerStyle: {height: scale(24), width: scale(24)},
@@ -801,10 +776,17 @@ const GroupChatInfo = ({route, navigation}) => {
           if (media !== undefined && media !== null) {
             console.log('media', media);
 
+            // let requestObject = {
+            //   profilePicture: media[0].thumbnail,
+            // };
+            // updateGroupData(requestObject);
+
             let requestObject = {
+              chatType: 1,
+              chatId: groupId,
               profilePicture: media[0].thumbnail,
             };
-            updateGroupData(requestObject);
+            updateGroupDetail(requestObject);
           }
         }}
       />
@@ -854,10 +836,17 @@ const GroupChatInfo = ({route, navigation}) => {
                 setErrorMessage({groupName: 'This field is required'});
                 return;
               } else {
+                // let requestObject = {
+                //   description: groupName,
+                // };
+
                 let requestObject = {
-                  description: groupName,
+                  chatType: 1,
+                  chatId: groupId,
+                  name: groupName,
                 };
-                updateGroupData(requestObject);
+                updateGroupDetail(requestObject);
+                //updateGroupData(requestObject);
               }
               setTimeout(() => {
                 groupTitleRef.current.close();

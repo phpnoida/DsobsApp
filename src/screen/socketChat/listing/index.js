@@ -146,8 +146,8 @@ const ChatList = ({navigation}) => {
         if (event.status) {
           let chat = event.chat;
           let _id = chat._id;
-          let exist = _.includes(postData, _id);
-          if (!exist) {
+          var index = postData.findIndex(x => x._id === _id);
+          if (index < 0) {
             console.log('====================================');
             console.log('New Chat Added');
             console.log('====================================');
@@ -397,8 +397,10 @@ const ChatList = ({navigation}) => {
       <TouchableOpacity
         activeOpacity={0.9}
         onPress={() => {
+          console.log('item', item);
           let payload = {
             groupId: item._id,
+            chatType: 0,
           };
           navigation.replace('MakeChat', payload);
         }}

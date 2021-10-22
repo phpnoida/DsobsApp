@@ -78,6 +78,7 @@ let newMessageList = [];
 let imageArray = [];
 let messagePosition = -1;
 let isLoadingEarlier = false;
+let chatType = 0;
 const scrollToBottomOffset = 200;
 
 let groupId = '';
@@ -115,6 +116,7 @@ const MakeChat = ({route}) => {
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
   );
+
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
@@ -157,7 +159,9 @@ const MakeChat = ({route}) => {
     if (route.params !== undefined && route.params !== null) {
       groupId = route.params.groupId;
       filterObject.groupId = groupId;
+      chatType = route.params.chatType;
 
+      getGroupData();
       getOldMessages();
     }
 
@@ -259,18 +263,32 @@ const MakeChat = ({route}) => {
 
         socketRef?.current?.removeListener('chat-removed-user');
         socketRef.current.on('chat-removed-user', event => {
+          console.log('chat-removed-user', event);
           if (event && event !== null && event !== undefined) {
+            //{"chatId": "61725b63bfceed78e078fa5c", "message": "User Removed", "status": true, "userId": ["602a65dca1714c5bd918612e", "60153bb047dc7c574d2b9b3e"]}
             if (
               event.userId &&
               event.userId !== null &&
-              event.userId !== undefined &&
-              event.userId === global.userId
+              event.userId !== undefined
             ) {
-              blockMsg = 'Admin removed you from group!';
-              setIsConnected(false);
-              setTimeout(() => {
-                disconnectUser();
-              }, 5000);
+              var isExist = event.userId.findIndex(x => x === global.userId);
+              if (isExist > -1) {
+                blockMsg = 'Admin removed you from group!';
+                setIsConnected(false);
+                setTimeout(() => {
+                  disconnectUser();
+                }, 5000);
+              }
+            }
+          }
+        });
+
+        socketRef?.current?.removeListener('chat-updated');
+        socketRef.current.on('chat-updated', event => {
+          console.log('chat-updated', event);
+          if (event && event !== null && event !== undefined) {
+            if (event.status) {
+              getGroupData();
             }
           }
         });
@@ -513,16 +531,23 @@ const MakeChat = ({route}) => {
 
             if (data.status) {
               let group = data.data;
+
+              console.log('group', group);
+
               setGroupInfo(oldData => ({...oldData, ...group}));
               try {
-                setHeader(group.name);
-                setHeaderImage({uri: group.profilePicture});
-
-                let superAdmin = group.superAdmins;
-                let members = group.users;
-                let merged = [...members, ...superAdmin];
-
-                setGroupMembers([...merged]);
+                if (group.chatType === 1) {
+                  setHeader(group.name);
+                  setHeaderImage({uri: group.profilePicture});
+                  let superAdmin = group.superAdmins;
+                  let members = group.users;
+                  let merged = [...members, ...superAdmin];
+                  setGroupMembers([...merged]);
+                } else if (group.chatType === 0) {
+                  let user = group.users;
+                  setHeader(`${user?.firstName} ${user?.lastName} `);
+                  setHeaderImage({uri: user?.profileImg});
+                }
               } catch (error) {
                 console.log('chatRef', error);
               }
@@ -634,8 +659,38 @@ const MakeChat = ({route}) => {
                 }
 
                 if (filterObject.page === 1) {
-                  setGroupMembers(data.users);
+                  if (
+                    data.userStatusForChat &&
+                    data.userStatusForChat !== undefined
+                  ) {
+                    if (data.userStatusForChat === 0) {
+                      blockMsg = 'You left';
+                      setIsConnected(false);
+                    } else if (data.userStatusForChat === 2) {
+                      blockMsg = 'You have been removed by admin!';
+                      setIsConnected(false);
+                    }
+                  }
+                  chatType = data.chatType;
+                  try {
+                    if (data.chatType === 1) {
+                      // setHeader(data.name);
+                      // setHeaderImage({uri: data.profilePicture});
+                      // let superAdmin = data.superAdmins;
+                      // let members = data.users;
+                      // let merged = [...members, ...superAdmin];
+                      setGroupMembers(data.users);
+                    } else if (data.chatType === 0) {
+                      let user = data.users;
+                      setHeader(`${user?.firstName} ${user?.lastName} `);
+                      setSubHeader(`Batch: ${user?.batch}`);
+                      setHeaderImage({uri: user?.profileImg});
+                    }
+                  } catch (error) {
+                    console.log('chatRef', error);
+                  }
                 }
+
                 if (unreadIds.length > 0) {
                   updateReadMessages(unreadIds);
                 }
@@ -1121,7 +1176,7 @@ const MakeChat = ({route}) => {
                 </>
               ) : (
                 <>
-                  <TouchableOpacity
+                  {/* <TouchableOpacity
                     onPress={() => {
                       if (
                         chatObjRef.current !== undefined &&
@@ -1158,7 +1213,7 @@ const MakeChat = ({route}) => {
                       ]}>
                       Report Comment
                     </Text>
-                  </TouchableOpacity>
+                  </TouchableOpacity> */}
                   <TouchableOpacity
                     onPress={() => {
                       if (
@@ -1531,10 +1586,17 @@ const MakeChat = ({route}) => {
                   </View>
                   <TouchableOpacity
                     onPress={() => {
-                      navigation.navigate('GroupChatInfo', {
-                        groupId: groupId,
-                        socket: socketRef?.current,
-                      });
+                      if (chatType === 1) {
+                        navigation.navigate('GroupChatInfo', {
+                          groupId: groupId,
+                          socket: socketRef?.current,
+                        });
+                      } else {
+                        navigation.navigate('UserProfileInfo', {
+                          groupId: groupId,
+                          socket: socketRef?.current,
+                        });
+                      }
                     }}
                     style={[grid.col, g.ml5, g.mr5, grid.justifyContentCenter]}>
                     {header !== null && header !== '' && (
