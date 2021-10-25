@@ -71,6 +71,7 @@ let imageArray = [];
 let messagePosition = -1;
 let isLoadingEarlier = false;
 let chatType = 0;
+let chatItem = null;
 let userStatusForChat = 1;
 const scrollToBottomOffset = 200;
 
@@ -101,7 +102,6 @@ const MakeChat = ({route, navigation}) => {
   const animRef = useRef();
   const chatObjRef = useRef();
   const chatRef = useRef();
-  const messageReportRef = useRef();
 
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
@@ -135,7 +135,6 @@ const MakeChat = ({route, navigation}) => {
   const [showSearch, setShowSearch] = useState(false);
   const [freshSearch, setFreshSearch] = useState(true);
 
-  const [reportContent, setReportContent] = useState('');
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [showHideMessageAlert, setShowHideMessageAlert] = useState(false);
   const [showRemoveMessageAlert, setShowRemoveMessageAlert] = useState(false);
@@ -148,6 +147,7 @@ const MakeChat = ({route, navigation}) => {
       groupId = route.params.groupId;
       filterObject.groupId = groupId;
       chatType = route.params.chatType;
+      chatItem = route.params.chatItem;
 
       getGroupData();
       getOldMessages();
@@ -346,6 +346,41 @@ const MakeChat = ({route, navigation}) => {
       }
     });
 
+    socketRef?.current?.removeListener('chat-blocked-user');
+    socketRef.current.on('chat-blocked-user', event => {
+      console.log('chat-blocked-user-detail', event);
+      if (event && event !== null && event !== undefined) {
+        if (event.status) {
+          let blockedUser = event.blockedUser;
+          if (
+            blockedUser &&
+            blockedUser !== null &&
+            blockedUser === global.userId
+          ) {
+            setIsConnected(true);
+          }
+        }
+      }
+    });
+
+    socketRef?.current?.removeListener('chat-unblocked-user');
+    socketRef.current.on('chat-unblocked-user', event => {
+      console.log('chat-unblocked-user', event);
+      if (event && event !== null && event !== undefined) {
+        if (event.status) {
+          let blockedUser = event.blockedUser;
+          if (
+            blockedUser &&
+            blockedUser !== null &&
+            blockedUser === global.userId
+          ) {
+            blockMsg = 'This chat has been blocked!';
+            setIsConnected(false);
+          }
+        }
+      }
+    });
+
     return () => {};
   }, [messages, isFiltering, readMessage, showScrollToBottom]);
 
@@ -446,6 +481,8 @@ const MakeChat = ({route, navigation}) => {
     socketRef?.current?.removeListener('chat-updated');
     socketRef?.current?.removeListener('chat-message-hidden');
     socketRef?.current?.removeListener('chat-message-removed');
+    socketRef?.current?.removeListener('chat-unblocked-user');
+    socketRef?.current?.removeListener('chat-status-ack');
   };
 
   /**
@@ -659,6 +696,9 @@ const MakeChat = ({route, navigation}) => {
                     setIsConnected(false);
                   } else if (data.userStatusForChat === 2) {
                     blockMsg = 'You have been removed by admin!';
+                    setIsConnected(false);
+                  } else if (chatItem?.isBlock === 1) {
+                    blockMsg = 'This chat has been blocked!';
                     setIsConnected(false);
                   }
                   chatType = data.chatType;

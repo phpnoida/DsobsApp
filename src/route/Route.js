@@ -73,6 +73,7 @@ import CreateChat from '../screen/socketChat/createChat';
 import MakeChat from '../screen/socketChat/chat';
 import GroupChatInfo from '../screen/socketChat/chat/GroupChatInfo';
 import UserProfileInfo from '../screen/socketChat/chat/UserProfileInfo';
+import ChatUserSettings from '../screen/socketChat/settings';
 
 const Stack = createStackNavigator();
 
@@ -434,6 +435,11 @@ export const RootNavigators = baseRoute => {
       <Stack.Screen
         name="UserProfileInfo"
         component={UserProfileInfo}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ChatUserSettings"
+        component={ChatUserSettings}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

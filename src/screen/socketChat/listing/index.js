@@ -23,7 +23,7 @@ import {generateMenuOption, showProgess} from '../../../component/Common';
 import {IconType, APP_NAME} from '../../../helper/Constants';
 import Helper from '../../../helper/Helper';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
-import {doGetChats} from '../../../Actions/SocketChatActions';
+import {doGetChats, updateChatStatus} from '../../../Actions/SocketChatActions';
 import _ from 'lodash';
 import io from 'socket.io-client';
 
@@ -44,10 +44,13 @@ let currentPage = 1;
 let searchQuery = '';
 let myGroupIds = [];
 let messageIds = [];
+let chatItem = null;
+let isChatEnabled = false;
 
 const ChatList = ({navigation}) => {
   const refOptions = useRef();
   const socketRef = useRef();
+  const refPostOptions = useRef();
 
   const [firstTimeLoad, setFirstTimeLoad] = useState(true);
   const [showLoader, setShowLoader] = useState(false);
@@ -57,6 +60,7 @@ const ChatList = ({navigation}) => {
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.allLoaded,
   );
+  const [selectedItem, setSelectedItem] = useState(null);
 
   /**
    * Socket section
@@ -131,12 +135,42 @@ const ChatList = ({navigation}) => {
         socketRef?.current.on('chat-user-subscribe', event => {
           console.log('connected', event);
         });
+
+        socketRef?.current?.removeListener('chat-blocked-user');
+        socketRef.current.on('chat-blocked-user', event => {
+          console.log('chat-blocked-user', event);
+          if (event && event !== null && event !== undefined) {
+            if (event.status) {
+              getGroupData();
+            }
+          }
+        });
+
+        socketRef?.current?.removeListener('chat-unblocked-user');
+        socketRef.current.on('chat-unblocked-user', event => {
+          console.log('chat-unblocked-user', event);
+          if (event && event !== null && event !== undefined) {
+            if (event.status) {
+              getGroupData();
+            }
+          }
+        });
+
+        socketRef?.current?.removeListener('chat-status-ack');
+        socketRef.current.on('chat-status-ack', event => {
+          console.log('chat-status-ack', event);
+          if (event && event !== null && event !== undefined) {
+            if (event.status) {
+              isChatEnabled = event.chatStatus === 1;
+            }
+          }
+        });
       }
     });
     /********************
      * Specific Events
      */
-  }, [joinSocketEvent]);
+  }, [joinSocketEvent, getGroupData]);
 
   useEffect(() => {
     socketRef?.current?.removeListener('chat-created-list');
@@ -179,6 +213,9 @@ const ChatList = ({navigation}) => {
     socketRef?.current?.removeListener('user-connected');
     socketRef?.current?.removeListener('chat-subscribe-user');
     socketRef?.current?.removeListener('chat-created-list');
+    socketRef?.current?.removeListener('chat-status-ack');
+    socketRef?.current?.removeListener('chat-blocked-user');
+    socketRef?.current?.removeListener('chat-unblocked-user');
     socketRef?.current?.disconnect();
     socketRef.current = null;
   };
@@ -265,6 +302,31 @@ const ChatList = ({navigation}) => {
     [postData],
   );
 
+  const blockUser = useCallback(isBlocked => {
+    if (socketRef?.current !== undefined && socketRef?.current !== null) {
+      let payload = {
+        blockUserId: chatItem.userId,
+        blockByUserId: global.userId,
+      };
+      console.log('update data', payload);
+      if (isBlocked) {
+        socketRef.current.emit('chat-block-user', payload);
+      } else {
+        socketRef.current.emit('chat-unblock-user', payload);
+      }
+    }
+  }, []);
+
+  const checkChatStatus = useCallback(() => {
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      let payload = {
+        userId: global.userId,
+      };
+
+      socketRef?.current?.emit('chat-status', payload);
+    }
+  }, []);
+
   /**
    * Socket section
    */
@@ -282,6 +344,7 @@ const ChatList = ({navigation}) => {
     doGetChats(
       filterObject,
       response => {
+        checkChatStatus();
         setShowLoader(false);
         setFirstTimeLoad(false);
         manageResponse(response);
@@ -295,12 +358,69 @@ const ChatList = ({navigation}) => {
         setPostData([]);
       },
     );
-  }, [manageResponse]);
+  }, [manageResponse, checkChatStatus]);
+
+  const updateConversion = useCallback(
+    type => {
+      updateChatStatus(
+        type,
+        chatItem._id,
+        response => {
+          if (response && response !== null) {
+            if (
+              response.data &&
+              response.data !== undefined &&
+              response.data !== null
+            ) {
+              let data = response.data;
+              console.log('====================================');
+              console.log('response: ' + data);
+              console.log('====================================');
+              if (data.status) {
+                getGroupData();
+              }
+            }
+          }
+        },
+        (error, message) => {
+          console.log('====================================');
+          console.log('error: ' + error, message);
+          console.log('====================================');
+        },
+      );
+    },
+    [getGroupData],
+  );
 
   /**
    *
    * @API Section
    */
+
+  const updateConversionStatus = useCallback(
+    type => {
+      Alert.alert(
+        type === 1 ? 'Mute Conversion' : 'Unmute Conversion',
+        `Are you sure you want to ${
+          type === 1 ? 'Mute Conversion' : 'Unmute Conversion'
+        }?`,
+        [
+          {
+            text: 'Cancel',
+            onPress: () => {},
+            style: 'cancel',
+          },
+          {
+            text: 'Yes',
+            onPress: () => {
+              updateConversion(type);
+            },
+          },
+        ],
+      );
+    },
+    [updateConversion],
+  );
 
   const manageResponse = useCallback(
     response => {
@@ -317,6 +437,10 @@ const ChatList = ({navigation}) => {
 
             if (data.status) {
               let arrayItems = data.groups;
+
+              console.log('====================================');
+              console.log('arrayItems', JSON.stringify(arrayItems));
+              console.log('====================================');
 
               let result = _.map(arrayItems, '_id');
               let isAnyNew = false;
@@ -351,7 +475,7 @@ const ChatList = ({navigation}) => {
         }
       }
     },
-    [postData],
+    [postData, joinGroupWithSocket],
   );
 
   /**
@@ -426,7 +550,9 @@ const ChatList = ({navigation}) => {
           {generateMenuOption('My Settings', 'setting', 10, () => {
             refOptions.current.close();
             setTimeout(() => {
-              navigation.navigate('ChatSettings');
+              navigation.navigate('ChatUserSettings', {
+                socket: socketRef?.current,
+              });
             }, 220);
           })}
 
@@ -441,6 +567,82 @@ const ChatList = ({navigation}) => {
               }, 220);
             },
           )}
+        </View>
+      </OptionsSheet>
+    );
+  };
+
+  const postOptions = () => {
+    return (
+      <OptionsSheet
+        ref={refPostOptions}
+        minClosingHeight={50}
+        height={300}
+        duration={200}
+        closeOnDragDown={true}
+        customStyles={{
+          container: GlobalInclude.AppStyle.sheetContainer,
+        }}>
+        <View stylre={[grid.flex1, g.mb10]}>
+          {selectedItem !== null &&
+            selectedItem !== undefined &&
+            generateMenuOption('Mark as Read', 'add-to-list', 9, () => {
+              refPostOptions.current.close();
+              // setTimeout(() => {
+              //   markAllRead();
+              // }, 205);
+            })}
+
+          {selectedItem !== null &&
+          selectedItem !== undefined &&
+          selectedItem.isMute
+            ? generateMenuOption(
+                'UnMute This conversation',
+                'unmute',
+                5,
+                () => {
+                  refPostOptions.current.close();
+                  setTimeout(() => {
+                    updateConversionStatus(0);
+                  }, 205);
+                },
+              )
+            : generateMenuOption('Mute This conversation', 'mute', 5, () => {
+                refPostOptions.current.close();
+                setTimeout(() => {
+                  updateConversionStatus(1);
+                }, 205);
+              })}
+
+          {selectedItem !== null &&
+            selectedItem !== undefined &&
+            selectedItem.chatType === 0 && (
+              <View>
+                {selectedItem.isBlock === 1
+                  ? generateMenuOption(
+                      'Unblock This Sender',
+                      'exclamationcircleo',
+                      10,
+                      () => {
+                        refPostOptions.current.close();
+                        setTimeout(() => {
+                          blockUser(0);
+                        }, 205);
+                      },
+                    )
+                  : generateMenuOption(
+                      'Block This Sender',
+                      'exclamationcircleo',
+                      10,
+                      () => {
+                        refPostOptions.current.close();
+                        setTimeout(() => {
+                          blockUser(1);
+                        }, 205);
+                      },
+                    )}
+              </View>
+            )}
         </View>
       </OptionsSheet>
     );
@@ -504,27 +706,32 @@ const ChatList = ({navigation}) => {
       <TouchableOpacity
         activeOpacity={0.9}
         onPress={() => {
-          disconnectAllGroup();
-          disconnectSocket();
-
-          console.log('item', item);
-          let payload = {
-            groupId: item._id,
-            chatType: 0,
-          };
-          navigation.navigate('MakeChat', payload);
+          if (isChatEnabled) {
+            chatItem = item;
+            disconnectAllGroup();
+            disconnectSocket();
+            let payload = {
+              groupId: chatItem._id,
+              chatType: chatItem.chatType,
+              chatItem: chatItem,
+            };
+            navigation.navigate('MakeChat', payload);
+          } else {
+            Alert.alert(
+              'Chat Disabled',
+              'Your chat has been disabled from settings.You can no longer send and receive messages.',
+            );
+          }
         }}
         onLongPress={() => {
-          // setSelectedItem(item);
-          // if (!isUserRemoved(item)) {
-          //   if (
-          //     refPostOptions.current !== undefined &&
-          //     refPostOptions.current !== null
-          //   ) {
-          //     selectedIndex = index;
-          //     refPostOptions.current.open();
-          //   }
-          // }
+          chatItem = item;
+          setSelectedItem(item);
+          if (
+            refPostOptions.current !== undefined &&
+            refPostOptions.current !== null
+          ) {
+            refPostOptions.current.open();
+          }
         }}
         style={[
           grid.rowdir,
@@ -668,7 +875,7 @@ const ChatList = ({navigation}) => {
                 grid.justifyContentCenter,
                 grid.rowrow,
               ]}>
-              {/* {isConversionMuted(item.mutedBy) && (
+              {item?.isMute && (
                 <View style={[g.ml5, g.mr5]}>
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(18), width: scale(18)}}
@@ -678,8 +885,8 @@ const ChatList = ({navigation}) => {
                     iconType={IconType[1]}
                   />
                 </View>
-              )} */}
-              {/* {!item.isGroup && isUserBlocked(item.userInfo) && (
+              )}
+              {!item.isGroup && item.isBlock === 1 && (
                 <View style={[g.ml5, g.mr5]}>
                   <GlobalInclude.BaseIcon
                     containerStyle={{height: scale(18), width: scale(18)}}
@@ -689,7 +896,7 @@ const ChatList = ({navigation}) => {
                     iconType={IconType[0]}
                   />
                 </View>
-              )} */}
+              )}
               {item.unreadMessageCount > 0 && (
                 <View style={styles.unreadCount}>
                   <Text
@@ -856,6 +1063,7 @@ const ChatList = ({navigation}) => {
       </SafeAreaView>
 
       {userOptions()}
+      {selectedItem !== null && postOptions()}
     </View>
   );
 };
