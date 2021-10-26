@@ -37,8 +37,8 @@ class ChatItem extends PureComponent {
     const {currentMessage, groupMembers, isGroup} = this.props;
     if (
       currentMessage &&
-      currentMessage.user &&
-      currentMessage.user._id !== global.userId
+      currentMessage.authorId &&
+      currentMessage.authorId._id !== global.userId
     ) {
       return null;
     }
@@ -46,6 +46,8 @@ class ChatItem extends PureComponent {
       let tickIcon = '',
         iconColor = '#323232';
 
+      tickIcon = 'ios-checkmark-sharp';
+      iconColor = '#cccccc';
       if (isGroup) {
         if (groupMembers !== undefined && groupMembers !== null) {
           if (
@@ -61,21 +63,8 @@ class ChatItem extends PureComponent {
           }
         }
       } else {
-        if (
-          currentMessage &&
-          (currentMessage.isSent ||
-            currentMessage.isRead ||
-            currentMessage.pending)
-        ) {
-          if (currentMessage.isSent) {
-            tickIcon = 'ios-checkmark-sharp';
-            iconColor = '#cccccc';
-          }
-          if (currentMessage.isDelivered) {
-            tickIcon = 'checkmark-done-sharp';
-            iconColor = '#cccccc';
-          }
-          if (currentMessage.isRead) {
+        if (currentMessage) {
+          if (currentMessage.messageRead === 1) {
             tickIcon = 'checkmark-done-sharp';
             iconColor = '#34b7f1';
           }
@@ -375,7 +364,7 @@ class ChatItem extends PureComponent {
     if (!isSameUser(currentMessage, nextMessage)) {
       return (
         <ProgressImage
-          source={{uri: currentMessage.user.profileImg}}
+          source={{uri: currentMessage.authorId.profileImg}}
           containerStyle={styles.imageStyle}
           imageStyle={styles.imageStyle}
           mode={'cover'}
@@ -599,8 +588,8 @@ class ChatItem extends PureComponent {
 
         <View style={[grid.rowrow, styles.viewRight]}>
           {this.renderDateComponent(currentMessage, isLeft)}
-          {/* <View style={{marginHorizontal: scale(3)}} />
-          {this.renderTicks()} */}
+          <View style={{marginHorizontal: scale(3)}} />
+          {this.renderTicks()}
         </View>
       </View>
     );

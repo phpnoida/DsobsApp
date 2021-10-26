@@ -71,10 +71,10 @@ let imageArray = [];
 let messagePosition = -1;
 let isLoadingEarlier = false;
 let chatType = 0;
-let chatItem = null;
 let userStatusForChat = 1;
 const scrollToBottomOffset = 200;
-
+let timerInterval = null;
+let opponentInfo = null;
 let groupId = '';
 
 let filterObject = {
@@ -123,6 +123,7 @@ const MakeChat = ({route, navigation}) => {
   const [subHeader, setSubHeader] = useState('');
   const [headerImage, setHeaderImage] = useState(null);
   const [isSending, setIsSending] = useState(false);
+  const [isOnline, setIsOnline] = useState(false);
   const [selectedChatObject, setSelectedChatObject] = useState(null);
   const [isReplayEditComment, setIsReplayEditComment] = useState(false);
   const [showDocViewer, setShowDocViewer] = useState(false);
@@ -147,7 +148,6 @@ const MakeChat = ({route, navigation}) => {
       groupId = route.params.groupId;
       filterObject.groupId = groupId;
       chatType = route.params.chatType;
-      chatItem = route.params.chatItem;
 
       getGroupData();
       getOldMessages();
@@ -278,6 +278,16 @@ const MakeChat = ({route, navigation}) => {
             }
           }
         });
+
+        socketRef?.current?.removeListener('chat-check-online-user-ack');
+        socketRef.current.on('chat-check-online-user-ack', event => {
+          // console.log('chat-check-online-user-ack', event);
+          if (event && event !== null && event !== undefined) {
+            if (event.userId === opponentInfo._id) {
+              setIsOnline(event.status);
+            }
+          }
+        });
       }
     });
 
@@ -349,15 +359,17 @@ const MakeChat = ({route, navigation}) => {
     socketRef?.current?.removeListener('chat-blocked-user');
     socketRef.current.on('chat-blocked-user', event => {
       console.log('chat-blocked-user-detail', event);
+      //{"blockUserId": "602cb54aa1714c5bd91862e0", "blockedUserBy": "602a65dca1714c5bd918612e", "status": true}
       if (event && event !== null && event !== undefined) {
         if (event.status) {
-          let blockedUser = event.blockedUser;
+          let blockedUser = event.blockUserId;
           if (
             blockedUser &&
             blockedUser !== null &&
             blockedUser === global.userId
           ) {
-            setIsConnected(true);
+            blockMsg = `${opponentInfo.firstName} block this chat!`;
+            setIsConnected(false);
           }
         }
       }
@@ -365,7 +377,7 @@ const MakeChat = ({route, navigation}) => {
 
     socketRef?.current?.removeListener('chat-unblocked-user');
     socketRef.current.on('chat-unblocked-user', event => {
-      console.log('chat-unblocked-user', event);
+      console.log('chat-unblocked-user-detail page', event);
       if (event && event !== null && event !== undefined) {
         if (event.status) {
           let blockedUser = event.blockedUser;
@@ -374,8 +386,33 @@ const MakeChat = ({route, navigation}) => {
             blockedUser !== null &&
             blockedUser === global.userId
           ) {
-            blockMsg = 'This chat has been blocked!';
-            setIsConnected(false);
+            blockMsg = 'This chat has been unblocked!';
+            setIsConnected(true);
+          }
+        }
+      }
+    });
+
+    socketRef?.current?.removeListener('chat-read-message-ack');
+    socketRef.current.on('chat-read-message-ack', event => {
+      console.log('chat-read-message-ack-detail page', event);
+      if (event && event !== null && event !== undefined) {
+        if (event.status) {
+          let anyFound = false;
+          let message = event.messages;
+          let oldData = messages;
+
+          message.forEach(element => {
+            let msgId = element._id;
+            var index = oldData.findIndex(x => x._id === msgId);
+            if (index > -1) {
+              anyFound = true;
+              oldData[index].messageRead = 1;
+            }
+          });
+
+          if (anyFound) {
+            setMessages([...oldData]);
           }
         }
       }
@@ -434,6 +471,25 @@ const MakeChat = ({route, navigation}) => {
     }
   }, []);
 
+  const checkOpponentStatus = useCallback(opponent => {
+    if (timerInterval !== null) {
+      clearInterval(timerInterval);
+    }
+    timerInterval = setInterval(() => {
+      if (socketRef.current !== undefined && socketRef.current !== null) {
+        let payload = {
+          userId: opponent,
+          checkingUserId: global.userId,
+        };
+        socketRef?.current?.emit('chat-check-online-user', payload);
+        let pingPayload = {
+          userId: global.userId,
+        };
+        socketRef?.current?.emit('chat-user-ping', pingPayload);
+      }
+    }, 3000);
+  }, []);
+
   const updateReadMessages = useCallback(
     messageIds => {
       if (
@@ -483,6 +539,11 @@ const MakeChat = ({route, navigation}) => {
     socketRef?.current?.removeListener('chat-message-removed');
     socketRef?.current?.removeListener('chat-unblocked-user');
     socketRef?.current?.removeListener('chat-status-ack');
+    socketRef?.current?.removeListener('chat-check-online-user-ack');
+    socketRef?.current?.removeListener('chat-read-message-ack');
+    if (timerInterval !== null) {
+      clearInterval(timerInterval);
+    }
   };
 
   /**
@@ -571,7 +632,7 @@ const MakeChat = ({route, navigation}) => {
                   let user = info.users;
                   let index = user.findIndex(x => x.id._id !== global.userId);
                   if (index > -1) {
-                    var opponentInfo = user[index].id;
+                    opponentInfo = user[index].id;
                     setHeader(
                       `${opponentInfo?.firstName} ${opponentInfo?.lastName} `,
                     );
@@ -679,7 +740,7 @@ const MakeChat = ({route, navigation}) => {
               response.data !== null
             ) {
               let data = response.data;
-              console.log('groupMsgs', JSON.stringify(data));
+              // console.log('groupMsgs', JSON.stringify(data));
               if (data.status) {
                 let array = data.data;
                 let unreadIds = _.map(_.filter(array, {isRead: false}), '_id');
@@ -689,20 +750,38 @@ const MakeChat = ({route, navigation}) => {
                   currentPage = data.currentPage;
                 }
 
-                if (filterObject.page === 1) {
-                  userStatusForChat = data.userStatusForChat;
-                  if (data.userStatusForChat === 0) {
-                    blockMsg = 'You left';
-                    setIsConnected(false);
-                  } else if (data.userStatusForChat === 2) {
-                    blockMsg = 'You have been removed by admin!';
-                    setIsConnected(false);
-                  } else if (chatItem?.isBlock === 1) {
-                    blockMsg = 'This chat has been blocked!';
-                    setIsConnected(false);
+                if (data.chatType === 0) {
+                  if (filterObject.page === 1 && !isFiltering) {
+                    let userDetails = data.users;
+
+                    let index = userDetails.findIndex(
+                      x => x._id !== global.userId,
+                    );
+                    if (index > -1) {
+                      opponentInfo = userDetails[index];
+                    }
+
+                    userStatusForChat = data.userStatusForChat;
+                    if (data.userStatusForChat === 0) {
+                      blockMsg = 'You left';
+                      setIsConnected(false);
+                    } else if (data.userStatusForChat === 2) {
+                      blockMsg = 'You have been removed by admin!';
+                      setIsConnected(false);
+                    } else if (data?.blockUserStatus === 2) {
+                      blockMsg = `${opponentInfo.firstName} block this chat!`;
+                      setIsConnected(false);
+                    } else if (data?.blockUserStatus === 1) {
+                      blockMsg = `${global.userDetails.firstName} block this chat!`;
+                      setIsConnected(false);
+                    } else if (data?.blockUserStatus === 0) {
+                      blockMsg = 'This chat has been blocked!';
+                      setIsConnected(false);
+                    }
                   }
-                  chatType = data.chatType;
+                  checkOpponentStatus(opponentInfo._id);
                 }
+                chatType = data.chatType;
 
                 if (unreadIds.length > 0) {
                   updateReadMessages(unreadIds);
@@ -759,7 +838,7 @@ const MakeChat = ({route, navigation}) => {
         }
       });
     },
-    [updateReadMessages, isFiltering],
+    [updateReadMessages, isFiltering, checkOpponentStatus],
   );
 
   const removeMessageFromList = () => {
@@ -1210,7 +1289,7 @@ const MakeChat = ({route, navigation}) => {
     const messageProps = {
       groupMembers: [],
       messageColor: [],
-      isGroup: true,
+      isGroup: chatType === 1,
       key: item._id,
       currentMessage: item,
       previousMessage,
@@ -1495,6 +1574,17 @@ const MakeChat = ({route, navigation}) => {
                         />
                       )}
                     </View>
+                    <View
+                      style={{
+                        backgroundColor: isOnline ? 'green' : 'gray',
+                        height: scale(10),
+                        width: scale(10),
+                        borderRadius: scale(100),
+                        position: 'absolute',
+                        bottom: 0,
+                        right: -5,
+                      }}
+                    />
                   </View>
                   <TouchableOpacity
                     onPress={() => {

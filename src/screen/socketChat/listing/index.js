@@ -46,6 +46,7 @@ let myGroupIds = [];
 let messageIds = [];
 let chatItem = null;
 let isChatEnabled = false;
+let timerInterval = null;
 
 const ChatList = ({navigation}) => {
   const refOptions = useRef();
@@ -68,8 +69,24 @@ const ChatList = ({navigation}) => {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
+      filterObject = {
+        page: 1,
+        limit: 10,
+        search: '',
+      };
+
+      totalPages = 0;
+      currentPage = 1;
+      searchQuery = '';
+      myGroupIds = [];
+      messageIds = [];
+      chatItem = null;
+      isChatEnabled = false;
+      timerInterval = null;
+
       disconnectSocket();
       connectSocket();
+      getGroupData();
     });
 
     const backAction = () => {
@@ -84,13 +101,14 @@ const ChatList = ({navigation}) => {
     );
 
     return () => {
+      console.log('Line 88');
       if (backHandler !== undefined && backHandler !== null) {
         backHandler.remove();
       }
       unsubscribe();
       disconnectSocket();
     };
-  }, [navigation, connectSocket]);
+  }, [navigation, connectSocket, getGroupData]);
 
   const connectSocket = useCallback(() => {
     if (
@@ -138,7 +156,7 @@ const ChatList = ({navigation}) => {
 
         socketRef?.current?.removeListener('chat-blocked-user');
         socketRef.current.on('chat-blocked-user', event => {
-          console.log('chat-blocked-user', event);
+          // console.log('chat-blocked-user', event);
           if (event && event !== null && event !== undefined) {
             if (event.status) {
               getGroupData();
@@ -148,7 +166,7 @@ const ChatList = ({navigation}) => {
 
         socketRef?.current?.removeListener('chat-unblocked-user');
         socketRef.current.on('chat-unblocked-user', event => {
-          console.log('chat-unblocked-user', event);
+          // console.log('chat-unblocked-user', event);
           if (event && event !== null && event !== undefined) {
             if (event.status) {
               getGroupData();
@@ -165,6 +183,18 @@ const ChatList = ({navigation}) => {
             }
           }
         });
+
+        if (timerInterval !== null) {
+          clearInterval(timerInterval);
+        }
+        timerInterval = setInterval(() => {
+          if (socketRef.current !== undefined && socketRef.current !== null) {
+            let payload = {
+              userId: global.userId,
+            };
+            socketRef?.current?.emit('chat-user-ping', payload);
+          }
+        }, 3000);
       }
     });
     /********************
@@ -190,8 +220,23 @@ const ChatList = ({navigation}) => {
         }
       }
     });
-    return () => {};
-  }, [postData, mergeGroups]);
+
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      socketRef?.current?.removeListener('chat-get-message');
+      socketRef?.current.on('chat-get-message', event => {
+        if (event && event !== null && event !== undefined) {
+          let message = event.message;
+          let exist = _.includes(messageIds, message._id);
+          if (!exist) {
+            console.log('====================================');
+            console.log('useEffect-message-209', message);
+            console.log('====================================');
+            updateCountInGroup(message);
+          }
+        }
+      });
+    }
+  }, [postData, mergeGroups, updateCountInGroup]);
 
   const mergeGroups = useCallback(
     chat => {
@@ -218,6 +263,9 @@ const ChatList = ({navigation}) => {
     socketRef?.current?.removeListener('chat-unblocked-user');
     socketRef?.current?.disconnect();
     socketRef.current = null;
+    if (timerInterval !== null) {
+      clearInterval(timerInterval);
+    }
   };
 
   const joinSocketEvent = useCallback(() => {
@@ -257,28 +305,6 @@ const ChatList = ({navigation}) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (postData.length > 0) {
-      if (socketRef.current !== undefined && socketRef.current !== null) {
-        socketRef?.current?.removeListener('chat-get-message');
-        socketRef?.current.on('chat-get-message', event => {
-          if (event && event !== null && event !== undefined) {
-            let message = event.message;
-            let exist = _.includes(messageIds, message._id);
-            if (!exist) {
-              console.log('====================================');
-              console.log('useEffect-message-209', message);
-              console.log('====================================');
-              updateCountInGroup(message);
-            }
-          }
-        });
-      }
-    }
-
-    return () => {};
-  }, [postData, updateCountInGroup]);
-
   const updateCountInGroup = useCallback(
     message => {
       let oldData = postData;
@@ -288,8 +314,7 @@ const ChatList = ({navigation}) => {
       if (index !== undefined && index !== null && index > -1) {
         let newCount = oldData[index].unreadMessageCount + 1;
         oldData[index].unreadMessageCount = newCount;
-
-        // oldData = _.orderBy(oldData, ['unreadMessageCount'], ['desc']);
+        oldData[index].lastMessage = message;
 
         var placeholder = {};
         var objectToMove = oldData.splice(index, 1, placeholder)[0];
@@ -308,7 +333,7 @@ const ChatList = ({navigation}) => {
         blockUserId: chatItem.userId,
         blockByUserId: global.userId,
       };
-      console.log('update data', payload);
+      console.log('blockUser', payload);
       if (isBlocked) {
         socketRef.current.emit('chat-block-user', payload);
       } else {
@@ -330,11 +355,6 @@ const ChatList = ({navigation}) => {
   /**
    * Socket section
    */
-
-  useEffect(() => {
-    getGroupData();
-    return () => {};
-  }, [getGroupData]);
 
   /**
    *
@@ -438,9 +458,9 @@ const ChatList = ({navigation}) => {
             if (data.status) {
               let arrayItems = data.groups;
 
-              console.log('====================================');
-              console.log('arrayItems', JSON.stringify(arrayItems));
-              console.log('====================================');
+              // console.log('====================================');
+              // console.log('arrayItems', JSON.stringify(arrayItems));
+              // console.log('====================================');
 
               let result = _.map(arrayItems, '_id');
               let isAnyNew = false;
@@ -959,6 +979,7 @@ const ChatList = ({navigation}) => {
         }}
         customDelegate={() => {
           disconnectSocket();
+          navigation.goBack();
         }}
         openNewPage={page => {
           disconnectSocket();

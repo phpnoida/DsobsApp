@@ -6,6 +6,8 @@ import {authentication} from './src/helper/ChatHelper';
 import {useDispatch} from 'react-redux';
 import {refreshScreen} from './src/reducer/NotificationReducer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {ChatProvider} from './src/helper/contextProvider/ChatApiProvider';
+
 let notif;
 const AppWrapper = ({navigation}) => {
   const dispatch = useDispatch();
@@ -59,7 +61,11 @@ const AppWrapper = ({navigation}) => {
     [dispatch],
   );
 
-  return <App />;
+  return (
+    <ChatProvider>
+      <App />
+    </ChatProvider>
+  );
 };
 
 export default AppWrapper;
