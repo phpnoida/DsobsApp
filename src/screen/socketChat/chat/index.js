@@ -16,6 +16,7 @@ import {
   AppState,
   Alert,
   SafeAreaView,
+  ScrollView,
 } from 'react-native';
 import g from '../../../theme/global';
 import grid from '../../../theme/grid';
@@ -43,10 +44,12 @@ import {
   doAboutGroup,
   doGetGroupMessages,
   doSearchMessage,
+  doGetMessageInfo,
 } from '../../../Actions/SocketChatActions';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import io from 'socket.io-client';
 import _ from 'lodash';
+import RNBeep from 'react-native-a-beep';
 
 const {height, width} = Dimensions.get('window');
 
@@ -94,6 +97,10 @@ const PaginationStatus = {
   allLoaded: 2,
 };
 
+var lastTypingTime = 0;
+let typing = false;
+let typingUserName = '';
+
 const MakeChat = ({route, navigation}) => {
   const socketRef = useRef();
   const appState = useRef(AppState.currentState);
@@ -102,6 +109,7 @@ const MakeChat = ({route, navigation}) => {
   const animRef = useRef();
   const chatObjRef = useRef();
   const chatRef = useRef();
+  const messageInfoRef = useRef();
 
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
@@ -124,6 +132,7 @@ const MakeChat = ({route, navigation}) => {
   const [headerImage, setHeaderImage] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [selectedChatObject, setSelectedChatObject] = useState(null);
   const [isReplayEditComment, setIsReplayEditComment] = useState(false);
   const [showDocViewer, setShowDocViewer] = useState(false);
@@ -135,6 +144,7 @@ const MakeChat = ({route, navigation}) => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [freshSearch, setFreshSearch] = useState(true);
+  const [messageInfo, setMessageInfo] = useState(null);
 
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [showHideMessageAlert, setShowHideMessageAlert] = useState(false);
@@ -281,10 +291,23 @@ const MakeChat = ({route, navigation}) => {
 
         socketRef?.current?.removeListener('chat-check-online-user-ack');
         socketRef.current.on('chat-check-online-user-ack', event => {
-          // console.log('chat-check-online-user-ack', event);
+          //console.log('chat-check-online-user-ack', event);
           if (event && event !== null && event !== undefined) {
             if (event.userId === opponentInfo._id) {
               setIsOnline(event.status);
+            }
+          }
+        });
+
+        socketRef?.current?.removeListener('typing-ack');
+        socketRef.current.on('typing-ack', event => {
+          //console.log('typing-ack', event);
+          if (event && event !== null && event !== undefined) {
+            //{"data": {"chatId": "617934f2c3a12860b909d51a", "status": false, "userName": "Ajay"}, "status": true}
+            if (event.status) {
+              let data = event.data;
+              typingUserName = data.userName;
+              setIsTyping(data.status);
             }
           }
         });
@@ -304,6 +327,7 @@ const MakeChat = ({route, navigation}) => {
         var index = oldData.findIndex(x => x._id === message._id);
         if (index < 0) {
           if (author._id !== global.userId) {
+            playBeep();
             readMessage([message._id]);
           }
           if (showScrollToBottom) {
@@ -407,7 +431,7 @@ const MakeChat = ({route, navigation}) => {
             var index = oldData.findIndex(x => x._id === msgId);
             if (index > -1) {
               anyFound = true;
-              oldData[index].messageRead = 1;
+              oldData[index].messageRead = element.messageRead;
             }
           });
 
@@ -419,7 +443,12 @@ const MakeChat = ({route, navigation}) => {
     });
 
     return () => {};
-  }, [messages, isFiltering, readMessage, showScrollToBottom]);
+  }, [messages, isFiltering, readMessage, showScrollToBottom, playBeep]);
+
+  const playBeep = useCallback(() => {
+    //RNBeep.PlaySysSound(24);
+    RNBeep.beep();
+  }, []);
 
   const readMessage = useCallback(messageId => {
     if (socketRef.current !== undefined && socketRef.current !== null) {
@@ -454,7 +483,7 @@ const MakeChat = ({route, navigation}) => {
         messageId: messageId,
       };
 
-      console.log('hide-message', payload);
+      //console.log('hide-message', payload);
       socketRef.current.emit('chat-hide-message', payload);
     }
   }, []);
@@ -470,6 +499,36 @@ const MakeChat = ({route, navigation}) => {
       socketRef.current.emit('chat-subscribe-chat', payload);
     }
   }, []);
+
+  const sendUserTyping = useCallback(status => {
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      let payload = {
+        userName: Helper.capitalize(global.userDetails.firstName),
+        chatId: groupId,
+        status: status,
+      };
+      //console.log('hide-message', payload);
+      socketRef.current.emit('typing', payload);
+    }
+  }, []);
+
+  const sendTyping = () => {
+    if (!typing) {
+      typing = true;
+      sendUserTyping(true);
+    }
+    lastTypingTime = new Date().getTime();
+
+    setTimeout(() => {
+      var timeNow = new Date().getTime();
+      var diff = timeNow - lastTypingTime;
+
+      if (diff >= 3000 && typing) {
+        sendUserTyping(false);
+        typing = false;
+      }
+    }, 3000);
+  };
 
   const checkOpponentStatus = useCallback(opponent => {
     if (timerInterval !== null) {
@@ -560,7 +619,7 @@ const MakeChat = ({route, navigation}) => {
 
       console.log('post Msg Object', JSON.stringify(object));
       socketRef?.current?.emit('chat-send-message', object);
-
+      sendUserTyping(false);
       if (isReplayEditComment) {
         object.parentMessageId = selectedChatObject;
       }
@@ -750,6 +809,7 @@ const MakeChat = ({route, navigation}) => {
                   currentPage = data.currentPage;
                 }
 
+                console.log('data.chatType', data.chatType);
                 if (data.chatType === 0) {
                   if (filterObject.page === 1 && !isFiltering) {
                     let userDetails = data.users;
@@ -865,6 +925,77 @@ const MakeChat = ({route, navigation}) => {
     }, 2500);
   };
 
+  const getMessageInfo = messageId => {
+    global.loader_ref.show_loader(1);
+    doGetMessageInfo(
+      groupId,
+      messageId,
+      response => {
+        global.loader_ref.show_loader(0);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            if (data.status) {
+              let message = data.message;
+              let sendToData = message.sendTo;
+              let readData = message.read;
+
+              let messageInfoPayload = {
+                sendTo: [],
+                read: [],
+              };
+
+              if (readData !== undefined && readData !== null) {
+                let filteredRead = readData.filter(
+                  item => item._id !== global.userId,
+                );
+                messageInfoPayload.read = filteredRead;
+              }
+              if (sendToData !== undefined && sendToData !== null) {
+                let filteredSend = sendToData.filter(
+                  item => item._id !== global.userId,
+                );
+                filteredSend = filteredSend.filter(item => {
+                  return (
+                    messageInfoPayload.read.findIndex(
+                      obj2 => obj2._id === item._id,
+                    ) === -1
+                  );
+                });
+                messageInfoPayload.sendTo = filteredSend;
+              }
+
+              setMessageInfo(prevState => ({
+                ...prevState,
+                ...messageInfoPayload,
+              }));
+              setTimeout(() => {
+                if (
+                  messageInfoRef.current !== undefined &&
+                  messageInfoRef.current !== null
+                ) {
+                  messageInfoRef.current.open();
+                }
+              }, 220);
+            }
+          }
+        }
+      },
+      (code, error) => {
+        global.loader_ref.show_loader(0);
+        setIsRefreshing(false);
+        setIsFirstLoad(false);
+        console.log('544');
+        setMessages([]);
+        isLoadingEarlier = false;
+      },
+    );
+  };
+
   /**
    *
    * @PostMessage
@@ -880,6 +1011,11 @@ const MakeChat = ({route, navigation}) => {
         batch: global.userDetails.batch,
         profileImg: global.userDetails.profileImg,
       },
+      chatName:
+        chatType === 0
+          ? Helper.capitalize(global.userDetails.firstName)
+          : header,
+      chatType: chatType,
       messageText: input,
       depth: 0,
       media: {
@@ -1130,6 +1266,29 @@ const MakeChat = ({route, navigation}) => {
                       Remove Message
                     </Text>
                   </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (
+                        chatObjRef.current !== undefined &&
+                        chatObjRef.current !== null
+                      ) {
+                        chatObjRef.current.close();
+                      }
+                      getMessageInfo(selectedChatObject._id);
+                    }}
+                    style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
+                    <Text
+                      style={[
+                        g.fs18,
+                        g.FHNM,
+                        g.colorBlue,
+                        grid.justifyContentCenter,
+                        grid.alignItems,
+                        g.txtCenterVertical,
+                      ]}>
+                      Message Info
+                    </Text>
+                  </TouchableOpacity>
                 </>
               ) : (
                 <></>
@@ -1151,7 +1310,12 @@ const MakeChat = ({route, navigation}) => {
                         setShowRemoveMessageAlert(true);
                       }, 220);
                     }}
-                    style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
+                    style={[
+                      grid.justifyContentCenter,
+                      grid.alignItems,
+                      g.p15,
+                      {borderBottomWidth: 2, borderBottomColor: '#ebebe4'},
+                    ]}>
                     <Text
                       style={[
                         g.fs18,
@@ -1162,6 +1326,29 @@ const MakeChat = ({route, navigation}) => {
                         g.txtCenterVertical,
                       ]}>
                       Remove Message
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (
+                        chatObjRef.current !== undefined &&
+                        chatObjRef.current !== null
+                      ) {
+                        chatObjRef.current.close();
+                      }
+                      getMessageInfo(selectedChatObject._id);
+                    }}
+                    style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
+                    <Text
+                      style={[
+                        g.fs18,
+                        g.FHNM,
+                        g.colorBlue,
+                        grid.justifyContentCenter,
+                        grid.alignItems,
+                        g.txtCenterVertical,
+                      ]}>
+                      Message Info
                     </Text>
                   </TouchableOpacity>
                 </>
@@ -1277,6 +1464,203 @@ const MakeChat = ({route, navigation}) => {
             </Text>
           </View>
         </TouchableOpacity>
+      </OptionsSheet>
+    );
+  };
+
+  const showReadByUsers = (userTag, isRead) => {
+    let componentArray = [];
+    for (let i = 0; i < userTag.length; i++) {
+      let item = userTag[i];
+      const component = (
+        <View
+          style={[
+            i < userTag.length - 1 ? styles.bottomLine : {},
+            g.mb5,
+            g.ml5,
+            g.mr5,
+          ]}
+          key={i}>
+          <View style={[grid.rowdir]}>
+            <View style={[grid.col]}>
+              <View style={[grid.rowdir, g.mb5, grid.alignItems]}>
+                <View
+                  style={[
+                    {
+                      height: scale(42),
+                      width: scale(42),
+                      borderRadius: scale(90),
+                    },
+                    grid.alignItems,
+                    grid.justifyContentCenter,
+                    g.mr10,
+                  ]}>
+                  {item !== null &&
+                  item.profileImg !== null &&
+                  item.profileImg !== undefined &&
+                  item.profileImg !== '' ? (
+                    <ProgressImage
+                      source={{uri: item.profileImg}}
+                      containerStyle={{
+                        aspectRatio: 1 / 1,
+                        height: scale(42),
+                        width: scale(42),
+                        borderRadius: scale(90),
+                      }}
+                      imageStyle={{
+                        aspectRatio: 1 / 1,
+                        height: scale(42),
+                        width: scale(42),
+                        borderRadius: scale(90),
+                      }}
+                      mode={'cover'}
+                    />
+                  ) : (
+                    <View
+                      style={[
+                        {
+                          height: scale(42),
+                          width: scale(42),
+                          borderRadius: scale(90),
+                        },
+                        g.bggray,
+                        g.oh,
+                        grid.alignItems,
+                        grid.justifyContentCenter,
+                      ]}>
+                      <Text
+                        style={[
+                          g.fs28,
+                          g.FHNM,
+                          g.colorWhite,
+                          GlobalInclude.AppStyle.transform,
+                        ]}>
+                        {item !== null
+                          ? item.firstName.charAt(0)
+                          : item.fullName.charAt(0)}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <View>
+                  <Text style={[g.colordarkGray, g.fs14, g.FHNR, g.txtLeft]}>
+                    {item !== null
+                      ? Helper.capitalize(Helper.concatName(item))
+                      : item.fullName}
+                  </Text>
+                  {item !== null && (
+                    <View>
+                      <View style={[g.mt2, g.mb2]} />
+                      <Text
+                        style={[g.colordarkGray, g.fs14, g.FHNR, g.txtLeft]}>
+                        Batch {item.batch}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </View>
+            <View style={[grid.alignItems, grid.justifyContentCenter]}>
+              <GlobalInclude.BaseIcon
+                containerStyle={{height: scale(20), width: scale(20)}}
+                iconColor={isRead ? '#34b7f1' : '#cccccc'}
+                iconName={'checkmark-done-sharp'}
+                iconSize={scale(18)}
+                iconType={IconType[6]}
+              />
+            </View>
+          </View>
+        </View>
+      );
+
+      componentArray.push(component);
+    }
+    return componentArray;
+  };
+
+  const messageInfoSheet = () => {
+    return (
+      <OptionsSheet
+        ref={messageInfoRef}
+        minClosingHeight={50}
+        height={height / 2 + 150}
+        duration={200}
+        closeOnDragDown={true}
+        customStyles={{
+          container: GlobalInclude.AppStyle.sheetContainer,
+        }}>
+        {messageInfo !== undefined && messageInfo !== null && (
+          <>
+            <Text style={[g.colordarkGray, g.fs20, g.FHNB]}>Message Info</Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {messageInfo?.read &&
+                messageInfo.read !== undefined &&
+                messageInfo.read !== null &&
+                messageInfo.read.length > 0 && (
+                  <>
+                    <View style={[styles.bottomLine, g.ml10, g.mr10]}>
+                      <View
+                        style={[
+                          grid.rowdir,
+                          grid.alignItems,
+                          grid.justifyContentCenter,
+                          g.mb5,
+                          g.mt10,
+                        ]}>
+                        <Text
+                          style={[
+                            g.colordarkGray,
+                            g.fs16,
+                            g.FHNB,
+                            g.txtLeft,
+                            g.txtCenterVertical,
+                            grid.col,
+                          ]}>
+                          Read By
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={[g.mt5, g.mb10, g.pl5, g.pr5]}>
+                      {showReadByUsers(messageInfo.read, true)}
+                    </View>
+                  </>
+                )}
+
+              {messageInfo?.sendTo &&
+                messageInfo.sendTo !== undefined &&
+                messageInfo.sendTo !== null &&
+                messageInfo.sendTo.length > 0 && (
+                  <>
+                    <View style={[styles.bottomLine, g.ml10, g.mr10]}>
+                      <View
+                        style={[
+                          grid.rowdir,
+                          grid.alignItems,
+                          grid.justifyContentCenter,
+                          g.mb5,
+                          g.mt10,
+                        ]}>
+                        <Text
+                          style={[
+                            g.colordarkGray,
+                            g.fs16,
+                            g.FHNB,
+                            g.txtLeft,
+                            g.txtCenterVertical,
+                            grid.col,
+                          ]}>
+                          Delivered To
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={[g.mt5, g.mb10, g.pl5, g.pr5]}>
+                      {showReadByUsers(messageInfo.sendTo, false)}
+                    </View>
+                  </>
+                )}
+            </ScrollView>
+          </>
+        )}
       </OptionsSheet>
     );
   };
@@ -1574,17 +1958,19 @@ const MakeChat = ({route, navigation}) => {
                         />
                       )}
                     </View>
-                    <View
-                      style={{
-                        backgroundColor: isOnline ? 'green' : 'gray',
-                        height: scale(10),
-                        width: scale(10),
-                        borderRadius: scale(100),
-                        position: 'absolute',
-                        bottom: 0,
-                        right: -5,
-                      }}
-                    />
+                    {chatType === 0 && (
+                      <View
+                        style={{
+                          backgroundColor: isOnline ? 'green' : 'gray',
+                          height: scale(10),
+                          width: scale(10),
+                          borderRadius: scale(100),
+                          position: 'absolute',
+                          bottom: 0,
+                          right: -5,
+                        }}
+                      />
+                    )}
                   </View>
                   <TouchableOpacity
                     onPress={() => {
@@ -1615,8 +2001,7 @@ const MakeChat = ({route, navigation}) => {
                         {header}
                       </Text>
                     )}
-
-                    {subHeader !== null && subHeader !== '' && (
+                    {isTyping ? (
                       <Text
                         style={[
                           g.fs11,
@@ -1626,8 +2011,24 @@ const MakeChat = ({route, navigation}) => {
                           g.mt2,
                         ]}
                         numberOfLines={1}>
-                        {subHeader}
+                        {typingUserName} is typing...
                       </Text>
+                    ) : (
+                      <>
+                        {subHeader !== null && subHeader !== '' && (
+                          <Text
+                            style={[
+                              g.fs11,
+                              g.FHNB,
+                              g.colordarkGray,
+                              g.txtLeft,
+                              g.mt2,
+                            ]}
+                            numberOfLines={1}>
+                            {subHeader}
+                          </Text>
+                        )}
+                      </>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -1983,6 +2384,7 @@ const MakeChat = ({route, navigation}) => {
                           placeholder="Enter text here"
                           onChangeText={input => {
                             setInputValue(input);
+                            sendTyping();
 
                             if (input.length > 0 && !isStickerShowing) {
                               isStickerShowing = true;
@@ -2169,6 +2571,7 @@ const MakeChat = ({route, navigation}) => {
       {emojiList()}
 
       {selectedChatObject !== null && chatOptions()}
+      {messageInfo !== null && messageInfoSheet()}
 
       {showDocViewer && (
         <DocViewer

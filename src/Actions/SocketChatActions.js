@@ -164,6 +164,22 @@ export function updateChatStatus(type, chatId, callback, errCallback) {
   };
 }
 
+export function doGetMessageInfo(groupId, msgId, callback, errCallback) {
+  let requestPath = `${SERVER_PATH}chat-message/info/${groupId}/${msgId}`;
+
+  const request = axios
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
+    })
+    .then(res => callback(res))
+    .catch(err => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
 export function handleError(err, errCallback) {
   if (
     err.response &&

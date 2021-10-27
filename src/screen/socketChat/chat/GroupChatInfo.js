@@ -541,7 +541,7 @@ const GroupChatInfo = ({route, navigation}) => {
                       ]}>
                       {Helpers.capitalize(Helpers.concatName(item))}
                     </Text>
-                    {item._id === groupData.isAd && (
+                    {groupAdmin === item._id && (
                       <Text
                         style={[g.colordarkGray, g.fs14, g.FHNM, g.txtLeft]}>
                         Admin
@@ -557,7 +557,7 @@ const GroupChatInfo = ({route, navigation}) => {
               </View>
             </TouchableOpacity>
 
-            {groupData.isAdmin && item._id !== global.userId && (
+            {groupAdmin === item._id && item._id !== global.userId && (
               <TouchableOpacity
                 onPress={() => {
                   removeIndex(() => {

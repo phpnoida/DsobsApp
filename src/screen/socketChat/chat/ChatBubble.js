@@ -46,28 +46,12 @@ class ChatItem extends PureComponent {
       let tickIcon = '',
         iconColor = '#323232';
 
-      tickIcon = 'ios-checkmark-sharp';
+      tickIcon = 'checkmark-done-sharp';
       iconColor = '#cccccc';
-      if (isGroup) {
-        if (groupMembers !== undefined && groupMembers !== null) {
-          if (
-            currentMessage.readBy !== undefined &&
-            currentMessage.readBy !== null &&
-            currentMessage.readBy.length === groupMembers.length
-          ) {
-            tickIcon = 'checkmark-done-sharp';
-            iconColor = '#34b7f1';
-          } else {
-            tickIcon = 'checkmark-done-sharp';
-            iconColor = '#cccccc';
-          }
-        }
-      } else {
-        if (currentMessage) {
-          if (currentMessage.messageRead === 1) {
-            tickIcon = 'checkmark-done-sharp';
-            iconColor = '#34b7f1';
-          }
+      if (currentMessage) {
+        if (currentMessage.messageRead === 1) {
+          tickIcon = 'checkmark-done-sharp';
+          iconColor = '#34b7f1';
         }
       }
 
@@ -466,7 +450,7 @@ class ChatItem extends PureComponent {
 
     return (
       <View style={[grid.rowdir]}>
-        {this.renderAvtar()}
+        {/* {this.renderAvtar()} */}
         <View style={[g.ml5, g.bgWhite, styles.bubbleLeft]}>
           {isGroup && !isSameUser(currentMessage, previousMessage) && (
             <TouchableOpacity

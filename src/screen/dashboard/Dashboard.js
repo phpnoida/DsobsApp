@@ -272,6 +272,9 @@ const Dashboard = ({props, navigation}) => {
       case 202:
         navigation.navigate('GroupsList');
         break;
+      case 204:
+        navigation.navigate('ChatList');
+        break;
       case 1002:
         if (
           data.threadId !== undefined &&

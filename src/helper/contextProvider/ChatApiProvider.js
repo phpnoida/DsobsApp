@@ -11,18 +11,31 @@ export const ChatProvider = ({children}) => {
     return () => socket.off('chat-user-connected', fn);
   };
 
+  const onChatUserConnected = fn => {
+    socket.on('user-connected', event => fn(event));
+    return () => socket.off('user-connected', fn);
+  };
+
   const onUserSubscribe = fn => {
     socket.on('chat-user-subscribe', event => fn(event));
     return () => socket.off('chat-user-subscribe', fn);
   };
 
   const onBlockUser = fn => {
-    socket.on('chat-blocked-user', event => fn(event));
+    socket.on('chat-blocked-user', event => {
+      if (event && event !== null && event !== undefined) {
+        fn(event.status);
+      }
+    });
     return () => socket.off('chat-blocked-user', fn);
   };
 
   const onUnBlockUser = fn => {
-    socket.on('chat-unblocked-user', event => fn(event));
+    socket.on('chat-unblocked-user', event => {
+      if (event && event !== null && event !== undefined) {
+        fn(event.status);
+      }
+    });
     return () => socket.off('chat-unblocked-user', fn);
   };
 
@@ -54,20 +67,37 @@ export const ChatProvider = ({children}) => {
         fn(message);
       }
     });
+    return () => socket.off('chat-get-message', fn);
   };
 
   const emitEvent = (event, payload, fn) => {
     socket.emit(event, payload, fn);
   };
 
-  const disconnectAll = fn => {
-    socket.off('chat-user-connected');
-    socket.off('chat-user-subscribe');
-    socket.off('chat-blocked-user');
-    socket.off('chat-unblocked-user');
-    socket.off('chat-status-ack');
-    socket.off('chat-created-list');
-    socket.off('chat-get-message');
+  const disconnectAll = () => {
+    return new Promise((resolve, reject) => {
+      socket.off('user-connected');
+      socket.off('chat-user-connected');
+      socket.off('chat-user-subscribe');
+      socket.off('chat-blocked-user');
+      socket.off('chat-unblocked-user');
+      socket.off('chat-status-ack');
+      socket.off('chat-created-list');
+      socket.off('chat-get-message');
+      resolve(true);
+    });
+  };
+
+  const removeChatListeners = () => {
+    return new Promise((resolve, reject) => {
+      socket.off('chat-user-subscribe');
+      socket.off('chat-blocked-user');
+      socket.off('chat-unblocked-user');
+      socket.off('chat-status-ack');
+      socket.off('chat-created-list');
+      socket.off('chat-get-message');
+      resolve(true);
+    });
   };
 
   return (
@@ -75,6 +105,7 @@ export const ChatProvider = ({children}) => {
       value={{
         onUserSubscribe,
         onUserConnected,
+        onChatUserConnected,
         emitEvent,
         onBlockUser,
         onChatStatus,
@@ -82,6 +113,7 @@ export const ChatProvider = ({children}) => {
         onNewChatCreated,
         onGetNewChatMessage,
         disconnectAll,
+        removeChatListeners,
       }}>
       {children}
     </ChatContext.Provider>
