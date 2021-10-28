@@ -31,6 +31,7 @@ import {useDispatch} from 'react-redux';
 import {refreshScreen} from './src/reducer/NotificationReducer';
 
 import Offline from './src/component/Offline';
+import messaging from '@react-native-firebase/messaging';
 
 let baseRoute = 'AppTour';
 const deviceWidth = Dimensions.get('window').width;
@@ -75,17 +76,24 @@ const App = () => {
       });
     } else {
       PushNotification.popInitialNotification(notification => {
-        //console.log('Initial Notification', notification);
+        console.log('Initial Notification', notification);
         global.notification = notification;
       });
     }
+    const unsubscribe = messaging().onMessage(async remoteMessage => {
+      handleNotification('PushNotificationIOS', remoteMessage);
+      global.notification = remoteMessage;
+      console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
+    });
 
     /**
      *
      * Notification end
      *
      */
-    return () => {};
+    return () => {
+      unsubscribe();
+    };
   }, [dispatch]);
 
   useEffect(() => {

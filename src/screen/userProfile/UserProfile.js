@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {
   Text,
   View,
@@ -39,6 +39,7 @@ import MyFamily from './MyFamily';
 import Links from './Links';
 import {addUser, checkUserExist} from '../../helper/ChatHelper';
 import {IconType} from '../../helper/Constants';
+import io from 'socket.io-client';
 
 let profileSheetMenu = [
   {
@@ -66,6 +67,8 @@ let profileSheet = null,
 let challengerUser = null;
 
 const UserProfile = ({route, navigation}) => {
+  const socketRef = useRef();
+
   const [step, setStep] = useState(1);
   const [profileData, setProfileData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -84,6 +87,8 @@ const UserProfile = ({route, navigation}) => {
 
     console.log('Request for', userId);
 
+    connectSocket();
+
     checkUserExist(global.userId, false).then(result => {
       if (result !== undefined && result !== null) {
         challengerUser = result;
@@ -96,7 +101,7 @@ const UserProfile = ({route, navigation}) => {
       getOtherUserProfile();
     }
     return () => {};
-  }, []);
+  }, [connectSocket]);
 
   /**
    * ************************************************
@@ -228,6 +233,98 @@ const UserProfile = ({route, navigation}) => {
    * API Section End
    * ************************************************
    */
+
+  /**
+   * Socket Start
+   */
+  const connectSocket = useCallback(() => {
+    if (
+      socketRef == null ||
+      socketRef.current === null ||
+      socketRef.current === undefined
+    ) {
+      socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
+        reconnectionAttempts: 2,
+        transports: ['websocket'],
+        upgrade: false,
+      });
+    }
+
+    socketRef?.current?.on('connect', () => {
+      console.log('socketRef?.current.connected', socketRef?.current.connected);
+      if (socketRef?.current.connected) {
+        socketRef?.current.on('error', attempt => {
+          console.log('errror', attempt);
+        });
+
+        socketRef?.current.on('disconnect', () => {
+          console.log('socket disconnected'); // undefined
+        });
+
+        socketRef?.current.on('reconnect', attempt => {
+          console.log('attempt', attempt);
+        });
+        socketRef?.current.on('reconnect_error', attempt => {
+          console.log('reconnect_error', attempt);
+        });
+        socketRef?.current.on('reconnect_attempt', attempt => {
+          console.log('reconnect_attempt', attempt);
+        });
+
+        socketRef?.current.once('user-connected', event => {
+          console.log('connected', event);
+          console.log('connected', event.status);
+        });
+
+        socketRef?.current?.removeListener('chat-user-subscribe');
+        socketRef?.current.on('chat-user-subscribe', event => {
+          console.log('connected', event);
+        });
+
+        socketRef?.current?.removeListener('chat-created');
+        socketRef?.current?.on('chat-created', event => {
+          console.log('chat-created', event);
+          if (event && event !== null && event !== undefined) {
+            console.log('connected', event);
+            //{"chat": {"__v": 0, "_id": "616ff0e265ae7477aca542cf", "chatType": true, "createdAt": "2021-10-20T10:35:14.110Z", "hasHiddenMessage": false, "hasMessageReported": false, "lastUpdate": 1634725426, "mutedUsers": [], "name": "event check", "status": true, "totalReports": 0, "updatedAt": "2021-10-20T10:35:14.110Z", "users": [[Object], [Object]]}, "status": true}
+            // if (event.status) {
+            //   let chatObj = event.chat;
+            //   if (chatObj && chatObj !== null && chatObj !== undefined) {
+            //     groupId = chatObj._id;
+            //     groupCreated();
+            //   }
+            // }
+          }
+        });
+
+        socketRef?.current?.removeListener('chat-status-ack');
+        socketRef.current.on('chat-status-ack', event => {
+          console.log('chat-status-ack', event);
+          if (event && event !== null && event !== undefined) {
+            // if (event.status) {
+            //   updateChat(event.chatStatus);
+            // }
+          }
+        });
+
+        console.log('bottom');
+      }
+    });
+    /********************
+     * Specific Events
+     */
+  }, []);
+  /**
+   * Socket Start
+   */
+
+  const checkChatStatus = () => {
+    let payload = {
+      userId: global.userId,
+    };
+    socketRef?.current?.emit('chat-status', payload);
+  };
+
   const openProfile = selectedId => {
     birthDate = 'N/A';
     moveToTab = 1;
@@ -383,6 +480,7 @@ const UserProfile = ({route, navigation}) => {
                       profession={profileData.profession}
                       city={profileData.city}
                       lastseen={profileData.lastseen}
+                      checkChatStatus={checkChatStatus}
                     />
                   </View>
 

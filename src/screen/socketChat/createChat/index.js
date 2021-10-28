@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {
   View,
   SafeAreaView,
@@ -23,7 +23,6 @@ import Helper from '../../../helper/Helper';
 import ProgresImage from '../../../component/ProgresImage';
 import ModelAlert from '../../../component/ModalAlert';
 import CommonButton from '../../../component/CommonButton';
-import {doCreateGroup} from '../../../Actions/SocketChatActions';
 
 const {width} = Dimensions.get('window');
 
@@ -97,7 +96,7 @@ const CreateChat = ({route, navigation}) => {
       });
     }
     return () => {};
-  }, [route.params]);
+  }, [route.params, groupCreated]);
 
   const createGroup = async () => {
     let userIds = [];
@@ -119,49 +118,9 @@ const CreateChat = ({route, navigation}) => {
       socketRef.current.emit('chat-create', payload);
       setIsLoading(true);
     }
-
-    // doCreateGroup(
-    //   payload,
-    //   response => {
-    //     setIsLoading(false);
-    //     if (response && response !== null) {
-    //       if (
-    //         response.data &&
-    //         response.data !== undefined &&
-    //         response.data !== null
-    //       ) {
-    //         let data = response.data;
-
-    //         console.log('data', data);
-    //         if (data.status) {
-    //           isSuccess = true;
-    //           responseMessage =
-    //             'You have successfully submitted your request to start a new group';
-    //           setShowErrorMessage(true);
-    //           setTimeout(() => {
-    //             setShowErrorMessage(false);
-    //           }, 2500);
-    //         } else {
-    //           responseMessage = 'Error while posting your request!';
-    //           setShowErrorMessage(true);
-    //           setTimeout(() => {
-    //             setShowErrorMessage(false);
-    //           }, 2500);
-    //         }
-    //       }
-    //     }
-    //   },
-    //   (code, error) => {
-    //     console.log('====================================');
-    //     console.log(code, error);
-    //     console.log('====================================');
-    //     setIsLoading(false);
-    //     //Alert.alert('Something went wrong', error);
-    //   },
-    // );
   };
 
-  const groupCreated = () => {
+  const groupCreated = useCallback(() => {
     setIsLoading(false);
     if (chatType === 1) {
       isSuccess = true;
@@ -173,7 +132,7 @@ const CreateChat = ({route, navigation}) => {
       };
       navigation.replace('MakeChat', payload);
     }
-  };
+  }, [chatType, navigation]);
 
   // Filter section
   const changeText = text => {

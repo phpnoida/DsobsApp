@@ -7,11 +7,16 @@ import {SocketProvider} from './src/helper/contextProvider/SocketProvider';
 const AppContext = ({navigation}) => {
   return (
     <StoreProvider store={store}>
-      <SocketProvider>
-        <App />
-      </SocketProvider>
+      <App />
     </StoreProvider>
   );
+  // return (
+  //   <StoreProvider store={store}>
+  //     <SocketProvider>
+  //       <App />
+  //     </SocketProvider>
+  //   </StoreProvider>
+  // );
 };
 
 export default AppContext;

@@ -79,7 +79,7 @@ const scrollToBottomOffset = 200;
 let timerInterval = null;
 let opponentInfo = null;
 let groupId = '';
-
+let isSenderBlocked = false;
 let filterObject = {
   page: 1,
   limit: 10,
@@ -100,6 +100,7 @@ const PaginationStatus = {
 var lastTypingTime = 0;
 let typing = false;
 let typingUserName = '';
+let blockStatus = -1;
 
 const MakeChat = ({route, navigation}) => {
   const socketRef = useRef();
@@ -402,16 +403,35 @@ const MakeChat = ({route, navigation}) => {
     socketRef?.current?.removeListener('chat-unblocked-user');
     socketRef.current.on('chat-unblocked-user', event => {
       console.log('chat-unblocked-user-detail page', event);
+      //chat-unblocked-user-detail page {"blockedUser": "60153bb047dc7c574d2b9b3e", "blockedUserBy": "602a65dca1714c5bd918612e", "status": true}
+      // chat-unblocked-user-detail page {"blockedUser": "602a65dca1714c5bd918612e", "blockedUserBy": "603af43e022dfb5ae7bc8e88", "status": true}
       if (event && event !== null && event !== undefined) {
         if (event.status) {
           let blockedUser = event.blockedUser;
-          if (
-            blockedUser &&
-            blockedUser !== null &&
-            blockedUser === global.userId
-          ) {
-            blockMsg = 'This chat has been unblocked!';
-            setIsConnected(true);
+          if (userStatusForChat === 2) {
+            if (
+              blockedUser &&
+              blockedUser !== null &&
+              blockedUser === opponentInfo._id
+            ) {
+              setIsConnected(true);
+            }
+          } else if (userStatusForChat === 1) {
+            if (
+              blockedUser &&
+              blockedUser !== null &&
+              blockedUser === global.userId
+            ) {
+              setIsConnected(true);
+            }
+          } else if (userStatusForChat === 0) {
+            if (
+              blockedUser &&
+              blockedUser !== null &&
+              blockedUser === global.userId
+            ) {
+              getGroupData();
+            }
           }
         }
       }
@@ -544,9 +564,27 @@ const MakeChat = ({route, navigation}) => {
         let pingPayload = {
           userId: global.userId,
         };
+        console.log('====================================');
+        console.log('my ping');
+        console.log('====================================');
         socketRef?.current?.emit('chat-user-ping', pingPayload);
       }
     }, 3000);
+  }, []);
+
+  const blockUser = useCallback(isBlocked => {
+    if (socketRef?.current !== undefined && socketRef?.current !== null) {
+      let payload = {
+        blockUserId: opponentInfo._id,
+        blockByUserId: global.userId,
+      };
+      console.log('blockUser', payload);
+      if (isBlocked) {
+        socketRef.current.emit('chat-block-user', payload);
+      } else {
+        socketRef.current.emit('chat-unblock-user', payload);
+      }
+    }
   }, []);
 
   const updateReadMessages = useCallback(
@@ -615,7 +653,7 @@ const MakeChat = ({route, navigation}) => {
       setInputValue('');
       setEmojiIconWidth(scale(40));
       animRef.current.slideInLeft().then(() => {});
-      Keyboard.dismiss();
+      // Keyboard.dismiss();
 
       console.log('post Msg Object', JSON.stringify(object));
       socketRef?.current?.emit('chat-send-message', object);
@@ -695,7 +733,7 @@ const MakeChat = ({route, navigation}) => {
                     setHeader(
                       `${opponentInfo?.firstName} ${opponentInfo?.lastName} `,
                     );
-                    setSubHeader(`Batch: ${opponentInfo?.batch}`);
+                    setSubHeader(opponentInfo?.profession);
                     setHeaderImage({uri: opponentInfo?.profileImg});
                   }
                 }
@@ -799,7 +837,7 @@ const MakeChat = ({route, navigation}) => {
               response.data !== null
             ) {
               let data = response.data;
-              // console.log('groupMsgs', JSON.stringify(data));
+              console.log('groupMsgs', JSON.stringify(data));
               if (data.status) {
                 let array = data.data;
                 let unreadIds = _.map(_.filter(array, {isRead: false}), '_id');
@@ -822,6 +860,7 @@ const MakeChat = ({route, navigation}) => {
                     }
 
                     userStatusForChat = data.userStatusForChat;
+
                     if (data.userStatusForChat === 0) {
                       blockMsg = 'You left';
                       setIsConnected(false);
@@ -832,15 +871,16 @@ const MakeChat = ({route, navigation}) => {
                       blockMsg = `${opponentInfo.firstName} block this chat!`;
                       setIsConnected(false);
                     } else if (data?.blockUserStatus === 1) {
-                      blockMsg = `${global.userDetails.firstName} block this chat!`;
+                      isSenderBlocked = true;
+                      blockMsg = 'You blocked this chat. Tap to unblock';
                       setIsConnected(false);
                     } else if (data?.blockUserStatus === 0) {
                       blockMsg = 'This chat has been blocked!';
                       setIsConnected(false);
                     }
                   }
-                  checkOpponentStatus(opponentInfo._id);
                 }
+                checkOpponentStatus(opponentInfo._id);
                 chatType = data.chatType;
 
                 if (unreadIds.length > 0) {
@@ -1065,6 +1105,7 @@ const MakeChat = ({route, navigation}) => {
     bottomUnread = 0;
     newMessageList = [];
     imageArray = [];
+    isSenderBlocked = false;
   };
 
   const resetCount = () => {
@@ -2460,7 +2501,10 @@ const MakeChat = ({route, navigation}) => {
                 </View>
               ) : (
                 <View style={styles.footer}>
-                  <View
+                  <TouchableOpacity
+                    onPress={() => blockUser(false)}
+                    activeOpacity={1}
+                    disabled={!isSenderBlocked}
                     style={[
                       styles.whiteCurvedBox,
                       g.p10,
@@ -2479,7 +2523,7 @@ const MakeChat = ({route, navigation}) => {
                       ]}>
                       {blockMsg === '' ? 'Connecting...' : blockMsg}
                     </Text>
-                  </View>
+                  </TouchableOpacity>
                 </View>
               )}
             </KeyboardAvoidingView>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useCallback, useRef, useEffect} from 'react';
 import {
   Text,
   View,
@@ -13,8 +13,8 @@ import grid from '../theme/grid';
 import {scale} from '../theme/Scalling';
 import {checkChatExist} from '../helper/ChatHelper';
 
-const UserProfileHeader = (props) => {
-  const showLastSeen = (timestamp) => {
+const UserProfileHeader = props => {
+  const showLastSeen = timestamp => {
     let month_names = [
       'Jan',
       'Feb',
@@ -136,7 +136,7 @@ const UserProfileHeader = (props) => {
             <TouchableOpacity
               style={{height: scale(24), width: scale(24)}}
               activeOpacity={0.8}
-              onPress={() => openChat()}>
+              onPress={() => props.checkChatStatus()}>
               <Image
                 source={GlobalInclude.Assets.ChatBlue}
                 resizeMode="contain"

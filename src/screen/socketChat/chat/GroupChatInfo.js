@@ -257,35 +257,6 @@ const GroupChatInfo = ({route, navigation}) => {
     );
   };
 
-  const updateGroupInfo = async () => {
-    if (newMembers.length > 0 || removedMembers.length > 0) {
-      setIsUpdating(true);
-      setTimeout(() => {
-        if (newMembers.length > 0) {
-          if (socketRef?.current !== undefined && socketRef?.current !== null) {
-            let payload = {
-              chatId: groupId,
-              usersId: newMembers,
-            };
-            console.log('add', payload);
-            socketRef.current.emit('chat-add-user', payload);
-          }
-        }
-        if (removedMembers.length > 0) {
-          if (socketRef?.current !== undefined && socketRef?.current !== null) {
-            let payload = {
-              authorId: global.userId,
-              chatId: groupId,
-              usersId: removedMembers,
-            };
-            console.log('remove', payload);
-            socketRef.current.emit('chat-remove-user', payload);
-          }
-        }
-      }, 1000);
-    }
-  };
-
   const updateGroupDetail = async payload => {
     setIsUpdating(true);
     if (socketRef?.current !== undefined && socketRef?.current !== null) {
@@ -557,21 +528,20 @@ const GroupChatInfo = ({route, navigation}) => {
               </View>
             </TouchableOpacity>
 
-            {groupAdmin === item._id && item._id !== global.userId && (
+            {groupData.isAdmin && item._id !== global.userId && (
               <TouchableOpacity
                 onPress={() => {
                   removeIndex(() => {
-                    var isExist = removedMembers.findIndex(x => x === item._id);
-                    if (isExist < 0) {
-                      removedMembers.push(item._id);
-                      let oldData = groupMembers;
-                      var findIndex = oldData.findIndex(
-                        x => x._id === item._id,
-                      );
-                      if (findIndex > -1) {
-                        oldData.splice(findIndex, 1);
-                      }
-                      setGroupMembers([...oldData]);
+                    if (
+                      socketRef?.current !== undefined &&
+                      socketRef?.current !== null
+                    ) {
+                      let payload = {
+                        authorId: global.userId,
+                        chatId: groupId,
+                        usersId: [item._id],
+                      };
+                      socketRef.current.emit('chat-remove-user', payload);
                     }
                   });
                 }}
@@ -795,19 +765,7 @@ const GroupChatInfo = ({route, navigation}) => {
                 </View>
               </ScrollView>
             </View>
-            {groupData.isAdmin ? (
-              <View style={[styles.filterButton, g.mb10]}>
-                <CommonButton
-                  showLoader={isUpdating}
-                  title={'Update'}
-                  onPress={() => {
-                    if (!isUpdating) {
-                      updateGroupInfo();
-                    }
-                  }}
-                />
-              </View>
-            ) : userStatusForChat === 1 ? (
+            {!groupData.isAdmin && userStatusForChat === 1 ? (
               <View style={[styles.filterButton, g.mb10]}>
                 <CommonButton
                   showLoader={isUpdating}
@@ -835,13 +793,6 @@ const GroupChatInfo = ({route, navigation}) => {
         onPickMedia={media => {
           uploadRef.current.close();
           if (media !== undefined && media !== null) {
-            console.log('media', media);
-
-            // let requestObject = {
-            //   profilePicture: media[0].thumbnail,
-            // };
-            // updateGroupData(requestObject);
-
             let requestObject = {
               chatType: 1,
               chatId: groupId,
@@ -897,17 +848,12 @@ const GroupChatInfo = ({route, navigation}) => {
                 setErrorMessage({groupName: 'This field is required'});
                 return;
               } else {
-                // let requestObject = {
-                //   description: groupName,
-                // };
-
                 let requestObject = {
                   chatType: 1,
                   chatId: groupId,
                   name: groupName,
                 };
                 updateGroupDetail(requestObject);
-                //updateGroupData(requestObject);
               }
               setTimeout(() => {
                 groupTitleRef.current.close();
@@ -920,7 +866,7 @@ const GroupChatInfo = ({route, navigation}) => {
       <OptionsSheet
         ref={userSelector}
         minClosingHeight={50}
-        height={height / 2 + height / 3}
+        height={height / 2 + 50}
         duration={200}
         closeOnDragDown={true}
         customStyles={{
@@ -992,18 +938,23 @@ const GroupChatInfo = ({route, navigation}) => {
               selectedUsers.forEach(element => {
                 var index = oldData.findIndex(x => x._id === element._id);
                 if (index < 0) {
-                  oldData.push(element);
                   newMembers.push(element._id);
-                  var isExist = removedMembers.findIndex(
-                    x => x === element._id,
-                  );
-                  if (isExist > -1) {
-                    removedMembers.splice(isExist, 1);
+                  setIsUpdating(true);
+                  if (newMembers.length > 0) {
+                    if (
+                      socketRef?.current !== undefined &&
+                      socketRef?.current !== null
+                    ) {
+                      let payload = {
+                        chatId: groupId,
+                        usersId: newMembers,
+                      };
+                      console.log('add', payload);
+                      socketRef.current.emit('chat-add-user', payload);
+                    }
                   }
-                  console.log('removedMembers', removedMembers);
                 }
               });
-              sortUsers(oldData);
             }}
           />
         </View>

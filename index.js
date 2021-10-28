@@ -1,5 +1,5 @@
 import React from 'react';
-import {AppRegistry, LogBox} from 'react-native';
+import {AppRegistry, LogBox, Platform} from 'react-native';
 import AppWrapper from './AppContext';
 import {name as appName} from './app.json';
 import messaging from '@react-native-firebase/messaging';
@@ -10,7 +10,9 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
   if (remoteMessage) {
     global.notification = remoteMessage;
     // global.isNotificationTap = true;
-    Helper.presentNotification('background-16', remoteMessage);
+    if (Platform.OS === 'ios') {
+      Helper.presentNotification('background-16', remoteMessage);
+    }
   }
 });
 

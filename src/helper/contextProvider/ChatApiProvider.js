@@ -70,6 +70,37 @@ export const ChatProvider = ({children}) => {
     return () => socket.off('chat-get-message', fn);
   };
 
+  const onNewUserAdded = fn => {
+    socket.on('chat-added-user', event => {
+      if (event && event !== null && event !== undefined) {
+        fn(event.status);
+      }
+    });
+    return () => socket.off('chat-added-user', fn);
+  };
+
+  const onUserRemoved = fn => {
+    socket.on('chat-removed-user', event => {
+      if (event && event !== null && event !== undefined) {
+        if (event.status) {
+          fn(event);
+        }
+      }
+    });
+    return () => socket.off('chat-removed-user', fn);
+  };
+
+  const onChatInfoUpdated = fn => {
+    socket.on('chat-updated', event => {
+      if (event && event !== null && event !== undefined) {
+        if (event.status) {
+          fn(event);
+        }
+      }
+    });
+    return () => socket.off('chat-updated', fn);
+  };
+
   const emitEvent = (event, payload, fn) => {
     socket.emit(event, payload, fn);
   };
@@ -112,6 +143,9 @@ export const ChatProvider = ({children}) => {
         onUnBlockUser,
         onNewChatCreated,
         onGetNewChatMessage,
+        onNewUserAdded,
+        onUserRemoved,
+        onChatInfoUpdated,
         disconnectAll,
         removeChatListeners,
       }}>

@@ -174,6 +174,16 @@ const ChatList = ({navigation}) => {
           }
         });
 
+        socketRef?.current?.removeListener('chat-read-all-message-ack');
+        socketRef.current.on('chat-read-all-message-ack', event => {
+          // console.log('chat-read-all-message-ack', event);
+          if (event && event !== null && event !== undefined) {
+            if (event.status) {
+              getGroupData();
+            }
+          }
+        });
+
         socketRef?.current?.removeListener('chat-status-ack');
         socketRef.current.on('chat-status-ack', event => {
           console.log('chat-status-ack', event);
@@ -183,24 +193,29 @@ const ChatList = ({navigation}) => {
             }
           }
         });
-
-        if (timerInterval !== null) {
-          clearInterval(timerInterval);
-        }
-        timerInterval = setInterval(() => {
-          if (socketRef.current !== undefined && socketRef.current !== null) {
-            let payload = {
-              userId: global.userId,
-            };
-            socketRef?.current?.emit('chat-user-ping', payload);
-          }
-        }, 3000);
       }
     });
     /********************
      * Specific Events
      */
   }, [joinSocketEvent, getGroupData]);
+
+  const pingYourSelf = useCallback(() => {
+    if (timerInterval !== null) {
+      clearInterval(timerInterval);
+    }
+    timerInterval = setInterval(() => {
+      if (socketRef.current !== undefined && socketRef.current !== null) {
+        let payload = {
+          userId: global.userId,
+        };
+        console.log('====================================');
+        console.log('my ping');
+        console.log('====================================');
+        socketRef?.current?.emit('chat-user-ping', payload);
+      }
+    }, 3000);
+  }, []);
 
   useEffect(() => {
     socketRef?.current?.removeListener('chat-created-list');
@@ -243,12 +258,22 @@ const ChatList = ({navigation}) => {
       let oldData = postData;
 
       oldData.push(chat);
+
+      let exist = _.includes(myGroupIds, chat._id);
+      if (!exist) {
+        myGroupIds.push(chat._id);
+        joinGroupWithSocket([chat._id]);
+      }
+
       setPostData([...oldData]);
     },
-    [postData],
+    [postData, joinGroupWithSocket],
   );
 
   const disconnectSocket = () => {
+    if (timerInterval !== null) {
+      clearInterval(timerInterval);
+    }
     socketRef?.current?.removeListener('connect');
     socketRef?.current?.removeListener('error');
     socketRef?.current?.removeListener('disconnect');
@@ -263,9 +288,6 @@ const ChatList = ({navigation}) => {
     socketRef?.current?.removeListener('chat-unblocked-user');
     socketRef?.current?.disconnect();
     socketRef.current = null;
-    if (timerInterval !== null) {
-      clearInterval(timerInterval);
-    }
   };
 
   const joinSocketEvent = useCallback(() => {
@@ -352,6 +374,17 @@ const ChatList = ({navigation}) => {
     }
   }, []);
 
+  const markAllMessageAsRead = useCallback(() => {
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      let payload = {
+        userId: global.userId,
+        chatId: chatItem._id,
+      };
+
+      socketRef?.current?.emit('chat-read-all-message', payload);
+    }
+  }, []);
+
   /**
    * Socket section
    */
@@ -364,6 +397,7 @@ const ChatList = ({navigation}) => {
     doGetChats(
       filterObject,
       response => {
+        pingYourSelf();
         checkChatStatus();
         setShowLoader(false);
         setFirstTimeLoad(false);
@@ -378,7 +412,7 @@ const ChatList = ({navigation}) => {
         setPostData([]);
       },
     );
-  }, [manageResponse, checkChatStatus]);
+  }, [manageResponse, checkChatStatus, pingYourSelf]);
 
   const updateConversion = useCallback(
     type => {
@@ -608,9 +642,9 @@ const ChatList = ({navigation}) => {
             selectedItem !== undefined &&
             generateMenuOption('Mark as Read', 'add-to-list', 9, () => {
               refPostOptions.current.close();
-              // setTimeout(() => {
-              //   markAllRead();
-              // }, 205);
+              setTimeout(() => {
+                markAllMessageAsRead();
+              }, 205);
             })}
 
           {selectedItem !== null &&
@@ -695,30 +729,62 @@ const ChatList = ({navigation}) => {
     if (lastMsg !== undefined && lastMsg !== null) {
       lastMsgTime = lastMsg.createdAt;
 
-      if (item.chatType === 1) {
-        messageText = `${Helper.capitalize(lastMsg.authorId.firstName)}: ${
-          lastMsg.messageText
-        }`;
-      } else {
-        messageText = lastMsg.messageText;
-      }
-
       if (lastMsg?.media?.mediaType === 'IMAGE') {
         mediaIcon = 'camera';
         mediaIconType = 'feather';
         totalLines = 1;
+        if (item.chatType === 1) {
+          messageText = `${Helper.capitalize(lastMsg.authorId.firstName)}: ${
+            lastMsg.messageText !== '' ? lastMsg.messageText : 'Image'
+          }`;
+        } else {
+          messageText =
+            lastMsg.messageText !== '' ? lastMsg.messageText : 'Image';
+        }
       } else if (lastMsg?.media?.mediaType === 'VIDEO') {
         mediaIcon = 'video';
         mediaIconType = 'feather';
         totalLines = 1;
+        if (item.chatType === 1) {
+          messageText = `${Helper.capitalize(lastMsg.authorId.firstName)}: ${
+            lastMsg.messageText !== '' ? lastMsg.messageText : 'Video'
+          }`;
+        } else {
+          messageText =
+            lastMsg.messageText !== '' ? lastMsg.messageText : 'Video';
+        }
       } else if (lastMsg?.media?.mediaType === 'AUDIO') {
         mediaIcon = 'audiotrack';
         mediaIconType = 'material-icon';
         totalLines = 1;
+        if (item.chatType === 1) {
+          messageText = `${Helper.capitalize(lastMsg.authorId.firstName)}: ${
+            lastMsg.messageText !== '' ? lastMsg.messageText : 'Audio'
+          }`;
+        } else {
+          messageText =
+            lastMsg.messageText !== '' ? lastMsg.messageText : 'Audio';
+        }
       } else if (lastMsg?.media?.mediaType === 'DOCUMENT') {
         mediaIcon = 'file-pdf-o';
         mediaIconType = 'font-awesome';
         totalLines = 1;
+        if (item.chatType === 1) {
+          messageText = `${Helper.capitalize(lastMsg.authorId.firstName)}: ${
+            lastMsg.messageText !== '' ? lastMsg.messageText : 'Document'
+          }`;
+        } else {
+          messageText =
+            lastMsg.messageText !== '' ? lastMsg.messageText : 'Document';
+        }
+      } else {
+        if (item.chatType === 1) {
+          messageText = `${Helper.capitalize(lastMsg.authorId.firstName)}: ${
+            lastMsg.messageText
+          }`;
+        } else {
+          messageText = lastMsg.messageText;
+        }
       }
     }
 
@@ -728,7 +794,7 @@ const ChatList = ({navigation}) => {
         onPress={() => {
           if (isChatEnabled) {
             chatItem = item;
-            disconnectAllGroup();
+
             disconnectSocket();
             let payload = {
               groupId: chatItem._id,

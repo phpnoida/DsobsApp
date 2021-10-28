@@ -61,11 +61,12 @@ const AppWrapper = ({navigation}) => {
     [dispatch],
   );
 
-  return (
-    <ChatProvider>
-      <App />
-    </ChatProvider>
-  );
+  return <App />;
+  // return (
+  //   <ChatProvider>
+  //     <App />
+  //   </ChatProvider>
+  // );
 };
 
 export default AppWrapper;

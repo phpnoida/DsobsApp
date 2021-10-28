@@ -25,24 +25,10 @@ import {
 const {width} = Dimensions.get('window');
 
 let responseMessage = '';
-
-let itemArray = [
-  {text: 'On All Conversation', key: 1, value: 1},
-  {text: 'Once a day', key: 2, value: 2},
-  {text: 'Twice a day', key: 3, value: 3},
-  {text: 'Every Hour', key: 4, value: 4},
-  {text: 'Every 2 Hours', key: 5, value: 5},
-];
-
-let selectedSetting = '';
-let defaultSelected = '';
 let isUserConnected = false;
 
 const ChatUserSettings = ({route, navigation}) => {
   const socketRef = useRef();
-
-  const [selectedFilter, setSelectedFilter] = useState(3);
-  const [filterList] = useState(itemArray);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [enableChat, setEnableChat] = useState(false);
   const [enableNotification, setEnableNotification] = useState(false);
@@ -137,18 +123,6 @@ const ChatUserSettings = ({route, navigation}) => {
 
   const setUserSettings = () => {
     setIsSubmitting(true);
-
-    // if (socketRef?.current !== undefined && socketRef?.current !== null) {
-    //   let payload = {
-    //     userId: global.userId,
-    //   };
-    //   console.log('update data', payload);
-    //   if (enableChat) {
-    //     socketRef.current.emit('chat-enable', payload);
-    //   } else {
-    //     socketRef.current.emit('chat-disable', payload);
-    //   }
-    // }
 
     let params = {
       chatNotificationSettings: enableNotification ? 1 : 0,
@@ -315,37 +289,12 @@ const ChatUserSettings = ({route, navigation}) => {
             </View>
           </View>
 
-          <View style={grid.flex1}>
-            {enableNotification && (
-              <RadioButton
-                defaultSelected={selectedFilter}
-                PROP={filterList}
-                onRadioSelect={item => {
-                  defaultSelected = '';
-                  selectedSetting = item.key;
-                  setSelectedFilter(item.key);
-                }}
-              />
-            )}
-          </View>
           <View style={[styles.filterButton, g.mb10]}>
             <CommonButton
               showLoader={isSubmitting}
               title={'Apply'}
               onPress={() => {
-                if (enableNotification && selectedSetting === '') {
-                  Alert.alert(
-                    'Required Selection',
-                    'You must select one setting',
-                  );
-                } else if (
-                  enableNotification &&
-                  defaultSelected === selectedSetting
-                ) {
-                  Alert.alert('Already Selected', 'Settings already selected');
-                } else {
-                  setUserSettings();
-                }
+                setUserSettings();
               }}
             />
           </View>
