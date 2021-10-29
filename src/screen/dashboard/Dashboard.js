@@ -105,9 +105,10 @@ const Dashboard = ({props, navigation}) => {
           {
             text: 'YES',
             onPress: () => {
-              setUserLastSeen(false, new Date().getTime(), () => {
-                BackHandler.exitApp();
-              });
+              // setUserLastSeen(false, new Date().getTime(), () => {
+                
+              // });
+              BackHandler.exitApp();
             },
           },
         ]);
@@ -118,14 +119,14 @@ const Dashboard = ({props, navigation}) => {
     backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
     const unsubscribe = navigation.addListener('focus', () => {
       Orientation.lockToPortrait();
-      addUser(global.userId, global.userDetails, () => {});
-      checkUserExist(global.userId, false).then(detailis => {
-        setUserData(detailis);
-        let object = {
-          platform: Platform.OS,
-        };
-        updateUserObject(object, global.userId, status => {});
-      });
+      // addUser(global.userId, global.userDetails, () => {});
+      // checkUserExist(global.userId, false).then(detailis => {
+      //   setUserData(detailis);
+      //   let object = {
+      //     platform: Platform.OS,
+      //   };
+      //   updateUserObject(object, global.userId, status => {});
+      // });
 
       getPopNotifications();
 
@@ -335,7 +336,7 @@ const Dashboard = ({props, navigation}) => {
               ) {
                 let fcmTopic = global.userDetails.fcmTopic;
                 AsyncStorage.clear().then(() => {
-                  clearAuthentication();
+                  //clearAuthentication();
                   PushNotification.unsubscribeFromTopic(fcmTopic);
                   resetToHome();
                 });
@@ -809,7 +810,8 @@ const Dashboard = ({props, navigation}) => {
                   onPress={() => {
                     bottomSheet.close();
                     setTimeout(() => {
-                      navigation.navigate('ChatUserList');
+                      //navigation.navigate('ChatUserList');
+                      navigation.navigate('ChatList');
                     }, 200);
                   }}>
                   <Image

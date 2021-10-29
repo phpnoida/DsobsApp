@@ -209,9 +209,6 @@ const ChatList = ({navigation}) => {
         let payload = {
           userId: global.userId,
         };
-        console.log('====================================');
-        console.log('my ping');
-        console.log('====================================');
         socketRef?.current?.emit('chat-user-ping', payload);
       }
     }, 3000);
@@ -256,7 +253,7 @@ const ChatList = ({navigation}) => {
   const mergeGroups = useCallback(
     chat => {
       let oldData = postData;
-
+      chat.unreadMessageCount = 0;
       oldData.push(chat);
 
       let exist = _.includes(myGroupIds, chat._id);
@@ -334,7 +331,9 @@ const ChatList = ({navigation}) => {
         return item._id === message.chatId;
       });
       if (index !== undefined && index !== null && index > -1) {
-        let newCount = oldData[index].unreadMessageCount + 1;
+        let newCount = oldData[index].unreadMessageCount
+          ? oldData[index].unreadMessageCount + 1
+          : 1;
         oldData[index].unreadMessageCount = newCount;
         oldData[index].lastMessage = message;
 
@@ -355,6 +354,7 @@ const ChatList = ({navigation}) => {
         blockUserId: chatItem.userId,
         blockByUserId: global.userId,
       };
+      //{"blockByUserId": "602a65dca1714c5bd918612e", "blockUserId": undefined}
       console.log('blockUser', payload);
       if (isBlocked) {
         socketRef.current.emit('chat-block-user', payload);
@@ -368,6 +368,7 @@ const ChatList = ({navigation}) => {
     if (socketRef.current !== undefined && socketRef.current !== null) {
       let payload = {
         userId: global.userId,
+        _id: global.userId,
       };
 
       socketRef?.current?.emit('chat-status', payload);
@@ -493,7 +494,7 @@ const ChatList = ({navigation}) => {
               let arrayItems = data.groups;
 
               // console.log('====================================');
-              // console.log('arrayItems', JSON.stringify(arrayItems));
+              // console.log('arrayItems', arrayItems.length);
               // console.log('====================================');
 
               let result = _.map(arrayItems, '_id');

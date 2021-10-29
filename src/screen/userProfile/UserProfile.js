@@ -65,7 +65,6 @@ let profileSheet = null,
   birthDate = 'N/A',
   moveToTab = 1;
 let challengerUser = null;
-
 const UserProfile = ({route, navigation}) => {
   const socketRef = useRef();
 
@@ -87,20 +86,25 @@ const UserProfile = ({route, navigation}) => {
 
     console.log('Request for', userId);
 
-    connectSocket();
-
-    checkUserExist(global.userId, false).then(result => {
-      if (result !== undefined && result !== null) {
-        challengerUser = result;
-      }
+    const unsubscribe = navigation.addListener('focus', () => {
+      disconnectSocket();
+      connectSocket();
     });
+
+    // checkUserExist(global.userId, false).then(result => {
+    //   if (result !== undefined && result !== null) {
+    //     challengerUser = result;
+    //   }
+    // });
 
     if (userId === global.userId) {
       getProfile();
     } else {
       getOtherUserProfile();
     }
-    return () => {};
+    return () => {
+      unsubscribe();
+    };
   }, [connectSocket]);
 
   /**
@@ -253,29 +257,7 @@ const UserProfile = ({route, navigation}) => {
     socketRef?.current?.on('connect', () => {
       console.log('socketRef?.current.connected', socketRef?.current.connected);
       if (socketRef?.current.connected) {
-        socketRef?.current.on('error', attempt => {
-          console.log('errror', attempt);
-        });
-
-        socketRef?.current.on('disconnect', () => {
-          console.log('socket disconnected'); // undefined
-        });
-
-        socketRef?.current.on('reconnect', attempt => {
-          console.log('attempt', attempt);
-        });
-        socketRef?.current.on('reconnect_error', attempt => {
-          console.log('reconnect_error', attempt);
-        });
-        socketRef?.current.on('reconnect_attempt', attempt => {
-          console.log('reconnect_attempt', attempt);
-        });
-
-        socketRef?.current.once('user-connected', event => {
-          console.log('connected', event);
-          console.log('connected', event.status);
-        });
-
+        joinSocketEvent();
         socketRef?.current?.removeListener('chat-user-subscribe');
         socketRef?.current.on('chat-user-subscribe', event => {
           console.log('connected', event);
@@ -287,13 +269,12 @@ const UserProfile = ({route, navigation}) => {
           if (event && event !== null && event !== undefined) {
             console.log('connected', event);
             //{"chat": {"__v": 0, "_id": "616ff0e265ae7477aca542cf", "chatType": true, "createdAt": "2021-10-20T10:35:14.110Z", "hasHiddenMessage": false, "hasMessageReported": false, "lastUpdate": 1634725426, "mutedUsers": [], "name": "event check", "status": true, "totalReports": 0, "updatedAt": "2021-10-20T10:35:14.110Z", "users": [[Object], [Object]]}, "status": true}
-            // if (event.status) {
-            //   let chatObj = event.chat;
-            //   if (chatObj && chatObj !== null && chatObj !== undefined) {
-            //     groupId = chatObj._id;
-            //     groupCreated();
-            //   }
-            // }
+            if (event.status) {
+              let chatObj = event.chat;
+              if (chatObj && chatObj !== null && chatObj !== undefined) {
+                groupCreated(chatObj._id);
+              }
+            }
           }
         });
 
@@ -301,9 +282,9 @@ const UserProfile = ({route, navigation}) => {
         socketRef.current.on('chat-status-ack', event => {
           console.log('chat-status-ack', event);
           if (event && event !== null && event !== undefined) {
-            // if (event.status) {
-            //   updateChat(event.chatStatus);
-            // }
+            if (event.status) {
+              updateChat(event.chatStatus);
+            }
           }
         });
 
@@ -313,17 +294,81 @@ const UserProfile = ({route, navigation}) => {
     /********************
      * Specific Events
      */
+  }, [joinSocketEvent, updateChat, groupCreated]);
+
+  const disconnectSocket = () => {
+    socketRef?.current?.removeListener('connect');
+    socketRef?.current?.removeListener('error');
+    socketRef?.current?.removeListener('disconnect');
+    socketRef?.current?.removeListener('reconnect');
+    socketRef?.current?.removeListener('reconnect_error');
+    socketRef?.current?.removeListener('reconnect_attempt');
+    socketRef?.current?.removeListener('user-connected');
+    socketRef?.current?.removeListener('chat-subscribe-user');
+    socketRef?.current?.removeListener('chat-created-list');
+    socketRef?.current?.removeListener('chat-status-ack');
+    socketRef?.current?.removeListener('chat-blocked-user');
+    socketRef?.current?.removeListener('chat-unblocked-user');
+    socketRef?.current?.disconnect();
+    socketRef.current = null;
+  };
+
+  const joinSocketEvent = useCallback(() => {
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      let payload = {
+        userId: global.userId,
+      };
+      console.log('payload', payload);
+      socketRef?.current?.emit('chat-subscribe-user', payload);
+    }
   }, []);
+
   /**
    * Socket Start
    */
 
-  const checkChatStatus = () => {
-    let payload = {
-      userId: global.userId,
-    };
-    socketRef?.current?.emit('chat-status', payload);
-  };
+  const checkChatStatus = useCallback(() => {
+    if (socketRef.current !== undefined && socketRef.current !== null) {
+      let payload = {
+        _id: global.userId,
+        userId: userId,
+      };
+
+      socketRef?.current?.emit('chat-status', payload);
+    }
+  }, []);
+
+  const updateChat = useCallback(status => {
+    if (status) {
+      let userIds = [];
+      userIds.push(userId);
+      if (socketRef?.current !== undefined && socketRef?.current !== null) {
+        let payload = {
+          _id: global.userId,
+          userId: global.userId,
+          chatType: 0,
+          name: '',
+          users: userIds,
+        };
+        console.log('payload', payload);
+        socketRef.current.emit('chat-create', payload);
+        setIsLoading(true);
+      }
+    } else {
+      Alert.alert('Feature not available', 'user has disabled this feature.');
+    }
+  }, []);
+
+  const groupCreated = useCallback(
+    groupId => {
+      let payload = {
+        groupId: groupId,
+      };
+      disconnectSocket();
+      navigation.replace('MakeChat', payload);
+    },
+    [navigation],
+  );
 
   const openProfile = selectedId => {
     birthDate = 'N/A';

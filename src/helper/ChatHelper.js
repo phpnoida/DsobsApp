@@ -800,7 +800,7 @@ export const executePushNotification = async (
 
 export const checkUserAuthenticated = async callback => {
   auth().onAuthStateChanged(state => {
-    console.log('auth state changed', state);
+    //console.log('auth state changed', state);
     callback(state);
   });
 };

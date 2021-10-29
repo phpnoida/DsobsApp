@@ -181,8 +181,8 @@ const UserProfileInfo = ({route, navigation}) => {
                   Last Seen:{' '}
                   {opponentInfo?.chatOnline
                     ? 'Online'
-                    : opponentInfo?.chatLastSeen > 0
-                    ? moment(opponentInfo?.chatLastSeen).fromNow()
+                    : opponentInfo?.chatLastseen > 0
+                    ? moment(opponentInfo?.chatLastseen * 1000).fromNow()
                     : 'Not yet'}
                 </Text>
               </View>

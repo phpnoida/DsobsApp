@@ -56,7 +56,6 @@ const {height, width} = Dimensions.get('window');
 let selectedFontSize = 1,
   isOpenPicker = false,
   isBackTap = false,
-  isUserConnected = false,
   responseMessage = '',
   totalPages = 0,
   currentPage = 1,
@@ -75,11 +74,13 @@ let messagePosition = -1;
 let isLoadingEarlier = false;
 let chatType = 0;
 let userStatusForChat = 1;
+let blockUserStatus = -1;
 const scrollToBottomOffset = 200;
 let timerInterval = null;
 let opponentInfo = null;
 let groupId = '';
 let isSenderBlocked = false;
+
 let filterObject = {
   page: 1,
   limit: 10,
@@ -100,7 +101,6 @@ const PaginationStatus = {
 var lastTypingTime = 0;
 let typing = false;
 let typingUserName = '';
-let blockStatus = -1;
 
 const MakeChat = ({route, navigation}) => {
   const socketRef = useRef();
@@ -115,6 +115,7 @@ const MakeChat = ({route, navigation}) => {
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
   );
+  const [allDone, setAllDone] = useState(false); //this will hide ui until all data come
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
@@ -155,14 +156,17 @@ const MakeChat = ({route, navigation}) => {
     resetOldData();
     resetCount();
 
-    if (route.params !== undefined && route.params !== null) {
-      groupId = route.params.groupId;
-      filterObject.groupId = groupId;
-      chatType = route.params.chatType;
-
-      getGroupData();
-      getOldMessages();
-    }
+    const unsubscribe = navigation.addListener('focus', () => {
+      console.log('focus');
+      if (route.params !== undefined && route.params !== null) {
+        groupId = route.params.groupId;
+        filterObject.groupId = groupId;
+        chatType = route.params.chatType;
+      }
+      getGroupData().then(() => {
+        getOldMessages();
+      });
+    });
 
     const handleAppStateChange = state => {
       if (isOpenPicker) {
@@ -195,10 +199,6 @@ const MakeChat = ({route, navigation}) => {
     );
 
     AppState.addEventListener('change', handleAppStateChange);
-
-    const unsubscribe = navigation.addListener('focus', () => {
-      getGroupData();
-    });
 
     return () => {
       if (backHandler !== undefined && backHandler !== null) {
@@ -233,30 +233,9 @@ const MakeChat = ({route, navigation}) => {
           joinGroupRequest();
         }, 100);
 
-        socketRef.current.on('error', attempt => {
-          console.log('errror', attempt);
-        });
-
-        socketRef.current.on('disconnect', () => {
-          isUserConnected = false;
-          console.log('socket disconnected'); // undefined
-        });
-
-        socketRef.current.on('reconnect', attempt => {
-          console.log('attempt', attempt);
-        });
-        socketRef.current.on('reconnect_error', attempt => {
-          console.log('reconnect_error', attempt);
-          isUserConnected = false;
-        });
-        socketRef.current.on('reconnect_attempt', attempt => {
-          console.log('reconnect_attempt', attempt);
-        });
-
         socketRef?.current?.removeListener('chat-user-connected');
         socketRef.current.on('chat-user-connected', event => {
           console.log('connected', event);
-          isUserConnected = JSON.parse(event.status);
         });
 
         socketRef?.current?.removeListener('chat-removed-user');
@@ -294,7 +273,7 @@ const MakeChat = ({route, navigation}) => {
         socketRef.current.on('chat-check-online-user-ack', event => {
           //console.log('chat-check-online-user-ack', event);
           if (event && event !== null && event !== undefined) {
-            if (event.userId === opponentInfo._id) {
+            if (event.userId === opponentInfo?._id) {
               setIsOnline(event.status);
             }
           }
@@ -393,7 +372,9 @@ const MakeChat = ({route, navigation}) => {
             blockedUser !== null &&
             blockedUser === global.userId
           ) {
-            blockMsg = `${opponentInfo.firstName} block this chat!`;
+            blockMsg = `${Helper.capitalize(
+              opponentInfo?.firstName,
+            )} block this chat!`;
             setIsConnected(false);
           }
         }
@@ -403,35 +384,19 @@ const MakeChat = ({route, navigation}) => {
     socketRef?.current?.removeListener('chat-unblocked-user');
     socketRef.current.on('chat-unblocked-user', event => {
       console.log('chat-unblocked-user-detail page', event);
-      //chat-unblocked-user-detail page {"blockedUser": "60153bb047dc7c574d2b9b3e", "blockedUserBy": "602a65dca1714c5bd918612e", "status": true}
-      // chat-unblocked-user-detail page {"blockedUser": "602a65dca1714c5bd918612e", "blockedUserBy": "603af43e022dfb5ae7bc8e88", "status": true}
       if (event && event !== null && event !== undefined) {
         if (event.status) {
           let blockedUser = event.blockedUser;
-          if (userStatusForChat === 2) {
-            if (
-              blockedUser &&
+          let blockedUserBy = event.blockedUserBy;
+          if (
+            (blockedUser &&
               blockedUser !== null &&
-              blockedUser === opponentInfo._id
-            ) {
-              setIsConnected(true);
-            }
-          } else if (userStatusForChat === 1) {
-            if (
-              blockedUser &&
-              blockedUser !== null &&
-              blockedUser === global.userId
-            ) {
-              setIsConnected(true);
-            }
-          } else if (userStatusForChat === 0) {
-            if (
-              blockedUser &&
-              blockedUser !== null &&
-              blockedUser === global.userId
-            ) {
-              getGroupData();
-            }
+              blockedUser === global.userId) ||
+            (blockedUserBy &&
+              blockedUserBy !== null &&
+              blockedUserBy === global.userId)
+          ) {
+            setIsConnected(true);
           }
         }
       }
@@ -556,17 +521,17 @@ const MakeChat = ({route, navigation}) => {
     }
     timerInterval = setInterval(() => {
       if (socketRef.current !== undefined && socketRef.current !== null) {
-        let payload = {
-          userId: opponent,
-          checkingUserId: global.userId,
-        };
-        socketRef?.current?.emit('chat-check-online-user', payload);
+        if (opponent !== '') {
+          let payload = {
+            userId: opponent,
+            checkingUserId: global.userId,
+          };
+          socketRef?.current?.emit('chat-check-online-user', payload);
+        }
         let pingPayload = {
           userId: global.userId,
         };
-        console.log('====================================');
-        console.log('my ping');
-        console.log('====================================');
+
         socketRef?.current?.emit('chat-user-ping', pingPayload);
       }
     }, 3000);
@@ -575,7 +540,7 @@ const MakeChat = ({route, navigation}) => {
   const blockUser = useCallback(isBlocked => {
     if (socketRef?.current !== undefined && socketRef?.current !== null) {
       let payload = {
-        blockUserId: opponentInfo._id,
+        blockUserId: opponentInfo?._id,
         blockByUserId: global.userId,
       };
       console.log('blockUser', payload);
@@ -702,50 +667,58 @@ const MakeChat = ({route, navigation}) => {
   };
 
   const getGroupData = useCallback(() => {
-    doAboutGroup(
-      groupId,
-      response => {
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
-
-            try {
-              // console.log('getGroupData', JSON.stringify(data));
-              if (data.status) {
-                let info = data.data;
-                setGroupInfo(info);
-                if (info.chatType === 1) {
-                  let superAdmin = info.superAdmins;
-                  let members = info.users;
-                  let merged = [...members, ...superAdmin];
-                  setHeader(info.name);
-                  setHeaderImage({uri: info.profilePicture});
-                  setGroupMembers([...merged]);
-                } else if (info.chatType === 0) {
-                  let user = info.users;
-                  let index = user.findIndex(x => x.id._id !== global.userId);
-                  if (index > -1) {
-                    opponentInfo = user[index].id;
-                    setHeader(
-                      `${opponentInfo?.firstName} ${opponentInfo?.lastName} `,
-                    );
-                    setSubHeader(opponentInfo?.profession);
-                    setHeaderImage({uri: opponentInfo?.profileImg});
+    return new Promise((resolve, reject) => {
+      doAboutGroup(
+        groupId,
+        response => {
+          if (response && response !== null) {
+            if (
+              response.data &&
+              response.data !== undefined &&
+              response.data !== null
+            ) {
+              let data = response.data;
+              try {
+                if (data.status) {
+                  let info = data.data;
+                  setGroupInfo(info);
+                  if (info.chatType === 1) {
+                    let superAdmin = info.superAdmins;
+                    let members = info.users;
+                    let merged = [...members, ...superAdmin];
+                    setHeader(info.name);
+                    setHeaderImage({uri: info.profilePicture});
+                    setGroupMembers([...merged]);
+                  } else if (info.chatType === 0) {
+                    let user = info.users;
+                    let index = user.findIndex(x => x.id._id !== global.userId);
+                    if (index > -1) {
+                      opponentInfo = user[index].id;
+                      setHeader(
+                        `${opponentInfo?.firstName} ${opponentInfo?.lastName} `,
+                      );
+                      setSubHeader(opponentInfo?.profession);
+                      setHeaderImage({uri: opponentInfo?.profileImg});
+                    }
                   }
+                  resolve(true);
+                } else {
+                  resolve(true);
                 }
+              } catch (error) {
+                resolve(true);
+                console.log('error', error);
               }
-            } catch (error) {
-              console.log('error', error);
+            } else {
+              resolve(true);
             }
           }
-        }
-      },
-      (code, error) => {},
-    );
+        },
+        (code, error) => {
+          resolve(true);
+        },
+      );
+    });
   }, []);
 
   const doScrapping = (link, onDone) => {
@@ -780,14 +753,18 @@ const MakeChat = ({route, navigation}) => {
   const getOldMessages = useCallback(() => {
     isLoadingEarlier = true;
     setIsRefreshing(true);
+
     if (filterObject.page > 1) {
       global.loader_ref.show_loader(1);
+    } else {
+      setAllDone(false);
     }
     doGetGroupMessages(
       filterObject,
       groupId,
       response => {
         setIsRefreshing(false);
+        setAllDone(true);
         manageResponse(response).then(() => {
           global.loader_ref.show_loader(0);
           setIsFirstLoad(false);
@@ -795,9 +772,11 @@ const MakeChat = ({route, navigation}) => {
         });
       },
       (code, error) => {
+        console.log('errorMsg', error);
         global.loader_ref.show_loader(0);
         setIsRefreshing(false);
         setIsFirstLoad(false);
+        setAllDone(true);
         console.log('544');
         setMessages([]);
         isLoadingEarlier = false;
@@ -839,6 +818,7 @@ const MakeChat = ({route, navigation}) => {
               let data = response.data;
               console.log('groupMsgs', JSON.stringify(data));
               if (data.status) {
+                chatType = data.chatType;
                 let array = data.data;
                 let unreadIds = _.map(_.filter(array, {isRead: false}), '_id');
 
@@ -846,12 +826,9 @@ const MakeChat = ({route, navigation}) => {
                   totalPages = data.totalPages;
                   currentPage = data.currentPage;
                 }
-
-                console.log('data.chatType', data.chatType);
-                if (data.chatType === 0) {
+                if (chatType === 0) {
                   if (filterObject.page === 1 && !isFiltering) {
                     let userDetails = data.users;
-
                     let index = userDetails.findIndex(
                       x => x._id !== global.userId,
                     );
@@ -859,29 +836,35 @@ const MakeChat = ({route, navigation}) => {
                       opponentInfo = userDetails[index];
                     }
 
-                    userStatusForChat = data.userStatusForChat;
-
-                    if (data.userStatusForChat === 0) {
-                      blockMsg = 'You left';
+                    blockUserStatus = data.blockUserStatus;
+                    if (blockUserStatus === 2) {
+                      blockMsg = `${Helper.capitalize(
+                        opponentInfo.firstName,
+                      )} block this chat!`;
                       setIsConnected(false);
-                    } else if (data.userStatusForChat === 2) {
-                      blockMsg = 'You have been removed by admin!';
-                      setIsConnected(false);
-                    } else if (data?.blockUserStatus === 2) {
-                      blockMsg = `${opponentInfo.firstName} block this chat!`;
-                      setIsConnected(false);
-                    } else if (data?.blockUserStatus === 1) {
+                    } else if (blockUserStatus === 1) {
                       isSenderBlocked = true;
                       blockMsg = 'You blocked this chat. Tap to unblock';
                       setIsConnected(false);
-                    } else if (data?.blockUserStatus === 0) {
+                    } else if (blockUserStatus === 0) {
                       blockMsg = 'This chat has been blocked!';
                       setIsConnected(false);
                     }
                   }
+                  if (opponentInfo !== undefined && opponentInfo !== null) {
+                    checkOpponentStatus(opponentInfo._id);
+                  }
+                } else {
+                  userStatusForChat = data.userStatusForChat;
+                  if (userStatusForChat === 0) {
+                    blockMsg = 'You left';
+                    setIsConnected(false);
+                  } else if (userStatusForChat === 2) {
+                    blockMsg = 'You have been removed by admin!';
+                    setIsConnected(false);
+                  }
+                  checkOpponentStatus(''); //this is for group
                 }
-                checkOpponentStatus(opponentInfo._id);
-                chatType = data.chatType;
 
                 if (unreadIds.length > 0) {
                   updateReadMessages(unreadIds);
@@ -1106,6 +1089,34 @@ const MakeChat = ({route, navigation}) => {
     newMessageList = [];
     imageArray = [];
     isSenderBlocked = false;
+    isOpenPicker = false;
+    responseMessage = '';
+    totalPages = 0;
+    currentPage = 1;
+    fitlerText = '';
+    extraObjects = null;
+    messagePosition = -1;
+    isLoadingEarlier = false;
+    chatType = 0;
+    userStatusForChat = 1;
+    blockUserStatus = -1;
+    timerInterval = null;
+    opponentInfo = null;
+    groupId = '';
+    lastTypingTime = 0;
+    typing = false;
+    typingUserName = '';
+
+    filterObject = {
+      page: 1,
+      limit: 10,
+      groupId: '',
+    };
+    searchfilterObject = {
+      page: 1,
+      search: '',
+      limit: 10,
+    };
   };
 
   const resetCount = () => {
@@ -2202,334 +2213,358 @@ const MakeChat = ({route, navigation}) => {
     <View style={[GlobalInclude.AppStyle.fill, g.bggray3]}>
       {renderHeader()}
       {showProgess(isFirstLoad)}
-      {showScrollToBottom ? renderScrollToBottomWrapper() : null}
-      <SafeAreaView style={[GlobalInclude.AppStyle.topSpace, g.bggray3]}>
-        <View style={grid.flex1}>
-          <View style={grid.flex1}>
-            {isFirstLoad ? (
-              <View style={[GlobalInclude.AppStyle.fillCenter]}>
-                <ThreeDotsLoader
-                  size={scale(12)}
-                  activeBackground={GlobalInclude.Color.ColorPrimary}
-                />
+      {allDone ? (
+        <>
+          {showScrollToBottom ? renderScrollToBottomWrapper() : null}
+          <SafeAreaView style={[GlobalInclude.AppStyle.topSpace, g.bggray3]}>
+            <View style={grid.flex1}>
+              <View style={grid.flex1}>
+                {isFirstLoad ? (
+                  <View style={[GlobalInclude.AppStyle.fillCenter]}>
+                    <ThreeDotsLoader
+                      size={scale(12)}
+                      activeBackground={GlobalInclude.Color.ColorPrimary}
+                    />
+                  </View>
+                ) : showSearch ? (
+                  <FlatList
+                    ref={chatRef}
+                    inverted={-1}
+                    data={filterMessage}
+                    extraData={filterMessage}
+                    renderItem={renderChatItem}
+                    keyExtractor={keyExtractor}
+                    enableEmptySections
+                    automaticallyAdjustContentInsets={false}
+                    style={{flex: 1}}
+                    contentContainerStyle={{
+                      flexGrow: 1,
+                      justifyContent: 'flex-start',
+                    }}
+                    onScroll={handleOnScroll}
+                    scrollEventThrottle={100}
+                    onEndReached={onEndReached}
+                    onEndReachedThreshold={0.1}
+                    ListEmptyComponent={emptySearchComponent}
+                    removeClippedSubviews={Platform.OS !== 'web'}
+                    showsVerticalScrollIndicator={false}
+                    maintainVisibleContentPosition={{
+                      minIndexForVisible: 0,
+                    }}
+                    bounces={false}
+                    initialNumToRender={10}
+                    maxToRenderPerBatch={8}
+                    updateCellsBatchingPeriod={100}
+                    initialListSize={10}
+                    pageSize={1}
+                  />
+                ) : (
+                  <FlatList
+                    ref={chatRef}
+                    inverted={-1}
+                    data={messages}
+                    extraData={messages}
+                    renderItem={renderChatItem}
+                    keyExtractor={keyExtractor}
+                    enableEmptySections
+                    automaticallyAdjustContentInsets={false}
+                    style={{flex: 1}}
+                    contentContainerStyle={{
+                      flexGrow: 1,
+                      justifyContent: 'flex-start',
+                    }}
+                    onScroll={handleOnScroll}
+                    scrollEventThrottle={100}
+                    onEndReached={onEndReached}
+                    onEndReachedThreshold={0.1}
+                    removeClippedSubviews={Platform.OS !== 'web'}
+                    showsVerticalScrollIndicator={false}
+                    maintainVisibleContentPosition={{
+                      minIndexForVisible: 0,
+                    }}
+                    ListEmptyComponent={emptyComponent}
+                    bounces={false}
+                    initialNumToRender={10}
+                    maxToRenderPerBatch={8}
+                    updateCellsBatchingPeriod={100}
+                    initialListSize={10}
+                    pageSize={1}
+                  />
+                )}
               </View>
-            ) : showSearch ? (
-              <FlatList
-                ref={chatRef}
-                inverted={-1}
-                data={filterMessage}
-                extraData={filterMessage}
-                renderItem={renderChatItem}
-                keyExtractor={keyExtractor}
-                enableEmptySections
-                automaticallyAdjustContentInsets={false}
-                style={{flex: 1}}
-                contentContainerStyle={{
-                  flexGrow: 1,
-                  justifyContent: 'flex-start',
-                }}
-                onScroll={handleOnScroll}
-                scrollEventThrottle={100}
-                onEndReached={onEndReached}
-                onEndReachedThreshold={0.1}
-                ListEmptyComponent={emptySearchComponent}
-                removeClippedSubviews={Platform.OS !== 'web'}
-                showsVerticalScrollIndicator={false}
-                maintainVisibleContentPosition={{
-                  minIndexForVisible: 0,
-                }}
-                bounces={false}
-                initialNumToRender={10}
-                maxToRenderPerBatch={8}
-                updateCellsBatchingPeriod={100}
-                initialListSize={10}
-                pageSize={1}
-              />
-            ) : (
-              <FlatList
-                ref={chatRef}
-                inverted={-1}
-                data={messages}
-                extraData={messages}
-                renderItem={renderChatItem}
-                keyExtractor={keyExtractor}
-                enableEmptySections
-                automaticallyAdjustContentInsets={false}
-                style={{flex: 1}}
-                contentContainerStyle={{
-                  flexGrow: 1,
-                  justifyContent: 'flex-start',
-                }}
-                onScroll={handleOnScroll}
-                scrollEventThrottle={100}
-                onEndReached={onEndReached}
-                onEndReachedThreshold={0.1}
-                removeClippedSubviews={Platform.OS !== 'web'}
-                showsVerticalScrollIndicator={false}
-                maintainVisibleContentPosition={{
-                  minIndexForVisible: 0,
-                }}
-                ListEmptyComponent={emptyComponent}
-                bounces={false}
-                initialNumToRender={10}
-                maxToRenderPerBatch={8}
-                updateCellsBatchingPeriod={100}
-                initialListSize={10}
-                pageSize={1}
-              />
-            )}
-          </View>
-          {!showSearch && (
-            <KeyboardAvoidingView
-              keyboardVerticalOffset={Platform.select({
-                ios: -30,
-                android: 30,
-              })}
-              behavior={Platform.select({android: 'height', ios: 'padding'})}>
-              {isConnected ? (
-                <View style={styles.footer}>
-                  <View
-                    style={{
-                      backgroundColor: '#fff',
-                      flexDirection: 'row',
-                      flex: 1,
-                      borderRadius: isReplayEditComment ? scale(10) : scale(30),
-                    }}>
-                    <View
-                      style={[
-                        grid.flex1,
-                        isReplayEditComment && [g.pt5, g.pb5],
-                      ]}>
-                      {isReplayEditComment && (
-                        <View style={grid.rowdir}>
-                          <View
-                            style={[
-                              styles.replayContainer,
-                              g.ml10,
-                              g.mr10,
-                              grid.col,
-                            ]}>
-                            <View
-                              style={[
-                                styles.renderBorder,
-                                {
-                                  backgroundColor:
-                                    GlobalInclude.Color.ColorPrimary,
-                                },
-                              ]}
-                            />
-                            <View style={[g.pl10, g.pt3, g.pr10, g.pb3]}>
-                              <Text
+              {!showSearch && (
+                <KeyboardAvoidingView
+                  keyboardVerticalOffset={Platform.select({
+                    ios: -30,
+                    android: 30,
+                  })}
+                  behavior={Platform.select({
+                    android: 'height',
+                    ios: 'padding',
+                  })}>
+                  {isConnected ? (
+                    <View style={styles.footer}>
+                      <View
+                        style={{
+                          backgroundColor: '#fff',
+                          flexDirection: 'row',
+                          flex: 1,
+                          borderRadius: isReplayEditComment
+                            ? scale(10)
+                            : scale(30),
+                        }}>
+                        <View
+                          style={[
+                            grid.flex1,
+                            isReplayEditComment && [g.pt5, g.pb5],
+                          ]}>
+                          {isReplayEditComment && (
+                            <View style={grid.rowdir}>
+                              <View
                                 style={[
-                                  g.fs12,
-                                  g.FHNB,
-                                  g.colorBlue,
-                                  grid.justifyContentCenter,
-                                  grid.alignItems,
-                                  g.txtCenterVertical,
-                                  g.mb5,
+                                  styles.replayContainer,
+                                  g.ml10,
+                                  g.mr10,
+                                  grid.col,
                                 ]}>
-                                {'Replying To:'}
-                              </Text>
-                              <Text style={[g.fs14, g.FHNB, g.colorBlack]}>
-                                {Helper.capitalize(
-                                  selectedChatObject.authorId.firstName,
+                                <View
+                                  style={[
+                                    styles.renderBorder,
+                                    {
+                                      backgroundColor:
+                                        GlobalInclude.Color.ColorPrimary,
+                                    },
+                                  ]}
+                                />
+                                <View style={[g.pl10, g.pt3, g.pr10, g.pb3]}>
+                                  <Text
+                                    style={[
+                                      g.fs12,
+                                      g.FHNB,
+                                      g.colorBlue,
+                                      grid.justifyContentCenter,
+                                      grid.alignItems,
+                                      g.txtCenterVertical,
+                                      g.mb5,
+                                    ]}>
+                                    {'Replying To:'}
+                                  </Text>
+                                  <Text style={[g.fs14, g.FHNB, g.colorBlack]}>
+                                    {Helper.capitalize(
+                                      selectedChatObject.authorId.firstName,
+                                    )}
+                                  </Text>
+                                  <View style={[g.mt2, g.mb2]} />
+                                  <Text
+                                    numberOfLines={1}
+                                    style={[g.fs12, g.FHNR, g.colorBlack]}>
+                                    {selectedChatObject.media.mediaType === 1
+                                      ? selectedChatObject.message
+                                      : selectedChatObject.media.mediaType}
+                                  </Text>
+                                </View>
+                              </View>
+                              <View style={[g.mt2, g.mr5]}>
+                                {showImageThumb(
+                                  selectedChatObject.media.mediaUrl,
+                                  selectedChatObject.media.mediaType === 'IMAGE'
+                                    ? 2
+                                    : selectedChatObject.media.mediaType ===
+                                      'VIDEO'
+                                    ? 3
+                                    : 4,
                                 )}
-                              </Text>
-                              <View style={[g.mt2, g.mb2]} />
-                              <Text
-                                numberOfLines={1}
-                                style={[g.fs12, g.FHNR, g.colorBlack]}>
-                                {selectedChatObject.media.mediaType === 1
-                                  ? selectedChatObject.message
-                                  : selectedChatObject.media.mediaType}
-                              </Text>
+                              </View>
+
+                              {/* part two */}
+                              <TouchableOpacity
+                                onPress={() => {
+                                  setIsReplayEditComment(false);
+                                  setSelectedChatObject(null);
+                                }}
+                                style={styles.closeComment}>
+                                <GlobalInclude.BaseIcon
+                                  containerStyle={{
+                                    height: scale(14),
+                                    width: scale(14),
+                                  }}
+                                  iconColor={'#fff'}
+                                  iconName={'close'}
+                                  iconSize={scale(14)}
+                                  iconType={IconType[6]}
+                                />
+                              </TouchableOpacity>
                             </View>
-                          </View>
-                          <View style={[g.mt2, g.mr5]}>
-                            {showImageThumb(
-                              selectedChatObject.media.mediaUrl,
-                              selectedChatObject.media.mediaType === 'IMAGE'
-                                ? 2
-                                : selectedChatObject.media.mediaType === 'VIDEO'
-                                ? 3
-                                : 4,
-                            )}
-                          </View>
+                          )}
 
-                          {/* part two */}
-                          <TouchableOpacity
-                            onPress={() => {
-                              setIsReplayEditComment(false);
-                              setSelectedChatObject(null);
-                            }}
-                            style={styles.closeComment}>
-                            <GlobalInclude.BaseIcon
-                              containerStyle={{
-                                height: scale(14),
-                                width: scale(14),
+                          {/* row two */}
+                          <View style={[grid.rowdir]}>
+                            <Animatable.View
+                              ref={animRef}
+                              useNativeDriver={true}
+                              style={{
+                                width: emojiIconWidth,
+                                height: scale(40),
+                                borderRadius: scale(10),
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                alignSelf: 'center',
                               }}
-                              iconColor={'#fff'}
-                              iconName={'close'}
-                              iconSize={scale(14)}
-                              iconType={IconType[6]}
+                              easing={'linear'}>
+                              <TouchableOpacity
+                                onPress={() => {
+                                  if (
+                                    emojiRef !== undefined &&
+                                    emojiRef !== null
+                                  ) {
+                                    emojiRef.current.open();
+                                  }
+                                }}
+                                style={[styles.commentButton]}>
+                                <GlobalInclude.BaseIcon
+                                  containerStyle={{
+                                    height: scale(20),
+                                    width: scale(20),
+                                  }}
+                                  iconColor={GlobalInclude.Color.ColorPrimary}
+                                  iconName={'sticker-emoji'}
+                                  iconSize={scale(20)}
+                                  iconType={IconType[1]}
+                                />
+                              </TouchableOpacity>
+                            </Animatable.View>
+                            <TextInput
+                              autoCapitalize={'sentences'}
+                              underlineColorAndroid="transparent"
+                              style={[
+                                styles.inputContainer,
+                                styles.inputView,
+                                grid.alignItems,
+                              ]}
+                              keyboardType={'default'}
+                              value={inputValue}
+                              multiline={true}
+                              placeholder="Enter text here"
+                              onChangeText={input => {
+                                setInputValue(input);
+                                sendTyping();
+
+                                if (input.length > 0 && !isStickerShowing) {
+                                  isStickerShowing = true;
+                                  setEmojiIconWidth(0);
+                                  animRef.current.slideOutLeft().then(() => {});
+                                } else if (
+                                  input.length === 0 &&
+                                  isStickerShowing
+                                ) {
+                                  inEditMode = false;
+                                  isStickerShowing = false;
+                                  setEmojiIconWidth(scale(40));
+                                  animRef.current.slideInLeft().then(() => {});
+                                }
+                              }}
+                              placeholderTextColor={'#b2b2b2'}
                             />
-                          </TouchableOpacity>
+                            <TouchableOpacity
+                              onPress={() => {
+                                if (uploadRef.current !== null) {
+                                  isOpenPicker = true;
+                                  uploadRef.current.open();
+                                }
+                              }}
+                              style={[styles.commentButton]}>
+                              <GlobalInclude.BaseIcon
+                                containerStyle={{
+                                  height: scale(20),
+                                  width: scale(20),
+                                }}
+                                iconColor={GlobalInclude.Color.ColorPrimary}
+                                iconName={'attach-file'}
+                                iconSize={scale(20)}
+                                iconType={IconType[0]}
+                              />
+                            </TouchableOpacity>
+                          </View>
+                          {/* row two */}
                         </View>
-                      )}
-
-                      {/* row two */}
-                      <View style={[grid.rowdir]}>
+                      </View>
+                      {inputValue.trim().length > 0 && (
                         <Animatable.View
-                          ref={animRef}
                           useNativeDriver={true}
-                          style={{
-                            width: emojiIconWidth,
-                            height: scale(40),
-                            borderRadius: scale(10),
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            alignSelf: 'center',
-                          }}
-                          easing={'linear'}>
+                          animation={'slideInRight'}
+                          style={[
+                            g.ml5,
+                            styles.commentButton,
+                            inputValue.trim().length > 0
+                              ? styles.enableButton
+                              : styles.disbleButton,
+                          ]}>
                           <TouchableOpacity
+                            style={[styles.commentButton, styles.enableButton]}
                             onPress={() => {
-                              if (emojiRef !== undefined && emojiRef !== null) {
-                                emojiRef.current.open();
-                              }
-                            }}
-                            style={[styles.commentButton]}>
-                            <GlobalInclude.BaseIcon
-                              containerStyle={{
-                                height: scale(20),
-                                width: scale(20),
-                              }}
-                              iconColor={GlobalInclude.Color.ColorPrimary}
-                              iconName={'sticker-emoji'}
-                              iconSize={scale(20)}
-                              iconType={IconType[1]}
-                            />
+                              handleInputChat(1, inputValue, '', '', '');
+                            }}>
+                            {isSending ? (
+                              <ActivityIndicator
+                                size={'small'}
+                                color={'#fff'}
+                              />
+                            ) : (
+                              <GlobalInclude.BaseIcon
+                                containerStyle={{
+                                  height: scale(20),
+                                  width: scale(20),
+                                }}
+                                iconColor={
+                                  inputValue.trim().length > 0
+                                    ? '#fff'
+                                    : '#b2b2b2'
+                                }
+                                iconName={'send-o'}
+                                iconSize={scale(20)}
+                                iconType={IconType[4]}
+                              />
+                            )}
                           </TouchableOpacity>
                         </Animatable.View>
-                        <TextInput
-                          autoCapitalize={'sentences'}
-                          underlineColorAndroid="transparent"
-                          style={[
-                            styles.inputContainer,
-                            styles.inputView,
-                            grid.alignItems,
-                          ]}
-                          keyboardType={'default'}
-                          value={inputValue}
-                          multiline={true}
-                          placeholder="Enter text here"
-                          onChangeText={input => {
-                            setInputValue(input);
-                            sendTyping();
-
-                            if (input.length > 0 && !isStickerShowing) {
-                              isStickerShowing = true;
-                              setEmojiIconWidth(0);
-                              animRef.current.slideOutLeft().then(() => {});
-                            } else if (input.length === 0 && isStickerShowing) {
-                              inEditMode = false;
-                              isStickerShowing = false;
-                              setEmojiIconWidth(scale(40));
-                              animRef.current.slideInLeft().then(() => {});
-                            }
-                          }}
-                          placeholderTextColor={'#b2b2b2'}
-                        />
-                        <TouchableOpacity
-                          onPress={() => {
-                            if (uploadRef.current !== null) {
-                              isOpenPicker = true;
-                              uploadRef.current.open();
-                            }
-                          }}
-                          style={[styles.commentButton]}>
-                          <GlobalInclude.BaseIcon
-                            containerStyle={{
-                              height: scale(20),
-                              width: scale(20),
-                            }}
-                            iconColor={GlobalInclude.Color.ColorPrimary}
-                            iconName={'attach-file'}
-                            iconSize={scale(20)}
-                            iconType={IconType[0]}
-                          />
-                        </TouchableOpacity>
-                      </View>
-                      {/* row two */}
+                      )}
                     </View>
-                  </View>
-                  {inputValue.trim().length > 0 && (
-                    <Animatable.View
-                      useNativeDriver={true}
-                      animation={'slideInRight'}
-                      style={[
-                        g.ml5,
-                        styles.commentButton,
-                        inputValue.trim().length > 0
-                          ? styles.enableButton
-                          : styles.disbleButton,
-                      ]}>
+                  ) : (
+                    <View style={styles.footer}>
                       <TouchableOpacity
-                        style={[styles.commentButton, styles.enableButton]}
-                        onPress={() => {
-                          handleInputChat(1, inputValue, '', '', '');
-                        }}>
-                        {isSending ? (
-                          <ActivityIndicator size={'small'} color={'#fff'} />
-                        ) : (
-                          <GlobalInclude.BaseIcon
-                            containerStyle={{
-                              height: scale(20),
-                              width: scale(20),
-                            }}
-                            iconColor={
-                              inputValue.trim().length > 0 ? '#fff' : '#b2b2b2'
-                            }
-                            iconName={'send-o'}
-                            iconSize={scale(20)}
-                            iconType={IconType[4]}
-                          />
-                        )}
+                        onPress={() => blockUser(false)}
+                        activeOpacity={1}
+                        disabled={!isSenderBlocked}
+                        style={[
+                          styles.whiteCurvedBox,
+                          g.p10,
+                          grid.alignItems,
+                          grid.justifyContentCenter,
+                          g.ml15,
+                          g.mr15,
+                        ]}>
+                        <Text
+                          style={[
+                            g.colorBlue,
+                            g.fs12,
+                            g.FHNR,
+                            g.txtCenter,
+                            g.txtCenterVertical,
+                          ]}>
+                          {blockMsg === '' ? 'Connecting...' : blockMsg}
+                        </Text>
                       </TouchableOpacity>
-                    </Animatable.View>
+                    </View>
                   )}
-                </View>
-              ) : (
-                <View style={styles.footer}>
-                  <TouchableOpacity
-                    onPress={() => blockUser(false)}
-                    activeOpacity={1}
-                    disabled={!isSenderBlocked}
-                    style={[
-                      styles.whiteCurvedBox,
-                      g.p10,
-                      grid.alignItems,
-                      grid.justifyContentCenter,
-                      g.ml15,
-                      g.mr15,
-                    ]}>
-                    <Text
-                      style={[
-                        g.colorBlue,
-                        g.fs12,
-                        g.FHNR,
-                        g.txtCenter,
-                        g.txtCenterVertical,
-                      ]}>
-                      {blockMsg === '' ? 'Connecting...' : blockMsg}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                </KeyboardAvoidingView>
               )}
-            </KeyboardAvoidingView>
-          )}
-        </View>
-      </SafeAreaView>
+            </View>
+          </SafeAreaView>
+        </>
+      ) : (
+        <></>
+      )}
+
       <UploadMedia
         hideTagInVideo={true}
         refRBSheet={uploadRef}
@@ -2613,10 +2648,8 @@ const MakeChat = ({route, navigation}) => {
         }}
       />
       {emojiList()}
-
       {selectedChatObject !== null && chatOptions()}
       {messageInfo !== null && messageInfoSheet()}
-
       {showDocViewer && (
         <DocViewer
           mediaContent={documentItem}
