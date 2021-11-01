@@ -17,6 +17,7 @@ import {
   Alert,
   SafeAreaView,
   ScrollView,
+  Modal,
 } from 'react-native';
 import g from '../../../theme/global';
 import grid from '../../../theme/grid';
@@ -46,7 +47,8 @@ import {
   doSearchMessage,
   doGetMessageInfo,
 } from '../../../Actions/SocketChatActions';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {_downloadContent} from '../../../helper/mediaHelper';
+
 import io from 'socket.io-client';
 import _ from 'lodash';
 import RNBeep from 'react-native-a-beep';
@@ -80,7 +82,7 @@ let timerInterval = null;
 let opponentInfo = null;
 let groupId = '';
 let isSenderBlocked = false;
-
+let imageUrl = '';
 let filterObject = {
   page: 1,
   limit: 10,
@@ -128,6 +130,9 @@ const MakeChat = ({route, navigation}) => {
   const [fontSize, setFontSize] = useState(scale(14));
   const [scaleSize, setScaleSize] = useState(scale(22));
 
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
   const [inputValue, setInputValue] = useState('');
   const [header, setHeader] = useState('');
   const [subHeader, setSubHeader] = useState('');
@@ -151,13 +156,13 @@ const MakeChat = ({route, navigation}) => {
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [showHideMessageAlert, setShowHideMessageAlert] = useState(false);
   const [showRemoveMessageAlert, setShowRemoveMessageAlert] = useState(false);
+  const [isLoadData, setIsLoadData] = useState(false);
 
   useEffect(() => {
     resetOldData();
     resetCount();
 
     const unsubscribe = navigation.addListener('focus', () => {
-      console.log('focus');
       if (route.params !== undefined && route.params !== null) {
         groupId = route.params.groupId;
         filterObject.groupId = groupId;
@@ -168,24 +173,8 @@ const MakeChat = ({route, navigation}) => {
       });
     });
 
-    const handleAppStateChange = state => {
-      if (isOpenPicker) {
-        return;
-      }
-
-      if (appState.current.match(/inactive|background/) && state === 'active') {
-        console.log('App has come to the foreground!');
-      } else if (state === 'background' || state === 'inactive') {
-        console.log('App gone to the background!');
-        // if (!isBackTap) {
-        //   isBackTap = true;
-        //   disconnectUser();
-        // }
-      }
-      appState.current = state;
-    };
-
     const backAction = () => {
+      console.log('195');
       if (!isBackTap) {
         isBackTap = true;
         disconnectUser();
@@ -197,14 +186,11 @@ const MakeChat = ({route, navigation}) => {
       'hardwareBackPress',
       backAction,
     );
-
-    AppState.addEventListener('change', handleAppStateChange);
-
     return () => {
       if (backHandler !== undefined && backHandler !== null) {
         backHandler.remove();
       }
-      //AppState.addEventListener('remove', handleAppStateChange);
+
       unsubscribe();
     };
   }, [navigation, getGroupData, route.params, disconnectUser, getOldMessages]);
@@ -293,8 +279,6 @@ const MakeChat = ({route, navigation}) => {
         });
       }
     });
-
-    return () => {};
   }, [joinGroupRequest, disconnectUser, getGroupData]);
 
   useEffect(() => {
@@ -426,8 +410,6 @@ const MakeChat = ({route, navigation}) => {
         }
       }
     });
-
-    return () => {};
   }, [messages, isFiltering, readMessage, showScrollToBottom, playBeep]);
 
   const playBeep = useCallback(() => {
@@ -753,7 +735,7 @@ const MakeChat = ({route, navigation}) => {
   const getOldMessages = useCallback(() => {
     isLoadingEarlier = true;
     setIsRefreshing(true);
-
+    setIsLoadData(true);
     if (filterObject.page > 1) {
       global.loader_ref.show_loader(1);
     } else {
@@ -766,12 +748,14 @@ const MakeChat = ({route, navigation}) => {
         setIsRefreshing(false);
         setAllDone(true);
         manageResponse(response).then(() => {
+          setIsLoadData(false);
           global.loader_ref.show_loader(0);
           setIsFirstLoad(false);
           isLoadingEarlier = false;
         });
       },
       (code, error) => {
+        setIsLoadData(false);
         console.log('errorMsg', error);
         global.loader_ref.show_loader(0);
         setIsRefreshing(false);
@@ -785,6 +769,7 @@ const MakeChat = ({route, navigation}) => {
   }, [manageResponse]);
 
   const searchMessageContent = () => {
+    setIsLoadData(true);
     isLoadingEarlier = true;
     doSearchMessage(
       groupId,
@@ -792,12 +777,15 @@ const MakeChat = ({route, navigation}) => {
       response => {
         setFreshSearch(false);
         setIsRefreshing(false);
-        manageResponse(response).then(() => {
+        manageSearchResults(response).then(() => {
+          setIsLoadData(false);
           setIsFirstLoad(false);
           isLoadingEarlier = false;
         });
       },
       (code, error) => {
+        console.log('code', code, error);
+        setIsLoadData(false);
         setIsRefreshing(false);
         setIsFirstLoad(false);
         setFilterMessage([]);
@@ -816,18 +804,15 @@ const MakeChat = ({route, navigation}) => {
               response.data !== null
             ) {
               let data = response.data;
-              console.log('groupMsgs', JSON.stringify(data));
               if (data.status) {
                 chatType = data.chatType;
                 let array = data.data;
                 let unreadIds = _.map(_.filter(array, {isRead: false}), '_id');
+                totalPages = data.totalPages;
+                currentPage = data.currentPage;
 
-                if (!isFiltering) {
-                  totalPages = data.totalPages;
-                  currentPage = data.currentPage;
-                }
                 if (chatType === 0) {
-                  if (filterObject.page === 1 && !isFiltering) {
+                  if (filterObject.page === 1) {
                     let userDetails = data.users;
                     let index = userDetails.findIndex(
                       x => x._id !== global.userId,
@@ -872,56 +857,80 @@ const MakeChat = ({route, navigation}) => {
 
                 if (array.length === 0) {
                   if (currentPage === 1) {
-                    if (isFiltering) {
-                      setFilterMessage([]);
-                    } else {
-                      setPaginationStatus(PaginationStatus.allLoaded);
-                      setMessages([]);
-                    }
+                    setPaginationStatus(PaginationStatus.allLoaded);
+                    setMessages([]);
                   }
                   setTimeout(() => {
                     resolve(true);
                   }, 200);
                 } else {
-                  if (isFiltering) {
-                    if (searchfilterObject.page === 1) {
-                      setFilterMessage([...array]);
-                      setTimeout(() => {
-                        setPaginationStatus(PaginationStatus.waiting);
-                        resolve(true);
-                      }, 250);
-                    } else {
-                      setFilterMessage(old => [...old, ...array]);
-                      setTimeout(() => {
-                        setPaginationStatus(PaginationStatus.waiting);
-                        resolve(true);
-                      }, 250);
-                    }
+                  if (filterObject.page === 1) {
+                    setMessages([...array]);
+                    setTimeout(() => {
+                      setPaginationStatus(PaginationStatus.waiting);
+                      resolve(true);
+                    }, 250);
                   } else {
-                    if (filterObject.page === 1) {
-                      setMessages([...array]);
-                      setTimeout(() => {
-                        setPaginationStatus(PaginationStatus.waiting);
-                        resolve(true);
-                      }, 250);
-                    } else {
-                      setMessages(old => [...old, ...array]);
-                      setTimeout(() => {
-                        setPaginationStatus(PaginationStatus.waiting);
-                        resolve(true);
-                      }, 250);
-                    }
+                    setMessages(old => [...old, ...array]);
+                    setTimeout(() => {
+                      setPaginationStatus(PaginationStatus.waiting);
+                      resolve(true);
+                    }, 250);
                   }
                 }
               }
             }
           }
-        } catch (error) {
-          console.log('error in manage', error);
-        }
+        } catch (error) {}
       });
     },
-    [updateReadMessages, isFiltering, checkOpponentStatus],
+    [updateReadMessages, checkOpponentStatus],
+  );
+
+  const manageSearchResults = useCallback(
+    response => {
+      return new Promise((resolve, reject) => {
+        try {
+          if (response && response !== null) {
+            if (
+              response.data &&
+              response.data !== undefined &&
+              response.data !== null
+            ) {
+              let data = response.data;
+              if (data.status) {
+                chatType = data.chatType;
+                let array = data.data;
+                checkOpponentStatus(''); //this is for group
+                if (array.length === 0) {
+                  if (currentPage === 1) {
+                    setFilterMessage([]);
+                  }
+                  setTimeout(() => {
+                    resolve(true);
+                  }, 200);
+                } else {
+                  if (searchfilterObject.page === 1) {
+                    setFilterMessage([...array]);
+                    setTimeout(() => {
+                      setPaginationStatus(PaginationStatus.waiting);
+                      resolve(true);
+                    }, 250);
+                  } else {
+                    setFilterMessage(old => [...old, ...array]);
+                    setTimeout(() => {
+                      setPaginationStatus(PaginationStatus.waiting);
+                      resolve(true);
+                    }, 250);
+                  }
+                }
+              }
+            }
+          }
+        } catch (error) {}
+      });
+    },
+    [checkOpponentStatus],
   );
 
   const removeMessageFromList = () => {
@@ -1017,6 +1026,30 @@ const MakeChat = ({route, navigation}) => {
         isLoadingEarlier = false;
       },
     );
+  };
+
+  const downloadImage = async () => {
+    setShowImageModal(false);
+    if (!isDownloading) {
+      console.log(imageUrl);
+      setIsDownloading(true);
+      let result = await _downloadContent(imageUrl);
+      if (result) {
+        responseMessage = 'Image Downloaded Successfully!';
+      } else {
+        responseMessage = 'Error while downloading content!';
+      }
+      setIsDownloading(false);
+
+      if (showImageModal) {
+        Alert.alert('', responseMessage);
+      } else {
+        setShowModal(true);
+        setTimeout(() => {
+          setShowModal(false);
+        }, 2000);
+      }
+    }
   };
 
   /**
@@ -1129,7 +1162,6 @@ const MakeChat = ({route, navigation}) => {
   };
 
   const resetSearch = () => {
-    setShowSearch(false);
     setFilterQuery('');
     setFreshSearch(true);
     fitlerText = '';
@@ -1753,6 +1785,8 @@ const MakeChat = ({route, navigation}) => {
 
               if (messageType === 'IMAGE') {
                 imageArray = [];
+                imageUrl = '';
+                imageUrl = mediaContent;
                 imageArray.push({
                   url: mediaContent,
                 });
@@ -2246,17 +2280,8 @@ const MakeChat = ({route, navigation}) => {
                     onEndReached={onEndReached}
                     onEndReachedThreshold={0.1}
                     ListEmptyComponent={emptySearchComponent}
-                    removeClippedSubviews={Platform.OS !== 'web'}
                     showsVerticalScrollIndicator={false}
-                    maintainVisibleContentPosition={{
-                      minIndexForVisible: 0,
-                    }}
                     bounces={false}
-                    initialNumToRender={10}
-                    maxToRenderPerBatch={8}
-                    updateCellsBatchingPeriod={100}
-                    initialListSize={10}
-                    pageSize={1}
                   />
                 ) : (
                   <FlatList
@@ -2273,6 +2298,7 @@ const MakeChat = ({route, navigation}) => {
                       flexGrow: 1,
                       justifyContent: 'flex-start',
                     }}
+                    scrollEnabled={!isLoadData}
                     onScroll={handleOnScroll}
                     scrollEventThrottle={100}
                     onEndReached={onEndReached}
@@ -2673,6 +2699,8 @@ const MakeChat = ({route, navigation}) => {
           onClose={() => {
             setShowImageModal(false);
           }}
+          download={true}
+          downloadImage={downloadImage}
         />
       )}
 
@@ -2729,6 +2757,21 @@ const MakeChat = ({route, navigation}) => {
           }}
         />
       )}
+
+      <Modal
+        animationType={'fade'}
+        transparent={true}
+        onRequestClose={() => {
+          setShowModal(!showModal);
+        }}
+        hardwareAccelerated={true}
+        visible={showModal}>
+        <View style={styles.centeredView}>
+          <View style={styles.responseMessage}>
+            <Text style={styles.headerText}>{responseMessage}</Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

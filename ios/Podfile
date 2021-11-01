@@ -12,7 +12,7 @@ target 'DSOBS' do
     :hermes_enabled => false
   )
 
-  pod 'RNReactNativeABeep', :path => '../node_modules/react-native-a-beep'
+  #pod 'RNReactNativeABeep', :path => '../node_modules/react-native-a-beep'
 
   target 'DSOBSTests' do
     inherit! :complete

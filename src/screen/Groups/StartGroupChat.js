@@ -2167,15 +2167,7 @@ const StartGroupChat = ({route}) => {
                   ListEmptyComponent={emptySearchComponent}
                   removeClippedSubviews={Platform.OS !== 'web'}
                   showsVerticalScrollIndicator={false}
-                  maintainVisibleContentPosition={{
-                    minIndexForVisible: 0,
-                  }}
                   bounces={false}
-                  initialNumToRender={10}
-                  maxToRenderPerBatch={8}
-                  updateCellsBatchingPeriod={100}
-                  initialListSize={10}
-                  pageSize={1}
                 />
               ) : (
                 <FlatList

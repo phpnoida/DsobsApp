@@ -45,7 +45,7 @@ const ImageViewModal = ({
     };
   }, []);
 
-  const _orientationDidChange = (orientation) => {
+  const _orientationDidChange = orientation => {
     currentOriantation = orientation;
   };
 
