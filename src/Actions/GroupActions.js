@@ -123,8 +123,10 @@ export function doGetDiscoverGroups(filterObject, callback, errCallback) {
 export function doJoinGroup(groupId, callback, errCallback) {
   let requestPath = `${SERVER_PATH}group/join-request/${groupId}`;
 
+  console.log('requestPath', requestPath);
+
   const request = axios
-    .post(requestPath, null, {
+    .post(requestPath, new FormData(), {
       headers: {
         Authorization: global.accessToken,
         'content-type': 'application/json',
@@ -222,7 +224,7 @@ export function doUpdateGroupAdmin(
   console.log('requestPath', requestPath);
 
   const request = axios
-    .post(requestPath, null, {
+    .post(requestPath, new FormData(), {
       headers: {
         Authorization: global.accessToken,
         'content-type': 'application/json',

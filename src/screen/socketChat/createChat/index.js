@@ -23,6 +23,7 @@ import Helper from '../../../helper/Helper';
 import ProgresImage from '../../../component/ProgresImage';
 import ModelAlert from '../../../component/ModalAlert';
 import CommonButton from '../../../component/CommonButton';
+import _ from 'lodash';
 
 const {width} = Dimensions.get('window');
 
@@ -32,6 +33,9 @@ let responseMessage = '';
 let isSuccess = false;
 let isUserConnected = false;
 let groupId = '';
+let userList = [];
+let selectedChatType = 0;
+let groupNameInput = '';
 
 const CreateChat = ({route, navigation}) => {
   const socketRef = useRef();
@@ -79,6 +83,15 @@ const CreateChat = ({route, navigation}) => {
         isUserConnected = JSON.parse(event.status);
       });
 
+      socketRef?.current?.removeListener('chat-status-multi-ack');
+      socketRef?.current?.on('chat-status-multi-ack', event => {
+        console.log('chat-status-multi-ack', event);
+        //{"chatStatus": [{"_id": "602a65dca1714c5bd918612e", "enableChat": 0}], "status": true}
+        if (event && event !== null && event !== undefined && event.status) {
+          checkChatStatus(event.chatStatus);
+        }
+      });
+
       socketRef?.current?.removeListener('chat-created');
       socketRef?.current?.on('chat-created', event => {
         console.log('chat-created', event);
@@ -96,32 +109,80 @@ const CreateChat = ({route, navigation}) => {
       });
     }
     return () => {};
-  }, [route.params, groupCreated]);
+  }, [route.params, groupCreated, checkChatStatus]);
 
   const createGroup = async () => {
     let userIds = [];
 
-    selectedUser.map((item, index) => {
+    userList.map((item, index) => {
       userIds.push(item._id);
     });
 
     if (socketRef?.current !== undefined && socketRef?.current !== null) {
       let payload = {
         _id: global.userId,
-        userId: global.userId,
-        chatType: chatType,
-        users: userIds,
-        name: groupName,
+        userId: userIds,
       };
-
       console.log('payload', payload);
-      socketRef.current.emit('chat-create', payload);
+      socketRef.current.emit('chat-status-multi', payload);
       setIsLoading(true);
     }
   };
 
+  const checkChatStatus = useCallback(chat => {
+    let offlineUsers = _.map(_.filter(chat, {enableChat: 0}), '_id');
+    console.log('====================================');
+    console.log('offlineUsers', offlineUsers);
+    console.log('selectedUser', userList);
+    console.log('====================================');
+    if (offlineUsers.length > 0) {
+      setIsLoading(false);
+      let disabledUserMessage = '';
+      offlineUsers.map(item => {
+        let index = userList.findIndex(x => x._id === item);
+        if (index > -1) {
+          disabledUserMessage =
+            disabledUserMessage +
+            Helper.capitalize(Helper.concatName(userList[index])) +
+            ' - ' +
+            userList[index].batch +
+            '\n';
+        }
+      });
+
+      Alert.alert(
+        'Error',
+        'Some members in your selected list have disabled their chat, so you cannot add them. The members are\n' +
+          disabledUserMessage,
+      );
+    } else {
+      if (socketRef?.current !== undefined && socketRef?.current !== null) {
+        let userIds = [];
+        userList.map((item, index) => {
+          userIds.push(item._id);
+        });
+        let payload = {
+          _id: global.userId,
+          userId: global.userId,
+          chatType: selectedChatType,
+          users: userIds,
+          name: groupNameInput,
+        };
+
+        console.log('payload', payload);
+        socketRef.current.emit('chat-create', payload);
+      }
+    }
+  }, []);
+
   const groupCreated = useCallback(() => {
     setIsLoading(false);
+
+    setSearchedUser([]);
+    setSearchUserName('');
+    setGroupName('');
+    setSelectedUser([]);
+    userList = [];
     if (chatType === 1) {
       isSuccess = true;
       responseMessage = 'You have successfully created a new group';
@@ -245,7 +306,9 @@ const CreateChat = ({route, navigation}) => {
                       setSearchUserName('');
                       setSearchedUser([]);
                       setSelectedUser([]);
+                      userList = [];
                       setchatType(0);
+                      selectedChatType = 0;
                     }}>
                     <Text
                       style={{
@@ -281,7 +344,9 @@ const CreateChat = ({route, navigation}) => {
                       setSearchUserName('');
                       setSearchedUser([]);
                       setSelectedUser([]);
+                      userList = [];
                       setchatType(1);
+                      selectedChatType = 1;
                     }}>
                     <Text
                       style={{
@@ -337,6 +402,7 @@ const CreateChat = ({route, navigation}) => {
                       returnKeyType={'done'}
                       placeholder={'Enter your text here'}
                       onChangeText={value => {
+                        groupNameInput = value;
                         setGroupName(value);
                       }}
                     />
@@ -366,6 +432,7 @@ const CreateChat = ({route, navigation}) => {
                       let itemArray = [];
                       itemArray.push(row);
                       setSelectedUser([...itemArray]);
+                      userList = [...itemArray];
                       setSearchedUser([]);
                       setSearchUserName('');
                       Keyboard.dismiss();
@@ -384,6 +451,7 @@ const CreateChat = ({route, navigation}) => {
                       } else {
                         oldData.push(row);
                         setSelectedUser([...oldData]);
+                        userList = [...oldData];
                         setSearchedUser([]);
                         setSearchUserName('');
                         Keyboard.dismiss();
@@ -500,6 +568,7 @@ const CreateChat = ({route, navigation}) => {
               let oldData = selectedUser;
               oldData.splice(lastIndex, 1);
               setSelectedUser([...oldData]);
+              userList = [...oldData];
             }}
             cancelButton={'Cancel'}
             cancelAction={() => {

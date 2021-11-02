@@ -39,6 +39,7 @@ import {
   clearAuthentication,
   updateUserObject,
 } from '../../helper/ChatHelper';
+import {doGetAnyUnread} from '../../Actions/SocketChatActions';
 import Orientation from 'react-native-orientation-locker';
 
 let deviceHeight = Dimensions.get('screen').height;
@@ -74,7 +75,7 @@ const Dashboard = ({props, navigation}) => {
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [showPopNotification, setShowPopNotification] = useState(false);
   const [notificationList, setNotificationList] = useState([]);
-  const [userData, setUserData] = useState(null);
+  const [anyLatestMsg, setAnyLatestMsg] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -106,7 +107,7 @@ const Dashboard = ({props, navigation}) => {
             text: 'YES',
             onPress: () => {
               // setUserLastSeen(false, new Date().getTime(), () => {
-                
+
               // });
               BackHandler.exitApp();
             },
@@ -119,6 +120,7 @@ const Dashboard = ({props, navigation}) => {
     backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
     const unsubscribe = navigation.addListener('focus', () => {
       Orientation.lockToPortrait();
+      checkForLatestMsg();
       // addUser(global.userId, global.userDetails, () => {});
       // checkUserExist(global.userId, false).then(detailis => {
       //   setUserData(detailis);
@@ -138,7 +140,7 @@ const Dashboard = ({props, navigation}) => {
       validatePushNotification();
 
       // console.log('global.userDetails.fcmTopic', global.userDetails.fcmTopic);
-      // console.log('global.userDetails.fcmTopic', global.accessToken);
+      console.log('global.userDetails.fcmTopic', global.accessToken);
     });
 
     if (refreshState) {
@@ -154,6 +156,26 @@ const Dashboard = ({props, navigation}) => {
       backHandler.remove();
     };
   }, [navigation, refreshState, validatePushNotification, dispatch]);
+
+  const checkForLatestMsg = () => {
+    if (global.isConnected) {
+      doGetAnyUnread(
+        response => {
+          if (response && response !== null) {
+            if (
+              response.data &&
+              response.data !== undefined &&
+              response.response !== null
+            ) {
+              let data = response.data;
+              setAnyLatestMsg(data.status);
+            }
+          }
+        },
+        (status, error) => {},
+      );
+    }
+  };
 
   const getPopNotifications = () => {
     if (global.isConnected) {
@@ -471,21 +493,19 @@ const Dashboard = ({props, navigation}) => {
                 resizeMode={'contain'}
               />
 
-              {userData &&
-                userData.isLatestMessages !== undefined &&
-                userData.isLatestMessages && (
-                  <View
-                    style={{
-                      position: 'absolute',
-                      height: scale(10),
-                      width: scale(10),
-                      borderRadius: scale(30),
-                      backgroundColor: 'green',
-                      top: 9,
-                      right: 9,
-                    }}
-                  />
-                )}
+              {anyLatestMsg && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    height: scale(10),
+                    width: scale(10),
+                    borderRadius: scale(30),
+                    backgroundColor: 'green',
+                    top: 7,
+                    right: 7,
+                  }}
+                />
+              )}
             </TouchableOpacity>
             <View style={styles.headerIconSpacer} />
             <TouchableOpacity

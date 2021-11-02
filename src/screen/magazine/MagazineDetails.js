@@ -73,7 +73,7 @@ const MagazineDetails = ({route, navigation}) => {
     return () => {};
   }, []);
 
-  const computeEmbeddedMaxWidth = (availableWidth) => {
+  const computeEmbeddedMaxWidth = availableWidth => {
     return Math.min(availableWidth, 500);
   };
 
@@ -110,7 +110,7 @@ const MagazineDetails = ({route, navigation}) => {
                   }}
                   locked={false}
                   tabBarUnderlineStyle={{height: 0}}
-                  onChangeTab={(index) => {
+                  onChangeTab={index => {
                     shareOptions.url = pageContent[index.i].shareLink;
                     //console.log('data', pageContent[index.i]);
                   }}

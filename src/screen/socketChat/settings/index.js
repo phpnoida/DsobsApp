@@ -230,62 +230,66 @@ const ChatUserSettings = ({route, navigation}) => {
       {showProgess(isLoading)}
       <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
         <View style={[grid.flex1, g.pl10, g.pr10, g.mt10]}>
-          <View style={[grid.rowdir, grid.alignItems, g.pt10, g.pb10]}>
-            <Text
-              numberOfLines={2}
-              style={[
-                g.FHNM,
-                g.fs15,
-                g.colorBlack,
-                GlobalInclude.AppStyle.transform,
-              ]}>
-              Enable Chat
-            </Text>
-            <View style={[grid.col, g.ml5]}>
-              <Switch
-                value={enableChat}
-                onValueChange={() => {
-                  setEnableChat(!enableChat);
-                }}
-                trackColor={{
-                  false: '#767577',
-                  true: GlobalInclude.Color.ColorPrimaryTooLight,
-                }}
-                thumbColor={
-                  enableChat ? GlobalInclude.Color.ColorPrimary : '#f4f3f4'
-                }
-                ios_backgroundColor={GlobalInclude.Color.ColorPrimary}
-              />
+          <View style={[grid.flex1, g.pl10, g.pr10, g.mt10]}>
+            <View style={[grid.rowdir, grid.alignItems, g.pt10, g.pb10]}>
+              <Text
+                numberOfLines={2}
+                style={[
+                  g.FHNM,
+                  g.fs15,
+                  g.colorBlack,
+                  GlobalInclude.AppStyle.transform,
+                  grid.col,
+                ]}>
+                Enable Chat
+              </Text>
+              <View style={[g.ml5]}>
+                <Switch
+                  value={enableChat}
+                  onValueChange={() => {
+                    setEnableChat(!enableChat);
+                  }}
+                  trackColor={{
+                    false: '#f4f3f4',
+                    true: GlobalInclude.Color.ColorPrimaryTooLight,
+                  }}
+                  thumbColor={
+                    enableChat ? GlobalInclude.Color.ColorPrimary : '#f4f3f4'
+                  }
+                  ios_backgroundColor={GlobalInclude.Color.ColorPrimaryTooLight}
+                />
+              </View>
             </View>
-          </View>
-          <View style={[grid.rowdir, grid.alignItems, g.pt10, g.pb10]}>
-            <Text
-              numberOfLines={2}
-              style={[
-                g.FHNM,
-                g.fs15,
-                g.colorBlack,
-                GlobalInclude.AppStyle.transform,
-              ]}>
-              Enable Notification
-            </Text>
-            <View style={[grid.col, g.ml5]}>
-              <Switch
-                value={enableNotification}
-                onValueChange={() => {
-                  setEnableNotification(!enableNotification);
-                }}
-                trackColor={{
-                  false: '#767577',
-                  true: GlobalInclude.Color.ColorPrimaryTooLight,
-                }}
-                thumbColor={
-                  enableNotification
-                    ? GlobalInclude.Color.ColorPrimary
-                    : '#f4f3f4'
-                }
-                ios_backgroundColor={GlobalInclude.Color.ColorPrimary}
-              />
+            <View style={[grid.rowdir, grid.alignItems, g.pt10, g.pb10]}>
+              <Text
+                numberOfLines={2}
+                style={[
+                  g.FHNM,
+                  g.fs15,
+                  g.colorBlack,
+                  GlobalInclude.AppStyle.transform,
+                  grid.col,
+                ]}>
+                Enable Notification
+              </Text>
+              <View style={[g.ml5]}>
+                <Switch
+                  value={enableNotification}
+                  onValueChange={() => {
+                    setEnableNotification(!enableNotification);
+                  }}
+                  trackColor={{
+                    false: '#767577',
+                    true: GlobalInclude.Color.ColorPrimaryTooLight,
+                  }}
+                  thumbColor={
+                    enableNotification
+                      ? GlobalInclude.Color.ColorPrimary
+                      : '#f4f3f4'
+                  }
+                  ios_backgroundColor={GlobalInclude.Color.ColorPrimaryTooLight}
+                />
+              </View>
             </View>
           </View>
 

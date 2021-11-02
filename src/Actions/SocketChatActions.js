@@ -180,6 +180,22 @@ export function doGetMessageInfo(groupId, msgId, callback, errCallback) {
   };
 }
 
+export function doGetAnyUnread(callback, errCallback) {
+  let requestPath = `${SERVER_PATH}chats/unread-messages`;
+
+  const request = axios
+    .get(requestPath, {
+      headers: {Authorization: global.accessToken},
+    })
+    .then(res => callback(res))
+    .catch(err => {
+      handleError(err, errCallback);
+    });
+  return {
+    payload: request,
+  };
+}
+
 export function handleError(err, errCallback) {
   if (
     err.response &&

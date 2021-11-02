@@ -10,7 +10,6 @@ import {
   KeyboardAvoidingView,
   FlatList,
   ActivityIndicator,
-  Keyboard,
   BackHandler,
   Dimensions,
   AppState,
@@ -22,13 +21,12 @@ import {
 import g from '../../../theme/global';
 import grid from '../../../theme/grid';
 import {scale} from '../../../theme/Scalling';
-import {showProgess, generateHeader} from '../../../component/Common';
+import {showProgess} from '../../../component/Common';
 import UploadMedia from '../../../component/UploadMedia';
 import ProgressImage from '../../../component/ProgresImage';
 import DocViewer from '../../../component/DocViewer';
 import AudioPlayer from '../../../component/AudioPlayer';
 import ImageViewer from '../../../component/ImageViewer';
-import CommonButton from '../../../component/CommonButton';
 import {showImageThumb} from '../../chat/ChatDelegates';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import {getStatusBarHeight} from 'react-native-iphone-x-helper';
@@ -39,7 +37,6 @@ import Helper from '../../../helper/Helper';
 import EmojiSelector from 'react-native-emoji-selector';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
 import * as Animatable from 'react-native-animatable';
-import {useNavigation} from '@react-navigation/native';
 import {getScrappedData} from '../../../Actions/CommonActions';
 import {
   doAboutGroup,
@@ -56,7 +53,6 @@ import RNBeep from 'react-native-a-beep';
 const {height, width} = Dimensions.get('window');
 
 let selectedFontSize = 1,
-  isOpenPicker = false,
   isBackTap = false,
   responseMessage = '',
   totalPages = 0,
@@ -79,19 +75,19 @@ let userStatusForChat = 1;
 let blockUserStatus = -1;
 const scrollToBottomOffset = 200;
 let timerInterval = null;
+let ownTimerInterval = null;
 let opponentInfo = null;
 let groupId = '';
 let isSenderBlocked = false;
 let imageUrl = '';
 let filterObject = {
   page: 1,
-  limit: 10,
+
   groupId: '',
 };
 let searchfilterObject = {
   page: 1,
   search: '',
-  limit: 10,
 };
 
 const PaginationStatus = {
@@ -106,7 +102,6 @@ let typingUserName = '';
 
 const MakeChat = ({route, navigation}) => {
   const socketRef = useRef();
-  const appState = useRef(AppState.currentState);
   const uploadRef = useRef();
   const emojiRef = useRef();
   const animRef = useRef();
@@ -174,7 +169,6 @@ const MakeChat = ({route, navigation}) => {
     });
 
     const backAction = () => {
-      console.log('195');
       if (!isBackTap) {
         isBackTap = true;
         disconnectUser();
@@ -216,6 +210,7 @@ const MakeChat = ({route, navigation}) => {
       if (socketRef.current.connected) {
         setIsConnected(true);
         setTimeout(() => {
+          checkOwnStatus();
           joinGroupRequest();
         }, 100);
 
@@ -279,7 +274,7 @@ const MakeChat = ({route, navigation}) => {
         });
       }
     });
-  }, [joinGroupRequest, disconnectUser, getGroupData]);
+  }, [joinGroupRequest, disconnectUser, getGroupData, checkOwnStatus]);
 
   useEffect(() => {
     socketRef?.current?.removeListener('chat-get-message');
@@ -358,7 +353,7 @@ const MakeChat = ({route, navigation}) => {
           ) {
             blockMsg = `${Helper.capitalize(
               opponentInfo?.firstName,
-            )} block this chat!`;
+            )} blocked this chat!`;
             setIsConnected(false);
           }
         }
@@ -510,13 +505,23 @@ const MakeChat = ({route, navigation}) => {
           };
           socketRef?.current?.emit('chat-check-online-user', payload);
         }
+      }
+    }, 2500);
+  }, []);
+
+  const checkOwnStatus = useCallback(opponent => {
+    if (ownTimerInterval !== null) {
+      clearInterval(ownTimerInterval);
+    }
+    ownTimerInterval = setInterval(() => {
+      if (socketRef.current !== undefined && socketRef.current !== null) {
         let pingPayload = {
           userId: global.userId,
         };
 
         socketRef?.current?.emit('chat-user-ping', pingPayload);
       }
-    }, 3000);
+    }, 2500);
   }, []);
 
   const blockUser = useCallback(isBlocked => {
@@ -587,6 +592,9 @@ const MakeChat = ({route, navigation}) => {
     socketRef?.current?.removeListener('chat-read-message-ack');
     if (timerInterval !== null) {
       clearInterval(timerInterval);
+    }
+    if (ownTimerInterval !== null) {
+      clearInterval(ownTimerInterval);
     }
   };
 
@@ -825,7 +833,7 @@ const MakeChat = ({route, navigation}) => {
                     if (blockUserStatus === 2) {
                       blockMsg = `${Helper.capitalize(
                         opponentInfo.firstName,
-                      )} block this chat!`;
+                      )} blocked this chat!`;
                       setIsConnected(false);
                     } else if (blockUserStatus === 1) {
                       isSenderBlocked = true;
@@ -884,7 +892,7 @@ const MakeChat = ({route, navigation}) => {
         } catch (error) {}
       });
     },
-    [updateReadMessages, checkOpponentStatus],
+    [checkOpponentStatus, updateReadMessages],
   );
 
   const manageSearchResults = useCallback(
@@ -1122,7 +1130,6 @@ const MakeChat = ({route, navigation}) => {
     newMessageList = [];
     imageArray = [];
     isSenderBlocked = false;
-    isOpenPicker = false;
     responseMessage = '';
     totalPages = 0;
     currentPage = 1;
@@ -1134,6 +1141,7 @@ const MakeChat = ({route, navigation}) => {
     userStatusForChat = 1;
     blockUserStatus = -1;
     timerInterval = null;
+    ownTimerInterval = null;
     opponentInfo = null;
     groupId = '';
     lastTypingTime = 0;
@@ -1142,13 +1150,12 @@ const MakeChat = ({route, navigation}) => {
 
     filterObject = {
       page: 1,
-      limit: 10,
+
       groupId: '',
     };
     searchfilterObject = {
       page: 1,
       search: '',
-      limit: 10,
     };
   };
 
@@ -1158,7 +1165,6 @@ const MakeChat = ({route, navigation}) => {
 
     filterObject = {};
     filterObject.page = 1;
-    filterObject.limit = 10;
   };
 
   const resetSearch = () => {
@@ -1170,7 +1176,6 @@ const MakeChat = ({route, navigation}) => {
     searchfilterObject = {
       page: 1,
       search: '',
-      limit: 10,
     };
     setIsConnected(true);
     setShowSearch(false);
@@ -1224,6 +1229,9 @@ const MakeChat = ({route, navigation}) => {
   };
 
   const onEndReached = ({distanceFromEnd}) => {
+    console.log('hasScrolled', hasScrolled);
+    console.log('distanceFromEnd', distanceFromEnd);
+    console.log('isLoadingEarlier', isLoadingEarlier);
     if (
       (hasScrolled || distanceFromEnd > 0) &&
       distanceFromEnd <= 100 &&
@@ -1302,12 +1310,7 @@ const MakeChat = ({route, navigation}) => {
               }
               setIsReplayEditComment(true);
             }}
-            style={[
-              grid.justifyContentCenter,
-              grid.alignItems,
-              g.p15,
-              lineStyle,
-            ]}>
+            style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
             <Text
               style={[
                 g.fs18,
@@ -1337,7 +1340,17 @@ const MakeChat = ({route, navigation}) => {
                         setShowRemoveMessageAlert(true);
                       }, 220);
                     }}
-                    style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
+                    style={[
+                      grid.justifyContentCenter,
+                      grid.alignItems,
+                      g.p15,
+                      {
+                        borderBottomWidth: 2,
+                        borderBottomColor: '#ebebe4',
+                        borderTopWidth: 2,
+                        borderTopColor: '#ebebe4',
+                      },
+                    ]}>
                     <Text
                       style={[
                         g.fs18,
@@ -1398,7 +1411,12 @@ const MakeChat = ({route, navigation}) => {
                       grid.justifyContentCenter,
                       grid.alignItems,
                       g.p15,
-                      {borderBottomWidth: 2, borderBottomColor: '#ebebe4'},
+                      {
+                        borderBottomWidth: 2,
+                        borderBottomColor: '#ebebe4',
+                        borderTopWidth: 2,
+                        borderTopColor: '#ebebe4',
+                      },
                     ]}>
                     <Text
                       style={[
@@ -1950,7 +1968,6 @@ const MakeChat = ({route, navigation}) => {
                         searchfilterObject = {
                           page: 1,
                           search: fitlerText,
-                          limit: 10,
                         };
                         searchMessageContent();
                       }, 200);
@@ -2251,199 +2268,262 @@ const MakeChat = ({route, navigation}) => {
         <>
           {showScrollToBottom ? renderScrollToBottomWrapper() : null}
           <SafeAreaView style={[GlobalInclude.AppStyle.topSpace, g.bggray3]}>
-            <View style={grid.flex1}>
+            <KeyboardAvoidingView
+              keyboardVerticalOffset={Platform.select({
+                ios: -30,
+              })}
+              behavior={Platform.select({ios: 'padding'})}
+              style={{marginBottom: scale(10), flex: 1}}>
               <View style={grid.flex1}>
-                {isFirstLoad ? (
-                  <View style={[GlobalInclude.AppStyle.fillCenter]}>
-                    <ThreeDotsLoader
-                      size={scale(12)}
-                      activeBackground={GlobalInclude.Color.ColorPrimary}
+                <View style={grid.flex1}>
+                  {isFirstLoad ? (
+                    <View style={[GlobalInclude.AppStyle.fillCenter]}>
+                      <ThreeDotsLoader
+                        size={scale(12)}
+                        activeBackground={GlobalInclude.Color.ColorPrimary}
+                      />
+                    </View>
+                  ) : showSearch ? (
+                    <FlatList
+                      ref={chatRef}
+                      inverted={-1}
+                      data={filterMessage}
+                      extraData={filterMessage}
+                      renderItem={renderChatItem}
+                      keyExtractor={keyExtractor}
+                      enableEmptySections
+                      automaticallyAdjustContentInsets={false}
+                      style={{flex: 1}}
+                      contentContainerStyle={{
+                        flexGrow: 1,
+                        justifyContent: 'flex-start',
+                      }}
+                      onScroll={handleOnScroll}
+                      scrollEventThrottle={100}
+                      onEndReached={onEndReached}
+                      onEndReachedThreshold={0.1}
+                      ListEmptyComponent={emptySearchComponent}
+                      showsVerticalScrollIndicator={false}
+                      bounces={false}
                     />
-                  </View>
-                ) : showSearch ? (
-                  <FlatList
-                    ref={chatRef}
-                    inverted={-1}
-                    data={filterMessage}
-                    extraData={filterMessage}
-                    renderItem={renderChatItem}
-                    keyExtractor={keyExtractor}
-                    enableEmptySections
-                    automaticallyAdjustContentInsets={false}
-                    style={{flex: 1}}
-                    contentContainerStyle={{
-                      flexGrow: 1,
-                      justifyContent: 'flex-start',
-                    }}
-                    onScroll={handleOnScroll}
-                    scrollEventThrottle={100}
-                    onEndReached={onEndReached}
-                    onEndReachedThreshold={0.1}
-                    ListEmptyComponent={emptySearchComponent}
-                    showsVerticalScrollIndicator={false}
-                    bounces={false}
-                  />
-                ) : (
-                  <FlatList
-                    ref={chatRef}
-                    inverted={-1}
-                    data={messages}
-                    extraData={messages}
-                    renderItem={renderChatItem}
-                    keyExtractor={keyExtractor}
-                    enableEmptySections
-                    automaticallyAdjustContentInsets={false}
-                    style={{flex: 1}}
-                    contentContainerStyle={{
-                      flexGrow: 1,
-                      justifyContent: 'flex-start',
-                    }}
-                    scrollEnabled={!isLoadData}
-                    onScroll={handleOnScroll}
-                    scrollEventThrottle={100}
-                    onEndReached={onEndReached}
-                    onEndReachedThreshold={0.1}
-                    removeClippedSubviews={Platform.OS !== 'web'}
-                    showsVerticalScrollIndicator={false}
-                    maintainVisibleContentPosition={{
-                      minIndexForVisible: 0,
-                    }}
-                    ListEmptyComponent={emptyComponent}
-                    bounces={false}
-                    initialNumToRender={10}
-                    maxToRenderPerBatch={8}
-                    updateCellsBatchingPeriod={100}
-                    initialListSize={10}
-                    pageSize={1}
-                  />
-                )}
-              </View>
-              {!showSearch && (
-                <KeyboardAvoidingView
-                  keyboardVerticalOffset={Platform.select({
-                    ios: -30,
-                    android: 30,
-                  })}
-                  behavior={Platform.select({
-                    android: 'height',
-                    ios: 'padding',
-                  })}>
-                  {isConnected ? (
-                    <View style={styles.footer}>
-                      <View
-                        style={{
-                          backgroundColor: '#fff',
-                          flexDirection: 'row',
-                          flex: 1,
-                          borderRadius: isReplayEditComment
-                            ? scale(10)
-                            : scale(30),
-                        }}>
+                  ) : (
+                    <FlatList
+                      ref={chatRef}
+                      inverted={-1}
+                      data={messages}
+                      extraData={messages}
+                      renderItem={renderChatItem}
+                      keyExtractor={keyExtractor}
+                      enableEmptySections
+                      automaticallyAdjustContentInsets={false}
+                      style={{flex: 1}}
+                      contentContainerStyle={{
+                        flexGrow: 1,
+                        justifyContent: 'flex-start',
+                      }}
+                      scrollEnabled={!isLoadData}
+                      onScroll={handleOnScroll}
+                      scrollEventThrottle={100}
+                      onEndReached={onEndReached}
+                      onEndReachedThreshold={0.1}
+                      removeClippedSubviews={Platform.OS !== 'web'}
+                      showsVerticalScrollIndicator={false}
+                      maintainVisibleContentPosition={{
+                        minIndexForVisible: 0,
+                      }}
+                      ListEmptyComponent={emptyComponent}
+                      bounces={false}
+                      initialNumToRender={10}
+                      maxToRenderPerBatch={8}
+                      updateCellsBatchingPeriod={100}
+                      initialListSize={10}
+                      pageSize={1}
+                    />
+                  )}
+                </View>
+                {!showSearch && (
+                  <KeyboardAvoidingView
+                    keyboardVerticalOffset={Platform.select({
+                      ios: -30,
+                      android: 30,
+                    })}
+                    behavior={Platform.select({
+                      android: 'height',
+                      ios: 'padding',
+                    })}>
+                    {isConnected ? (
+                      <View style={styles.footer}>
                         <View
-                          style={[
-                            grid.flex1,
-                            isReplayEditComment && [g.pt5, g.pb5],
-                          ]}>
-                          {isReplayEditComment && (
-                            <View style={grid.rowdir}>
-                              <View
-                                style={[
-                                  styles.replayContainer,
-                                  g.ml10,
-                                  g.mr10,
-                                  grid.col,
-                                ]}>
+                          style={{
+                            backgroundColor: '#fff',
+                            flexDirection: 'row',
+                            flex: 1,
+                            borderRadius: isReplayEditComment
+                              ? scale(10)
+                              : scale(30),
+                          }}>
+                          <View
+                            style={[
+                              grid.flex1,
+                              isReplayEditComment && [g.pt5, g.pb5],
+                            ]}>
+                            {isReplayEditComment && (
+                              <View style={grid.rowdir}>
                                 <View
                                   style={[
-                                    styles.renderBorder,
-                                    {
-                                      backgroundColor:
-                                        GlobalInclude.Color.ColorPrimary,
-                                    },
-                                  ]}
-                                />
-                                <View style={[g.pl10, g.pt3, g.pr10, g.pb3]}>
-                                  <Text
+                                    styles.replayContainer,
+                                    g.ml10,
+                                    g.mr10,
+                                    grid.col,
+                                  ]}>
+                                  <View
                                     style={[
-                                      g.fs12,
-                                      g.FHNB,
-                                      g.colorBlue,
-                                      grid.justifyContentCenter,
-                                      grid.alignItems,
-                                      g.txtCenterVertical,
-                                      g.mb5,
-                                    ]}>
-                                    {'Replying To:'}
-                                  </Text>
-                                  <Text style={[g.fs14, g.FHNB, g.colorBlack]}>
-                                    {Helper.capitalize(
-                                      selectedChatObject.authorId.firstName,
-                                    )}
-                                  </Text>
-                                  <View style={[g.mt2, g.mb2]} />
-                                  <Text
-                                    numberOfLines={1}
-                                    style={[g.fs12, g.FHNR, g.colorBlack]}>
-                                    {selectedChatObject.media.mediaType === 1
-                                      ? selectedChatObject.message
-                                      : selectedChatObject.media.mediaType}
-                                  </Text>
+                                      styles.renderBorder,
+                                      {
+                                        backgroundColor:
+                                          GlobalInclude.Color.ColorPrimary,
+                                      },
+                                    ]}
+                                  />
+                                  <View style={[g.pl10, g.pt3, g.pr10, g.pb3]}>
+                                    <Text
+                                      style={[
+                                        g.fs12,
+                                        g.FHNB,
+                                        g.colorBlue,
+                                        grid.justifyContentCenter,
+                                        grid.alignItems,
+                                        g.txtCenterVertical,
+                                        g.mb5,
+                                      ]}>
+                                      {'Replying To:'}
+                                    </Text>
+                                    <Text
+                                      style={[g.fs14, g.FHNB, g.colorBlack]}>
+                                      {Helper.capitalize(
+                                        selectedChatObject.authorId.firstName,
+                                      )}
+                                    </Text>
+                                    <View style={[g.mt2, g.mb2]} />
+                                    <Text
+                                      numberOfLines={1}
+                                      style={[g.fs12, g.FHNR, g.colorBlack]}>
+                                      {selectedChatObject.media.mediaType === 1
+                                        ? selectedChatObject.message
+                                        : selectedChatObject.media.mediaType}
+                                    </Text>
+                                  </View>
                                 </View>
-                              </View>
-                              <View style={[g.mt2, g.mr5]}>
-                                {showImageThumb(
-                                  selectedChatObject.media.mediaUrl,
-                                  selectedChatObject.media.mediaType === 'IMAGE'
-                                    ? 2
-                                    : selectedChatObject.media.mediaType ===
-                                      'VIDEO'
-                                    ? 3
-                                    : 4,
-                                )}
-                              </View>
+                                <View style={[g.mt2, g.mr5]}>
+                                  {showImageThumb(
+                                    selectedChatObject.media.mediaUrl,
+                                    selectedChatObject.media.mediaType ===
+                                      'IMAGE'
+                                      ? 2
+                                      : selectedChatObject.media.mediaType ===
+                                        'VIDEO'
+                                      ? 3
+                                      : 4,
+                                  )}
+                                </View>
 
-                              {/* part two */}
-                              <TouchableOpacity
-                                onPress={() => {
-                                  setIsReplayEditComment(false);
-                                  setSelectedChatObject(null);
-                                }}
-                                style={styles.closeComment}>
-                                <GlobalInclude.BaseIcon
-                                  containerStyle={{
-                                    height: scale(14),
-                                    width: scale(14),
+                                {/* part two */}
+                                <TouchableOpacity
+                                  onPress={() => {
+                                    setIsReplayEditComment(false);
+                                    setSelectedChatObject(null);
                                   }}
-                                  iconColor={'#fff'}
-                                  iconName={'close'}
-                                  iconSize={scale(14)}
-                                  iconType={IconType[6]}
-                                />
-                              </TouchableOpacity>
-                            </View>
-                          )}
+                                  style={styles.closeComment}>
+                                  <GlobalInclude.BaseIcon
+                                    containerStyle={{
+                                      height: scale(14),
+                                      width: scale(14),
+                                    }}
+                                    iconColor={'#fff'}
+                                    iconName={'close'}
+                                    iconSize={scale(14)}
+                                    iconType={IconType[6]}
+                                  />
+                                </TouchableOpacity>
+                              </View>
+                            )}
 
-                          {/* row two */}
-                          <View style={[grid.rowdir]}>
-                            <Animatable.View
-                              ref={animRef}
-                              useNativeDriver={true}
-                              style={{
-                                width: emojiIconWidth,
-                                height: scale(40),
-                                borderRadius: scale(10),
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                alignSelf: 'center',
-                              }}
-                              easing={'linear'}>
+                            {/* row two */}
+                            <View style={[grid.rowdir]}>
+                              <Animatable.View
+                                ref={animRef}
+                                useNativeDriver={true}
+                                style={{
+                                  width: emojiIconWidth,
+                                  height: scale(40),
+                                  borderRadius: scale(10),
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                  alignSelf: 'center',
+                                }}
+                                easing={'linear'}>
+                                <TouchableOpacity
+                                  onPress={() => {
+                                    if (
+                                      emojiRef !== undefined &&
+                                      emojiRef !== null
+                                    ) {
+                                      emojiRef.current.open();
+                                    }
+                                  }}
+                                  style={[styles.commentButton]}>
+                                  <GlobalInclude.BaseIcon
+                                    containerStyle={{
+                                      height: scale(20),
+                                      width: scale(20),
+                                    }}
+                                    iconColor={GlobalInclude.Color.ColorPrimary}
+                                    iconName={'sticker-emoji'}
+                                    iconSize={scale(20)}
+                                    iconType={IconType[1]}
+                                  />
+                                </TouchableOpacity>
+                              </Animatable.View>
+                              <TextInput
+                                autoCapitalize={'sentences'}
+                                underlineColorAndroid="transparent"
+                                style={[
+                                  styles.inputContainer,
+                                  styles.inputView,
+                                  grid.alignItems,
+                                ]}
+                                keyboardType={'default'}
+                                value={inputValue}
+                                multiline={true}
+                                placeholder="Enter text here"
+                                onChangeText={input => {
+                                  setInputValue(input);
+                                  sendTyping();
+
+                                  if (input.length > 0 && !isStickerShowing) {
+                                    isStickerShowing = true;
+                                    setEmojiIconWidth(0);
+                                    animRef.current
+                                      .slideOutLeft()
+                                      .then(() => {});
+                                  } else if (
+                                    input.length === 0 &&
+                                    isStickerShowing
+                                  ) {
+                                    inEditMode = false;
+                                    isStickerShowing = false;
+                                    setEmojiIconWidth(scale(40));
+                                    animRef.current
+                                      .slideInLeft()
+                                      .then(() => {});
+                                  }
+                                }}
+                                placeholderTextColor={'#b2b2b2'}
+                              />
                               <TouchableOpacity
                                 onPress={() => {
-                                  if (
-                                    emojiRef !== undefined &&
-                                    emojiRef !== null
-                                  ) {
-                                    emojiRef.current.open();
+                                  if (uploadRef.current !== null) {
+                                    uploadRef.current.open();
                                   }
                                 }}
                                 style={[styles.commentButton]}>
@@ -2453,138 +2533,90 @@ const MakeChat = ({route, navigation}) => {
                                     width: scale(20),
                                   }}
                                   iconColor={GlobalInclude.Color.ColorPrimary}
-                                  iconName={'sticker-emoji'}
+                                  iconName={'attach-file'}
                                   iconSize={scale(20)}
-                                  iconType={IconType[1]}
+                                  iconType={IconType[0]}
                                 />
                               </TouchableOpacity>
-                            </Animatable.View>
-                            <TextInput
-                              autoCapitalize={'sentences'}
-                              underlineColorAndroid="transparent"
-                              style={[
-                                styles.inputContainer,
-                                styles.inputView,
-                                grid.alignItems,
-                              ]}
-                              keyboardType={'default'}
-                              value={inputValue}
-                              multiline={true}
-                              placeholder="Enter text here"
-                              onChangeText={input => {
-                                setInputValue(input);
-                                sendTyping();
-
-                                if (input.length > 0 && !isStickerShowing) {
-                                  isStickerShowing = true;
-                                  setEmojiIconWidth(0);
-                                  animRef.current.slideOutLeft().then(() => {});
-                                } else if (
-                                  input.length === 0 &&
-                                  isStickerShowing
-                                ) {
-                                  inEditMode = false;
-                                  isStickerShowing = false;
-                                  setEmojiIconWidth(scale(40));
-                                  animRef.current.slideInLeft().then(() => {});
-                                }
-                              }}
-                              placeholderTextColor={'#b2b2b2'}
-                            />
-                            <TouchableOpacity
-                              onPress={() => {
-                                if (uploadRef.current !== null) {
-                                  isOpenPicker = true;
-                                  uploadRef.current.open();
-                                }
-                              }}
-                              style={[styles.commentButton]}>
-                              <GlobalInclude.BaseIcon
-                                containerStyle={{
-                                  height: scale(20),
-                                  width: scale(20),
-                                }}
-                                iconColor={GlobalInclude.Color.ColorPrimary}
-                                iconName={'attach-file'}
-                                iconSize={scale(20)}
-                                iconType={IconType[0]}
-                              />
-                            </TouchableOpacity>
+                            </View>
+                            {/* row two */}
                           </View>
-                          {/* row two */}
                         </View>
+                        {inputValue.trim().length > 0 && (
+                          <Animatable.View
+                            useNativeDriver={true}
+                            animation={'slideInRight'}
+                            style={[
+                              g.ml5,
+                              styles.commentButton,
+                              inputValue.trim().length > 0
+                                ? styles.enableButton
+                                : styles.disbleButton,
+                            ]}>
+                            <TouchableOpacity
+                              style={[
+                                styles.commentButton,
+                                styles.enableButton,
+                              ]}
+                              onPress={() => {
+                                handleInputChat(1, inputValue, '', '', '');
+                              }}>
+                              {isSending ? (
+                                <ActivityIndicator
+                                  size={'small'}
+                                  color={'#fff'}
+                                />
+                              ) : (
+                                <GlobalInclude.BaseIcon
+                                  containerStyle={{
+                                    height: scale(20),
+                                    width: scale(20),
+                                  }}
+                                  iconColor={
+                                    inputValue.trim().length > 0
+                                      ? '#fff'
+                                      : '#b2b2b2'
+                                  }
+                                  iconName={'send-o'}
+                                  iconSize={scale(20)}
+                                  iconType={IconType[4]}
+                                />
+                              )}
+                            </TouchableOpacity>
+                          </Animatable.View>
+                        )}
                       </View>
-                      {inputValue.trim().length > 0 && (
-                        <Animatable.View
-                          useNativeDriver={true}
-                          animation={'slideInRight'}
+                    ) : (
+                      <View style={styles.footer}>
+                        <TouchableOpacity
+                          onPress={() => blockUser(false)}
+                          activeOpacity={1}
+                          disabled={!isSenderBlocked}
                           style={[
-                            g.ml5,
-                            styles.commentButton,
-                            inputValue.trim().length > 0
-                              ? styles.enableButton
-                              : styles.disbleButton,
+                            styles.whiteCurvedBox,
+                            g.p10,
+                            grid.alignItems,
+                            grid.justifyContentCenter,
+                            g.ml15,
+                            g.mr15,
                           ]}>
-                          <TouchableOpacity
-                            style={[styles.commentButton, styles.enableButton]}
-                            onPress={() => {
-                              handleInputChat(1, inputValue, '', '', '');
-                            }}>
-                            {isSending ? (
-                              <ActivityIndicator
-                                size={'small'}
-                                color={'#fff'}
-                              />
-                            ) : (
-                              <GlobalInclude.BaseIcon
-                                containerStyle={{
-                                  height: scale(20),
-                                  width: scale(20),
-                                }}
-                                iconColor={
-                                  inputValue.trim().length > 0
-                                    ? '#fff'
-                                    : '#b2b2b2'
-                                }
-                                iconName={'send-o'}
-                                iconSize={scale(20)}
-                                iconType={IconType[4]}
-                              />
-                            )}
-                          </TouchableOpacity>
-                        </Animatable.View>
-                      )}
-                    </View>
-                  ) : (
-                    <View style={styles.footer}>
-                      <TouchableOpacity
-                        onPress={() => blockUser(false)}
-                        activeOpacity={1}
-                        disabled={!isSenderBlocked}
-                        style={[
-                          styles.whiteCurvedBox,
-                          g.p10,
-                          grid.alignItems,
-                          grid.justifyContentCenter,
-                          g.ml15,
-                          g.mr15,
-                        ]}>
-                        <Text
-                          style={[
-                            g.colorBlue,
-                            g.fs12,
-                            g.FHNR,
-                            g.txtCenter,
-                            g.txtCenterVertical,
-                          ]}>
-                          {blockMsg === '' ? 'Connecting...' : blockMsg}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </KeyboardAvoidingView>
-              )}
-            </View>
+                          <Text
+                            style={[
+                              g.colorBlue,
+                              g.fs12,
+                              g.FHNR,
+                              g.txtCenter,
+                              g.txtCenterVertical,
+                            ]}>
+                            {blockMsg === '' ? 'Connecting...' : blockMsg}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </KeyboardAvoidingView>
+                )}
+              </View>
+            </KeyboardAvoidingView>
           </SafeAreaView>
         </>
       ) : (
@@ -2597,7 +2629,6 @@ const MakeChat = ({route, navigation}) => {
         media={{image: false, video: false, document: false, audio: false}}
         supportMultiple={true}
         onPickMedia={media => {
-          isOpenPicker = false;
           if (media !== undefined && media !== null) {
             media.forEach(item => {
               if (item.type === 1) {

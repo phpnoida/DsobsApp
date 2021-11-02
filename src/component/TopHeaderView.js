@@ -66,7 +66,7 @@ const TopHeaderView = ({
           </View>
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{flexGrow: 1}}>
+            contentContainerStyle={{flexGrow: 1, paddingBottom: scale(90)}}>
             <View
               style={[grid.alignItems, grid.col, {marginBottom: scale(15)}]}>
               {menuOptions.map(function (item, i) {

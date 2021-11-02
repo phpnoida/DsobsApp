@@ -9,8 +9,6 @@ import {
   SafeAreaView,
   Alert,
   BackHandler,
-  ScrollView,
-  AppState,
 } from 'react-native';
 import g from '../../../theme/global';
 import grid from '../../../theme/grid';
@@ -47,6 +45,7 @@ let messageIds = [];
 let chatItem = null;
 let isChatEnabled = false;
 let timerInterval = null;
+let checkAlternate = false;
 
 const ChatList = ({navigation}) => {
   const refOptions = useRef();
@@ -83,6 +82,7 @@ const ChatList = ({navigation}) => {
       chatItem = null;
       isChatEnabled = false;
       timerInterval = null;
+      checkAlternate = false;
 
       disconnectSocket();
       connectSocket();
@@ -189,7 +189,12 @@ const ChatList = ({navigation}) => {
           console.log('chat-status-ack', event);
           if (event && event !== null && event !== undefined) {
             if (event.status) {
-              isChatEnabled = event.chatStatus === 1;
+              if (checkAlternate) {
+                checkAlternate = false;
+                chatStatus(event.chatStatus);
+              } else {
+                isChatEnabled = event.chatStatus === 1;
+              }
             }
           }
         });
@@ -198,7 +203,7 @@ const ChatList = ({navigation}) => {
     /********************
      * Specific Events
      */
-  }, [joinSocketEvent, getGroupData]);
+  }, [joinSocketEvent, getGroupData, chatStatus]);
 
   const pingYourSelf = useCallback(() => {
     if (timerInterval !== null) {
@@ -304,6 +309,7 @@ const ChatList = ({navigation}) => {
           chatId: element,
           userId: global.userId,
         };
+        console.log('payload', payload);
         setTimeout(() => {
           socketRef?.current?.emit('chat-subscribe-chat', payload);
         }, 100);
@@ -364,10 +370,10 @@ const ChatList = ({navigation}) => {
     }
   }, []);
 
-  const checkChatStatus = useCallback(() => {
+  const checkChatStatus = useCallback(userId => {
     if (socketRef.current !== undefined && socketRef.current !== null) {
       let payload = {
-        userId: global.userId,
+        userId: userId,
         _id: global.userId,
       };
 
@@ -399,7 +405,7 @@ const ChatList = ({navigation}) => {
       filterObject,
       response => {
         pingYourSelf();
-        checkChatStatus();
+        checkChatStatus(global.userId);
         setShowLoader(false);
         setFirstTimeLoad(false);
         manageResponse(response);
@@ -452,6 +458,23 @@ const ChatList = ({navigation}) => {
    * @API Section
    */
 
+  const chatStatus = useCallback(
+    status => {
+      if (status === 1) {
+        disconnectAllGroup();
+        let payload = {
+          groupId: chatItem._id,
+          chatType: chatItem.chatType,
+          chatItem: chatItem,
+        };
+        navigation.navigate('MakeChat', payload);
+      } else {
+        Alert.alert('Feature not available', 'User has disabled Chat.');
+      }
+    },
+    [disconnectAllGroup, navigation],
+  );
+
   const updateConversionStatus = useCallback(
     type => {
       Alert.alert(
@@ -493,11 +516,24 @@ const ChatList = ({navigation}) => {
             if (data.status) {
               let arrayItems = data.groups;
 
-              // console.log('====================================');
-              // console.log('arrayItems', arrayItems.length);
-              // console.log('====================================');
+              console.log('====================================');
+              console.log('arrayItems', arrayItems);
+              console.log('====================================');
 
-              let result = _.map(arrayItems, '_id');
+              let result = [];
+              arrayItems.forEach(element => {
+                if (element.chatType === 0) {
+                  if (element.isBlock === 0 && element.userStatusForChat) {
+                    result.push(element._id);
+                  }
+                } else {
+                  if (element.userStatusForChat) {
+                    result.push(element._id);
+                  }
+                }
+              });
+
+              //let result = _.map(arrayItems, '_id');
               let isAnyNew = false;
               let unJoined = [];
               result.forEach(element => {
@@ -793,16 +829,21 @@ const ChatList = ({navigation}) => {
       <TouchableOpacity
         activeOpacity={0.9}
         onPress={() => {
+          console.log('item', JSON.stringify(item));
+          chatItem = item;
           if (isChatEnabled) {
-            chatItem = item;
-
-            disconnectSocket();
-            let payload = {
-              groupId: chatItem._id,
-              chatType: chatItem.chatType,
-              chatItem: chatItem,
-            };
-            navigation.navigate('MakeChat', payload);
+            if (item.chatType === 0) {
+              checkAlternate = true;
+              checkChatStatus(chatItem.userId);
+            } else {
+              disconnectAllGroup();
+              let payload = {
+                groupId: chatItem._id,
+                chatType: chatItem.chatType,
+                chatItem: chatItem,
+              };
+              navigation.navigate('MakeChat', payload);
+            }
           } else {
             Alert.alert(
               'Chat Disabled',
@@ -1045,11 +1086,11 @@ const ChatList = ({navigation}) => {
           }
         }}
         customDelegate={() => {
-          disconnectSocket();
+          disconnectAllGroup();
           navigation.goBack();
         }}
         openNewPage={page => {
-          disconnectSocket();
+          disconnectAllGroup();
           navigation.navigate(page);
         }}
       />

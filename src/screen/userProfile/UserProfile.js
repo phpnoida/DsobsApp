@@ -355,7 +355,7 @@ const UserProfile = ({route, navigation}) => {
         setIsLoading(true);
       }
     } else {
-      Alert.alert('Feature not available', 'user has disabled this feature.');
+      Alert.alert('Feature not available', 'User has disabled Chat.');
     }
   }, []);
 

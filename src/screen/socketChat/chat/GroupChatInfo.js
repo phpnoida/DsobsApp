@@ -10,6 +10,8 @@ import {
   Modal,
   Alert,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import g from '../../../theme/global';
 import grid from '../../../theme/grid';
@@ -114,7 +116,6 @@ const GroupChatInfo = ({route, navigation}) => {
       socketRef?.current?.on('chat-removed-user', event => {
         if (event && event !== null && event !== undefined) {
           console.log('removed', event);
-
           setIsUpdating(false);
           if (event.status) {
             if (
@@ -154,9 +155,22 @@ const GroupChatInfo = ({route, navigation}) => {
   }, [route.params, getGroupData, navigation]);
 
   const disconnectAllEvents = () => {
-    socketRef?.current?.removeListener('chat-removed-user');
     socketRef?.current?.removeListener('chat-added-user');
+    socketRef?.current?.removeListener('chat-get-message');
+    socketRef?.current?.removeListener('chat-get-edited-message');
+    socketRef?.current?.removeListener('chat-message-hidden');
+    socketRef?.current?.removeListener('chat-message-removed');
+    socketRef?.current?.removeListener('chat-blocked-user');
+    socketRef?.current?.removeListener('chat-unblocked-user');
+    socketRef?.current?.removeListener('chat-read-message-ack');
+    socketRef?.current?.removeListener('chat-user-connected');
+    socketRef?.current?.removeListener('chat-removed-user');
     socketRef?.current?.removeListener('chat-updated');
+    socketRef?.current?.removeListener('chat-check-online-user-ack');
+    socketRef?.current?.removeListener('typing-ack');
+    socketRef?.current?.removeListener('chat-made-admin');
+    socketRef?.current?.removeListener('chat-removed-admin');
+    socketRef?.current?.removeListener('chat-status-ack');
   };
 
   useEffect(() => {
@@ -291,7 +305,7 @@ const GroupChatInfo = ({route, navigation}) => {
 
   const removeIndex = callBack => {
     Alert.alert(
-      'Are you sure you want to delete it?',
+      'Are you sure you want to remove?',
       '',
       [
         {
@@ -806,38 +820,39 @@ const GroupChatInfo = ({route, navigation}) => {
       <OptionsSheet
         ref={groupTitleRef}
         minClosingHeight={50}
-        height={height / 2 - 170}
+        height={scale(180)}
         duration={200}
         closeOnDragDown={true}
         customStyles={{
           container: GlobalInclude.AppStyle.sheetContainer,
         }}>
-        <KeyboardAwareScrollView
-          keyboardShouldPersistTaps={'handled'}
-          style={grid.flex1}
-          showsVerticalScrollIndicator={false}>
-          <View style={grid.flex1}>
-            <View style={g.mb15}>
-              {generateHeader('Group Name', true)}
-              <TextInput
-                underlineColorAndroid="transparent"
-                style={g.inputWhite}
-                maxLength={50}
-                keyboardType={'default'}
-                autoCapitalize={'words'}
-                returnKeyType={'done'}
-                placeholder={'Type name'}
-                value={groupName}
-                onChangeText={value => {
-                  setGroupName(value);
-                }}
-              />
-              {errorMessage.groupName && errorMessage.groupName.length > 0 && (
-                <Text style={[g.errorMsg, g.pt5]}>
-                  {errorMessage.groupName}
-                </Text>
-              )}
-            </View>
+        <KeyboardAvoidingView
+          keyboardVerticalOffset={Platform.select({
+            ios: -30,
+            android: 30,
+          })}
+          behavior={Platform.select({
+            android: 'height',
+            ios: 'padding',
+          })}>
+          <View style={g.mb15}>
+            {generateHeader('Group Name', true)}
+            <TextInput
+              underlineColorAndroid="transparent"
+              style={g.inputWhite}
+              maxLength={50}
+              keyboardType={'default'}
+              autoCapitalize={'words'}
+              returnKeyType={'done'}
+              placeholder={'Type name'}
+              value={groupName}
+              onChangeText={value => {
+                setGroupName(value);
+              }}
+            />
+            {errorMessage.groupName && errorMessage.groupName.length > 0 && (
+              <Text style={[g.errorMsg, g.pt5]}>{errorMessage.groupName}</Text>
+            )}
           </View>
           <CommonButton
             title={'Save'}
@@ -860,7 +875,7 @@ const GroupChatInfo = ({route, navigation}) => {
               }, 220);
             }}
           />
-        </KeyboardAwareScrollView>
+        </KeyboardAvoidingView>
       </OptionsSheet>
 
       <OptionsSheet

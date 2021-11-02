@@ -56,7 +56,7 @@ const Summary = ({route, navigation}) => {
     setIsLoading(true);
     getMagazineDetail(
       magazineId,
-      (response) => {
+      response => {
         setIsLoading(false);
         if (response && response !== null) {
           if (
@@ -88,7 +88,7 @@ const Summary = ({route, navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         setIsLoading(false);
         console.log('error', error);
       },
@@ -101,16 +101,16 @@ const Summary = ({route, navigation}) => {
    * ************************************************
    */
 
-  const openEmail = (email) => {
+  const openEmail = email => {
     if (email !== undefined && email !== null && email !== '') {
       Linking.openURL(`mailto:${email}`);
     }
   };
 
-  const openLink = (link) => {
+  const openLink = link => {
     if (link !== undefined && link !== null && link !== '') {
       console.log('link', link);
-      Linking.canOpenURL(link).then((status) => {
+      Linking.canOpenURL(link).then(status => {
         if (status) {
           Linking.openURL(link);
         } else {
@@ -125,8 +125,8 @@ const Summary = ({route, navigation}) => {
     let count = 0;
     let isFound = false;
 
-    tableOfContents.map((content) => {
-      content.data.map((data) => {
+    tableOfContents.map(content => {
+      content.data.map(data => {
         let object = {
           header: data.title,
           subTitle: data.subTitle,
@@ -532,7 +532,7 @@ const Summary = ({route, navigation}) => {
                               </View>
                               <View style={g.mt10}>
                                 {editorialBoard !== null &&
-                                  editorialBoard.map((item) => {
+                                  editorialBoard.map(item => {
                                     return (
                                       <View style={g.mb10}>
                                         <Text

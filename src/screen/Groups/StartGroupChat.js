@@ -2132,9 +2132,9 @@ const StartGroupChat = ({route}) => {
       <SafeAreaView style={[GlobalInclude.AppStyle.topSpace, g.bggray3]}>
         <KeyboardAvoidingView
           keyboardVerticalOffset={Platform.select({
-            ios: () => -30,
-          })()}
-          behavior={Platform.select({android: 'height', ios: 'padding'})}
+            ios: -30,
+          })}
+          behavior={Platform.select({ios: 'padding'})}
           style={{marginBottom: scale(10), flex: 1}}>
           <View style={grid.flex1}>
             <View style={grid.flex1}>
@@ -2206,9 +2206,10 @@ const StartGroupChat = ({route}) => {
             {!showSearch && (
               <KeyboardAvoidingView
                 keyboardVerticalOffset={Platform.select({
-                  ios: () => -30,
-                })()}
-                behavior={Platform.select({android: 'height', ios: 'padding'})}>
+                  ios: -30,
+                })}
+                behavior={Platform.select({ios: 'padding'})}
+                style={{marginBottom: scale(10), flex: 1}}>
                 {isConnected ? (
                   <View style={styles.footer}>
                     <View
