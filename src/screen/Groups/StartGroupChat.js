@@ -2208,8 +2208,7 @@ const StartGroupChat = ({route}) => {
                 keyboardVerticalOffset={Platform.select({
                   ios: -30,
                 })}
-                behavior={Platform.select({ios: 'padding'})}
-                style={{marginBottom: scale(10), flex: 1}}>
+                behavior={Platform.select({ios: 'padding'})}>
                 {isConnected ? (
                   <View style={styles.footer}>
                     <View

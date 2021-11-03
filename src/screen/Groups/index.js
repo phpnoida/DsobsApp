@@ -222,6 +222,7 @@ const GroupsList = ({route, navigation}) => {
         manageResponse(response);
       },
       (code, error) => {
+        console.log('error', error, code);
         setPostData([]);
       },
     );
@@ -293,9 +294,7 @@ const GroupsList = ({route, navigation}) => {
         ) {
           try {
             let data = response.data;
-            console.log('====================================');
-            console.log('data', data);
-            console.log('====================================');
+
             if (data.status) {
               let arrayItems = data.groups;
 
@@ -739,9 +738,9 @@ const GroupsList = ({route, navigation}) => {
                     // if (uploadRef.current !== null) {
                     //   uploadRef.current.open();
                     // }
-                    pickImage((data)=>{
+                    pickImage(data => {
                       setMediaData(data);
-                    })
+                    });
                   },
                   mediaData !== undefined && mediaData !== null
                     ? 'Image Uploaded successfully'

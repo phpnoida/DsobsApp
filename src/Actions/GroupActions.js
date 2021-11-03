@@ -126,12 +126,16 @@ export function doJoinGroup(groupId, callback, errCallback) {
   console.log('requestPath', requestPath);
 
   const request = axios
-    .post(requestPath, new FormData(), {
-      headers: {
-        Authorization: global.accessToken,
-        'content-type': 'application/json',
+    .post(
+      requestPath,
+      {},
+      {
+        headers: {
+          Authorization: global.accessToken,
+          'content-type': 'application/json',
+        },
       },
-    })
+    )
     .then(res => callback(res))
     .catch(err => {
       handleError(err, errCallback);
@@ -172,12 +176,16 @@ export function doAcceptUserRequest(
   console.log('requestPath', requestPath);
 
   const request = axios
-    .post(requestPath, null, {
-      headers: {
-        Authorization: global.accessToken,
-        'content-type': 'application/json',
+    .post(
+      requestPath,
+      {},
+      {
+        headers: {
+          Authorization: global.accessToken,
+          'content-type': 'application/json',
+        },
       },
-    })
+    )
     .then(res => callback(res))
     .catch(err => {
       handleError(err, errCallback);
@@ -191,12 +199,16 @@ export function doExitFromGroup(groupId, userId, callback, errCallback) {
   let requestPath = `${SERVER_PATH}group/remove-user/${groupId}/${userId}`;
 
   const request = axios
-    .post(requestPath, null, {
-      headers: {
-        Authorization: global.accessToken,
-        'content-type': 'application/json',
+    .post(
+      requestPath,
+      {},
+      {
+        headers: {
+          Authorization: global.accessToken,
+          'content-type': 'application/json',
+        },
       },
-    })
+    )
     .then(res => callback(res))
     .catch(err => {
       handleError(err, errCallback);
@@ -224,12 +236,16 @@ export function doUpdateGroupAdmin(
   console.log('requestPath', requestPath);
 
   const request = axios
-    .post(requestPath, new FormData(), {
-      headers: {
-        Authorization: global.accessToken,
-        'content-type': 'application/json',
+    .post(
+      requestPath,
+      {},
+      {
+        headers: {
+          Authorization: global.accessToken,
+          'content-type': 'application/json',
+        },
       },
-    })
+    )
     .then(res => callback(res))
     .catch(err => {
       handleError(err, errCallback);
@@ -292,12 +308,16 @@ export function doHideMessage(groupId, messageId, callback, errCallback) {
   console.log('====================================');
 
   const request = axios
-    .post(requestPath, null, {
-      headers: {
-        Authorization: global.accessToken,
-        'content-type': 'application/json',
+    .post(
+      requestPath,
+      {},
+      {
+        headers: {
+          Authorization: global.accessToken,
+          'content-type': 'application/json',
+        },
       },
-    })
+    )
     .then(res => callback(res))
     .catch(err => {
       handleError(err, errCallback);

@@ -104,8 +104,8 @@ const UploadMedia = ({
       multiple: supportMultiple ? supportMultiple : false,
     })
       .then(images => {
+        console.log('images', images);
         if (images !== null) {
-          console.log('images', images);
           uploadTmpImages = [];
           uploadFinalImages = [];
           imageIndex = 0;
@@ -118,6 +118,7 @@ const UploadMedia = ({
         }
       })
       .catch(err => {
+        console.log('err', err);
         if (err.code === 'E_PICKER_CANCELLED') {
           onPickMedia(null);
           Alert.alert('Cancel Selection', 'User Cancelled Selection!');
