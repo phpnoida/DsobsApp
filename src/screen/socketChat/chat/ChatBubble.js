@@ -13,6 +13,7 @@ import {scale} from '../../../theme/Scalling';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import ProgressImage from '../../../component/ProgresImage';
 import YoutubeView from '../../../component/YoutubeItem';
+import GroupImages from '../../../component/GroupImage/GroupImages';
 import moment from 'moment';
 import ParsedText from 'react-native-parsed-text';
 import Helper from '../../../helper/Helper';
@@ -115,6 +116,20 @@ class ChatItem extends PureComponent {
         ]}>
         {source}
       </ParsedText>
+    );
+  }
+
+  renderGroupImages(currentMessage) {
+    let mediaContent = null;
+    if (currentMessage.media !== undefined && currentMessage.media !== null) {
+      mediaContent = currentMessage.media.metaData.imageArray;
+    }
+    return (
+      <GroupImages
+        images={mediaContent}
+        style={{aspectRatio: 1 / 1, alignSelf: 'center'}}
+        width={width / 2}
+      />
     );
   }
 
@@ -553,6 +568,10 @@ class ChatItem extends PureComponent {
             ) : messageType === 'EMOJI' ? (
               <View style={style}>
                 {this.renderEmojiComponent(messageContent)}
+              </View>
+            ) : messageType === 'IMAGE_GROUP' ? (
+              <View style={style}>
+                {this.renderGroupImages(currentMessage)}
               </View>
             ) : null}
             {messageContent !== null &&

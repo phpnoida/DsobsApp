@@ -45,16 +45,36 @@ class GroupImages extends Component {
     return (
       <View style={[styles.imageContainer, {backgroundColor}]}>
         {title && <Text style={styles.titleStyle}>{title}</Text>}
-        <View style={styles.fourImagesInnerView}>
-          {images.map((image, i) => (
-            <TouchableOpacity
-              key={`chat-image-${i}`}
-              onPress={() => this.showImageListModal(!modalVisible, i)}
-              activeOpacity={0.8}
-              style={styles.flexBasisHalf}>
-              {this.imageView(image.media.mediaUrl)}
-            </TouchableOpacity>
-          ))}
+        <View style={styles.moreThanFourImagesInnerView}>
+          <TouchableOpacity
+            onPress={() => this.showImageListModal(!modalVisible, 0)}
+            activeOpacity={0.8}
+            style={styles.flexBasisHalf}>
+            {this.imageView(images[0].media.mediaUrl)}
+          </TouchableOpacity>
+          <View style={{marginHorizontal: 2}} />
+          <TouchableOpacity
+            onPress={() => this.showImageListModal(!modalVisible, 1)}
+            activeOpacity={0.8}
+            style={styles.flexBasisHalf}>
+            {this.imageView(images[1].media.mediaUrl)}
+          </TouchableOpacity>
+        </View>
+        <View style={{marginVertical: 2}} />
+        <View style={styles.moreThanFourImagesInnerView}>
+          <TouchableOpacity
+            onPress={() => this.showImageListModal(!modalVisible, 2)}
+            activeOpacity={0.8}
+            style={styles.flexBasisHalf}>
+            {this.imageView(images[2].media.mediaUrl)}
+          </TouchableOpacity>
+          <View style={{marginHorizontal: 2}} />
+          <TouchableOpacity
+            onPress={() => this.showImageListModal(!modalVisible, 3)}
+            activeOpacity={0.8}
+            style={styles.flexBasisHalf}>
+            {this.imageView(images[3].media.mediaUrl)}
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -74,6 +94,7 @@ class GroupImages extends Component {
             style={styles.flexBasisHalf}>
             {this.imageView(images[0].media.mediaUrl)}
           </TouchableOpacity>
+          <View style={{marginHorizontal: 2}} />
           <TouchableOpacity
             onPress={() => this.showImageListModal(!modalVisible, 1)}
             activeOpacity={0.8}
@@ -81,7 +102,7 @@ class GroupImages extends Component {
             {this.imageView(images[1].media.mediaUrl)}
           </TouchableOpacity>
         </View>
-
+        <View style={{marginVertical: 2}} />
         <View style={styles.moreThanFourImagesInnerView}>
           <TouchableOpacity
             onPress={() => this.showImageListModal(!modalVisible, 2)}
@@ -89,7 +110,7 @@ class GroupImages extends Component {
             style={styles.flexBasisHalf}>
             {this.imageView(images[2].media.mediaUrl)}
           </TouchableOpacity>
-
+          <View style={{marginHorizontal: 2}} />
           <TouchableOpacity
             onPress={() => this.showImageListModal(!modalVisible, 3)}
             activeOpacity={0.8}
@@ -146,7 +167,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   flexBasisHalf: {
-    flexBasis: '50%',
+    flexBasis: '48%',
   },
   flexOne: {
     flex: 1,
@@ -197,21 +218,21 @@ const styles = StyleSheet.create({
   container: {
     aspectRatio: 1,
     borderRadius: 5,
-    width: '100%',
+
+    flex: 1,
   },
   innerView: {
     backgroundColor: 'lightgray',
     borderRadius: 5,
     height: '100%',
     justifyContent: 'center',
-    width: '100%',
+    flex: 1,
   },
   img: {
     borderRadius: 5,
     flex: 1,
     height: '100%',
     resizeMode: 'cover',
-    width: '100%',
   },
 });
 

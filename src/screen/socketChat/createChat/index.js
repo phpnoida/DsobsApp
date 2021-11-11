@@ -36,6 +36,7 @@ let groupId = '';
 let userList = [];
 let selectedChatType = 0;
 let groupNameInput = '';
+let userItem = null;
 
 const CreateChat = ({route, navigation}) => {
   const socketRef = useRef();
@@ -112,68 +113,60 @@ const CreateChat = ({route, navigation}) => {
   }, [route.params, groupCreated, checkChatStatus]);
 
   const createGroup = async () => {
-    let userIds = [];
-
-    userList.map((item, index) => {
-      userIds.push(item._id);
-    });
-
     if (socketRef?.current !== undefined && socketRef?.current !== null) {
+      let userIds = [];
+      userList.map((item, index) => {
+        userIds.push(item._id);
+      });
       let payload = {
         _id: global.userId,
-        userId: userIds,
+        userId: global.userId,
+        chatType: selectedChatType,
+        users: userIds,
+        name: groupNameInput,
       };
+
       console.log('payload', payload);
-      socketRef.current.emit('chat-status-multi', payload);
+      socketRef.current.emit('chat-create', payload);
       setIsLoading(true);
     }
   };
 
-  const checkChatStatus = useCallback(chat => {
-    let offlineUsers = _.map(_.filter(chat, {enableChat: 0}), '_id');
-    console.log('====================================');
-    console.log('offlineUsers', offlineUsers);
-    console.log('selectedUser', userList);
-    console.log('====================================');
-    if (offlineUsers.length > 0) {
-      setIsLoading(false);
-      let disabledUserMessage = '';
-      offlineUsers.map(item => {
-        let index = userList.findIndex(x => x._id === item);
-        if (index > -1) {
-          disabledUserMessage =
-            disabledUserMessage +
-            Helper.capitalize(Helper.concatName(userList[index])) +
-            ' - ' +
-            userList[index].batch +
-            '\n';
-        }
-      });
-
-      Alert.alert(
-        'Error',
-        'Some members in your selected list have disabled their chat, so you cannot add them. The members are\n' +
-          disabledUserMessage,
-      );
-    } else {
-      if (socketRef?.current !== undefined && socketRef?.current !== null) {
-        let userIds = [];
-        userList.map((item, index) => {
-          userIds.push(item._id);
-        });
-        let payload = {
-          _id: global.userId,
-          userId: global.userId,
-          chatType: selectedChatType,
-          users: userIds,
-          name: groupNameInput,
-        };
-
-        console.log('payload', payload);
-        socketRef.current.emit('chat-create', payload);
+  const checkChatStatus = useCallback(
+    chat => {
+      let offlineUsers = _.map(_.filter(chat, {enableChat: 0}), '_id');
+      console.log('====================================');
+      console.log('offlineUsers', offlineUsers);
+      console.log('====================================');
+      if (offlineUsers.length > 0) {
+        Alert.alert(
+          'Error',
+          `${Helper.capitalize(
+            Helper.concatName(userItem),
+          )} has disabled Chat so You can't add.`,
+        );
+      } else {
+        let oldData = selectedUser;
+        oldData.push(userItem);
+        setSelectedUser([...oldData]);
+        userList = [...oldData];
+        setSearchedUser([]);
+        setSearchUserName('');
       }
-    }
-  }, []);
+    },
+    [selectedUser],
+  );
+
+  const checkUserAvailable = () => {
+    let userIds = [];
+    userIds.push(userItem._id);
+    let payload = {
+      _id: global.userId,
+      userId: userIds,
+    };
+    console.log('payload', payload);
+    socketRef.current.emit('chat-status-multi', payload);
+  };
 
   const groupCreated = useCallback(() => {
     setIsLoading(false);
@@ -449,12 +442,9 @@ const CreateChat = ({route, navigation}) => {
                           '',
                         );
                       } else {
-                        oldData.push(row);
-                        setSelectedUser([...oldData]);
-                        userList = [...oldData];
-                        setSearchedUser([]);
-                        setSearchUserName('');
+                        userItem = row;
                         Keyboard.dismiss();
+                        checkUserAvailable();
                       }
                     }
                   }}
