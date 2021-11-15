@@ -248,11 +248,13 @@ const ChatUserProfile = ({route, navigation}) => {
                       ? profileData.countryCode + ' '
                       : ' ') + profileData.phone,
                 () => {
-                  Helpers.openDialler(
-                    (profileData.countryCode
-                      ? profileData.countryCode + ' '
-                      : ' ') + profileData.phone,
-                  );
+                  if (profileData.phoneScope !== 0) {
+                    Helpers.openDialler(
+                      (profileData.countryCode
+                        ? profileData.countryCode + ' '
+                        : ' ') + profileData.phone,
+                    );
+                  }
                 },
               )}
             </View>

@@ -34,7 +34,7 @@ let downloadOptions = {
   },
 };
 let currentOriantation = '';
-const DocViewer = (props) => {
+const DocViewer = props => {
   /**
    * Here you have to pass valid media content if media content is in different format you have to reformat like below
    * [
@@ -52,7 +52,7 @@ const DocViewer = (props) => {
    * Download content
    *
    */
-  const _downloadContent = async (file) => {
+  const _downloadContent = async file => {
     if (Platform.OS === 'android') {
       try {
         const granted = await PermissionsAndroid.request(
@@ -83,10 +83,10 @@ const DocViewer = (props) => {
     }
   };
 
-  const downloadData = (file) => {
+  const downloadData = file => {
     config(downloadOptions)
       .fetch('GET', file)
-      .then((res) => {
+      .then(res => {
         console.log('res', res);
         responseMessage = 'Content downloaded successfully!';
         setIsDownloading(false);
@@ -119,7 +119,7 @@ const DocViewer = (props) => {
     };
   }, []);
 
-  const _orientationDidChange = (orientation) => {
+  const _orientationDidChange = orientation => {
     currentOriantation = orientation;
   };
 
@@ -144,13 +144,13 @@ const DocViewer = (props) => {
             onPageChanged={(page, numberOfPages) => {
               // console.log(`current page: ${page}`);
             }}
-            onError={(error) => {
+            onError={error => {
               console.log('error', error);
               console.log('mediaContent', mediaContent);
               setShowModal(!showModal);
               props.onClose();
             }}
-            onPressLink={(uri) => {
+            onPressLink={uri => {
               // console.log(`Link presse: ${uri}`)
             }}
             style={GlobalInclude.AppStyle.fullSize}

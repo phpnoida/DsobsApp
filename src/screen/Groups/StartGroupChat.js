@@ -173,31 +173,10 @@ const StartGroupChat = ({route}) => {
       filterObject.groupId = groupId;
     }
 
-    const handleAppStateChange = state => {
-      if (isOpenPicker) {
-        return;
-      }
-
-      if (appState.current.match(/inactive|background/) && state === 'active') {
-        console.log('App has come to the foreground!');
-      } else if (state === 'background' || state === 'inactive') {
-        console.log('App gone to the background!');
-        // if (!isBackTap) {
-        //   isBackTap = true;
-        //   disconnectUser();
-        // }
-      }
-      appState.current = state;
-    };
-
     const backAction = () => {
-      if (showSearch) {
-        resetSearch();
-      } else {
-        if (!isBackTap) {
-          isBackTap = true;
-          disconnectUser();
-        }
+      if (!isBackTap) {
+        isBackTap = true;
+        disconnectUser();
       }
       return true;
     };
@@ -206,8 +185,6 @@ const StartGroupChat = ({route}) => {
       'hardwareBackPress',
       backAction,
     );
-
-    AppState.addEventListener('change', handleAppStateChange);
 
     const unsubscribe = navigation.addListener('focus', () => {
       console.log('onFocus');
@@ -218,18 +195,10 @@ const StartGroupChat = ({route}) => {
       if (backHandler !== undefined && backHandler !== null) {
         backHandler.remove();
       }
-      AppState.removeEventListener('change', handleAppStateChange);
       disconnectUser();
       unsubscribe();
     };
-  }, [
-    route.params,
-    disconnectUser,
-    navigation,
-    getGroupData,
-    resetSearch,
-    showSearch,
-  ]);
+  }, [route.params, disconnectUser, navigation, getGroupData, resetSearch]);
 
   useEffect(() => {
     if (
@@ -294,6 +263,7 @@ const StartGroupChat = ({route}) => {
               blockMsg = 'Admin removed you from group!';
               setIsConnected(false);
               setTimeout(() => {
+                console.log('279');
                 disconnectUser();
               }, 5000);
             }
@@ -510,6 +480,7 @@ const StartGroupChat = ({route}) => {
         userId: global.userId,
       };
 
+      console.log('514');
       socketRef.current.emit('user-disconnect', payload);
 
       setTimeout(() => {
@@ -568,7 +539,7 @@ const StartGroupChat = ({route}) => {
 
     filterObject = {};
     filterObject.page = 1;
-    filterObject.limit = 10;
+    filterObject.limit = 100;
   };
 
   const getOldMessages = useCallback(() => {
@@ -652,8 +623,6 @@ const StartGroupChat = ({route}) => {
                 if (unreadIds.length > 0) {
                   updateReadMessages(unreadIds);
                 }
-
-                console.log('array.length', array.length);
                 if (array.length === 0) {
                   if (
                     firstComment !== undefined &&
@@ -682,9 +651,9 @@ const StartGroupChat = ({route}) => {
                 } else {
                   for (let i = 0; i < array.length; i++) {
                     let element = array[i];
-                    let media = element?.media;
-                    let mediaType = media?.mediaType;
-                    let tmpAuthorId = element?.authorId?._id;
+                    let media = element?.media ?? null;
+                    let mediaType = media?.mediaType ?? null;
+                    let tmpAuthorId = element?.authorId?._id ?? null;
 
                     if (authorId === 0) {
                       authorId = tmpAuthorId;
@@ -720,7 +689,25 @@ const StartGroupChat = ({route}) => {
                         tmpArray = [];
                         counter = 0;
                       }
-                      objArray.push(element);
+                      authorId = tmpAuthorId;
+
+                      if (mediaType === 'IMAGE') {
+                        counter++;
+                        tmpArray.push(element);
+                      } else {
+                        if (counter > 3) {
+                          objArray.push(imageGroupRequest(tmpArray));
+                          tmpArray = [];
+                          counter = 0;
+                        } else {
+                          tmpArray.forEach(child => {
+                            objArray.push(child);
+                          });
+                          tmpArray = [];
+                          counter = 0;
+                        }
+                        objArray.push(element);
+                      }
                     }
                   }
 
@@ -1682,8 +1669,8 @@ const StartGroupChat = ({route}) => {
                 <TouchableOpacity
                   activeOpacity={0.9}
                   onPress={() => {
-                    setFreshSearch(true);
-                    setFilterMessage([]);
+                    // setFreshSearch(true);
+                    // setFilterMessage([]);
                     setShowSearch(true);
                   }}
                   style={{
@@ -2597,8 +2584,6 @@ const StartGroupChat = ({route}) => {
           }}
         />
       )}
-
-      {console.log('showHideMessageAlert', showHideMessageAlert)}
       {showHideMessageAlert && (
         <GlobalInclude.ModalAlert
           status={showHideMessageAlert}

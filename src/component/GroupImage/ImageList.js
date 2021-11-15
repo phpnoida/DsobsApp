@@ -9,6 +9,7 @@ import {
   Modal,
   ActivityIndicator,
   Text,
+  TouchableNativeFeedback,
 } from 'react-native';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import GlobalInclude from '../../globalInclude/Globalinclude';
@@ -127,7 +128,7 @@ class ImageList extends Component {
           showLabel
           title={'Image List'}
         />
-        {/* {this.renderBackBtn()} */}
+
         <ScrollView
           ref={view => (this.scrollView = view)}
           showsVerticalScrollIndicator={false}
@@ -141,6 +142,18 @@ class ImageList extends Component {
             transparent={false}
             onRequestClose={() => this.setState({showImg: false})}>
             <ImageViewer
+              enableSwipeDown
+              renderIndicator={() => <View />}
+              renderHeader={() => (
+                <HeaderBar
+                  onGoBack={() => {
+                    this.setState({showImg: false});
+                  }}
+                  showBack={true}
+                  showLabel
+                  title={'Image List'}
+                />
+              )}
               index={imgToShow}
               loadingRender={() => (
                 <ActivityIndicator size="small" color="#eee" />

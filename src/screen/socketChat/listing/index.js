@@ -561,6 +561,7 @@ const ChatList = ({navigation}) => {
               setPaginationStatus(PaginationStatus.waiting);
             }
           } catch (error) {
+            console.log('error', error);
             setPaginationStatus(PaginationStatus.allLoaded);
           }
         }

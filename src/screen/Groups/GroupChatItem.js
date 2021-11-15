@@ -36,9 +36,9 @@ class GroupChatItem extends PureComponent {
   }
   isSameUser(currentMessage = {}, diffMessage = {}) {
     return !!(
-      diffMessage.user &&
-      currentMessage.user &&
-      diffMessage.user._id === currentMessage.user._id
+      diffMessage.authorId &&
+      currentMessage.authorId &&
+      diffMessage.authorId._id === currentMessage.authorId._id
     );
   }
 
@@ -51,23 +51,21 @@ class GroupChatItem extends PureComponent {
         <View style={[grid.col, g.bgWhite, styles.bubbleLeft, g.p5]}>
           <View style={[grid.row, g.mt3, g.mb2]}>
             <View style={[grid.col]}>
-              {!this.isSameUser(currentMessage, previousMessage) && (
-                <TouchableOpacity
-                  style={{zIndex: 1}}
-                  hitSlop={{
-                    top: 20,
-                    bottom: 20,
-                    left: 20,
-                    right: 20,
-                  }}
-                  onPress={() => {
-                    onTapUserName();
-                  }}>
-                  <Text numberOfLines={1} style={[customFont, g.FHNB]}>
-                    {currentMessage.authorId.name}
-                  </Text>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                style={{zIndex: 1}}
+                hitSlop={{
+                  top: 20,
+                  bottom: 20,
+                  left: 20,
+                  right: 20,
+                }}
+                onPress={() => {
+                  onTapUserName();
+                }}>
+                <Text numberOfLines={1} style={[customFont, g.FHNB]}>
+                  {currentMessage.authorId.name}
+                </Text>
+              </TouchableOpacity>
             </View>
             <View style={[g.mr5, grid.justifyContentCenter, grid.alignItems]}>
               {this.renderDateComponent(currentMessage, true)}
@@ -99,19 +97,17 @@ class GroupChatItem extends PureComponent {
         <View style={[grid.col, g.bgGreenLight, styles.bubbleRight, g.p5]}>
           <View style={[grid.row, g.mt3, g.mb2]}>
             <View style={[grid.col]}>
-              {!this.isSameUser(currentMessage, previousMessage) && (
-                <TouchableOpacity
-                  style={{zIndex: 1}}
-                  onPress={() => {
-                    onTapUserName();
-                  }}>
-                  <Text
-                    numberOfLines={1}
-                    style={[customFont, g.FHNB, g.colorBlack]}>
-                    {currentMessage.authorId.name}
-                  </Text>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                style={{zIndex: 1}}
+                onPress={() => {
+                  onTapUserName();
+                }}>
+                <Text
+                  numberOfLines={1}
+                  style={[customFont, g.FHNB, g.colorBlack]}>
+                  {currentMessage.authorId.name}
+                </Text>
+              </TouchableOpacity>
             </View>
             <View style={[g.mr5, grid.justifyContentCenter, grid.alignItems]}>
               {this.renderDateComponent(currentMessage, false)}

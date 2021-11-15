@@ -865,7 +865,12 @@ const GroupInfo = ({route, navigation}) => {
           if (media !== undefined && media !== null) {
             console.log('media', JSON.stringify(media));
             if (!isValidMedia(media[0])) {
-              setErrorMessage({mediaData: 'Photo must be in 16:9 ratio'});
+              responseMessage = 'Photo must be in 16:9 ratio';
+              setShowErrorMessage(true);
+              setTimeout(() => {
+                setShowErrorMessage(false);
+                getGroupData();
+              }, 2500);
             } else {
               if (media !== undefined && media !== null) {
                 let requestObject = {

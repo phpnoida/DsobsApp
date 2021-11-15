@@ -17,7 +17,6 @@ import YoutubeView from '../../component/YoutubeItem';
 import BubbleText from '../../component/BubbleText';
 import moment from 'moment';
 import ParsedText from 'react-native-parsed-text';
-import Helper from '../../helper/Helper';
 import Pdf from 'react-native-pdf';
 
 import {isSameUser, isSameDay} from '../../helper/ChatHelper';
@@ -100,15 +99,15 @@ class ChatItem extends PureComponent {
   }
 
   handleEmailPress(email, matchIndex /*: number*/) {
-    Helper.openEmail(email);
+    Helpers.openEmail(email);
   }
 
   handleUrlPress(url, matchIndex /*: number*/) {
-    Helper.openLink(url);
+    Helpers.openLink(url);
   }
 
   handlePhonePress(phone, matchIndex /*: number*/) {
-    Helper.openDialler(phone);
+    Helpers.openDialler(phone);
   }
 
   renderTextComponent(source, isLeft) {
@@ -376,7 +375,7 @@ class ChatItem extends PureComponent {
             isLeft && g.ml5,
             isLeft && g.mb2,
           ]}>
-          {Helper.getChatDate(source.createdAt)}
+          {HelpersgetChatDate(source.createdAt)}
         </Text>
       </View>
     );
@@ -433,7 +432,7 @@ class ChatItem extends PureComponent {
             {currentMessage.replay.user._id === global.userId &&
             currentMessage.user._id === global.userId
               ? 'You'
-              : Helper.concatName(currentMessage.replay.user)}
+              : HelpersconcatName(currentMessage.replay.user)}
           </Text>
           <Text
             numberOfLines={2}
@@ -500,7 +499,7 @@ class ChatItem extends PureComponent {
               <Text
                 numberOfLines={1}
                 style={[customFont, g.FHNB, g.pt4, g.pl5, {color: color}]}>
-                {Helper.capitalize(currentMessage.user.firstName)}
+                {Helperscapitalize(currentMessage.user.firstName)}
                 {currentMessage.user.batch !== undefined &&
                 currentMessage.user.batch !== null
                   ? ' ' + '-' + currentMessage.user.batch + ' '

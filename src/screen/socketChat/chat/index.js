@@ -962,6 +962,7 @@ const MakeChat = ({route, navigation}) => {
   );
 
   const imageGroupRequest = tmpArray => {
+    let author = tmpArray[1].authorId;
     let request = {
       media: {
         mediaType: 'IMAGE_GROUP',
@@ -975,12 +976,12 @@ const MakeChat = ({route, navigation}) => {
       createdAt: tmpArray[0].createdAt,
       _id: tmpArray[0]._id,
       authorId: {
-        _id: tmpArray[0].authorId._id,
-        profileImg: tmpArray[0].profileImg,
-        lastName: tmpArray[0].lastName,
-        profession: tmpArray[0].profession,
-        batch: tmpArray[0].batch,
-        firstName: tmpArray[0].firstName,
+        _id: author._id,
+        profileImg: author.profileImg,
+        lastName: author.lastName,
+        profession: author.profession,
+        batch: author.batch,
+        firstName: author.firstName,
       },
     };
     return request;
@@ -1267,7 +1268,7 @@ const MakeChat = ({route, navigation}) => {
       page: 1,
       search: '',
     };
-    setIsConnected(true);
+    // setIsConnected(true);
     setShowSearch(false);
   };
 
@@ -1419,7 +1420,7 @@ const MakeChat = ({route, navigation}) => {
 
           {isNormalUser ? (
             <>
-              {ownMessage ? (
+              {ownMessage && (
                 <>
                   <TouchableOpacity
                     onPress={() => {
@@ -1480,8 +1481,6 @@ const MakeChat = ({route, navigation}) => {
                     </Text>
                   </TouchableOpacity>
                 </>
-              ) : (
-                <></>
               )}
             </>
           ) : (
@@ -1549,44 +1548,6 @@ const MakeChat = ({route, navigation}) => {
                 </>
               ) : (
                 <>
-                  {/* <TouchableOpacity
-                    onPress={() => {
-                      if (
-                        chatObjRef.current !== undefined &&
-                        chatObjRef.current !== null
-                      ) {
-                        chatObjRef.current.close();
-                      }
-                      setTimeout(
-                        () => {
-                          if (
-                            messageReportRef.current !== undefined &&
-                            messageReportRef.current !== null
-                          ) {
-                            messageReportRef.current.open();
-                          }
-                        },
-                        Platform.OS === 'ios' ? 200 : 0,
-                      );
-                    }}
-                    style={[
-                      grid.justifyContentCenter,
-                      grid.alignItems,
-                      g.p15,
-                      {borderBottomWidth: 2, borderBottomColor: '#ebebe4'},
-                    ]}>
-                    <Text
-                      style={[
-                        g.fs18,
-                        g.FHNM,
-                        g.colorBlue,
-                        grid.justifyContentCenter,
-                        grid.alignItems,
-                        g.txtCenterVertical,
-                      ]}>
-                      Report Comment
-                    </Text>
-                  </TouchableOpacity> */}
                   <TouchableOpacity
                     onPress={() => {
                       if (
@@ -1606,10 +1567,7 @@ const MakeChat = ({route, navigation}) => {
                       grid.justifyContentCenter,
                       grid.alignItems,
                       g.p15,
-                      selectedChatObject !== null &&
-                      selectedChatObject.authorId._id === global.userId
-                        ? {borderBottomWidth: 2, borderBottomColor: '#ebebe4'}
-                        : {},
+                      {borderTopWidth: 2, borderTopColor: '#ebebe4'},
                     ]}>
                     <Text
                       style={[
@@ -2041,9 +1999,12 @@ const MakeChat = ({route, navigation}) => {
                     underlineColorAndroid="transparent"
                     style={[
                       g.inputWhite,
-                      g.mb0,
-                      {borderTopLeftRadius: 0, borderBottomLeftRadius: 0},
+                      {
+                        borderTopLeftRadius: 0,
+                        borderBottomLeftRadius: 0,
+                      },
                     ]}
+                    textAlignVertical={'center'}
                     keyboardType={'default'}
                     value={filterQuery}
                     multiline={false}
@@ -2588,13 +2549,10 @@ const MakeChat = ({route, navigation}) => {
                         <TextInput
                           autoCapitalize={'sentences'}
                           underlineColorAndroid="transparent"
-                          style={[
-                            styles.inputContainer,
-                            styles.inputView,
-                            grid.alignItems,
-                          ]}
+                          style={[styles.inputContainer, styles.inputView]}
                           keyboardType={'default'}
                           value={inputValue}
+                          textAlignVertical={'center'}
                           multiline={true}
                           placeholder="Enter text here"
                           onChangeText={input => {
@@ -2911,15 +2869,18 @@ const styles = StyleSheet.create({
   inputContainer: {
     borderWidth: 0,
     backgroundColor: 'transparent',
-    paddingVertical: scale(8),
-    paddingHorizontal: scale(12),
+    padding: scale(10),
     minHeight: scale(40),
     flex: 1,
     borderRadius: scale(30),
+    justifyContent: 'center',
+    textAlignVertical: 'center',
   },
   inputView: {
     fontSize: scale(15),
     fontFamily: 'Lato-Regular',
+    justifyContent: 'center',
+    textAlignVertical: 'center',
   },
   commentButton: {
     height: scale(40),

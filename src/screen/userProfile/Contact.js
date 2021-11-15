@@ -61,10 +61,12 @@ const Contact = props => {
                   : (props.countryCode ? props.countryCode + ' ' : ' ') +
                       props.phone,
                 () => {
-                  openDialler(
-                    (props.countryCode ? props.countryCode + ' ' : ' ') +
-                      props.phone,
-                  );
+                  if (props.phoneScope !== 0) {
+                    openDialler(
+                      (props.countryCode ? props.countryCode + ' ' : ' ') +
+                        props.phone,
+                    );
+                  }
                 },
               )
             : null}
@@ -108,11 +110,13 @@ const Contact = props => {
                       ? props.secondaryCountryCode + ' '
                       : ' ') + props.secondaryPhone,
                 () => {
-                  openDialler(
-                    (props.secondaryCountryCode
-                      ? props.secondaryCountryCode + ' '
-                      : ' ') + props.secondaryPhone,
-                  );
+                  if (props.secondaryPhoneScope !== 0) {
+                    openDialler(
+                      (props.secondaryCountryCode
+                        ? props.secondaryCountryCode + ' '
+                        : ' ') + props.secondaryPhone,
+                    );
+                  }
                 },
               )}
             </View>
@@ -128,7 +132,9 @@ const Contact = props => {
                   ? 'Set to Private'
                   : props.secondaryEmail,
                 () => {
-                  openEmail(props.email);
+                  if (props.secondaryEmailScope !== 0) {
+                    openEmail(props.email);
+                  }
                 },
               )}
             </View>

@@ -102,6 +102,16 @@ const UploadMedia = ({
       includeExif: false,
       mediaType: 'photo',
       multiple: supportMultiple ? supportMultiple : false,
+      smartAlbums: [
+        'Favorites',
+        'RecentlyAdded',
+        'AllHidden',
+        'CloudShared',
+        'Imported',
+        'Regular',
+        'UserLibrary',
+        'SyncedAlbum',
+      ],
     })
       .then(images => {
         console.log('images', images);
@@ -119,6 +129,7 @@ const UploadMedia = ({
       })
       .catch(err => {
         console.log('err', err);
+        console.log('err', JSON.stringify(err));
         if (err.code === 'E_PICKER_CANCELLED') {
           onPickMedia(null);
           Alert.alert('Cancel Selection', 'User Cancelled Selection!');
@@ -456,7 +467,10 @@ const UploadMedia = ({
             source={name}
             resizeMode={'contain'}
             resizeMethod={'auto'}
-            style={styles.menuIcon}
+            style={[
+              styles.menuIcon,
+              {tintColor: enabled ? '#ebebe4' : undefined},
+            ]}
             tintColor={enabled ? '#ebebe4' : undefined}
           />
         </View>

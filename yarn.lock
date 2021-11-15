@@ -7017,10 +7017,10 @@
     "invariant" "^2.2.4"
     "prop-types" "^15.7.2"
 
-"react-native-image-crop-picker@^0.36.2":
-  "integrity" "sha512-FOWkYbCEh78V5/aK9HqMSvRnQJtelGwj0UOu1zhE49gO6e4YoKKNBvA15jweAMM/kPA+omDXBIgJaruonoEXGA=="
-  "resolved" "https://registry.npmjs.org/react-native-image-crop-picker/-/react-native-image-crop-picker-0.36.4.tgz"
-  "version" "0.36.4"
+"react-native-image-crop-picker@^0.37.1":
+  "integrity" "sha512-Jk0VTC/c+sU9a1bl0CjAy3SlOXScZ0Pg2STG+qJnYhUQQN1XIbvHYYk30vk0GY/xVQGyslT2ECRzXYIYrQnN3w=="
+  "resolved" "https://registry.npmjs.org/react-native-image-crop-picker/-/react-native-image-crop-picker-0.37.1.tgz"
+  "version" "0.37.1"
 
 "react-native-image-pan-zoom@^2.1.12":
   "integrity" "sha512-BF66XeP6dzuANsPmmFsJshM2Jyh/Mo1t8FsGc1L9Q9/sVP8MJULDabB1hms+eAoqgtyhMr5BuXV3E1hJ5U5H6Q=="
@@ -7169,6 +7169,7 @@
   "version" "0.3.1"
 
 "react-native-slider@git+https://github.com/abbasfreestyle/react-native-slider.git":
+  "integrity" "sha512-jV9K87eu9uWr0uJIyrSpBLnCKvVlOySC2wynq9TFCdV9oGgjt7Niq8Q1A8R8v+5GHsuBw/s8vEj1AAkkUi+u+w=="
   "version" "0.11.0"
   dependencies:
     "prop-types" "^15.5.6"

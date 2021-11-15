@@ -19,7 +19,7 @@ import ParsedText from 'react-native-parsed-text';
 import Helper from '../../../helper/Helper';
 import Pdf from 'react-native-pdf';
 
-import {isSameUser, isSameDay} from '../../../helper/ChatHelper';
+import {isSameDay} from '../../../helper/ChatHelper';
 import {IconType} from '../../../helper/Constants';
 import {showImageThumb} from '../../chat/ChatDelegates';
 import Helpers from '../../../helper/Helper';
@@ -32,6 +32,14 @@ class ChatItem extends PureComponent {
     this.state = {
       isNewLine: false,
     };
+  }
+
+  isSameUser(currentMessage = {}, diffMessage = {}) {
+    return !!(
+      diffMessage.authorId &&
+      currentMessage.authorId &&
+      diffMessage.authorId._id === currentMessage.authorId._id
+    );
   }
 
   renderTicks() {
@@ -360,7 +368,7 @@ class ChatItem extends PureComponent {
       return null;
     }
 
-    if (!isSameUser(currentMessage, nextMessage)) {
+    if (!this.isSameUser(currentMessage, nextMessage)) {
       return (
         <ProgressImage
           source={{uri: currentMessage.authorId.profileImg}}
@@ -467,7 +475,7 @@ class ChatItem extends PureComponent {
       <View style={[grid.rowdir]}>
         {/* {this.renderAvtar()} */}
         <View style={[g.ml5, g.bgWhite, styles.bubbleLeft]}>
-          {isGroup && !isSameUser(currentMessage, previousMessage) && (
+          {isGroup && !this.isSameUser(currentMessage, previousMessage) && (
             <TouchableOpacity
               style={{zIndex: 1}}
               hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
@@ -477,7 +485,7 @@ class ChatItem extends PureComponent {
               <Text
                 numberOfLines={1}
                 style={[customFont, g.FHNB, g.pt4, g.pl5, {color: color}]}>
-                {Helper.capitalize(currentMessage?.authorId?.firstName)}
+                {Helper.capitalize(currentMessage?.authorId?.firstName ?? '')}
                 {currentMessage?.authorId?.batch !== undefined &&
                 currentMessage?.authorId?.batch !== null
                   ? ' ' + '-' + currentMessage?.authorId?.batch + ' '
@@ -687,8 +695,7 @@ class ChatItem extends PureComponent {
 
   render() {
     const {currentMessage, nextMessage, position} = this.props;
-    const sameUser = isSameUser(currentMessage, nextMessage);
-
+    const sameUser = this.isSameUser(currentMessage, nextMessage);
     return (
       <View>
         {currentMessage.system ? (
