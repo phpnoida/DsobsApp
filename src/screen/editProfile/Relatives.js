@@ -18,6 +18,7 @@ import GlobalInclude from '../../globalInclude/Globalinclude';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import EditLinksExperience from '../../component/EditLinksExperience';
 import {searchUser} from '../../Actions/UserActions';
+import {getDirectory} from '../../Actions/DirectoryActions';
 import NextPreviousButton from '../../component/NextPreviousButton';
 import {updateUserProfile} from '../../Actions/UserActions';
 import Helpers from '../../helper/Helper';
@@ -25,7 +26,7 @@ import Helpers from '../../helper/Helper';
 var lastSelectedIndex = -1;
 let responseMessage = '';
 let selectedUser = null;
-const Relatives = (props) => {
+const Relatives = props => {
   const {profileData} = props;
 
   const [isLoading, setIsLoading] = useState(false);
@@ -58,10 +59,11 @@ const Relatives = (props) => {
     );
   };
 
-  const doSearchUser = (searchQuery) => {
-    searchUser(
+  const doSearchUser = searchQuery => {
+    getDirectory(
+      '1',
       searchQuery,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -80,7 +82,7 @@ const Relatives = (props) => {
           }
         }
       },
-      (error) => {
+      error => {
         setSearchedUser([]);
         console.log('error', error);
       },
@@ -113,7 +115,7 @@ const Relatives = (props) => {
     );
   };
 
-  const addNewLink = (updateMode) => {
+  const addNewLink = updateMode => {
     Keyboard.dismiss();
     if (relativeName.trim() === '') {
       setErrorMessage({relativeName: 'This field is required'});
@@ -170,7 +172,7 @@ const Relatives = (props) => {
       setIsLoading(true);
       updateUserProfile(
         requestData,
-        (response) => {
+        response => {
           setIsLoading(false);
           if (response && response !== null) {
             if (
@@ -275,7 +277,7 @@ const Relatives = (props) => {
                 style={g.inputWhite}
                 placeholder={'Name of Relative'}
                 value={relativeName}
-                onChangeText={(value) => {
+                onChangeText={value => {
                   setRelativeName(value);
                   if (value.length > 0) {
                     doSearchUser(value);
@@ -301,7 +303,7 @@ const Relatives = (props) => {
                 style={g.inputWhite}
                 placeholder={'Nature of Relationship'}
                 value={relationship}
-                onChangeText={(value) => inputHandler('relationship', value)}
+                onChangeText={value => inputHandler('relationship', value)}
               />
             </View>
             <View>
@@ -309,7 +311,7 @@ const Relatives = (props) => {
                 {!isEdit ? (
                   <Text
                     style={[g.btn]}
-                    onPress={(e) => {
+                    onPress={e => {
                       addNewLink(false);
                     }}>
                     Add this Relative
@@ -317,7 +319,7 @@ const Relatives = (props) => {
                 ) : (
                   <Text
                     style={[g.btn]}
-                    onPress={(e) => {
+                    onPress={e => {
                       addNewLink(true);
                     }}>
                     Update

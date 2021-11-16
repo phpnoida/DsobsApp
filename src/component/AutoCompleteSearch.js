@@ -149,7 +149,7 @@ const AutoCompleteSearch = ({
               keyboardType={'default'}
               placeholder={
                 chkType === 1
-                  ? 'Type more than 3 characters'
+                  ? 'Type few characters'
                   : chkType === 4
                   ? 'Type anything...'
                   : 'Search Photo'

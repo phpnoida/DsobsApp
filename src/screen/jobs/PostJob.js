@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {
   View,
   SafeAreaView,
@@ -25,6 +25,7 @@ import g from '../../theme/global';
 import {scale} from '../../theme/Scalling';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {generateHeader} from '../../component/Common';
+import BottomSheetHeader from '../../component/BottomSheetHeader';
 import CommonButton from '../../component/CommonButton';
 import ProfessionalSheet from '../../component/ProfessionalSheetFilter';
 import RadioButton from '../../component/RadioButton';
@@ -35,7 +36,6 @@ import NextPreviousButton from '../../component/NextPreviousButton';
 import {getProfessionList} from '../../Actions/UserActions';
 import {addJobData, getJobNature, editJobs} from '../../Actions/JobsActions';
 import UploadMedia from '../../component/UploadMedia';
-import moment from 'moment';
 
 let professionListMain = [];
 let countryListMain = [];
@@ -46,6 +46,7 @@ let postId = '';
 
 const AddJobPost = ({route, navigation}) => {
   const deviceWidth = useWindowDimensions().width;
+  const deviceHeight = useWindowDimensions().height;
   const professionRef = useRef();
   const countryRef = useRef();
   const jobNatureRef = useRef();
@@ -83,7 +84,7 @@ const AddJobPost = ({route, navigation}) => {
 
   useEffect(() => {
     let countryNames = [];
-    getAllCountries().then((data) => {
+    getAllCountries().then(data => {
       if (data && data !== undefined && data !== null) {
         data.map((item, index) => {
           countryNames.push({key: index, text: item.name, value: item.name});
@@ -110,48 +111,51 @@ const AddJobPost = ({route, navigation}) => {
       }
     }
     return () => {};
-  }, [route]);
+  }, [route, setupDefaultData, getProfession]);
 
-  const setupDefaultData = (defaultData) => {
-    if (defaultData && defaultData !== undefined && defaultData !== null) {
-      setSelectedProfession(defaultData.profession);
-      setAgeCriteria({
-        ...ageCriteria,
-        selectedMaximumAge: defaultData.ageBracket.max,
-        selectedMinimumAge: defaultData.ageBracket.min,
-      });
-      setAccessEmail(defaultData.email);
-      setJobLocation(defaultData.city);
-      setJobCountry(defaultData.country);
-      setCompany(defaultData.forCompany);
-      setDesignation(defaultData.designation);
-      setSalary(defaultData.annualSalary);
-      setTotalPositions(defaultData.numOfPosition.toString());
-      setJobNature(defaultData.nature);
-      setJobTitle(defaultData.title);
-      setJobDetail(defaultData.description);
-      setSelectedGender(defaultData.gender.toString());
-      setSelectedDate(new Date(defaultData.postDate));
+  const setupDefaultData = useCallback(
+    defaultData => {
+      if (defaultData && defaultData !== undefined && defaultData !== null) {
+        setSelectedProfession(defaultData.profession);
+        setAgeCriteria({
+          ...ageCriteria,
+          selectedMaximumAge: defaultData.ageBracket.max,
+          selectedMinimumAge: defaultData.ageBracket.min,
+        });
+        setAccessEmail(defaultData.email);
+        setJobLocation(defaultData.city);
+        setJobCountry(defaultData.country);
+        setCompany(defaultData.forCompany);
+        setDesignation(defaultData.designation);
+        setSalary(defaultData.annualSalary);
+        setTotalPositions(defaultData.numOfPosition.toString());
+        setJobNature(defaultData.nature);
+        setJobTitle(defaultData.title);
+        setJobDetail(defaultData.description);
+        setSelectedGender(defaultData.gender.toString());
+        setSelectedDate(new Date(defaultData.postDate));
 
-      if (defaultData.logo !== undefined && defaultData.logo !== null) {
-        let tmpLogo = {
-          thumbnail: defaultData.logo,
-        };
-        setLogoData(tmpLogo);
+        if (defaultData.logo !== undefined && defaultData.logo !== null) {
+          let tmpLogo = {
+            thumbnail: defaultData.logo,
+          };
+          setLogoData(tmpLogo);
+        }
+
+        postId = defaultData._id;
       }
-
-      postId = defaultData._id;
-    }
-  };
+    },
+    [ageCriteria],
+  );
 
   /*****
    *
    * API Section
    *
    */
-  const getProfession = () => {
+  const getProfession = useCallback(() => {
     getProfessionList(
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -176,17 +180,17 @@ const AddJobPost = ({route, navigation}) => {
           getNature();
         }, 100);
       },
-      (error) => {
+      error => {
         setTimeout(() => {
           getNature();
         }, 100);
       },
     );
-  };
+  }, []);
 
   const getNature = () => {
     getJobNature(
-      (response) => {
+      response => {
         setLoading(false);
         if (response && response !== null) {
           if (
@@ -208,16 +212,16 @@ const AddJobPost = ({route, navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         setLoading(false);
       },
     );
   };
 
-  const saveJob = (requestObject) => {
+  const saveJob = requestObject => {
     addJobData(
       requestObject,
-      (response) => {
+      response => {
         setLoader(false);
         if (response && response !== null) {
           if (
@@ -245,11 +249,11 @@ const AddJobPost = ({route, navigation}) => {
     );
   };
 
-  const editJobData = (requestObject) => {
+  const editJobData = requestObject => {
     editJobs(
       postId,
       requestObject,
-      (response) => {
+      response => {
         setLoader(false);
         if (response && response !== null) {
           if (
@@ -349,9 +353,9 @@ const AddJobPost = ({route, navigation}) => {
     }
   };
 
-  const searchProfession = (searchText) => {
+  const searchProfession = searchText => {
     if (searchText.length > 0) {
-      var filtered = professionListMain.filter((element) =>
+      var filtered = professionListMain.filter(element =>
         element.text.toLowerCase().includes(searchText.toLowerCase()),
       );
       setProfessionList([...filtered]);
@@ -360,9 +364,9 @@ const AddJobPost = ({route, navigation}) => {
     }
   };
 
-  const searchCountry = (searchText) => {
+  const searchCountry = searchText => {
     if (searchText.length > 0) {
-      var filtered = countryListMain.filter((element) =>
+      var filtered = countryListMain.filter(element =>
         element.text.toLowerCase().includes(searchText.toLowerCase()),
       );
       setCountryCodeList([...filtered]);
@@ -371,7 +375,7 @@ const AddJobPost = ({route, navigation}) => {
     }
   };
 
-  const sliderValueChange = (value) => {
+  const sliderValueChange = value => {
     setAgeCriteria({
       ...ageCriteria,
       selectedMaximumAge: value[1],
@@ -379,7 +383,7 @@ const AddJobPost = ({route, navigation}) => {
     });
   };
 
-  const createGenderRadioButtons = (value) => {
+  const createGenderRadioButtons = value => {
     return [
       {
         key: '1',
@@ -399,7 +403,7 @@ const AddJobPost = ({route, navigation}) => {
     ];
   };
 
-  const renderRadioButton = (gender) => {
+  const renderRadioButton = gender => {
     const radioObj = createGenderRadioButtons(gender);
     return radioObj.map((item, key) => {
       return (
@@ -407,7 +411,7 @@ const AddJobPost = ({route, navigation}) => {
           <Radio
             item={item}
             title={item.label}
-            onRadioSelect={(value) => {
+            onRadioSelect={value => {
               setSelectedGender(value.key);
             }}
             selected={item.selected}
@@ -507,7 +511,7 @@ const AddJobPost = ({route, navigation}) => {
                         autoCapitalize={'none'}
                         returnKeyType={'done'}
                         placeholder={'Type your email address'}
-                        onChangeText={(value) => {
+                        onChangeText={value => {
                           handleInput('accessEmail', value);
                         }}
                       />
@@ -606,7 +610,7 @@ const AddJobPost = ({route, navigation}) => {
                         autoCapitalize={'words'}
                         returnKeyType={'done'}
                         placeholder={'Type the location here'}
-                        onChangeText={(value) => {
+                        onChangeText={value => {
                           handleInput('jobLocation', value);
                         }}
                       />
@@ -664,7 +668,7 @@ const AddJobPost = ({route, navigation}) => {
                         autoCapitalize={'words'}
                         returnKeyType={'done'}
                         placeholder={'eg. Incred Applications Pvt. Ltd.'}
-                        onChangeText={(value) => {
+                        onChangeText={value => {
                           handleInput('company', value);
                         }}
                       />
@@ -686,7 +690,7 @@ const AddJobPost = ({route, navigation}) => {
                         autoCapitalize={'words'}
                         returnKeyType={'done'}
                         placeholder={'eg. Marketing Executive'}
-                        onChangeText={(value) => {
+                        onChangeText={value => {
                           handleInput('designation', value);
                         }}
                       />
@@ -708,7 +712,7 @@ const AddJobPost = ({route, navigation}) => {
                         autoCapitalize={'characters'}
                         returnKeyType={'done'}
                         placeholder={'Enter Salary'}
-                        onChangeText={(value) => {
+                        onChangeText={value => {
                           handleInput('salary', value);
                         }}
                       />
@@ -731,7 +735,7 @@ const AddJobPost = ({route, navigation}) => {
                           keyboardType={'number-pad'}
                           returnKeyType={'done'}
                           placeholder={'Position(s)'}
-                          onChangeText={(value) => {
+                          onChangeText={value => {
                             handleInput('totalPositions', value);
                           }}
                         />
@@ -786,7 +790,7 @@ const AddJobPost = ({route, navigation}) => {
                         autoCapitalize={'sentences'}
                         returnKeyType={'done'}
                         placeholder={'Type here'}
-                        onChangeText={(value) => {
+                        onChangeText={value => {
                           handleInput('jobTitle', value);
                         }}
                       />
@@ -821,7 +825,7 @@ const AddJobPost = ({route, navigation}) => {
                         returnKeyType="done"
                         blurOnSubmit={true}
                         placeholder={'Type here'}
-                        onChangeText={(value) => {
+                        onChangeText={value => {
                           handleInput('jobDetail', value);
                         }}
                       />
@@ -996,11 +1000,11 @@ const AddJobPost = ({route, navigation}) => {
       <ProfessionalSheet
         refRBSheet={professionRef}
         dataList={professionList}
-        searchProfession={(query) => {
+        searchProfession={query => {
           searchProfession(query);
         }}
         selectedProfession={selectedProfession}
-        setSelectedProfession={(value) => {
+        setSelectedProfession={value => {
           console.log('value', value);
           setSelectedProfession(value);
           setProfessionList([...professionListMain]);
@@ -1011,20 +1015,42 @@ const AddJobPost = ({route, navigation}) => {
         }}
         onClose={() => {}}
       />
-      <ProfessionalSheet
-        refRBSheet={countryRef}
-        dataList={countryCodeList}
-        searchProfession={(query) => {
-          searchCountry(query);
-        }}
-        selectedProfession={jobCountry}
-        setSelectedProfession={(value) => {
-          setJobCountry(value);
-          setCountryCodeList([...countryListMain]);
-          countryRef.current.close();
-        }}
-        onClose={() => {}}
-      />
+
+      <RBSheet
+        ref={countryRef}
+        height={deviceHeight - 150}
+        minClosingHeight={50}
+        duration={350}
+        closeOnDragDown={true}
+        customStyles={{
+          container: {
+            backgroundColor: '#fff',
+            borderTopLeftRadius: 30,
+            borderTopRightRadius: 30,
+            paddingStart: scale(15),
+            paddingEnd: scale(15),
+            paddingBottom: scale(20),
+          },
+        }}>
+        <BottomSheetHeader
+          title={'Select Country'}
+          showSearch={true}
+          onSeachQuery={query => {
+            searchCountry(query);
+          }}
+        />
+
+        <RadioButton
+          capitalize={true}
+          defaultSelected={jobCountry}
+          PROP={countryCodeList}
+          onRadioSelect={value => {
+            setJobCountry(value.text);
+            setCountryCodeList([...countryListMain]);
+            countryRef.current.close();
+          }}
+        />
+      </RBSheet>
       <RBSheet
         ref={jobNatureRef}
         height={300}
@@ -1046,7 +1072,7 @@ const AddJobPost = ({route, navigation}) => {
         <RadioButton
           PROP={jobNatureList}
           defaultSelected={jobNature}
-          onRadioSelect={(value) => {
+          onRadioSelect={value => {
             setJobNature(value.text);
             jobNatureRef.current.close();
           }}
@@ -1075,7 +1101,7 @@ const AddJobPost = ({route, navigation}) => {
               setShowDatePicker(false);
             }
           }}
-          onTouchCancel={(event) => {
+          onTouchCancel={event => {
             setShowDatePicker(false);
           }}
         />
@@ -1085,7 +1111,7 @@ const AddJobPost = ({route, navigation}) => {
           onCloseAction={() => {
             setShowDatePicker(false);
           }}
-          onDateSelect={(obj) => {
+          onDateSelect={obj => {
             setSelectedDate(obj.serverDate);
           }}
         />
@@ -1116,7 +1142,7 @@ const AddJobPost = ({route, navigation}) => {
           onClose={() => {
             setShowCountryPicker(false);
           }}
-          onSelect={(country) => {
+          onSelect={country => {
             handleInput('jobCountry', country.name);
           }}
         />
@@ -1153,7 +1179,7 @@ const AddJobPost = ({route, navigation}) => {
           audio: true,
         }}
         supportMultiple={false}
-        onPickMedia={(media) => {
+        onPickMedia={media => {
           uploadRef.current.close();
           if (media !== undefined && media !== null) {
             console.log('media', media);

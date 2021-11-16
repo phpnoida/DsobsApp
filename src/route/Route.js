@@ -66,6 +66,7 @@ import CreateGroup from '../screen/Groups/CreateGroup';
 import GroupSettings from '../screen/Groups/GroupSettings';
 import StartGroupChat from '../screen/Groups/StartGroupChat';
 import GroupInfo from '../screen/Groups/GroupInfo';
+import GroupEtiquette from '../screen/Groups/GroupEtiquette';
 
 // Socket chat
 import ChatList from '../screen/socketChat/listing';
@@ -409,6 +410,11 @@ export const RootNavigators = baseRoute => {
       <Stack.Screen
         name="GroupInfo"
         component={GroupInfo}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="GroupEtiquette"
+        component={GroupEtiquette}
         options={{headerShown: false}}
       />
 

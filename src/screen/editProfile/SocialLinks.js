@@ -24,7 +24,7 @@ var lastSelectedIndex = -1;
 const {urlRegex, fbRegex, instaRegex, twiterRegex, youtubeRegex, wikiRegex} =
   URL_REGX;
 let responseMessage = '';
-const SocialLinks = (props) => {
+const SocialLinks = props => {
   const {profileData} = props;
 
   const [isLoading, setIsLoading] = useState(false);
@@ -134,7 +134,7 @@ const SocialLinks = (props) => {
       setIsLoading(true);
       updateUserProfile(
         requestData,
-        (response) => {
+        response => {
           setIsLoading(false);
           if (response && response !== null) {
             if (
@@ -188,7 +188,7 @@ const SocialLinks = (props) => {
     }
   };
 
-  const addNewLink = (updateMode) => {
+  const addNewLink = updateMode => {
     setErrorMessage({});
     if (link.trim() === '') {
       setErrorMessage({link: 'This field is required'});
@@ -318,7 +318,7 @@ const SocialLinks = (props) => {
                   underlineColorAndroid="transparent"
                   style={[g.inputWhite, grid.col]}
                   value={facebook}
-                  onChangeText={(value) => inputHandler('facebook', value)}
+                  onChangeText={value => inputHandler('facebook', value)}
                   placeholder={''}
                   maxLength={264}
                   editable={true}
@@ -337,7 +337,7 @@ const SocialLinks = (props) => {
                   underlineColorAndroid="transparent"
                   style={[g.inputWhite, grid.col]}
                   value={twitter}
-                  onChangeText={(value) => inputHandler('twitter', value)}
+                  onChangeText={value => inputHandler('twitter', value)}
                   placeholder={''}
                   maxLength={264}
                   editable={true}
@@ -356,7 +356,7 @@ const SocialLinks = (props) => {
                   underlineColorAndroid="transparent"
                   style={[g.inputWhite, grid.col]}
                   value={linkedIn}
-                  onChangeText={(value) => inputHandler('linkedIn', value)}
+                  onChangeText={value => inputHandler('linkedIn', value)}
                   placeholder={''}
                   maxLength={264}
                   editable={true}
@@ -375,7 +375,7 @@ const SocialLinks = (props) => {
                   underlineColorAndroid="transparent"
                   style={[g.inputWhite, grid.col]}
                   value={instagram}
-                  onChangeText={(value) => inputHandler('instagram', value)}
+                  onChangeText={value => inputHandler('instagram', value)}
                   placeholder={''}
                   maxLength={264}
                   editable={true}
@@ -396,7 +396,7 @@ const SocialLinks = (props) => {
                   underlineColorAndroid="transparent"
                   style={[g.inputWhite, grid.col]}
                   value={youtube}
-                  onChangeText={(value) => inputHandler('youtube', value)}
+                  onChangeText={value => inputHandler('youtube', value)}
                   placeholder={''}
                   maxLength={264}
                   editable={true}
@@ -415,7 +415,7 @@ const SocialLinks = (props) => {
                   underlineColorAndroid="transparent"
                   style={[g.inputWhite, grid.col]}
                   value={wikipedia}
-                  onChangeText={(value) => inputHandler('wikipedia', value)}
+                  onChangeText={value => inputHandler('wikipedia', value)}
                   placeholder={''}
                   maxLength={264}
                   editable={true}
@@ -436,7 +436,7 @@ const SocialLinks = (props) => {
                   underlineColorAndroid="transparent"
                   style={[g.inputWhite, grid.col]}
                   value={whatsApp}
-                  onChangeText={(value) => inputHandler('whatsApp', value)}
+                  onChangeText={value => inputHandler('whatsApp', value)}
                   placeholder={''}
                   maxLength={264}
                   editable={true}
@@ -457,7 +457,7 @@ const SocialLinks = (props) => {
                 style={g.inputWhite}
                 placeholder={'Post Your Link Here'}
                 maxLength={264}
-                onChangeText={(value) => inputHandler('link', value)}
+                onChangeText={value => inputHandler('link', value)}
                 value={link}
                 editable={true}
               />
@@ -473,7 +473,7 @@ const SocialLinks = (props) => {
                 placeholder={'About Your Link'}
                 maxLength={264}
                 value={aboutLink}
-                onChangeText={(value) => inputHandler('aboutLink', value)}
+                onChangeText={value => inputHandler('aboutLink', value)}
                 editable={true}
               />
             </View>
@@ -485,7 +485,7 @@ const SocialLinks = (props) => {
               {!isEdit ? (
                 <Text
                   style={[g.btn]}
-                  onPress={(e) => {
+                  onPress={e => {
                     addNewLink(false);
                   }}>
                   Add More
@@ -493,7 +493,7 @@ const SocialLinks = (props) => {
               ) : (
                 <Text
                   style={[g.btn]}
-                  onPress={(e) => {
+                  onPress={e => {
                     addNewLink(true);
                   }}>
                   Update

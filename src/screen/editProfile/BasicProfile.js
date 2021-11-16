@@ -58,7 +58,7 @@ let pickerSelectionType = -1;
 let responseMessage = '';
 let height = Dimensions.get('window').height;
 
-const concatSchoolAndHouse = (profileData) => {
+const concatSchoolAndHouse = profileData => {
   let string = '';
 
   string =
@@ -71,7 +71,7 @@ const concatSchoolAndHouse = (profileData) => {
   return string;
 };
 
-const createGenderRadioButtons = (value) => {
+const createGenderRadioButtons = value => {
   return [
     {
       key: '1',
@@ -86,7 +86,7 @@ const createGenderRadioButtons = (value) => {
   ];
 };
 
-const createPrimaryVisibilityRadio = (value) => {
+const createPrimaryVisibilityRadio = value => {
   //0- no one 1 - everyone 2 - batchonly
   return [
     {
@@ -107,7 +107,7 @@ const createPrimaryVisibilityRadio = (value) => {
   ];
 };
 
-const BasicProfile = (props) => {
+const BasicProfile = props => {
   const {profileData, navigation} = props;
 
   const uploadRef = useRef();
@@ -279,7 +279,7 @@ const BasicProfile = (props) => {
 
   const getProfession = () => {
     getProfessionList(
-      (response) => {
+      response => {
         //console.log('getProfessionList', response);
         if (response && response !== null) {
           if (
@@ -302,7 +302,7 @@ const BasicProfile = (props) => {
           }
         }
       },
-      (error) => {
+      error => {
         console.log('error', error);
       },
     );
@@ -314,7 +314,7 @@ const BasicProfile = (props) => {
     }
 
     getCountries(
-      (response) => {
+      response => {
         setIsLoading(false);
         //console.log('getCountryList', response);
         if (response && response !== null) {
@@ -342,7 +342,7 @@ const BasicProfile = (props) => {
           getStateList();
         }
       },
-      (error) => {
+      error => {
         isCountrySelected = false;
         console.log('error', error);
         setIsLoading(false);
@@ -357,7 +357,7 @@ const BasicProfile = (props) => {
 
     getStates(
       selectedCountryItem,
-      (response) => {
+      response => {
         //console.log('getStateList', response);
         if (response && response !== null) {
           if (
@@ -385,7 +385,7 @@ const BasicProfile = (props) => {
           getCityList();
         }
       },
-      (error) => {
+      error => {
         isStateSelected = false;
         console.log('error', error);
         setIsLoading(false);
@@ -400,7 +400,7 @@ const BasicProfile = (props) => {
 
     getCities(
       selectedStateItem,
-      (response) => {
+      response => {
         //console.log('getCityList', response);
         if (response && response !== null) {
           if (
@@ -425,7 +425,7 @@ const BasicProfile = (props) => {
         setIsLoading(false);
         isCitySelected = false;
       },
-      (error) => {
+      error => {
         console.log('error', error);
         setIsLoading(false);
         isCitySelected = false;
@@ -526,7 +526,7 @@ const BasicProfile = (props) => {
         setIsLoading(true);
         updateUserProfile(
           requestData,
-          (response) => {
+          response => {
             setIsLoading(false);
             if (response && response !== null) {
               if (
@@ -575,7 +575,7 @@ const BasicProfile = (props) => {
           <Radio
             item={item}
             title={item.label}
-            onRadioSelect={(value) => {
+            onRadioSelect={value => {
               if (type === 1) {
                 setSelectedGender(value.key);
               } else if (type === 2) {
@@ -628,9 +628,9 @@ const BasicProfile = (props) => {
   /*
    * search section
    */
-  const searchProfession = (searchText) => {
+  const searchProfession = searchText => {
     if (searchText.length > 0) {
-      var filtered = countryListMain.filter((element) =>
+      var filtered = countryListMain.filter(element =>
         element.text.toLowerCase().includes(searchText.toLowerCase()),
       );
       setProfessionList([...filtered]);
@@ -639,9 +639,9 @@ const BasicProfile = (props) => {
     }
   };
 
-  const searchCountry = (searchText) => {
+  const searchCountry = searchText => {
     if (searchText.length > 0) {
-      var filtered = countryListMain.filter((element) =>
+      var filtered = countryListMain.filter(element =>
         element.text.toLowerCase().includes(searchText.toLowerCase()),
       );
       setCountryList([...filtered]);
@@ -650,9 +650,9 @@ const BasicProfile = (props) => {
     }
   };
 
-  const searchState = (searchText) => {
+  const searchState = searchText => {
     if (searchText.length > 0) {
-      var filtered = stateListMain.filter((element) =>
+      var filtered = stateListMain.filter(element =>
         element.text.toLowerCase().includes(searchText.toLowerCase()),
       );
       setStateList([...filtered]);
@@ -661,9 +661,9 @@ const BasicProfile = (props) => {
     }
   };
 
-  const searchCity = (searchText) => {
+  const searchCity = searchText => {
     if (searchText.length > 0) {
-      var filtered = cityListMain.filter((element) =>
+      var filtered = cityListMain.filter(element =>
         element.text.toLowerCase().includes(searchText.toLowerCase()),
       );
       setCityList([...filtered]);
@@ -675,7 +675,7 @@ const BasicProfile = (props) => {
    * search section end
    */
 
-  const openCounryCodePicker = (type) => {
+  const openCounryCodePicker = type => {
     pickerSelectionType = type;
     setShowCodePicker(!showCodePicker);
   };
@@ -684,7 +684,7 @@ const BasicProfile = (props) => {
     setShowCodePicker(!showCodePicker);
   };
 
-  const onSelectCountry = (country) => {
+  const onSelectCountry = country => {
     setShowCodePicker(!showCodePicker);
     let code = '+' + country.callingCode[0];
     if (pickerSelectionType === 1) {
@@ -751,7 +751,7 @@ const BasicProfile = (props) => {
                     setShowDatePicker(false);
                   }
                 }}
-                onTouchCancel={(event) => {
+                onTouchCancel={event => {
                   console.log('847');
                   setShowDatePicker(false);
                 }}
@@ -765,7 +765,7 @@ const BasicProfile = (props) => {
                 onCloseAction={() => {
                   setShowDatePicker(false);
                 }}
-                onDateSelect={(obj) => {
+                onDateSelect={obj => {
                   birthDate = obj.serverDate;
                   setShowDatePicker(false);
                   setSelectedDate(obj.displayDate);
@@ -780,7 +780,7 @@ const BasicProfile = (props) => {
               <TouchableOpacity
                 style={g.mb5}
                 activeOpacity={1}
-                onPress={(e) => {
+                onPress={e => {
                   if (
                     uploadRef &&
                     uploadRef.current !== undefined &&
@@ -812,7 +812,7 @@ const BasicProfile = (props) => {
                 <View style={[grid.rowdir, grid.justifyContentCenter]}>
                   <TouchableOpacity
                     style={[g.btnL, {width: scale(150), height: scale(40)}]}
-                    onPress={(e) => {
+                    onPress={e => {
                       if (
                         uploadRef &&
                         uploadRef.current !== undefined &&
@@ -846,7 +846,7 @@ const BasicProfile = (props) => {
                   style={g.inputWhite}
                   value={prefix}
                   placeholder="Enter your text here"
-                  onChangeText={(value) => inputHandler('prefix', value)}
+                  onChangeText={value => inputHandler('prefix', value)}
                 />
               </View>
               <View style={[grid.col, g.ml5]}>
@@ -857,7 +857,7 @@ const BasicProfile = (props) => {
                   style={g.inputWhite}
                   value={petName}
                   placeholder="Enter your text here"
-                  onChangeText={(value) => inputHandler('petName', value)}
+                  onChangeText={value => inputHandler('petName', value)}
                 />
               </View>
             </View>
@@ -1083,7 +1083,7 @@ const BasicProfile = (props) => {
                 autoCapitalize="words"
                 placeholder="Enter your text here"
                 value={designation}
-                onChangeText={(value) => inputHandler('designation', value)}
+                onChangeText={value => inputHandler('designation', value)}
               />
             </View>
             <View style={g.mb15}>
@@ -1094,7 +1094,7 @@ const BasicProfile = (props) => {
                 autoCapitalize="words"
                 placeholder="Enter your text here"
                 value={companyName}
-                onChangeText={(value) => inputHandler('company', value)}
+                onChangeText={value => inputHandler('company', value)}
               />
             </View>
             <View>
@@ -1104,7 +1104,7 @@ const BasicProfile = (props) => {
                 style={[g.inputWhite]}
                 value={linkedInUrl}
                 placeholder={'Enter your text here'}
-                onChangeText={(value) => inputHandler('linkedin', value)}
+                onChangeText={value => inputHandler('linkedin', value)}
               />
             </View>
             <Text
@@ -1174,7 +1174,7 @@ const BasicProfile = (props) => {
                 underlineColorAndroid="transparent"
                 style={g.inputWhite}
                 value={pincode}
-                onChangeText={(pinCode) => inputHandler('pinCode', pinCode)}
+                onChangeText={pinCode => inputHandler('pinCode', pinCode)}
                 placeholder="Pincode"
                 placeholderTextColor={'#6e6e6e'}
               />
@@ -1287,7 +1287,7 @@ const BasicProfile = (props) => {
                     keyboardType="phone-pad"
                     value={secondaryPhone}
                     placeholder="Phone Number"
-                    onChangeText={(pinCode) =>
+                    onChangeText={pinCode =>
                       inputHandler('secondaryPhone', pinCode)
                     }
                     placeholderTextColor={'#ddd'}
@@ -1312,7 +1312,7 @@ const BasicProfile = (props) => {
                 underlineColorAndroid="transparent"
                 style={g.inputWhite}
                 value={secondaryEmail}
-                onChangeText={(pinCode) =>
+                onChangeText={pinCode =>
                   inputHandler('secondaryEmail', pinCode)
                 }
                 placeholder="Email Address"
@@ -1346,7 +1346,7 @@ const BasicProfile = (props) => {
               multiline={true}
               value={permanentAddress}
               style={[g.inputWhite, {height: 100, textAlignVertical: 'top'}]}
-              onChangeText={(value) => inputHandler('permanentAddress', value)}
+              onChangeText={value => inputHandler('permanentAddress', value)}
             />
             <View style={{marginVertical: scale(15)}}>
               <TouchableOpacity
@@ -1381,7 +1381,7 @@ const BasicProfile = (props) => {
               multiline={true}
               style={[g.inputWhite, {height: 100, textAlignVertical: 'top'}]}
               value={correspondenceAddress}
-              onChangeText={(pinCode) =>
+              onChangeText={pinCode =>
                 inputHandler('correspondenceAddress', pinCode)
               }
             />
@@ -1414,7 +1414,7 @@ const BasicProfile = (props) => {
             onClose={() => {
               closeCodePicker();
             }}
-            onSelect={(country) => {
+            onSelect={country => {
               onSelectCountry(country);
             }}
           />
@@ -1422,7 +1422,7 @@ const BasicProfile = (props) => {
 
         {/* blood group sheet */}
         <BloodGroupSheet
-          ref={(ref) => {
+          ref={ref => {
             bloodGroupSheet = ref;
           }}
           height={430}
@@ -1444,7 +1444,7 @@ const BasicProfile = (props) => {
           <RadioButton
             defaultSelected={bloodGroup}
             PROP={Helper.getBloodGroup()}
-            onRadioSelect={(value) => {
+            onRadioSelect={value => {
               setBloodGroup(value.text.toString());
               bloodGroupSheet.close();
             }}
@@ -1453,7 +1453,7 @@ const BasicProfile = (props) => {
 
         {/* profession sheet */}
         <ProfessionSheet
-          ref={(ref) => {
+          ref={ref => {
             professionSheet = ref;
           }}
           height={height - 150}
@@ -1473,14 +1473,14 @@ const BasicProfile = (props) => {
           <BottomSheetHeader
             title={'Select Profession'}
             showSearch={true}
-            onSeachQuery={(query) => {
+            onSeachQuery={query => {
               searchProfession(query);
             }}
           />
           <RadioButton
             defaultSelected={selectedProfession}
             PROP={professionList}
-            onRadioSelect={(value) => {
+            onRadioSelect={value => {
               setSelectedProfession(value.text.toString());
               professionSheet.close();
             }}
@@ -1489,7 +1489,7 @@ const BasicProfile = (props) => {
 
         {/* country list sheet */}
         <CountryListSheet
-          ref={(ref) => {
+          ref={ref => {
             countryListSheet = ref;
           }}
           height={height - 150}
@@ -1509,7 +1509,7 @@ const BasicProfile = (props) => {
           <BottomSheetHeader
             title={'Select Country'}
             showSearch={true}
-            onSeachQuery={(query) => {
+            onSeachQuery={query => {
               searchCountry(query);
             }}
           />
@@ -1518,7 +1518,7 @@ const BasicProfile = (props) => {
             capitalize={true}
             defaultSelected={selectedCountry}
             PROP={countryList}
-            onRadioSelect={(value) => {
+            onRadioSelect={value => {
               if (selectedCountry.trim() === '') {
                 setSelectedCountry(value.text);
                 selectedCountryItem = value.text;
@@ -1553,7 +1553,7 @@ const BasicProfile = (props) => {
 
         {/* state list sheet */}
         <StateListSheet
-          ref={(ref) => {
+          ref={ref => {
             stateListSheet = ref;
           }}
           height={height - 150}
@@ -1573,7 +1573,7 @@ const BasicProfile = (props) => {
           <BottomSheetHeader
             title={'Select State'}
             showSearch={true}
-            onSeachQuery={(query) => {
+            onSeachQuery={query => {
               searchState(query);
             }}
           />
@@ -1582,7 +1582,7 @@ const BasicProfile = (props) => {
             capitalize={true}
             defaultSelected={selectedState}
             PROP={stateList}
-            onRadioSelect={(value) => {
+            onRadioSelect={value => {
               if (selectedState.trim() === '') {
                 setSelectedState(value.text.toString());
                 setStateList([...stateListMain]);
@@ -1613,7 +1613,7 @@ const BasicProfile = (props) => {
 
         {/* city list sheet */}
         <CityListSheet
-          ref={(ref) => {
+          ref={ref => {
             cityListSheet = ref;
           }}
           height={height - 150}
@@ -1633,7 +1633,7 @@ const BasicProfile = (props) => {
           <BottomSheetHeader
             title={'Select City'}
             showSearch={true}
-            onSeachQuery={(query) => {
+            onSeachQuery={query => {
               searchCity(query);
             }}
           />
@@ -1642,7 +1642,7 @@ const BasicProfile = (props) => {
             capitalize={true}
             defaultSelected={selectedCity}
             PROP={cityList}
-            onRadioSelect={(value) => {
+            onRadioSelect={value => {
               setSelectedCity(value.text.toString());
               setCityList([...cityListMain]);
               selectedCityItem = value.text;
@@ -1661,7 +1661,7 @@ const BasicProfile = (props) => {
             audio: true,
           }}
           supportMultiple={false}
-          onPickMedia={(media) => {
+          onPickMedia={media => {
             uploadRef.current.close();
             if (media !== undefined && media !== null) {
               console.log('media', media);

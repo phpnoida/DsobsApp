@@ -525,7 +525,7 @@ const Profile = ({navigation}) => {
         {
           text: 'CONTACT VIA WHATSAPP',
           onPress: () => {
-            Helper.shareToWhatsAppWithContact(WHATSAPP_NO, '');
+            Helper.shareToWhatsAppWithContact(WHATSAPP_NO, 'Test');
           },
         },
       ],

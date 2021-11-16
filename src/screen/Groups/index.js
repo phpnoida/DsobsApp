@@ -833,6 +833,9 @@ const GroupsList = ({route, navigation}) => {
 
           {generateMenuOption('About Groups', 'exclamationcircleo', 10, () => {
             refOptions.current.close();
+            setTimeout(() => {
+              navigation.navigate('GroupEtiquette');
+            }, 220);
           })}
         </View>
       </OptionsSheet>

@@ -39,7 +39,7 @@ const ProfessionalSheetFilter = ({
     <BottomSheetHeader
       title={'Select Profession'}
       showSearch={true}
-      onSeachQuery={(query) => {
+      onSeachQuery={query => {
         searchProfession(query);
       }}
     />
@@ -47,7 +47,7 @@ const ProfessionalSheetFilter = ({
     <RadioButton
       defaultSelected={selectedProfession}
       PROP={dataList}
-      onRadioSelect={(value) => {
+      onRadioSelect={value => {
         setSelectedProfession(value.text.toString());
       }}
     />

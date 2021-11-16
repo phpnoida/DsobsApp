@@ -38,11 +38,15 @@ let selectedVideo = {};
 let videoLink = '',
   videoNotes = '';
 
+let responseMessage = '';
+let isSuccess = false;
+
 const {urlRegex} = URL_REGX;
 
 const Video = ({navigation}) => {
   const refRBFilter = useRef();
 
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [pageContent, setPageContent] = useState([]);
   const [showSharingSheet, setShowSharingSheet] = useState(false);
@@ -65,10 +69,10 @@ const Video = ({navigation}) => {
    * ************************************************
    */
 
-  const getVideoData = (searchQuery) => {
+  const getVideoData = searchQuery => {
     getVideos(
       searchQuery,
-      (response) => {
+      response => {
         setIsLoading(false);
         if (response && response !== null) {
           if (
@@ -81,7 +85,7 @@ const Video = ({navigation}) => {
             if (data.status) {
               let records = data.data;
 
-              records.map((child) => {
+              records.map(child => {
                 let videos = child.videos;
                 var i = videos.length;
                 while (i--) {
@@ -96,7 +100,7 @@ const Video = ({navigation}) => {
                 child.isShowing = false;
               });
 
-              records.map((child) => {
+              records.map(child => {
                 let videos = child.videos;
 
                 if (videos.length > 1) {
@@ -108,7 +112,7 @@ const Video = ({navigation}) => {
                 }
               });
 
-              records.map((item) => {
+              records.map(item => {
                 delete item.videos;
               });
 
@@ -119,7 +123,7 @@ const Video = ({navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         setPageContent(null);
         setIsLoading(false);
         console.log('error', error);
@@ -129,7 +133,7 @@ const Video = ({navigation}) => {
 
   const getVideoCategory = () => {
     getVideoCategories(
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -141,7 +145,13 @@ const Video = ({navigation}) => {
             if (data.status) {
               let records = data.data;
               let pushArray = [];
-              records.map((child) => {
+              pushArray.push({
+                label: 'All Videos',
+                value: -1,
+                isSelected: false,
+              });
+
+              records.map(child => {
                 pushArray.push({label: child, value: child, isSelected: false});
               });
 
@@ -150,7 +160,7 @@ const Video = ({navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         console.log('error', error);
       },
     );
@@ -174,7 +184,7 @@ const Video = ({navigation}) => {
     setShowAddPostLoader(true);
     doPostUserVideo(
       requestData,
-      (response) => {
+      response => {
         setShowAddPostLoader(false);
         if (response && response !== null) {
           if (
@@ -189,13 +199,21 @@ const Video = ({navigation}) => {
               videoNotes = '';
               setShowAddPostModal(false);
               setTimeout(() => {
+                isSuccess = true;
+                responseMessage = `Thanks ${Helper.capitalize(
+                  global.userDetails.firstName,
+                )}, your Video has been successfully forwarded to the Admin for approval.`;
+                setShowErrorMessage(true);
                 getVideoData('');
               }, 300);
+            } else {
+              responseMessage = 'Error while posting your request!';
+              setShowErrorMessage(true);
             }
           }
         }
       },
-      (error) => {
+      error => {
         setShowAddPostLoader(false);
         setIsLoading(false);
       },
@@ -208,10 +226,11 @@ const Video = ({navigation}) => {
    * ************************************************
    */
 
-  const shareImage = (title, subject, attachment, videoLink) => {
+  const shareImage = (title, subject, attachment, link) => {
+    console.log('attachment', attachment);
     let base64image = '';
     RNFetchBlob.fetch('GET', attachment)
-      .then((resp) => {
+      .then(resp => {
         base64image = resp.data;
         base64image = 'data:image/png;base64,' + base64image;
       })
@@ -219,7 +238,7 @@ const Video = ({navigation}) => {
         selectedVideo = {};
         selectedVideo.title = title;
         selectedVideo.message = subject;
-        selectedVideo.attachment = videoLink;
+        selectedVideo.attachment = link;
         if (
           base64image !== undefined &&
           base64image !== null &&
@@ -230,30 +249,37 @@ const Video = ({navigation}) => {
         } else {
           selectedVideo.type = 'text/plain';
         }
-        setShowSharingSheet(true);
+        //setShowSharingSheet(true);
+        Share.open(selectedVideo)
+          .then(res => {
+            console.log(res);
+          })
+          .catch(err => {
+            err && console.log(err);
+          });
       })
-      .catch((err) => {});
+      .catch(err => {});
   };
 
   const resetFilter = () => {
     let pushArray = videoCategories;
-    pushArray.map((child) => {
+    pushArray.map(child => {
       child.isSelected = false;
     });
     setVideoCategories([...pushArray]);
   };
 
-  const selectFilter = (index) => {
+  const selectFilter = index => {
     let oldData = videoCategories;
 
-    oldData.map((child) => {
+    oldData.map(child => {
       child.isSelected = false;
     });
     oldData[index].isSelected = true;
     setVideoCategories([...oldData]);
   };
 
-  const updateChild = (index) => {
+  const updateChild = index => {
     let oldData = pageContent;
     oldData[index].isShowing = !oldData[index].isShowing;
     setPageContent([...oldData]);
@@ -401,7 +427,7 @@ const Video = ({navigation}) => {
                     <TouchableOpacity
                       onPress={() => {
                         Linking.canOpenURL(item.mainVideo.podcast)
-                          .then((supported) => {
+                          .then(supported => {
                             if (!supported) {
                               Alert.alert('Link not supported');
                             } else {
@@ -522,7 +548,7 @@ const Video = ({navigation}) => {
                   ]}
                   keyboardType={'default'}
                   placeholder={'Search by(Title)'}
-                  onChangeText={(text) => {
+                  onChangeText={text => {
                     getVideoData(text);
                   }}
                 />
@@ -680,7 +706,11 @@ const Video = ({navigation}) => {
             refRBFilter.current.close();
 
             setTimeout(() => {
-              getVideoData(selectedFilter);
+              if (selectedFilter === 'All Videos') {
+                getVideoData('');
+              } else {
+                getVideoData(selectedFilter);
+              }
             }, 100);
           }}
         />
@@ -730,7 +760,7 @@ const Video = ({navigation}) => {
                     style={[g.inputWhite]}
                     autoCapitalize={'none'}
                     placeholder={'Paste link here'}
-                    onChangeText={(value) => {
+                    onChangeText={value => {
                       videoLink = value;
                     }}
                   />
@@ -757,7 +787,7 @@ const Video = ({navigation}) => {
                     ]}
                     autoCapitalize={'sentences'}
                     placeholder="Enter your text here"
-                    onChangeText={(value) => {
+                    onChangeText={value => {
                       videoNotes = value;
                     }}
                   />
@@ -795,6 +825,20 @@ const Video = ({navigation}) => {
           </View>
         </Modal>
         {/* post video modal */}
+
+        {showErrorMessage && (
+          <GlobalInclude.ModalAlert
+            status={showErrorMessage}
+            header={responseMessage}
+            okButton={isSuccess ? 'Close' : `Contact ${APP_NAME}`}
+            okAction={() => {
+              setShowErrorMessage(!showErrorMessage);
+            }}
+            closeAction={() => {
+              setShowErrorMessage(!showErrorMessage);
+            }}
+          />
+        )}
       </SafeAreaView>
     </View>
   );

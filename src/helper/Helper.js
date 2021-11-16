@@ -38,17 +38,7 @@ const Helpers = {
   },
 
   shareToWhatsAppWithContact: function (phone, message) {
-    console.log('phone', phone);
-    let url = `whatsapp://send?text=${message}&phone=${phone}`;
-    Linking.canOpenURL(url)
-      .then(supported => {
-        if (!supported) {
-          Alert.alert('Please install Whatsapp App first');
-        } else {
-          return Linking.openURL(url);
-        }
-      })
-      .catch(() => console.log(''));
+    Linking.openURL(`whatsapp://send?text=${message}&phone=${phone}`);
   },
 
   getThumbnail: function (video, imgType) {
@@ -102,7 +92,7 @@ const Helpers = {
       return `http${newUrl}`;
     }
     if (!/^(f|ht)tps?:\/\//i.test(newUrl)) {
-      return `http://${newUrl}`;
+      return `https://${newUrl}`;
     }
     return newUrl;
   },

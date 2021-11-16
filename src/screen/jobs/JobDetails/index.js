@@ -80,10 +80,10 @@ const JobDetails = ({route, navigation}) => {
    * API Section
    */
 
-  const getFilteredData = (filterObject) => {
+  const getFilteredData = filterObject => {
     doFilterJobs(
       filterObject,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -106,10 +106,10 @@ const JobDetails = ({route, navigation}) => {
     );
   };
 
-  const getAppliedData = (jobId) => {
+  const getAppliedData = jobId => {
     doGetAppliedUsers(
       jobId,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -119,7 +119,7 @@ const JobDetails = ({route, navigation}) => {
             let data = response.data;
             if (data.status) {
               let filtered = data.data.filter(
-                (item) => item._id === global.userId,
+                item => item._id === global.userId,
               );
             }
           }
@@ -144,7 +144,7 @@ const JobDetails = ({route, navigation}) => {
     setLoader(true);
     applyForJob(
       requestObject,
-      (response) => {
+      response => {
         setLoader(false);
         if (response && response !== null) {
           if (
@@ -153,21 +153,22 @@ const JobDetails = ({route, navigation}) => {
             response.data !== null
           ) {
             let data = response.data;
+            console.log('data', data);
             if (data.status) {
-              isSuccess = true;
-              if (openMode === 1) {
-                responseMessage =
-                  'You have successfully sent your application for this position!\n\nPlease await a response on this matter via E-mail from the Job poster.';
-              } else {
-                responseMessage =
-                  'You have successfully sent your recommendation for this position!\n\nPlease await a response on this matter via E-mail from the Job poster.';
-              }
-
               if (refApply.current !== null && refApply.current !== undefined) {
                 refApply.current.close();
               }
-
-              setShowErrorMessage(true);
+              setTimeout(() => {
+                isSuccess = true;
+                if (openMode === 1) {
+                  responseMessage =
+                    'You have successfully sent your application for this position!\n\nPlease await a response on this matter via E-mail from the Job poster.';
+                } else {
+                  responseMessage =
+                    'You have successfully sent your recommendation for this position!\n\nPlease await a response on this matter via E-mail from the Job poster.';
+                }
+                setShowErrorMessage(true);
+              }, 350);
             } else {
               responseMessage = 'Error while posting your request!';
               setShowErrorMessage(true);
@@ -189,7 +190,7 @@ const JobDetails = ({route, navigation}) => {
    * API Section
    */
 
-  const updateData = (type) => {
+  const updateData = type => {
     openMode = type;
     let userDetails = global.userDetails;
     setFullName(type === 2 ? '' : Helper.concatName(userDetails));
@@ -200,7 +201,7 @@ const JobDetails = ({route, navigation}) => {
     setErrorMessage({});
   };
 
-  const concateLocation = (item) => {
+  const concateLocation = item => {
     let locationString = '';
 
     if (item.city !== undefined && item.city !== null && item.city !== '') {
@@ -486,7 +487,7 @@ const JobDetails = ({route, navigation}) => {
                   returnKeyType={'done'}
                   placeholder={'Type your name'}
                   value={fullName}
-                  onChangeText={(value) => {
+                  onChangeText={value => {
                     setFullName(value);
                   }}
                 />
@@ -507,7 +508,7 @@ const JobDetails = ({route, navigation}) => {
                   returnKeyType={'done'}
                   placeholder={'Write/Paste link'}
                   value={linkedInProfile}
-                  onChangeText={(value) => {
+                  onChangeText={value => {
                     setLinkedInProfile(value);
                   }}
                 />
@@ -523,7 +524,7 @@ const JobDetails = ({route, navigation}) => {
                   returnKeyType={'done'}
                   placeholder={'Write your email address'}
                   value={emailAddress}
-                  onChangeText={(value) => {
+                  onChangeText={value => {
                     setEmailAddress(value);
                   }}
                 />
@@ -545,7 +546,7 @@ const JobDetails = ({route, navigation}) => {
                   returnKeyType={'done'}
                   placeholder={'Write phone number'}
                   value={phoneNumber}
-                  onChangeText={(value) => {
+                  onChangeText={value => {
                     setphoneNumber(value);
                   }}
                 />
@@ -580,7 +581,7 @@ const JobDetails = ({route, navigation}) => {
                   blurOnSubmit={true}
                   placeholder={'Type here'}
                   value={notes}
-                  onChangeText={(value) => {
+                  onChangeText={value => {
                     setNotes(value);
                   }}
                 />

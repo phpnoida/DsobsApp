@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {
   View,
   StyleSheet,
@@ -95,15 +95,15 @@ const JobListing = ({navigation}) => {
     return () => {
       unsubscribe();
     };
-  }, [navigation]);
+  }, [navigation, getProfession, getSearchCity]);
 
   /**
    *
    * API Section
    */
-  const getProfession = () => {
+  const getProfession = useCallback(() => {
     getProfessionList(
-      (response) => {
+      response => {
         getOwnJobs();
         if (response && response !== null) {
           if (
@@ -128,15 +128,15 @@ const JobListing = ({navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         getOwnJobs();
       },
     );
-  };
+  }, [getOwnJobs]);
 
-  const getOwnJobs = () => {
+  const getOwnJobs = useCallback(() => {
     getMyJobs(
-      (response) => {
+      response => {
         getFilteredData();
         if (response && response !== null) {
           if (
@@ -156,15 +156,12 @@ const JobListing = ({navigation}) => {
         getFilteredData();
       },
     );
-  };
+  }, [getFilteredData]);
 
-  const getFilteredData = () => {
-    console.log('====================================');
-    console.log('filterObject', filterObject);
-    console.log('====================================');
+  const getFilteredData = useCallback(() => {
     doFilterJobs(
       filterObject,
-      (response) => {
+      response => {
         manageResponse(response);
       },
       (code, error) => {
@@ -174,93 +171,99 @@ const JobListing = ({navigation}) => {
         console.log('error->', error, code);
       },
     );
-  };
+  }, [manageResponse]);
 
-  const manageResponse = (response) => {
-    setIsRefreshing(false);
-    if (response && response !== null) {
-      if (
-        response.data &&
-        response.data !== undefined &&
-        response.data !== null
-      ) {
-        let data = response.data;
-        if (data.status) {
-          if (filterObject.index === 0) {
-            totalCount = data.totalCount;
-            setPageContent([...data.data]);
-          } else {
-            setPageContent([...pageContent, ...data.data]);
+  const manageResponse = useCallback(
+    response => {
+      setIsRefreshing(false);
+      if (response && response !== null) {
+        if (
+          response.data &&
+          response.data !== undefined &&
+          response.data !== null
+        ) {
+          let data = response.data;
+          if (data.status) {
+            if (filterObject.index === 0) {
+              totalCount = data.totalCount;
+              setPageContent([...data.data]);
+            } else {
+              setPageContent([...pageContent, ...data.data]);
+            }
+            setPaginationStatus(PaginationStatus.waiting);
           }
-          setPaginationStatus(PaginationStatus.waiting);
         }
       }
-    }
-    setFirstTimeLoad(false);
-  };
+      setFirstTimeLoad(false);
+    },
+    [pageContent],
+  );
 
-  const getSearchCity = (city) => {
-    let filterObj = {
-      s: city,
-    };
-    doFilterCities(
-      filterObj,
-      (response) => {
-        if (response && response !== null) {
-          if (
-            response.data &&
-            response.data !== undefined &&
-            response.data !== null
-          ) {
-            let data = response.data;
+  const getSearchCity = useCallback(
+    city => {
+      let filterObj = {
+        s: city,
+      };
+      doFilterCities(
+        filterObj,
+        response => {
+          if (response && response !== null) {
+            if (
+              response.data &&
+              response.data !== undefined &&
+              response.data !== null
+            ) {
+              let data = response.data;
 
-            if (data.status) {
-              if (city === '') {
-                let cityTmpArray = [];
-                if (data.data !== null) {
-                  cityTmpArray.push({
-                    key: -1,
-                    name: 'All',
-                    text: 'All',
-                  });
-
-                  data.data.map((item, index) => {
-                    let object = item._id;
-                    cityTmpArray.push({
-                      key: index,
-                      name: object.city,
-                      text: Helper.capitalize(
-                        `${object.city},${object.country}`,
-                      ),
-                    });
-                  });
-                }
-                setTopCityList(cityTmpArray);
-              } else {
-                if (searchedCity.length > 0) {
+              if (data.status) {
+                if (city === '') {
                   let cityTmpArray = [];
                   if (data.data !== null) {
+                    cityTmpArray.push({
+                      key: -1,
+                      name: 'All',
+                      text: 'All',
+                    });
+
                     data.data.map((item, index) => {
                       let object = item._id;
                       cityTmpArray.push({
                         key: index,
                         name: object.city,
-                        country_name: object.country,
+                        text: Helper.capitalize(
+                          `${object.city},${object.country}`,
+                        ),
                       });
                     });
                   }
-                  setSearchCityList(cityTmpArray);
+                  setTopCityList(cityTmpArray);
+                } else {
+                  if (searchedCity.length > 0) {
+                    let cityTmpArray = [];
+                    if (data.data !== null) {
+                      data.data.map((item, index) => {
+                        let object = item._id;
+                        cityTmpArray.push({
+                          key: index,
+                          name: object.city,
+                          country_name: object.country,
+                        });
+                      });
+                    }
+                    setSearchCityList(cityTmpArray);
+                  }
                 }
               }
             }
           }
-        }
-      },
-      (error) => {
-        getOwnJobs();
-      },
-    );
-  };
+        },
+        error => {
+          getOwnJobs();
+        },
+      );
+    },
+    [getOwnJobs],
+  );
 
   /**
    *
@@ -309,9 +312,9 @@ const JobListing = ({navigation}) => {
    *
    */
 
-  const searchProfession = (searchText) => {
+  const searchProfession = searchText => {
     if (searchText.length > 0) {
-      var filtered = professionListMain.filter((element) =>
+      var filtered = professionListMain.filter(element =>
         element.text.toLowerCase().includes(searchText.toLowerCase()),
       );
       setProfessionList([...filtered]);
@@ -494,7 +497,7 @@ const JobListing = ({navigation}) => {
           ]}>
           <SingleSearchWithFilter
             placeholder={'Search By Keyword'}
-            changeText={(text) => {
+            changeText={text => {
               setFilterQuery(text);
               if (text.length > 2) {
                 resetCount();
@@ -533,6 +536,24 @@ const JobListing = ({navigation}) => {
           )}
         </View>
       </Animated.View>
+    );
+  };
+
+  const noDataComponent = () => {
+    return (
+      <View style={GlobalInclude.AppStyle.fillColCenter}>
+        <Text
+          style={[
+            g.colorBlack,
+            g.FHNM,
+            g.fs12,
+            g.textCenter,
+            grid.alignItems,
+            grid.justifyContentCenter,
+          ]}>
+          No Record Found
+        </Text>
+      </View>
     );
   };
 
@@ -582,9 +603,11 @@ const JobListing = ({navigation}) => {
               keyExtractor={(item, index) => index.toString()}
               onEndReachedThreshold={0.1}
               onEndReached={onEndReached}
+              ListEmptyComponent={noDataComponent}
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
               contentContainerStyle={{
+                flexGrow: 1,
                 marginTop: animatedHeight,
                 paddingBottom:
                   searchCategory.length > 0 ? scale(280) : scale(130),
@@ -605,11 +628,11 @@ const JobListing = ({navigation}) => {
       <ProfessionalSheet
         refRBSheet={professionRef}
         dataList={professionList}
-        searchProfession={(query) => {
+        searchProfession={query => {
           searchProfession(query);
         }}
         selectedProfession={selectedProfession}
-        setSelectedProfession={(value) => {
+        setSelectedProfession={value => {
           professionRef.current.close();
           if (value !== 'All') {
             setSelectedProfession(value);
@@ -647,7 +670,7 @@ const JobListing = ({navigation}) => {
         <BottomSheetHeader
           title={'Select City'}
           showSearch={true}
-          onSeachQuery={(query) => {
+          onSeachQuery={query => {
             searchedCity = query;
             if (query.trim().length > 2) {
               getSearchCity(query);
@@ -674,7 +697,7 @@ const JobListing = ({navigation}) => {
                 defaultSelected={'All'}
                 PROP={topCityList}
                 capitalize
-                onRadioSelect={(item) => {
+                onRadioSelect={item => {
                   resetCount();
                   if (item.key !== -1) {
                     filterObject.city = item.name;

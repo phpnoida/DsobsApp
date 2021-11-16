@@ -13,6 +13,7 @@ import {
   FlatList,
   Modal,
   Keyboard,
+  KeyboardAvoidingView,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {scale} from '../../theme/Scalling';
@@ -54,7 +55,12 @@ let filteredRegion = [];
 let filteredIndustry = [];
 let filteredTopic = [];
 let searchVal = '';
+
+let responseMessage = '';
+let isSuccess = false;
+
 const NewsListing = ({navigation}) => {
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pageContent, setPageContent] = useState([]);
@@ -92,11 +98,11 @@ const NewsListing = ({navigation}) => {
    * ************************************************
    */
 
-  const doSearchUser = (searchQuery) => {
+  const doSearchUser = searchQuery => {
     getDirectory(
       '1',
       searchQuery,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -112,18 +118,18 @@ const NewsListing = ({navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         setSearchedUser([]);
       },
     );
   };
 
-  const getFilteredNews = (filters) => {
+  const getFilteredNews = filters => {
     doFilterNews(
       filters,
       newsIndex,
       newsSize,
-      (response) => {
+      response => {
         setIsLoading(false);
         if (response && response !== null) {
           if (
@@ -143,7 +149,7 @@ const NewsListing = ({navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         if (newsIndex === 0) {
           setPageContent(null);
         }
@@ -152,12 +158,12 @@ const NewsListing = ({navigation}) => {
     );
   };
 
-  const getNewsListing = (searchQuery) => {
+  const getNewsListing = searchQuery => {
     getNews(
       searchQuery,
       newsIndex,
       newsSize,
-      (response) => {
+      response => {
         setIsLoading(false);
         if (response && response !== null) {
           if (
@@ -177,7 +183,7 @@ const NewsListing = ({navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         if (newsIndex === 0) {
           setPageContent(null);
         }
@@ -187,7 +193,7 @@ const NewsListing = ({navigation}) => {
     );
   };
 
-  const saveData = (data) => {
+  const saveData = data => {
     let records = data.data;
     console.log('records', JSON.stringify(records));
     if (newsIndex === 0) {
@@ -201,7 +207,7 @@ const NewsListing = ({navigation}) => {
   const getFilterCategory = () => {
     setIsRefreshing(true);
     getNewsCategoris(
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -216,7 +222,7 @@ const NewsListing = ({navigation}) => {
               for (var key in records) {
                 if (records.hasOwnProperty(key)) {
                   let filterItem = [];
-                  records[key].map((category) => {
+                  records[key].map(category => {
                     filterItem.push({
                       label: category,
                       selected: false,
@@ -237,7 +243,7 @@ const NewsListing = ({navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         setNewsCategories([]);
         console.log('error', error);
       },
@@ -260,7 +266,7 @@ const NewsListing = ({navigation}) => {
 
     let users = [];
 
-    selectedUsers.map((user) => {
+    selectedUsers.map(user => {
       users.push({
         id: user._id,
         firstName: user.firstName,
@@ -279,7 +285,7 @@ const NewsListing = ({navigation}) => {
     setShowAddNewsLoader(true);
     doPostNews(
       requestData,
-      (response) => {
+      response => {
         setShowAddNewsLoader(false);
         if (response && response !== null) {
           if (
@@ -288,7 +294,19 @@ const NewsListing = ({navigation}) => {
             response.data !== null
           ) {
             let data = response.data;
+            console.log('====================================');
+            console.log('data', data);
+            console.log('====================================');
             if (data.status) {
+              isSuccess = true;
+              responseMessage = `Thanks ${Helper.capitalize(
+                global.userDetails.firstName,
+              )}, your News Article has been successfully forwarded to the Admin for approval.`;
+              setShowErrorMessage(true);
+              // setTimeout(() => {
+              //   setShowErrorMessage(false);
+              // }, 2500);
+
               newsLink = '';
               newsAbout = '';
               newsIndex = 0;
@@ -297,11 +315,14 @@ const NewsListing = ({navigation}) => {
               setTimeout(() => {
                 getNewsListing('');
               }, 300);
+            } else {
+              responseMessage = 'Error while posting your request!';
+              setShowErrorMessage(true);
             }
           }
         }
       },
-      (error) => {
+      error => {
         setShowAddNewsLoader(false);
         setIsLoading(false);
       },
@@ -314,7 +335,7 @@ const NewsListing = ({navigation}) => {
    * ************************************************
    */
 
-  const hideShowCategory = (index) => {
+  const hideShowCategory = index => {
     let oldData = newsCategoris;
 
     oldData[index].isVisible = !oldData[index].isVisible;
@@ -355,7 +376,6 @@ const NewsListing = ({navigation}) => {
 
   const onPaginate = () => {
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
-      console.log('onPaginate()');
       setPaginationStatus(PaginationStatus.waiting);
       newsIndex = parseInt(newsIndex, 10) + 1;
       getNewsListing(filterQuery);
@@ -363,7 +383,6 @@ const NewsListing = ({navigation}) => {
   };
 
   const onEndReached = () => {
-    console.log('onEndReached()');
     if (pageContent.length === totalCount) {
       setPaginationStatus(PaginationStatus.allLoaded);
       return;
@@ -434,7 +453,7 @@ const NewsListing = ({navigation}) => {
     }
   };
 
-  const concatName = (item) => {
+  const concatName = item => {
     let fullName = '';
 
     if (
@@ -685,7 +704,7 @@ const NewsListing = ({navigation}) => {
                   ]}
                   keyboardType={'default'}
                   placeholder={'Search by(Name/Title/Tags)'}
-                  onChangeText={(text) => {
+                  onChangeText={text => {
                     setfilterQuery(text);
                     if (text.trim().length === 0) {
                       setfilterQuery('');
@@ -771,7 +790,7 @@ const NewsListing = ({navigation}) => {
       </SafeAreaView>
       {/* filter sheet */}
       <FilterSheet
-        ref={(ref) => {
+        ref={ref => {
           filterSheet = ref;
         }}
         onClose={() => {}}
@@ -884,150 +903,172 @@ const NewsListing = ({navigation}) => {
         transparent={true}
         hardwareAccelerated={true}
         visible={showAddPostModal}>
-        <View style={style.centeredView}>
-          <View style={style.modalView}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <View>
-                <View style={style.headerView}>
-                  <View style={style.closeButton}>
-                    <TouchableOpacity
-                      style={{alignSelf: 'flex-end'}}
-                      activeOpacity={0.8}
-                      onPress={() => {
-                        setShowAddPostModal(false);
-                      }}
-                      hitSlop={{
-                        top: 15,
-                        bottom: 15,
-                        left: 15,
-                        right: 15,
-                      }}>
-                      <GlobalInclude.BaseIcon
-                        containerStyle={{height: scale(26), width: scale(26)}}
-                        iconColor={'#808080'}
-                        iconName={'close'}
-                        iconSize={scale(26)}
-                        iconType={IconType[8]}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                {/* content */}
-                <View style={style.postNewsChildContainer}>
-                  <View style={g.mb15}>
-                    <View style={[grid.rowdir, grid.alignItemsTop]}>
-                      <Text style={g.labeltext1}>Paste Link To News Story</Text>
-                      <Text style={g.colorRed}>*</Text>
+        <KeyboardAvoidingView behavior="padding" style={grid.flex1}>
+          <View style={style.centeredView}>
+            <View style={style.modalView}>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <View>
+                  <View style={style.headerView}>
+                    <View style={style.closeButton}>
+                      <TouchableOpacity
+                        style={{alignSelf: 'flex-end'}}
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          setShowAddPostModal(false);
+                        }}
+                        hitSlop={{
+                          top: 15,
+                          bottom: 15,
+                          left: 15,
+                          right: 15,
+                        }}>
+                        <GlobalInclude.BaseIcon
+                          containerStyle={{height: scale(26), width: scale(26)}}
+                          iconColor={'#808080'}
+                          iconName={'close'}
+                          iconSize={scale(26)}
+                          iconType={IconType[8]}
+                        />
+                      </TouchableOpacity>
                     </View>
-                    <TextInput
-                      underlineColorAndroid="transparent"
-                      style={[g.inputWhite]}
-                      autoCapitalize={'none'}
-                      placeholder={'Paste link here'}
-                      onChangeText={(value) => {
-                        newsLink = value;
-                      }}
-                    />
-                    {errorMessage !== null &&
-                      errorMessage.link !== undefined &&
-                      errorMessage.link !== '' && (
-                        <Text style={[g.errorMsg, g.fs12]}>
-                          {errorMessage.link}
-                        </Text>
-                      )}
                   </View>
-
-                  <View style={g.mb15}>
-                    <View style={[grid.rowdir, grid.alignItemsTop]}>
-                      <Text style={g.labeltext1}>Name of {APP_NAME} User</Text>
-                    </View>
-                    <TextInput
-                      underlineColorAndroid="transparent"
-                      style={[g.inputWhite]}
-                      autoCapitalize={'words'}
-                      value={searchUserQuery}
-                      placeholder={'Search user here'}
-                      onChangeText={(value) => {
-                        searchVal = value;
-                        setSearchUserQuery(value);
-                        if (value.length > 0) {
-                          doSearchUser(value);
-                        } else {
-                          setSearchedUser([]);
-                        }
-                      }}
-                    />
-                  </View>
-
-                  {searchedUser.length > 0 && (
-                    <AutoSuggestUser
-                      searchedUser={searchedUser}
-                      onPress={(row, index) => {
-                        let oldData = selectedUsers;
-
-                        if (oldData.length < 3) {
-                          searchVal = '';
-                          oldData.push(row);
-                          setSearchUserQuery('');
-                          setSelectedUsers([...oldData]);
-                          setSearchedUser([]);
-                        }
-                      }}
-                    />
-                  )}
-
-                  {selectedUsers.length > 0 && (
+                  {/* content */}
+                  <View style={style.postNewsChildContainer}>
                     <View style={g.mb15}>
                       <View style={[grid.rowdir, grid.alignItemsTop]}>
-                        <Text style={g.labeltext1}>Selected Users</Text>
+                        <Text style={g.labeltext1}>
+                          Paste Link To News Story
+                        </Text>
+                        <Text style={g.colorRed}>*</Text>
                       </View>
-                      {renderSelectedUsers()}
+                      <TextInput
+                        underlineColorAndroid="transparent"
+                        style={[g.inputWhite]}
+                        autoCapitalize={'none'}
+                        placeholder={'Paste link here'}
+                        onChangeText={value => {
+                          newsLink = value;
+                        }}
+                      />
+                      {errorMessage !== null &&
+                        errorMessage.link !== undefined &&
+                        errorMessage.link !== '' && (
+                          <Text style={[g.errorMsg, g.fs12]}>
+                            {errorMessage.link}
+                          </Text>
+                        )}
                     </View>
-                  )}
 
-                  <View style={g.mb15}>
-                    <View style={[grid.rowdir, grid.alignItemsTop]}>
-                      <Text style={g.labeltext1}>Note to {APP_NAME}</Text>
+                    <View style={g.mb15}>
+                      <View style={[grid.rowdir, grid.alignItemsTop]}>
+                        <Text style={g.labeltext1}>
+                          Name of {APP_NAME} User
+                        </Text>
+                      </View>
+                      <TextInput
+                        underlineColorAndroid="transparent"
+                        style={[g.inputWhite]}
+                        autoCapitalize={'words'}
+                        value={searchUserQuery}
+                        placeholder={'Search user here'}
+                        onChangeText={value => {
+                          searchVal = value;
+                          setSearchUserQuery(value);
+                          if (value.length > 0) {
+                            doSearchUser(value);
+                          } else {
+                            setSearchedUser([]);
+                          }
+                        }}
+                      />
                     </View>
-                    <TextInput
-                      underlineColorAndroid="transparent"
-                      numberOfLines={6}
-                      multiline={true}
-                      style={[
-                        g.inputWhite,
-                        {height: 100, textAlignVertical: 'top'},
-                      ]}
-                      autoCapitalize={'sentences'}
-                      placeholder="Enter your text here"
-                      onChangeText={(value) => {
-                        newsAbout = value;
-                      }}
-                    />
-                  </View>
 
-                  <View style={style.submitButton}>
-                    <CommonButton
-                      showLoader={showAddNewsLoader}
-                      title={'Submit'}
-                      onPress={() => {
-                        setErrorMessage({});
-                        if (newsLink.trim() === '') {
-                          setErrorMessage({link: 'This field is required!'});
-                        } else if (!Helper.validateRegex(urlRegex, newsLink)) {
-                          setErrorMessage({link: 'This link is not valid!'});
-                        } else {
-                          addNewsPost();
-                        }
-                      }}
-                    />
+                    {searchedUser.length > 0 && (
+                      <AutoSuggestUser
+                        searchedUser={searchedUser}
+                        onPress={(row, index) => {
+                          let oldData = selectedUsers;
+
+                          if (oldData.length < 3) {
+                            searchVal = '';
+                            oldData.push(row);
+                            setSearchUserQuery('');
+                            setSelectedUsers([...oldData]);
+                            setSearchedUser([]);
+                          }
+                        }}
+                      />
+                    )}
+
+                    {selectedUsers.length > 0 && (
+                      <View style={g.mb15}>
+                        <View style={[grid.rowdir, grid.alignItemsTop]}>
+                          <Text style={g.labeltext1}>Selected Users</Text>
+                        </View>
+                        {renderSelectedUsers()}
+                      </View>
+                    )}
+
+                    <View style={g.mb15}>
+                      <View style={[grid.rowdir, grid.alignItemsTop]}>
+                        <Text style={g.labeltext1}>Note to {APP_NAME}</Text>
+                      </View>
+                      <TextInput
+                        underlineColorAndroid="transparent"
+                        numberOfLines={6}
+                        multiline={true}
+                        style={[
+                          g.inputWhite,
+                          {height: 100, textAlignVertical: 'top'},
+                        ]}
+                        autoCapitalize={'sentences'}
+                        placeholder="Enter your text here"
+                        onChangeText={value => {
+                          newsAbout = value;
+                        }}
+                      />
+                    </View>
+
+                    <View style={style.submitButton}>
+                      <CommonButton
+                        showLoader={showAddNewsLoader}
+                        title={'Submit'}
+                        onPress={() => {
+                          setErrorMessage({});
+                          if (newsLink.trim() === '') {
+                            setErrorMessage({link: 'This field is required!'});
+                          } else if (
+                            !Helper.validateRegex(urlRegex, newsLink)
+                          ) {
+                            setErrorMessage({link: 'This link is not valid!'});
+                          } else {
+                            addNewsPost();
+                          }
+                        }}
+                      />
+                    </View>
                   </View>
                 </View>
-              </View>
-            </ScrollView>
+              </ScrollView>
+            </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
       {/* post video modal */}
+
+      {showErrorMessage && (
+        <GlobalInclude.ModalAlert
+          status={showErrorMessage}
+          header={responseMessage}
+          okButton={isSuccess ? 'Close' : `Contact ${APP_NAME}`}
+          okAction={() => {
+            setShowErrorMessage(!showErrorMessage);
+          }}
+          closeAction={() => {
+            setShowErrorMessage(!showErrorMessage);
+          }}
+        />
+      )}
     </View>
   );
 };

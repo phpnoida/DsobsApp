@@ -86,7 +86,7 @@ const GalleryListing = ({navigation}) => {
    */
   const getFilterCategory = () => {
     getGalleryCategory(
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -109,7 +109,7 @@ const GalleryListing = ({navigation}) => {
                 isSelected: false,
               });
 
-              records.map((child) => {
+              records.map(child => {
                 pushArray.push({
                   label: child,
                   value: child,
@@ -122,7 +122,7 @@ const GalleryListing = ({navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         console.log('error', error);
       },
     );
@@ -132,7 +132,7 @@ const GalleryListing = ({navigation}) => {
     getAlbums(
       filterObject,
       cancelAlbum,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -169,11 +169,11 @@ const GalleryListing = ({navigation}) => {
   };
 
   // Filter section
-  const doSearchUser = (query) => {
+  const doSearchUser = query => {
     getDirectory(
       '1',
       query,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -190,7 +190,7 @@ const GalleryListing = ({navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         setSearchedUser([]);
         console.log('error', error);
       },
@@ -203,10 +203,10 @@ const GalleryListing = ({navigation}) => {
    *
    */
 
-  const selectCategory = (index) => {
+  const selectCategory = index => {
     let oldData = filterCategory;
 
-    oldData.map((item) => {
+    oldData.map(item => {
       item.isSelected = false;
     });
     oldData[index].isSelected = true;
@@ -251,7 +251,7 @@ const GalleryListing = ({navigation}) => {
     getAlbumList();
   };
 
-  const expandSelectedPanel = (index) => {
+  const expandSelectedPanel = index => {
     let oldData = pageContent;
 
     oldData[index].isExpanded = !oldData[index].isExpanded;
@@ -336,7 +336,7 @@ const GalleryListing = ({navigation}) => {
           ChkThreeTitle={'Year'}
           ChkFourTitle={'Tags'}
           withFilter={true}
-          onChecked={(type) => {
+          onChecked={type => {
             searchType = type;
             setCheckedType(type);
             setSearchedUser([]);
@@ -352,12 +352,12 @@ const GalleryListing = ({navigation}) => {
               refRBFilter.current.open();
             }
           }}
-          changeText={(text) => {
+          changeText={text => {
             searchVal = text;
             setFilterQuery(text);
             console.log('searchType', searchType);
             if (searchType === 1) {
-              if (text.length > 3) {
+              if (text.length > 2) {
                 setSearchedUser([]);
                 doSearchUser(text);
               } else if (text.length < 4) {
@@ -560,7 +560,7 @@ const GalleryListing = ({navigation}) => {
         {showShareModal && (
           <ImageShareModal
             status={showShareModal}
-            onCloseAction={(type) => {
+            onCloseAction={type => {
               setShowShareModal(!showShareModal);
             }}
           />
@@ -570,7 +570,7 @@ const GalleryListing = ({navigation}) => {
         <YearSelection
           refRBSheet={refRBSheet}
           title={'Select Year'}
-          onSelect={(value) => {
+          onSelect={value => {
             refRBSheet.current.close();
             setCheckedType(-1);
             setTimeout(() => {

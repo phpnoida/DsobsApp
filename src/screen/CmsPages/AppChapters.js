@@ -15,6 +15,7 @@ const AppChapters = ({navigation}) => {
   return (
     <View style={GlobalInclude.AppStyle.fill}>
       <HeaderBar
+        showBack={true}
         navigation={navigation}
         title={`${APP_NAME} Regional Chapter Reps`}
       />

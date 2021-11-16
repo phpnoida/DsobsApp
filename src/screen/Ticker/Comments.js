@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {
   Text,
   View,
@@ -14,6 +14,7 @@ import {
   Modal,
   BackHandler,
   KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import g from '../../theme/global';
 import grid from '../../theme/grid';
@@ -37,6 +38,11 @@ import OptionsSheet from 'react-native-raw-bottom-sheet';
 import {useDispatch} from 'react-redux';
 import {increaseComment} from '../../reducer/NotificationReducer';
 import {StackActions} from '@react-navigation/native';
+import {
+  KeyboardAccessoryView,
+  useComponentSize,
+} from '../../component/keyboardView';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const {width: displayWidth} = Dimensions.get('window');
 
@@ -60,6 +66,8 @@ let inputValue = '';
 const Comments = ({route, navigation}) => {
   const refPostComments = useRef();
   const dispatch = useDispatch();
+  const {onLayout} = useComponentSize();
+  const insets = useSafeAreaInsets();
 
   const [commentText, setCommentText] = useState('');
   const [commentError, setCommentError] = useState('');
@@ -125,9 +133,9 @@ const Comments = ({route, navigation}) => {
     return () => {
       backHandler.remove();
     };
-  }, [route, navigation]);
+  }, [route, navigation, getCommentsList, manageCommentDraft]);
 
-  const manageCommentDraft = () => {
+  const manageCommentDraft = useCallback(() => {
     console.log('commentText', inputValue);
     if (inputValue !== '') {
       addCommentIfNotExist(() => {
@@ -144,7 +152,7 @@ const Comments = ({route, navigation}) => {
         navigation.dispatch(StackActions.replace('CommonRoom'));
       }
     }
-  };
+  }, [addCommentIfNotExist, navigation]);
 
   const checkCommentExist = () => {
     var isExistComment = -1;
@@ -167,12 +175,8 @@ const Comments = ({route, navigation}) => {
     return isExistComment;
   };
 
-  const addCommentIfNotExist = (callback) => {
+  const addCommentIfNotExist = useCallback(callback => {
     var isExist = checkCommentExist();
-
-    console.log('====================================');
-    console.log('isExist', isExist);
-    console.log('====================================');
     if (isExist === -1) {
       if (
         global.commentDraft &&
@@ -195,24 +199,23 @@ const Comments = ({route, navigation}) => {
       }
       callback();
     }
-  };
+  }, []);
 
   /**
    *
    * Pagination
    *
    */
-  const onPaginate = () => {
+  const onPaginate = useCallback(() => {
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
       console.log('onPaginate()');
       setPaginationStatus(PaginationStatus.waiting);
       filterObject.index = filterObject.index + 1;
       getCommentsList();
     }
-  };
+  }, [getCommentsList, isRefreshing, paginationStatus]);
 
-  const onEndReached = () => {
-    console.log('onEndReached()', paginationStatus);
+  const onEndReached = useCallback(() => {
     if (getCount() === totalCount || totalCount < 10) {
       setPaginationStatus(PaginationStatus.allLoaded);
       return;
@@ -220,14 +223,14 @@ const Comments = ({route, navigation}) => {
     if (paginationStatus === PaginationStatus.waiting) {
       onPaginate();
     }
-  };
+  }, [getCount, paginationStatus, onPaginate]);
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     filterObject.index = 0;
     setIsRefreshing(false);
     resetCount();
     getCommentsList();
-  };
+  }, [getCommentsList]);
 
   const resetCount = () => {
     totalCount = 0;
@@ -248,10 +251,10 @@ const Comments = ({route, navigation}) => {
    *
    *
    */
-  const getCommentsList = () => {
+  const getCommentsList = useCallback(() => {
     getComments(
       filterObject,
-      (response) => {
+      response => {
         setFirstTimeLoad(false);
         setIsRefreshing(false);
         if (response && response !== null) {
@@ -312,13 +315,13 @@ const Comments = ({route, navigation}) => {
         console.log('error->', error);
       },
     );
-  };
+  }, [comments]);
 
-  const postUserComment = (requestObject) => {
+  const postUserComment = requestObject => {
     Keyboard.dismiss();
     addUserComment(
       requestObject,
-      (response) => {
+      response => {
         setIsCommenting(false);
         setIsReplayEditComment(false);
         if (response && response !== null) {
@@ -361,7 +364,7 @@ const Comments = ({route, navigation}) => {
     );
   };
 
-  const getCount = () => {
+  const getCount = useCallback(() => {
     var count = 0;
 
     for (let i = 0; i < comments.length; i++) {
@@ -374,7 +377,7 @@ const Comments = ({route, navigation}) => {
       count = count + 1;
     }
     return count;
-  };
+  }, [comments]);
 
   const updateUserCommentData = () => {
     let requestObject = {
@@ -384,7 +387,7 @@ const Comments = ({route, navigation}) => {
     updateUserComment(
       requestObject,
       selectedPost._id,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -429,7 +432,7 @@ const Comments = ({route, navigation}) => {
   const deleteUserCommentData = () => {
     removeUserComment(
       selectedPost._id,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -478,7 +481,7 @@ const Comments = ({route, navigation}) => {
       setIsReporting(true);
       doReportComment(
         requestData,
-        (response) => {
+        response => {
           setIsReporting(false);
           if (response && response !== null) {
             if (
@@ -501,7 +504,7 @@ const Comments = ({route, navigation}) => {
             }
           }
         },
-        (error) => {
+        error => {
           responseMessage = 'Error while reporting!';
           setShowModal(true);
           setIsReporting(false);
@@ -562,7 +565,7 @@ const Comments = ({route, navigation}) => {
     );
   };
 
-  const renderItem = ({item, index}) => {
+  const renderItem = useCallback(({item, index}) => {
     return (
       <View key={index}>
         <TouchableOpacity
@@ -791,7 +794,7 @@ const Comments = ({route, navigation}) => {
           })}
       </View>
     );
-  };
+  }, []);
 
   const showUserPostOptions = () => {
     return (
@@ -860,7 +863,6 @@ const Comments = ({route, navigation}) => {
   const showOtherPostOptions = () => {
     return (
       <View>
-        
         <TouchableOpacity
           onPress={() => {
             if (
@@ -873,12 +875,7 @@ const Comments = ({route, navigation}) => {
               setShowReportModal(true);
             }, 250);
           }}
-          style={[
-            grid.justifyContentCenter,
-            grid.alignItems,
-            g.p15,
-            
-          ]}>
+          style={[grid.justifyContentCenter, grid.alignItems, g.p15]}>
           <Text
             style={[
               g.fs18,
@@ -990,6 +987,92 @@ const Comments = ({route, navigation}) => {
     );
   };
 
+  const emptyComponent = useCallback(() => {
+    return (
+      <View
+        style={{
+          flex: 1,
+        }}>
+        <View style={[GlobalInclude.AppStyle.fillCenter]}>
+          <Text
+            style={[
+              g.colorBlack,
+              g.FHNM,
+              g.fs12,
+              g.txtCenter,
+              grid.alignItems,
+              grid.justifyContentCenter,
+            ]}>
+            No Record Found
+          </Text>
+        </View>
+      </View>
+    );
+  }, []);
+
+  const renderScrollable = useCallback(
+    panHandlers => (
+      <View style={grid.flex1}>
+        {firstTimeLoad ? (
+          <View style={GlobalInclude.AppStyle.fillCenter}>
+            <ActivityIndicator
+              size={'small'}
+              color={GlobalInclude.Color.ColorPrimary}
+            />
+          </View>
+        ) : (
+          <FlatList
+            data={comments}
+            extraData={comments}
+            renderItem={renderItem}
+            keyExtractor={(item, index) => index.toString()}
+            enableEmptySections
+            automaticallyAdjustContentInsets={false}
+            style={{flex: 1}}
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: comments.length !== 0 ? undefined : 'center',
+              paddingTop:
+                Platform.OS === 'android'
+                  ? insets.bottom + 20
+                  : insets.bottom - 15,
+              paddingHorizontal: scale(15),
+              paddingBottom: scale(60),
+            }}
+            onEndReached={onEndReached}
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            scrollEventThrottle={100}
+            onEndReachedThreshold={0.1}
+            removeClippedSubviews={Platform.OS !== 'web'}
+            showsVerticalScrollIndicator={false}
+            maintainVisibleContentPosition={{
+              minIndexForVisible: 0,
+            }}
+            ListEmptyComponent={emptyComponent}
+            bounces={false}
+            initialNumToRender={10}
+            maxToRenderPerBatch={8}
+            updateCellsBatchingPeriod={100}
+            initialListSize={10}
+            pageSize={1}
+            {...panHandlers}
+          />
+        )}
+      </View>
+    ),
+    [
+      insets.bottom,
+      emptyComponent,
+      renderItem,
+      comments,
+      isRefreshing,
+      onEndReached,
+      handleRefresh,
+      firstTimeLoad,
+    ],
+  );
+
   return (
     <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
       <HeaderBar
@@ -997,204 +1080,164 @@ const Comments = ({route, navigation}) => {
         showBack={true}
         onGoBack={() => manageCommentDraft()}
       />
-      <SafeAreaView style={GlobalInclude.AppStyle.fill}>
-        <KeyboardAvoidingView
-          behavior="padding"
-          keyboardVerticalOffset={70}
-          style={grid.flex1}>
-          <View style={grid.flex1}>
-            <View style={grid.flex1}>
-              {firstTimeLoad ? (
-                <View style={GlobalInclude.AppStyle.fillCenter}>
-                  <ActivityIndicator
-                    size={'small'}
-                    color={GlobalInclude.Color.ColorPrimary}
-                  />
-                </View>
-              ) : (
-                <FlatList
-                  showsVerticalScrollIndicator={false}
-                  extraData={comments}
-                  data={comments}
-                  renderItem={renderItem}
-                  keyExtractor={(item, index) => index.toString()}
-                  onEndReachedThreshold={0.1}
-                  onEndReached={onEndReached}
-                  refreshing={isRefreshing}
-                  onRefresh={handleRefresh}
-                  ListEmptyComponent={renderNoDataComponent}
-                  ListFooterComponent={renderFooter}
-                  contentContainerStyle={{
-                    paddingBottom: scale(70),
-                    paddingTop: scale(25),
-                    paddingHorizontal: scale(15),
-                  }}
-                />
-              )}
-            </View>
-            <View style={[g.mb20, g.pl15, g.pr15]}>
-              <View
-                style={
-                  isReplayEditComment
-                    ? [
-                        g.bggray3,
-                        {
-                          borderTopLeftRadius: scale(10),
-                          borderTopRightRadius: scale(10),
-                          borderBottomLeftRadius: scale(8),
-                          borderBottomRightRadius: scale(15),
-                        },
-                      ]
-                    : {}
-                }>
-                {isReplayEditComment && (
-                  <View style={[g.pl10, g.pb10, grid.rowdir]}>
-                    <View style={[grid.col, g.pt10]}>
-                      <Text
-                        style={[
-                          g.fs14,
-                          g.FHNB,
-                          g.colorBlue,
-                          grid.justifyContentCenter,
-                          grid.alignItems,
-                          g.txtCenterVertical,
-                        ]}>
-                        {selectedOption === 'Edit'
-                          ? 'Editing:'
-                          : 'Commenting On:'}
-                      </Text>
-                      <Text
-                        style={[
-                          g.fs12,
-                          g.FHNM,
-                          g.colorBlue,
-                          grid.justifyContentCenter,
-                          grid.alignItems,
-                          g.txtCenterVertical,
-                          g.mt5,
-                        ]}
-                        numberOfLines={2}>
-                        {selectedPost != null && selectedPost.commentText}
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => {
-                        selectedOption = '';
-                        setIsReplayEditComment(false);
-                        setSelectedPost(null);
-                      }}
-                      style={{
-                        width: scale(26),
-                        height: scale(26),
-                        borderRadius: scale(30),
-                        backgroundColor: GlobalInclude.Color.ColorPrimary,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        marginTop: scale(5),
-                        marginRight: scale(5),
-                      }}>
-                      <GlobalInclude.BaseIcon
-                        containerStyle={{
-                          height: scale(14),
-                          width: scale(14),
-                          justifyContent: 'center',
-                        }}
-                        iconColor={'#fff'}
-                        iconName={'close'}
-                        iconSize={scale(14)}
-                        iconType={IconType[6]}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                )}
-                <View
-                  style={[
-                    grid.rowrow,
-                    grid.justifyContentCenter,
-                    grid.alignItems,
-                  ]}>
-                  <TextInput
-                    underlineColorAndroid={'transparent'}
+      <KeyboardAccessoryView
+        {...{
+          renderScrollable,
+        }}>
+        <View style={[g.mb5, g.pl10, g.pr10]}>
+          <View
+            style={
+              isReplayEditComment
+                ? [
+                    g.bggray3,
+                    {
+                      borderTopLeftRadius: scale(10),
+                      borderTopRightRadius: scale(10),
+                      borderBottomLeftRadius: scale(8),
+                      borderBottomRightRadius: scale(15),
+                    },
+                  ]
+                : {}
+            }>
+            {isReplayEditComment && (
+              <View style={[g.pl10, g.pb10, grid.rowdir]}>
+                <View style={[grid.col, g.pt10]}>
+                  <Text
                     style={[
-                      grid.flex1,
-                      g.mr5,
-                      {
-                        backgroundColor: '#f8f8f8',
-                        fontSize: scale(12),
-                        borderRadius: scale(8),
-                        fontFamily: 'Lato-Regular',
-                        justifyContent: 'center',
-                        textAlignVertical: 'center',
-                        minHeight: scale(40),
-                        padding: scale(10),
-                      },
+                      g.fs14,
+                      g.FHNB,
+                      g.colorBlue,
+                      grid.justifyContentCenter,
+                      grid.alignItems,
+                      g.txtCenterVertical,
+                    ]}>
+                    {selectedOption === 'Edit' ? 'Editing:' : 'Commenting On:'}
+                  </Text>
+                  <Text
+                    style={[
+                      g.fs12,
+                      g.FHNM,
+                      g.colorBlue,
+                      grid.justifyContentCenter,
+                      grid.alignItems,
+                      g.txtCenterVertical,
+                      g.mt5,
                     ]}
-                    keyboardType={'default'}
-                    autoCapitalize={'sentences'}
-                    returnKeyType={'done'}
-                    value={commentText}
-                    multiline={true}
-                    placeholder={'Add/Paste Comment'}
-                    onChangeText={(value) => {
-                      setCommentText(value);
-                      setCommentError('');
-                      inputValue = value;
-                    }}
-                  />
-
-                  <TouchableOpacity
-                    onPress={() => {
-                      if (commentText.trim() === '') {
-                        setCommentError('This field is required!');
-                      } else {
-                        setIsCommenting(true);
-                        if (selectedOption === '') {
-                          let requestObject = {
-                            postId: filterObject.postId,
-                            depth: 0,
-                            parentId: '',
-                            commentText: commentText,
-                          };
-                          postUserComment(requestObject);
-                        } else if (selectedOption === 'Replay') {
-                          let requestObject = {
-                            postId: filterObject.postId,
-                            depth: parseInt(selectedPost.depth, 10) + 1,
-                            parentId: selectedPost._id,
-                            commentText: commentText,
-                          };
-                          postUserComment(requestObject);
-                        } else if (selectedOption === 'Edit') {
-                          updateUserCommentData();
-                        }
-                      }
-                    }}
-                    style={styles.commentButton}>
-                    {isCommenting ? (
-                      <ActivityIndicator size="small" color="#fff" />
-                    ) : (
-                      <GlobalInclude.BaseIcon
-                        containerStyle={{height: scale(20), width: scale(20)}}
-                        iconColor={'#FFF'}
-                        iconName={'send-o'}
-                        iconSize={scale(20)}
-                        iconType={IconType[4]}
-                      />
-                    )}
-                  </TouchableOpacity>
+                    numberOfLines={2}>
+                    {selectedPost != null && selectedPost.commentText}
+                  </Text>
                 </View>
-                {commentError &&
-                commentError !== null &&
-                commentError.length > 0 ? (
-                  <Text style={g.errorMsg}>{commentError}</Text>
-                ) : null}
+                <TouchableOpacity
+                  onPress={() => {
+                    selectedOption = '';
+                    setIsReplayEditComment(false);
+                    setSelectedPost(null);
+                  }}
+                  style={{
+                    width: scale(26),
+                    height: scale(26),
+                    borderRadius: scale(30),
+                    backgroundColor: GlobalInclude.Color.ColorPrimary,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginTop: scale(5),
+                    marginRight: scale(5),
+                  }}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{
+                      height: scale(14),
+                      width: scale(14),
+                      justifyContent: 'center',
+                    }}
+                    iconColor={'#fff'}
+                    iconName={'close'}
+                    iconSize={scale(14)}
+                    iconType={IconType[6]}
+                  />
+                </TouchableOpacity>
               </View>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-      {postComments()}
+            )}
+            <View
+              style={[grid.rowrow, grid.justifyContentCenter, grid.alignItems]}>
+              <TextInput
+                underlineColorAndroid={'transparent'}
+                style={[
+                  grid.flex1,
+                  g.mr5,
+                  {
+                    backgroundColor: '#f8f8f8',
+                    fontSize: scale(12),
+                    borderRadius: scale(8),
+                    fontFamily: 'Lato-Regular',
+                    justifyContent: 'center',
+                    textAlignVertical: 'center',
+                    minHeight: scale(40),
+                    padding: scale(10),
+                  },
+                ]}
+                keyboardType={'default'}
+                autoCapitalize={'sentences'}
+                returnKeyType={'done'}
+                value={commentText}
+                multiline={true}
+                placeholder={'Add/Paste Comment'}
+                onChangeText={value => {
+                  setCommentText(value);
+                  setCommentError('');
+                  inputValue = value;
+                }}
+              />
 
+              <TouchableOpacity
+                onPress={() => {
+                  if (commentText.trim() === '') {
+                    setCommentError('This field is required!');
+                  } else {
+                    setIsCommenting(true);
+                    if (selectedOption === '') {
+                      let requestObject = {
+                        postId: filterObject.postId,
+                        depth: 0,
+                        parentId: '',
+                        commentText: commentText,
+                      };
+                      postUserComment(requestObject);
+                    } else if (selectedOption === 'Replay') {
+                      let requestObject = {
+                        postId: filterObject.postId,
+                        depth: parseInt(selectedPost.depth, 10) + 1,
+                        parentId: selectedPost._id,
+                        commentText: commentText,
+                      };
+                      postUserComment(requestObject);
+                    } else if (selectedOption === 'Edit') {
+                      updateUserCommentData();
+                    }
+                  }
+                }}
+                style={styles.commentButton}>
+                {isCommenting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{height: scale(20), width: scale(20)}}
+                    iconColor={'#FFF'}
+                    iconName={'send-o'}
+                    iconSize={scale(20)}
+                    iconType={IconType[4]}
+                  />
+                )}
+              </TouchableOpacity>
+            </View>
+            {commentError &&
+            commentError !== null &&
+            commentError.length > 0 ? (
+              <Text style={g.errorMsg}>{commentError}</Text>
+            ) : null}
+          </View>
+        </View>
+      </KeyboardAccessoryView>
+      {postComments()}
       <Modal
         transparent={true}
         animationType="fade"
@@ -1248,7 +1291,7 @@ const Comments = ({route, navigation}) => {
                   g.textareaStyle,
                   {minHeight: 100, maxHeight: 100, height: 100},
                 ]}
-                onChangeText={(comment) => {
+                onChangeText={comment => {
                   setReportText(comment);
                   setErrorMessage({});
                 }}
