@@ -139,7 +139,7 @@ const TabOne = ({
               autoCapitalize={'words'}
               returnKeyType={'done'}
               placeholder={'Enter your text here'}
-              onChangeText={(value) => {
+              onChangeText={value => {
                 handleInput('businessName', value);
               }}
             />
@@ -296,7 +296,7 @@ const TabOne = ({
               autoCapitalize={'words'}
               returnKeyType={'done'}
               placeholder={'Paste Map Link Here'}
-              onChangeText={(value) => {
+              onChangeText={value => {
                 handleInput('businessLocation', value);
               }}
             />
@@ -318,6 +318,7 @@ const TabOne = ({
           }}
         />
       </View>
+
       <RbSheet
         ref={refRBSheetCity}
         height={height - 150}
@@ -336,13 +337,12 @@ const TabOne = ({
         <BottomSheetHeader
           title={'Select City'}
           showSearch={true}
-          onSeachQuery={(query) => {
+          onSeachQuery={query => {
             onSearchCity(query);
           }}
         />
         <View style={{paddingStart: scale(15), paddingEnd: scale(15)}}>
           <View>{cityList.length > 0 && renderCity()}</View>
-
           {selectedCities.length > 0 && (
             <View>
               <Text style={[g.colorBlack, g.fs16, g.FHNB]}>
@@ -354,9 +354,12 @@ const TabOne = ({
                     return (
                       <TouchableOpacity
                         key={i.toString()}
-                        onPress={() => {
+                        onPress={e => {
+                          e.preventDefault();
                           selectedIndex = i;
-                          setShowRemoveAlert(true);
+                          setTimeout(() => {
+                            setShowRemoveAlert(true);
+                          }, 100);
                         }}
                         style={{margin: scale(4)}}
                         activeOpacity={1}>
@@ -387,17 +390,36 @@ const TabOne = ({
               </View>
             </View>
           )}
+
+          {showRemoveAlert && (
+            <ModelAlert
+              status={showRemoveAlert}
+              header={'Are you sure you would like to remove?'}
+              okButton={'Okay'}
+              okAction={() => {
+                onRemoveCity(selectedIndex);
+                setShowRemoveAlert(false);
+              }}
+              cancelButton={'Cancel'}
+              cancelAction={() => {
+                setShowRemoveAlert(false);
+              }}
+              closeAction={() => {
+                setShowRemoveAlert(false);
+              }}
+            />
+          )}
         </View>
       </RbSheet>
 
       <ProfessionalSheet
         refRBSheet={refProfessionSheet}
         dataList={professionList}
-        searchProfession={(query) => {
+        searchProfession={query => {
           searchProfession(query);
         }}
         selectedProfession={selectedProfession}
-        setSelectedProfession={(value) => {
+        setSelectedProfession={value => {
           console.log('value', value);
           onPreofessionSelect(value);
           refProfessionSheet.current.close();
@@ -405,36 +427,17 @@ const TabOne = ({
         onClose={() => {}}
       />
 
-      {showRemoveAlert && (
-        <ModelAlert
-          status={true}
-          header={'Are you sure you would like to remove?'}
-          okButton={'Okay'}
-          okAction={() => {
-            onRemoveCity(selectedIndex);
-            setShowRemoveAlert(false);
-          }}
-          cancelButton={'Cancel'}
-          cancelAction={() => {
-            setShowRemoveAlert(false);
-          }}
-          closeAction={() => {
-            setShowRemoveAlert(false);
-          }}
-        />
-      )}
-
       <UploadMedia
         navigation={navigation}
         refRBSheet={uploadRef}
         media={{image: false, video: true, document: true, audio: true}}
         supportMultiple={true}
-        onPickMedia={(media) => {
+        onPickMedia={media => {
           uploadRef.current.close();
           if (media !== undefined && media !== null) {
             console.log('media', media);
             let tmp = [];
-            media.forEach((element) => {
+            media.forEach(element => {
               tmp.push(element.fileName);
             });
             setCoverImages(tmp);

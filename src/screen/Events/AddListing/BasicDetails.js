@@ -70,7 +70,7 @@ const BasicDetails = ({
                   setTime(currentDate);
                 }
               }}
-              onTouchCancel={(event) => {
+              onTouchCancel={event => {
                 setShowDatePicker(false);
               }}
             />
@@ -82,13 +82,15 @@ const BasicDetails = ({
               onCloseAction={() => {
                 setShowDatePicker(false);
               }}
-              onDateSelect={(obj) => {
+              onDateSelect={obj => {
                 setShowDatePicker(false);
                 const currentDate = obj || new Date();
                 if (selectedType === 1) {
-                  let tmpData = Helper.formateDate(currentDate);
+                  let serverDate = currentDate.serverDate;
+                  let tmpData = Helper.formateDate(new Date(serverDate));
                   setDate(tmpData);
                 } else {
+                  console.log('obj',obj);
                   setTime(currentDate);
                 }
               }}
@@ -133,7 +135,7 @@ const BasicDetails = ({
               autoCapitalize={'words'}
               returnKeyType={'done'}
               placeholder={'Write text here'}
-              onChangeText={(value) => {
+              onChangeText={value => {
                 handleInput('projectName', value);
               }}
             />
@@ -234,7 +236,7 @@ const BasicDetails = ({
               autoCapitalize={'words'}
               returnKeyType={'done'}
               placeholder={'Paste Map Link Here'}
-              onChangeText={(value) => {
+              onChangeText={value => {
                 handleInput('googleMapLink', value);
               }}
             />
@@ -272,7 +274,7 @@ const BasicDetails = ({
               autoCapitalize={'words'}
               returnKeyType={'done'}
               placeholder={'Write text here'}
-              onChangeText={(value) => {
+              onChangeText={value => {
                 handleInput('venueAddress', value);
               }}
             />
@@ -295,7 +297,7 @@ const BasicDetails = ({
               autoCapitalize={'words'}
               returnKeyType={'done'}
               placeholder={'Write text here'}
-              onChangeText={(value) => {
+              onChangeText={value => {
                 handleInput('city', value);
               }}
             />
@@ -312,7 +314,7 @@ const BasicDetails = ({
                 underlineColorAndroid="transparent"
                 style={[g.inputWhite, grid.col]}
                 value={facebook}
-                onChangeText={(value) => handleInput('facebook', value)}
+                onChangeText={value => handleInput('facebook', value)}
                 placeholder={'Write/Paste link here'}
                 maxLength={264}
               />
@@ -330,7 +332,7 @@ const BasicDetails = ({
                 underlineColorAndroid="transparent"
                 style={[g.inputWhite, grid.col]}
                 value={twitter}
-                onChangeText={(value) => handleInput('twitter', value)}
+                onChangeText={value => handleInput('twitter', value)}
                 placeholder={'Write/Paste link here'}
                 maxLength={264}
               />
@@ -348,7 +350,7 @@ const BasicDetails = ({
                 underlineColorAndroid="transparent"
                 style={[g.inputWhite, grid.col]}
                 value={wikipedia}
-                onChangeText={(value) => handleInput('wikipedia', value)}
+                onChangeText={value => handleInput('wikipedia', value)}
                 placeholder={'Write/Paste link here'}
                 maxLength={264}
               />

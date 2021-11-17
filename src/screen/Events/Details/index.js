@@ -72,7 +72,7 @@ const EventDetails = ({route, navigation}) => {
     setIsLoading(true);
     doFitlerSocialWork(
       filterObject,
-      (response) => {
+      response => {
         setIsLoading(false);
         if (response && response !== null) {
           if (
@@ -105,7 +105,7 @@ const EventDetails = ({route, navigation}) => {
     );
   };
 
-  const manageRSVP = (remove) => {
+  const manageRSVP = remove => {
     if (pageContent !== undefined && pageContent !== null) {
       let attendees = JSON.parse(
         JSON.stringify(
@@ -147,15 +147,23 @@ const EventDetails = ({route, navigation}) => {
     return [];
   };
 
-  const updateRSVP = (wantRemove) => {
+  const updateRSVP = wantRemove => {
+    let userInfo = manageRSVP(wantRemove);
+
+    userInfo.forEach(element => {
+      if (element.type && element.type !== undefined && element.type !== null) {
+        delete element.type;
+      }
+    });
     let requestObject = {
-      attendees: manageRSVP(wantRemove),
+      attendees: userInfo,
     };
 
+    console.log('requestObject', requestObject);
     updateEvent(
       requestObject,
       filterObject.id,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -184,7 +192,7 @@ const EventDetails = ({route, navigation}) => {
    *
    */
 
-  const createShareContent = (content) => {
+  const createShareContent = content => {
     shareContent = {};
     shareContent.title = `Event : ${
       content !== null &&
@@ -212,15 +220,15 @@ const EventDetails = ({route, navigation}) => {
     shareContent.type = 'image/*';
   };
 
-  const getEventImage = (attachment) => {
+  const getEventImage = attachment => {
     RNFetchBlob.config({
       fileCache: true,
     })
       .fetch('GET', attachment)
-      .then((resp) => {
+      .then(resp => {
         return resp.readFile('base64');
       })
-      .then((base64Data) => {
+      .then(base64Data => {
         let attachementFile =
           Platform.OS === 'ios'
             ? shareContent.attachment
@@ -403,7 +411,7 @@ const EventDetails = ({route, navigation}) => {
                     tabBarInactiveTextColor={'#bababa'}
                     tabBarTextStyle={style.tabTextStyle}
                     tabBarUnderlineStyle={style.tabBarUnderlineStyle}
-                    onChangeTab={(tab) => {
+                    onChangeTab={tab => {
                       //console.log('tab', tab);
                     }}
                     renderTabBar={() => (

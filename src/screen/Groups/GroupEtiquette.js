@@ -4,8 +4,6 @@ import GlobalInclude from '../../globalInclude/Globalinclude';
 import HeaderBar from '../../component/HeaderBar';
 import {scale} from '../../theme/Scalling';
 import g from '../../theme/global';
-import grid from '../../theme/grid';
-import {APP_NAME} from '../../helper/Constants';
 
 const GroupEtiquette = ({navigation}) => {
   const showText = text => {

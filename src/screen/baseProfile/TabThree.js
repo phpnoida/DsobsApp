@@ -10,7 +10,7 @@ import DatePickerView from '../../component/DatePickerView';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Helper from '../../helper/Helper';
 
-const createGenderRadioButtons = (value) => {
+const createGenderRadioButtons = value => {
   return [
     {
       key: '1',
@@ -33,7 +33,7 @@ const renderRadioButton = (gender, props) => {
         <Radio
           item={item}
           title={item.label}
-          onRadioSelect={(value) => {
+          onRadioSelect={value => {
             props.onGenderChange(value.key);
           }}
           selected={item.selected}
@@ -43,7 +43,7 @@ const renderRadioButton = (gender, props) => {
   });
 };
 
-const TabThree = (props) => {
+const TabThree = props => {
   const {errorMessage} = props;
   return (
     <View style={g.mt45}>
@@ -149,7 +149,7 @@ const TabThree = (props) => {
               props.openDatePicker();
             }
           }}
-          onTouchCancel={(event) => {
+          onTouchCancel={event => {
             props.openDatePicker();
           }}
         />
@@ -157,11 +157,12 @@ const TabThree = (props) => {
 
       {props.showDatePicker && Platform.OS === 'ios' && (
         <DatePickerView
+          mode={'date'}
           defaultDate={props.birthDate}
           onCloseAction={() => {
             props.openDatePicker();
           }}
-          onDateSelect={(obj) => {
+          onDateSelect={obj => {
             props.setSelectedDate(obj.displayDate, obj.serverDate);
           }}
         />

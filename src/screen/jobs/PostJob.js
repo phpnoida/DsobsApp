@@ -1108,6 +1108,7 @@ const AddJobPost = ({route, navigation}) => {
       )}
       {showDatePicker && Platform.OS === 'ios' && (
         <DatePickerView
+          mode={'date'}
           onCloseAction={() => {
             setShowDatePicker(false);
           }}

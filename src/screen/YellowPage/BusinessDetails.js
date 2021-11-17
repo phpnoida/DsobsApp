@@ -83,9 +83,9 @@ const BusinessDetails = ({route, navigation}) => {
     return () => {};
   }, [route]);
 
-  const loadCities = (citiesOfOperation) => {
+  const loadCities = citiesOfOperation => {
     let cities = [];
-    citiesOfOperation.map((child) => {
+    citiesOfOperation.map(child => {
       let result = child.split(',');
       if (
         result &&
@@ -152,7 +152,7 @@ const BusinessDetails = ({route, navigation}) => {
                     pageContent.coverImages !== undefined &&
                     pageContent.coverImages.length > 0 ? (
                       <View
-                        onLayout={(event) => {
+                        onLayout={event => {
                           setViewWidth(event.nativeEvent.layout.width);
                         }}
                         style={{
@@ -355,7 +355,12 @@ const BusinessDetails = ({route, navigation}) => {
                     pageContent.companyContactPerson.phone !== null &&
                     pageContent.companyContactPerson.phone !== ''
                   ) {
-                    Helpers.openDialler(pageContent.companyContactPerson.phone);
+                    refRBSheet?.current?.close();
+                    setTimeout(() => {
+                      Helpers.openDialler(
+                        pageContent.companyContactPerson.phone,
+                      );
+                    }, 200);
                   }
                 }}
                 activeOpacity={1}>
@@ -395,8 +400,11 @@ const BusinessDetails = ({route, navigation}) => {
                     pageContent.companyContactPerson.whatsapp !== null &&
                     pageContent.companyContactPerson.whatsapp !== ''
                   ) {
-                    let phoneNumber = `${pageContent.companyContactPerson.whatsappCountryCode}${pageContent.companyContactPerson.whatsapp}`;
-                    Helpers.shareToWhatsAppWithContact(phoneNumber, '');
+                    refRBSheet?.current?.close();
+                    setTimeout(() => {
+                      let phoneNumber = `${pageContent.companyContactPerson.whatsappCountryCode}${pageContent.companyContactPerson.whatsapp}`;
+                      Helpers.shareToWhatsAppWithContact(phoneNumber, '');
+                    }, 200);
                   }
                 }}
                 activeOpacity={1}>
@@ -429,7 +437,10 @@ const BusinessDetails = ({route, navigation}) => {
                     pageContent.companyContactPerson.email !== null &&
                     pageContent.companyContactPerson.email !== ''
                   ) {
-                    Helpers.openEmail(pageContent.companyContactPerson.email);
+                    refRBSheet?.current?.close();
+                    setTimeout(() => {
+                      Helpers.openEmail(pageContent.companyContactPerson.email);
+                    }, 200);
                   }
                 }}
                 activeOpacity={1}>
@@ -460,9 +471,11 @@ const BusinessDetails = ({route, navigation}) => {
                 }}>
                 <TouchableOpacity
                   onPress={() => {
-                    Helpers.openLink(
-                      pageContent.companyContactPerson.websiteLink,
-                    );
+                    refRBSheet?.current?.close();
+                    setTimeout(() => {
+                      let link = pageContent.companyContactPerson.websiteLink;
+                      Helpers.openLink(link);
+                    }, 200);
                   }}
                   activeOpacity={1}>
                   <ProgresImage

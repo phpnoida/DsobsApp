@@ -97,7 +97,7 @@ const ListSocialVenture = ({route, navigation}) => {
 
   const getCategory = () => {
     getWorkCategory(
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -119,15 +119,15 @@ const ListSocialVenture = ({route, navigation}) => {
           }
         }
       },
-      (error) => {},
+      error => {},
     );
   };
 
-  const doSearchUser = (query) => {
+  const doSearchUser = query => {
     getDirectory(
       '1',
       query,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -144,7 +144,7 @@ const ListSocialVenture = ({route, navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         setSearchedUser([]);
         console.log('error', error);
       },
@@ -180,6 +180,20 @@ const ListSocialVenture = ({route, navigation}) => {
       ) {
         delete item.fileName;
       }
+      if (
+        item.imageInfo &&
+        item.imageInfo !== undefined &&
+        item.imageInfo !== null
+      ) {
+        delete item.imageInfo;
+      }
+      if (
+        item.requestObject &&
+        item.requestObject !== undefined &&
+        item.requestObject !== null
+      ) {
+        delete item.requestObject;
+      }
       if (item.tags && item.tags !== undefined && item.tags !== null) {
         delete item.tags;
       }
@@ -210,11 +224,11 @@ const ListSocialVenture = ({route, navigation}) => {
     }
   };
 
-  const addMyWork = (requestObject) => {
+  const addMyWork = requestObject => {
     setLoader(true);
     addSocialWork(
       requestObject,
-      (response) => {
+      response => {
         setLoader(false);
         if (response && response !== null) {
           if (
@@ -278,11 +292,11 @@ const ListSocialVenture = ({route, navigation}) => {
     }
   };
 
-  const searchCategory = (searchText) => {
+  const searchCategory = searchText => {
     let oldContent = categoryList;
     var list = [];
     if (searchText.length > 0) {
-      oldContent.forEach((element) => {
+      oldContent.forEach(element => {
         if (element.text.toLowerCase().includes(searchText.toLowerCase())) {
           list.push(element);
         }
@@ -355,7 +369,7 @@ const ListSocialVenture = ({route, navigation}) => {
     }
   };
 
-  const removeIndex = (index) => {
+  const removeIndex = index => {
     Alert.alert(
       'Are you sure you want to delete it?',
       '',
@@ -435,7 +449,7 @@ const ListSocialVenture = ({route, navigation}) => {
     setVolunteers([...oldData]);
   };
 
-  const loadTab = (page) => {
+  const loadTab = page => {
     switch (page) {
       case 1:
         return (
@@ -451,19 +465,20 @@ const ListSocialVenture = ({route, navigation}) => {
             twitter={twitter}
             wikipedia={wikipedia}
             closingDate={closingDate}
-            setDate={(obj) => {
+            setDate={obj => {
+              console.log('obj', obj);
               setErrorMessage({});
               setClosingDate(obj.displayDate);
               let closeDate = new Date(obj.serverDate);
               investmentClosingDate = Math.round(closeDate.getTime() / 1000);
             }}
             searchCategory={searchCategory}
-            onCategorySelect={(category) => {
+            onCategorySelect={category => {
               setSelectedCategory(category);
               setErrorMessage({});
               setCategoryList([...categoryListMain]);
             }}
-            setYear={(value) => {
+            setYear={value => {
               setErrorMessage({});
               setSelectedYear(value);
             }}
@@ -483,12 +498,12 @@ const ListSocialVenture = ({route, navigation}) => {
             aboutVenture={aboutVenture}
             selectedTags={selectedTags}
             socialPhoto={socialPhoto}
-            uploadMedia={(media) => {
+            uploadMedia={media => {
               setErrorMessage({});
               setSocialPhoto(media);
             }}
             tag={tag}
-            setTag={(value) => {
+            setTag={value => {
               setTag(value);
             }}
             addTag={() => {
@@ -509,7 +524,7 @@ const ListSocialVenture = ({route, navigation}) => {
                 }
               }
             }}
-            onRemoveTag={(index) => {
+            onRemoveTag={index => {
               let oldData = selectedTags;
               oldData.splice(index, 1);
               setSelectedTags([...oldData]);
@@ -560,8 +575,8 @@ const ListSocialVenture = ({route, navigation}) => {
             onSaveTab={() => validateAndMoveNextTab()}
             onPreviousTab={() => goPreviousTab()}
             mediaData={mediaData}
-            removeMedia={(index) => removeIndex(index)}
-            onMediaPick={(media) => {
+            removeMedia={index => removeIndex(index)}
+            onMediaPick={media => {
               let oldData = mediaData;
               Array.prototype.push.apply(oldData, media);
               setMediaData([...oldData]);

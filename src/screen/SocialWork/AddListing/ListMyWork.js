@@ -95,7 +95,7 @@ const ListMyWork = ({route, navigation}) => {
 
   const getCategory = () => {
     getWorkCategory(
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -117,15 +117,15 @@ const ListMyWork = ({route, navigation}) => {
           }
         }
       },
-      (error) => {},
+      error => {},
     );
   };
 
-  const doSearchUser = (query) => {
+  const doSearchUser = query => {
     getDirectory(
       '1',
       query,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -142,7 +142,7 @@ const ListMyWork = ({route, navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         setSearchedUser([]);
         console.log('error', error);
       },
@@ -178,6 +178,20 @@ const ListMyWork = ({route, navigation}) => {
       ) {
         delete item.fileName;
       }
+      if (
+        item.imageInfo &&
+        item.imageInfo !== undefined &&
+        item.imageInfo !== null
+      ) {
+        delete item.imageInfo;
+      }
+      if (
+        item.requestObject &&
+        item.requestObject !== undefined &&
+        item.requestObject !== null
+      ) {
+        delete item.requestObject;
+      }
       if (item.tags && item.tags !== undefined && item.tags !== null) {
         delete item.tags;
       }
@@ -206,11 +220,11 @@ const ListMyWork = ({route, navigation}) => {
     }
   };
 
-  const addMyWork = (requestObject) => {
+  const addMyWork = requestObject => {
     setLoader(true);
     addSocialWork(
       requestObject,
-      (response) => {
+      response => {
         setLoader(false);
         if (response && response !== null) {
           if (
@@ -277,11 +291,11 @@ const ListMyWork = ({route, navigation}) => {
     }
   };
 
-  const searchCategory = (searchText) => {
+  const searchCategory = searchText => {
     let oldContent = categoryList;
     var list = [];
     if (searchText.length > 0) {
-      oldContent.forEach((element) => {
+      oldContent.forEach(element => {
         if (element.text.toLowerCase().includes(searchText.toLowerCase())) {
           list.push(element);
         }
@@ -351,7 +365,7 @@ const ListMyWork = ({route, navigation}) => {
     }
   };
 
-  const removeIndex = (index) => {
+  const removeIndex = index => {
     Alert.alert(
       'Are you sure you want to delete it?',
       '',
@@ -431,7 +445,7 @@ const ListMyWork = ({route, navigation}) => {
     setVolunteers([...oldData]);
   };
 
-  const loadTab = (page) => {
+  const loadTab = page => {
     switch (page) {
       case 1:
         return (
@@ -447,11 +461,11 @@ const ListMyWork = ({route, navigation}) => {
             twitter={twitter}
             wikipedia={wikipedia}
             searchCategory={searchCategory}
-            onCategorySelect={(category) => {
+            onCategorySelect={category => {
               setSelectedCategory(category);
               setCategoryList([...categoryListMain]);
             }}
-            setYear={(value) => {
+            setYear={value => {
               setErrorMessage({});
               setSelectedYear(value);
             }}
@@ -471,11 +485,11 @@ const ListMyWork = ({route, navigation}) => {
             aboutVenture={aboutVenture}
             selectedTags={selectedTags}
             socialPhoto={socialPhoto}
-            uploadMedia={(media) => {
+            uploadMedia={media => {
               setSocialPhoto(media);
             }}
             tag={tag}
-            setTag={(value) => {
+            setTag={value => {
               setTag(value);
             }}
             addTag={() => {
@@ -496,7 +510,7 @@ const ListMyWork = ({route, navigation}) => {
                 }
               }
             }}
-            onRemoveTag={(index) => {
+            onRemoveTag={index => {
               let oldData = selectedTags;
               oldData.splice(index, 1);
               setSelectedTags([...oldData]);
@@ -547,8 +561,8 @@ const ListMyWork = ({route, navigation}) => {
             onSaveTab={() => validateAndMoveNextTab()}
             onPreviousTab={() => goPreviousTab()}
             mediaData={mediaData}
-            removeMedia={(index) => removeIndex(index)}
-            onMediaPick={(media) => {
+            removeMedia={index => removeIndex(index)}
+            onMediaPick={media => {
               let oldData = mediaData;
               Array.prototype.push.apply(oldData, media);
               setMediaData([...oldData]);

@@ -95,7 +95,7 @@ const ListMyBusiness = ({route, navigation}) => {
     return () => {};
   }, [route]);
 
-  const setupDefaultData = (defaultData) => {
+  const setupDefaultData = defaultData => {
     if (defaultData && defaultData !== undefined && defaultData !== null) {
       setBusinessName(defaultData.businessName);
       setSetDefaultBusinessName(defaultData.businessName);
@@ -140,7 +140,7 @@ const ListMyBusiness = ({route, navigation}) => {
 
   const getProfession = () => {
     getProfessionList(
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -162,16 +162,16 @@ const ListMyBusiness = ({route, navigation}) => {
           }
         }
       },
-      (error) => {},
+      error => {},
     );
   };
 
-  const getSearchDataByCity = (query) => {
+  const getSearchDataByCity = query => {
     doSearchCity(
       query,
       10,
       0,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -203,7 +203,7 @@ const ListMyBusiness = ({route, navigation}) => {
     uploadMedia(
       childPath,
       body,
-      (response) => {
+      response => {
         setIsLoading(false);
         if (response && response !== undefined && response !== null) {
           if (response.status) {
@@ -233,11 +233,11 @@ const ListMyBusiness = ({route, navigation}) => {
    */
 
   // Filter section
-  const doSearchUser = (query) => {
+  const doSearchUser = query => {
     getDirectory(
       '1',
       query,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -254,7 +254,7 @@ const ListMyBusiness = ({route, navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         setSearchedUser([]);
         console.log('error', error);
       },
@@ -340,11 +340,11 @@ const ListMyBusiness = ({route, navigation}) => {
     }
   };
 
-  const addYellowPageData = (requestObject) => {
+  const addYellowPageData = requestObject => {
     setLoader(true);
     addYellowPage(
       requestObject,
-      (response) => {
+      response => {
         setLoader(false);
         if (response && response !== null) {
           if (
@@ -373,12 +373,12 @@ const ListMyBusiness = ({route, navigation}) => {
     );
   };
 
-  const editYellowPageData = (requestObject) => {
+  const editYellowPageData = requestObject => {
     setLoader(true);
     editYellowPage(
       postId,
       requestObject,
-      (response) => {
+      response => {
         setLoader(false);
         if (response && response !== null) {
           if (
@@ -422,7 +422,7 @@ const ListMyBusiness = ({route, navigation}) => {
     setShowCodePicker(!showCodePicker);
   };
 
-  const onSelectCountry = (country) => {
+  const onSelectCountry = country => {
     setShowCodePicker(!showCodePicker);
     let code = '+' + country.callingCode[0];
 
@@ -554,9 +554,9 @@ const ListMyBusiness = ({route, navigation}) => {
     }
   };
 
-  const searchProfession = (searchText) => {
+  const searchProfession = searchText => {
     if (searchText.length > 0) {
-      var filtered = professionListMain.filter((element) =>
+      var filtered = professionListMain.filter(element =>
         element.text.toLowerCase().includes(searchText.toLowerCase()),
       );
       setProfessionList([...filtered]);
@@ -566,7 +566,7 @@ const ListMyBusiness = ({route, navigation}) => {
     }
   };
 
-  const removeIndex = (index) => {
+  const removeIndex = index => {
     Alert.alert(
       'Are you sure you want to delete it?',
       '',
@@ -589,7 +589,7 @@ const ListMyBusiness = ({route, navigation}) => {
     );
   };
 
-  const loadTab = (page) => {
+  const loadTab = page => {
     switch (page) {
       case 1:
         return (
@@ -599,27 +599,27 @@ const ListMyBusiness = ({route, navigation}) => {
             businessName={businessName}
             professionList={professionList}
             selectedProfession={selectedProfession}
-            searchProfession={(search) => {
+            searchProfession={search => {
               searchProfession(search);
             }}
-            onPreofessionSelect={(profession) => {
+            onPreofessionSelect={profession => {
               setErrorMessage({});
               setSelectedProfession(profession);
               setProfessionList([...professionListMain]);
             }}
             coverImages={coverImages}
-            setCoverImages={(image) => {
+            setCoverImages={image => {
               let oldData = coverImages;
               Array.prototype.push.apply(oldData, image);
               setCoverImages([...oldData]);
             }}
-            onDeleteImage={(index) => {
+            onDeleteImage={index => {
               let oldData = coverImages;
               oldData.splice(index, 1);
               setCoverImages([...oldData]);
             }}
             cityList={cityList}
-            onSearchCity={(query) => {
+            onSearchCity={query => {
               cityTitle = query;
               getSearchDataByCity(query);
             }}
@@ -630,7 +630,7 @@ const ListMyBusiness = ({route, navigation}) => {
               setErrorMessage({});
               setSelectedCities([...oldData]);
             }}
-            onRemoveCity={(index) => {
+            onRemoveCity={index => {
               let oldData = selectedCities;
               oldData.splice(index, 1);
               setSelectedCities([...oldData]);
@@ -652,7 +652,7 @@ const ListMyBusiness = ({route, navigation}) => {
             aboutBusiness={aboutBusiness}
             businessServices={businessServices}
             tag={tag}
-            setTag={(value) => {
+            setTag={value => {
               setTag(value);
             }}
             productTags={productTags}
@@ -674,7 +674,7 @@ const ListMyBusiness = ({route, navigation}) => {
                 }
               }
             }}
-            onRemoveTag={(index) => {
+            onRemoveTag={index => {
               let oldData = productTags;
               oldData.splice(index, 1);
               setProductTags([...oldData]);
@@ -689,7 +689,7 @@ const ListMyBusiness = ({route, navigation}) => {
             onPreviousTab={() => goPreviousTab()}
             errorMessage={errorMessage}
             searchUserName={searchUserName}
-            changeText={(text) => {
+            changeText={text => {
               setSearchUserName(text);
               searchVal = text;
               if (text.length > 3) {
@@ -708,7 +708,7 @@ const ListMyBusiness = ({route, navigation}) => {
               setSearchUserName('');
               setSearchedUser([]);
             }}
-            removeAlumini={(index) => {
+            removeAlumini={index => {
               let oldData = selectedUser;
               oldData.splice(index, 1);
               setSelectedUser([...oldData]);
@@ -723,8 +723,8 @@ const ListMyBusiness = ({route, navigation}) => {
             onSaveTab={() => validateAndMoveNextTab()}
             onPreviousTab={() => goPreviousTab()}
             mediaData={mediaData}
-            removeMedia={(index) => removeIndex(index)}
-            onMediaPick={(media) => {
+            removeMedia={index => removeIndex(index)}
+            onMediaPick={media => {
               let oldData = mediaData;
               Array.prototype.push.apply(oldData, media);
               setMediaData([...oldData]);
@@ -749,7 +749,7 @@ const ListMyBusiness = ({route, navigation}) => {
             address={address}
             webLink={webLink}
             errorMessage={errorMessage}
-            openCounryCodePicker={(type) => {
+            openCounryCodePicker={type => {
               pickerType = type;
               openCounryCodePicker();
             }}
@@ -822,7 +822,7 @@ const ListMyBusiness = ({route, navigation}) => {
           onClose={() => {
             closeCodePicker();
           }}
-          onSelect={(country) => {
+          onSelect={country => {
             onSelectCountry(country);
           }}
         />

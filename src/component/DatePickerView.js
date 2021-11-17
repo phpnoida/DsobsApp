@@ -19,7 +19,7 @@ import Helper from '../helper/Helper';
 
 const windowWidth = Dimensions.get('window').width;
 
-const DatePickerView = (props) => {
+const DatePickerView = props => {
   const [date, setDate] = useState(
     props.defaultDate ? new Date(props.defaultDate) : new Date(),
   );
@@ -92,8 +92,12 @@ const DatePickerView = (props) => {
               showLoader={false}
               title={'Confirm'}
               onPress={() => {
-                let obj = Helper.formateDate(date);
-                props.onDateSelect(obj);
+                if (props.mode === 'date') {
+                  let obj = Helper.formateDate(date);
+                  props.onDateSelect(obj);
+                } else {
+                  props.onDateSelect(date);
+                }
               }}
             />
           </View>

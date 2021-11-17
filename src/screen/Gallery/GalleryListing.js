@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {
   View,
   StyleSheet,
@@ -73,10 +73,28 @@ const GalleryListing = ({navigation}) => {
       size: 10,
     };
 
-    userData = global.userDetails;
-    getFilterCategory();
-    getAlbumList();
-    return () => {};
+    const unsubscribe = navigation.addListener('focus', () => {
+      resetToDefaults();
+      setCheckedType(1);
+      setSearchedUser([]);
+      userData = global.userDetails;
+      getFilterCategory();
+      getAlbumList();
+    });
+
+    return () => unsubscribe();
+  }, [getAlbumList, resetToDefaults, navigation]);
+
+  const resetToDefaults = useCallback(() => {
+    userData = null;
+    categoryName = null;
+    searchVal = '';
+    searchType = 1;
+    totalCount = 0;
+    filterObject = {
+      index: 0,
+      size: 10,
+    };
   }, []);
 
   /**
@@ -128,7 +146,7 @@ const GalleryListing = ({navigation}) => {
     );
   };
 
-  const getAlbumList = () => {
+  const getAlbumList = useCallback(() => {
     getAlbums(
       filterObject,
       cancelAlbum,
@@ -166,7 +184,7 @@ const GalleryListing = ({navigation}) => {
         }
       },
     );
-  };
+  }, [pageContent]);
 
   // Filter section
   const doSearchUser = query => {

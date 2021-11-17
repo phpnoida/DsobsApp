@@ -340,6 +340,7 @@ const Helpers = {
   },
   openLink: function (link) {
     Linking.canOpenURL(link).then(status => {
+      console.log('link: ', status, link);
       if (status) {
         Linking.openURL(link).catch(() => {
           Alert.alert('Unable to open link!');

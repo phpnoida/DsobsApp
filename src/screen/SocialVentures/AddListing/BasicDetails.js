@@ -64,7 +64,7 @@ const BasicDetails = ({
                 setShowDatePicker(Platform.OS === 'ios');
                 setDate(obj);
               }}
-              onTouchCancel={(event) => {
+              onTouchCancel={event => {
                 setShowDatePicker(false);
               }}
             />
@@ -72,11 +72,12 @@ const BasicDetails = ({
 
           {showDatePicker && Platform.OS === 'ios' && (
             <DatePickerView
+              mode={'date'}
               minDate={new Date()}
               onCloseAction={() => {
                 setShowDatePicker(false);
               }}
-              onDateSelect={(obj) => {
+              onDateSelect={obj => {
                 setShowDatePicker(false);
                 setDate(obj);
               }}
@@ -155,7 +156,7 @@ const BasicDetails = ({
                   autoCapitalize={'words'}
                   returnKeyType={'done'}
                   placeholder={'Write text here'}
-                  onChangeText={(value) => {
+                  onChangeText={value => {
                     handleInput('projectName', value);
                   }}
                 />
@@ -213,7 +214,7 @@ const BasicDetails = ({
               autoCapitalize={'words'}
               returnKeyType={'done'}
               placeholder={'Write text here'}
-              onChangeText={(value) => {
+              onChangeText={value => {
                 handleInput('initiatedBy', value);
               }}
             />
@@ -230,7 +231,7 @@ const BasicDetails = ({
                 underlineColorAndroid="transparent"
                 style={[g.inputWhite, grid.col]}
                 value={facebook}
-                onChangeText={(value) => handleInput('facebook', value)}
+                onChangeText={value => handleInput('facebook', value)}
                 placeholder={'Write/Paste link here'}
                 maxLength={264}
               />
@@ -248,7 +249,7 @@ const BasicDetails = ({
                 underlineColorAndroid="transparent"
                 style={[g.inputWhite, grid.col]}
                 value={twitter}
-                onChangeText={(value) => handleInput('twitter', value)}
+                onChangeText={value => handleInput('twitter', value)}
                 placeholder={'Write/Paste link here'}
                 maxLength={264}
               />
@@ -266,7 +267,7 @@ const BasicDetails = ({
                 underlineColorAndroid="transparent"
                 style={[g.inputWhite, grid.col]}
                 value={wikipedia}
-                onChangeText={(value) => handleInput('wikipedia', value)}
+                onChangeText={value => handleInput('wikipedia', value)}
                 placeholder={'Write/Paste link here'}
                 maxLength={264}
               />
@@ -304,7 +305,7 @@ const BasicDetails = ({
       <YearSelection
         refRBSheet={refYear}
         title={'Select Year'}
-        onSelect={(value) => {
+        onSelect={value => {
           refYear.current.close();
           setYear(value.text.toString());
         }}

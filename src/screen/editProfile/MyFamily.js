@@ -28,7 +28,7 @@ import UploadMedia from '../../component/UploadMedia';
 import Helper from '../../helper/Helper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-const createGenderRadioButtons = (value) => {
+const createGenderRadioButtons = value => {
   return [
     {
       key: '1',
@@ -48,7 +48,7 @@ const createGenderRadioButtons = (value) => {
   ];
 };
 
-const generateOptionList = (defaultValue) => {
+const generateOptionList = defaultValue => {
   let optionList = [];
   optionList.push({
     key: 'Single',
@@ -91,7 +91,7 @@ var serverDate = '';
 let imageArray = [];
 let responseMessage = '';
 
-const MyFamily = (props) => {
+const MyFamily = props => {
   const {profileData} = props;
 
   const uploadRef = useRef();
@@ -149,7 +149,7 @@ const MyFamily = (props) => {
       setIsLoading(true);
       updateUserProfile(
         requestData,
-        (response) => {
+        response => {
           setIsLoading(false);
           console.log('updateUserProfile', response);
           if (response && response !== null) {
@@ -198,7 +198,7 @@ const MyFamily = (props) => {
     );
   };
 
-  const setSelectedDate = (dateVa) => {
+  const setSelectedDate = dateVa => {
     if (requestPicker === 1) {
       setDateOfMarriage(dateVa);
     } else if (requestPicker === 2) {
@@ -245,7 +245,7 @@ const MyFamily = (props) => {
     );
   };
 
-  const renderRadioButton = (radioObj) => {
+  const renderRadioButton = radioObj => {
     return radioObj.map((item, key) => {
       return (
         <View
@@ -258,7 +258,7 @@ const MyFamily = (props) => {
           <Radio
             item={item}
             title={item.label}
-            onRadioSelect={(value) => {
+            onRadioSelect={value => {
               setChildGender(value.key);
             }}
             selected={item.selected}
@@ -270,7 +270,7 @@ const MyFamily = (props) => {
     });
   };
 
-  const addNewLink = (updateMode) => {
+  const addNewLink = updateMode => {
     if (childName.trim() === '') {
       setErrorMessage({childName: 'This field is required'});
       return;
@@ -352,7 +352,7 @@ const MyFamily = (props) => {
                   setShowDatePicker(Platform.OS === 'ios');
                   setSelectedDate(obj.serverDate);
                 }}
-                onTouchCancel={(event) => {
+                onTouchCancel={event => {
                   setShowDatePicker(false);
                 }}
               />
@@ -360,10 +360,11 @@ const MyFamily = (props) => {
 
             {showDatePicker && Platform.OS === 'ios' && (
               <DatePickerView
+                mode={'date'}
                 onCloseAction={() => {
                   setShowDatePicker(false);
                 }}
-                onDateSelect={(obj) => {
+                onDateSelect={obj => {
                   serverDate = obj.serverDate;
                   setSelectedDate(obj.serverDate);
                   setShowDatePicker(false);
@@ -375,7 +376,7 @@ const MyFamily = (props) => {
               <YearSelection
                 title={'Relationship Status'}
                 yearList={generateOptionList(relationShipStatus)}
-                onItemSelect={(value) => {
+                onItemSelect={value => {
                   setRelationShipStatus(value.key);
                   setShowStatus(false);
                 }}
@@ -407,7 +408,7 @@ const MyFamily = (props) => {
                 style={g.inputWhite}
                 placeholder={'Spouse Name'}
                 value={spouseName}
-                onChangeText={(value) => inputHandler('spouseName', value)}
+                onChangeText={value => inputHandler('spouseName', value)}
               />
               {errorMessage.spouseName &&
                 errorMessage.spouseName.length > 0 && (
@@ -490,7 +491,7 @@ const MyFamily = (props) => {
                 style={g.inputWhite}
                 placeholder={'Father Name'}
                 value={fatherName}
-                onChangeText={(value) => inputHandler('fatherName', value)}
+                onChangeText={value => inputHandler('fatherName', value)}
               />
               {errorMessage.fatherName &&
                 errorMessage.fatherName.length > 0 && (
@@ -508,7 +509,7 @@ const MyFamily = (props) => {
                 style={g.inputWhite}
                 placeholder={'Mother Name'}
                 value={motherName}
-                onChangeText={(value) => inputHandler('motherName', value)}
+                onChangeText={value => inputHandler('motherName', value)}
               />
               {errorMessage.motherName &&
                 errorMessage.motherName.length > 0 && (
@@ -526,7 +527,7 @@ const MyFamily = (props) => {
                 style={g.inputWhite}
                 placeholder={'Child Name'}
                 value={childName}
-                onChangeText={(value) => inputHandler('childName', value)}
+                onChangeText={value => inputHandler('childName', value)}
               />
               {errorMessage.childName && errorMessage.childName.length > 0 && (
                 <Text style={[g.errorMsg, g.pt5]}>
@@ -610,7 +611,7 @@ const MyFamily = (props) => {
                 {!isEdit ? (
                   <Text
                     style={[g.btn, {width: scale(80)}]}
-                    onPress={(e) => {
+                    onPress={e => {
                       addNewLink(false);
                     }}>
                     Add
@@ -618,7 +619,7 @@ const MyFamily = (props) => {
                 ) : (
                   <Text
                     style={g.btn}
-                    onPress={(e) => {
+                    onPress={e => {
                       addNewLink(true);
                     }}>
                     Update
@@ -667,7 +668,7 @@ const MyFamily = (props) => {
           }}
           navigation={props.navigation}
           supportMultiple={false}
-          onPickMedia={(media) => {
+          onPickMedia={media => {
             uploadRef.current.close();
             if (media !== undefined && media !== null) {
               console.log('media', media);

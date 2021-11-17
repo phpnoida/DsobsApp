@@ -1,63 +1,31 @@
-import React, {useState, useEffect, useRef} from 'react';
-import {
-  View,
-  StyleSheet,
-  SafeAreaView,
-  Text,
-  ActivityIndicator,
-  Dimensions,
-} from 'react-native';
+import React from 'react';
+import {View, SafeAreaView, Text, ScrollView} from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import HeaderBar from '../../component/HeaderBar';
 import {scale} from '../../theme/Scalling';
+import {APP_NAME} from '../../helper/Constants';
 import g from '../../theme/global';
-import {getYellowPageAbout} from '../../Actions/YelloPageActions';
-
-import HTML from 'react-native-render-html';
 
 const AboutYellowPage = ({navigation}) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [pageContent, setPageContent] = useState(null);
-
-  useEffect(() => {
-    const doGetAbout = () => {
-      getYellowPageAbout(
-        (response) => {
-          if (response && response !== null) {
-            if (
-              response.data &&
-              response.data !== undefined &&
-              response.data !== null
-            ) {
-              let data = response.data;
-
-              if (data.status) {
-                let record = data.data;
-                if (
-                  record !== undefined &&
-                  record !== null &&
-                  record.length > 0
-                ) {
-                  console.log('====================================');
-                  console.log(record[0].about);
-                  console.log('====================================');
-                  setPageContent(record[0].about);
-                }
-              }
-            }
-          }
-        },
-        (error) => {
-          //setSearchedUser([]);
-        },
-      );
-    };
-    doGetAbout();
-    return () => {};
-  }, []);
-
-  const computeEmbeddedMaxWidth = (availableWidth) => {
-    return Math.min(availableWidth, 500);
+  const showText = (text, customStyle) => {
+    return (
+      <Text
+        style={[
+          g.fs15,
+          g.colorBlack,
+          {
+            textAlign: 'justify',
+            justifyContent: 'center',
+            alignContent: 'center',
+            textAlignVertical: 'center',
+            letterSpacing: 1,
+            lineHeight: 25,
+            ...customStyle,
+          },
+        ]}>
+        {text}
+      </Text>
+    );
   };
 
   return (
@@ -68,161 +36,43 @@ const AboutYellowPage = ({navigation}) => {
         showBack={true}
       />
       <SafeAreaView style={GlobalInclude.AppStyle.topSpace}>
-        {isLoading ? (
-          <View style={GlobalInclude.AppStyle.fillCenter}>
-            <ActivityIndicator
-              size={'small'}
-              color={GlobalInclude.Color.ColorPrimary}
-            />
-          </View>
-        ) : (
-          <View style={GlobalInclude.AppStyle.fill}>
-            {pageContent === null ? (
-              <View style={GlobalInclude.AppStyle.center}>
-                <Text style={[g.colorBlack, g.FHNM, g.fs12, g.textCenter]}>
-                  No Record Found
-                </Text>
-              </View>
-            ) : (
-              <View
-                style={[
-                  GlobalInclude.AppStyle.fill,
-                  GlobalInclude.AppStyle.contentSpace,
-                ]}>
-                <HTML
-                  source={{
-                    html:
-                      '<div>' +
-                      pageContent
-                        .replace(/<p[^>]*><br><\/p>/g, '<br>')
-                        .replace(/<h3[^>]*><br><\/h3>/g, '')
-                        .replace(/(<br\s*\/?>){1,}/gi, '<br>')
-                        .replace(/(\r\n|\n|\r)/gm, '')
-                        .replace(/(<br\s*\/?>)/gi, '') +
-                      '</div>',
-                  }}
-                  textSelectable={false}
-                  defaultTextProps={{allowFontScaling: true}}
-                  tagsStyles={richTextStyles}
-                  allowWhitespaceNodes={false}
-                  containerStyle={style.container}
-                  contentWidth={Dimensions.get('window').width - 30}
-                  computeEmbeddedMaxWidth={computeEmbeddedMaxWidth}
-                />
-              </View>
-            )}
-          </View>
-        )}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[g.ml10, g.mr10, g.pt15, g.pb15]}>
+          {showText('"Knowledge Our Light"', {
+            textAlign: 'center',
+            justifyContent: 'center',
+            alignContent: 'center',
+            textAlignVertical: 'center',
+          })}
+          <View style={{marginVertical: scale(12)}} />
+          {showText(
+            'The idea of the Common Room is to create a space for new thought, stimulation, conversation and engagement.',
+            {},
+          )}
+          <View style={{marginVertical: scale(12)}} />
+          {showText(
+            'To create an intellectual space for creative, constructive and thought provoking posts, comments, articles, videos and perspectives.',
+            {},
+          )}
+          <View style={{marginVertical: scale(12)}} />
+          {showText('You can make 10 posts a week.', {})}
+          <View style={{marginVertical: scale(12)}} />
+          {showText("Please don't post in anger.", {})}
+          <View style={{marginVertical: scale(12)}} />
+          {showText(
+            'Please refrain from political posts even though these are very critical times for the country. We plan to have those conversation in private like minded groups.',
+            {},
+          )}
+          <View style={{marginVertical: scale(12)}} />
+          {showText(
+            `The ${APP_NAME} adminsretain the right to remove objectionable posts.`,
+            {},
+          )}
+        </ScrollView>
       </SafeAreaView>
     </View>
   );
 };
-
-const richTextStyles = StyleSheet.create({
-  p: {
-    textAlign: 'justify',
-    paddingStart: scale(4),
-    paddingEnd: scale(4),
-  },
-});
-
-const style = StyleSheet.create({
-  container: {
-    height: '100%',
-    width: '100%',
-    padding: scale(6),
-  },
-  mainContainer: {
-    backgroundColor: '#ffffff',
-    shadowColor: '#333333',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 7,
-    elevation: 5,
-    marginTop: scale(5),
-    marginStart: scale(5),
-    marginEnd: scale(5),
-    marginBottom: scale(15),
-  },
-  videoContainer: {
-    height: scale(200),
-    width: '100%',
-    borderRadius: scale(15),
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-    justifyContent: 'center',
-  },
-  overlayStyle: {
-    backgroundColor: '#00000066',
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    top: 0,
-    left: 0,
-    zIndex: 1,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-    borderRadius: scale(15),
-  },
-  thumbStyle: {
-    borderRadius: scale(15),
-    height: scale(200),
-    width: '100%',
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-  },
-  playIconstyle: {
-    position: 'absolute',
-    zIndex: 9,
-    bottom: 15,
-    left: 15,
-  },
-  childVideoContainer: {
-    height: scale(100),
-    width: '100%',
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-    justifyContent: 'center',
-  },
-  childThumb: {
-    height: scale(100),
-    width: '100%',
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-  },
-
-  seeMore: {
-    flexDirection: 'row',
-    alignContent: 'center',
-    alignItems: 'center',
-  },
-  showChildVideo: {
-    marginBottom: 5,
-    marginLeft: 5,
-    marginRight: 5,
-    padding: 5,
-    paddingBottom: 15,
-  },
-  submitButton: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: scale(150),
-    alignContent: 'center',
-    alignSelf: 'center',
-  },
-  contentContainer: {
-    width: '100%',
-    paddingStart: scale(10),
-    paddingEnd: scale(10),
-    paddingTop: scale(5),
-    paddingBottom: scale(10),
-  },
-  closeButton: {
-    justifyContent: 'flex-end',
-    alignSelf: 'flex-end',
-    alignContent: 'flex-end',
-    flex: 1,
-  },
-});
 
 export default AboutYellowPage;
