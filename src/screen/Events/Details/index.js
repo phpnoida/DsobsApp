@@ -453,7 +453,14 @@ const EventDetails = ({route, navigation}) => {
                 activeOpacity={1}
                 style={style.button}
                 onPress={() => {
-                  setShowSharingSheet(true);
+                  // setShowSharingSheet(true);
+                  Share.open(shareContent)
+                    .then(res => {
+                      console.log(res);
+                    })
+                    .catch(err => {
+                      err && console.log(err);
+                    });
                 }}>
                 <Text style={[g.fs16, g.FHNB, g.colorBlack, grid.textCenter]}>
                   Share

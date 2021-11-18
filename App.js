@@ -54,24 +54,22 @@ const App = () => {
       requestUserPermission();
       PushNotificationIOS.addEventListener('notification', notification => {
         const isClicked = notification.getData().userInteraction === 1;
-
         console.log('isClicked', isClicked);
-
         if (isClicked) {
           global.notification = notification;
           setTimeout(() => {
             dispatch(refreshScreen());
           }, 100);
         } else {
-          if (
-            notification.getData() !== undefined &&
-            notification.getData() !== null
-          ) {
-            let data = notification.getData();
-            let notificationObj = {};
-            notificationObj.data = data;
-            handleNotification('PushNotificationIOS', notificationObj);
-          }
+          // if (
+          //   notification.getData() !== undefined &&
+          //   notification.getData() !== null
+          // ) {
+          //   let data = notification.getData();
+          //   let notificationObj = {};
+          //   notificationObj.data = data;
+          //   handleNotification('PushNotificationIOS', notificationObj);
+          // }
         }
       });
     } else {
