@@ -126,6 +126,7 @@ const CreateChat = ({route, navigation}) => {
         name: groupNameInput,
       };
 
+      //{"_id": "607d5b9b9dbdfe10901a1d5d", "chatType": 0, "name": "", "userId": "607d5b9b9dbdfe10901a1d5d", "users": ["608a5aa0da251b74041071c2"]}
       console.log('payload', payload);
       socketRef.current.emit('chat-create', payload);
       setIsLoading(true);

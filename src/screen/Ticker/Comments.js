@@ -318,10 +318,12 @@ const Comments = ({route, navigation}) => {
   }, [comments]);
 
   const postUserComment = requestObject => {
+    global.loader_ref.show_loader(1);
     Keyboard.dismiss();
     addUserComment(
       requestObject,
       response => {
+        global.loader_ref.show_loader(0);
         setIsCommenting(false);
         setIsReplayEditComment(false);
         if (response && response !== null) {
@@ -345,7 +347,6 @@ const Comments = ({route, navigation}) => {
                   };
                   dispatch(increaseComment(updateData));
                 }
-
                 handleRefresh();
               }, 200);
             } else {
@@ -354,6 +355,7 @@ const Comments = ({route, navigation}) => {
         }
       },
       (code, error) => {
+        global.loader_ref.show_loader(0);
         setIsCommenting(false);
         lastIndex = -1;
         setCommentError('');
@@ -380,6 +382,7 @@ const Comments = ({route, navigation}) => {
   }, [comments]);
 
   const updateUserCommentData = () => {
+    global.loader_ref.show_loader(1);
     let requestObject = {
       status: 2,
       commentText: commentText,
@@ -388,6 +391,9 @@ const Comments = ({route, navigation}) => {
       requestObject,
       selectedPost._id,
       response => {
+        setIsCommenting(false);
+        setIsReplayEditComment(false);
+        global.loader_ref.show_loader(0);
         if (response && response !== null) {
           if (
             response.data &&
@@ -398,11 +404,8 @@ const Comments = ({route, navigation}) => {
             if (data.status) {
               selectedOption = '';
               inputValue = '';
-              setIsCommenting(false);
               setCommentError('');
               setCommentText('');
-              setIsReplayEditComment(false);
-
               setTimeout(() => {
                 if (postIndex !== -1) {
                   let updateData = {
@@ -420,6 +423,7 @@ const Comments = ({route, navigation}) => {
         }
       },
       (code, error) => {
+        global.loader_ref.show_loader(0);
         lastIndex = -1;
         setIsCommenting(false);
         setCommentError('');
@@ -1216,17 +1220,13 @@ const Comments = ({route, navigation}) => {
                   }
                 }}
                 style={styles.commentButton}>
-                {isCommenting ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <GlobalInclude.BaseIcon
-                    containerStyle={{height: scale(20), width: scale(20)}}
-                    iconColor={'#FFF'}
-                    iconName={'send-o'}
-                    iconSize={scale(20)}
-                    iconType={IconType[4]}
-                  />
-                )}
+                <GlobalInclude.BaseIcon
+                  containerStyle={{height: scale(20), width: scale(20)}}
+                  iconColor={'#FFF'}
+                  iconName={'send-o'}
+                  iconSize={scale(20)}
+                  iconType={IconType[4]}
+                />
               </TouchableOpacity>
             </View>
             {commentError &&
@@ -1331,6 +1331,20 @@ const Comments = ({route, navigation}) => {
             </View>
           </View>
         </Modal>
+      )}
+
+      {isCommenting && (
+        <View
+          style={{
+            height: '100%',
+            width: '100%',
+            position: 'absolute',
+            backgroundColor: 'rgba(221, 221, 221,0.7)',
+            alignItems: 'center',
+            justifyContent: 'center',
+            alignSelf: 'center',
+          }}
+        />
       )}
     </View>
   );

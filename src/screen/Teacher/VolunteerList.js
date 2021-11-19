@@ -83,7 +83,7 @@ const VolunteerList = ({navigation}) => {
 
   const getCategoryList = () => {
     doGetAllCategories(
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -107,7 +107,7 @@ const VolunteerList = ({navigation}) => {
   const getTeachers = () => {
     doFilterTeachers(
       filterObject,
-      (response) => {
+      response => {
         setIsRefreshing(false);
         if (response && response !== null) {
           if (
@@ -180,7 +180,7 @@ const VolunteerList = ({navigation}) => {
     filterObject.type = 2;
   };
 
-  const createFullName = (item) => {
+  const createFullName = item => {
     let fullName = '';
 
     if (item.title !== undefined && item.title !== null && item.title !== '') {
@@ -192,7 +192,7 @@ const VolunteerList = ({navigation}) => {
     return fullName;
   };
 
-  const sortData = (item) => {
+  const sortData = item => {
     setSelectedCategory(item);
     resetCount();
     if (item !== 'All') {
@@ -216,35 +216,20 @@ const VolunteerList = ({navigation}) => {
           g.mb10,
           g.ml15,
           g.mr15,
-          {height: scale(85)},
+          {height: scale(80)},
         ]}>
         <View style={[grid.rowdir]}>
           <View style={[grid.col, grid.justifyContent]}>
             <Text style={[g.colordarkGray, g.FHNB, g.fs15]}>
               {createFullName(item)}
             </Text>
-            <Text
-              style={[
-                g.colorLightGray,
-                g.FHNR,
-                g.fs14,
-                g.mt5,
-                g.mb5,
-                GlobalInclude.AppStyle.transform,
-              ]}>{`${item.schoolNumber} ${item.house} ${item.section} ${item.batch}`}</Text>
-            <Text style={[g.colorLightGray, g.FHNR, g.fs13]}>
-              {item.category}
+            <Text style={[g.colorLightGray, g.FHNR, g.fs14]}>
+              {`${item.schoolNumber} ${item.house} ${item.section} ${item.batch}`}
             </Text>
+            <Text style={[g.colorBlue, g.FHNB, g.fs13]}>{item.category}</Text>
           </View>
           <View
-            style={[
-              g.w50,
-              g.bggray,
-              g.br3,
-              g.oh,
-              g.mr10,
-              {height: scale(50), alignSelf: 'center'},
-            ]}>
+            style={[g.w50, g.bggray, g.br3, g.oh, g.mr10, {height: scale(50)}]}>
             {item.profilePic !== null &&
               item.profilePic !== undefined &&
               item.profilePic !== '' && (

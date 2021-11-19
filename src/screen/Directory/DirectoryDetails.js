@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   Text,
   View,
@@ -121,13 +121,13 @@ const DirectoryDetails = ({route, navigation}) => {
     }
     getFilterDirectory();
     return () => {};
-  }, []);
+  }, [getFilterDirectory, route.params]);
 
-  const getFilterDirectory = () => {
+  const getFilterDirectory = useCallback(() => {
     setShowLoader(true);
     doFilterDirectory(
       filterObject,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -150,38 +150,41 @@ const DirectoryDetails = ({route, navigation}) => {
           setIsLoading(false);
         }
       },
-      (error) => {
+      error => {
         if (dataIndex === 0) {
-          setSearchedUser(null);
+          setSearchedUser([]);
           setIsLoading(false);
         }
         setShowLoader(false);
       },
     );
-  };
+  }, [saveData]);
 
-  const saveData = (data) => {
-    let records = data.data;
-    cityList = [];
-    data.uniqueCity.map((item) => {
-      cityList.push({key: item, text: item});
-    });
-    if (dataIndex === 0) {
-      setSearchedUser([...records]);
-      setDefaultUsers([...records]);
-      result = `${currentShowing}-${dataSize}`;
-    } else {
-      currentShowing = dataIndex * 10;
-      result = `${currentShowing}-${
-        records.length < 10
-          ? currentShowing + records.length
-          : currentShowing + dataSize
-      }`;
-      setSearchedUser([...searchedUser, ...records]);
-      setDefaultUsers([...defaultUsersList, ...records]);
-    }
-    setPaginationStatus(PaginationStatus.waiting);
-  };
+  const saveData = useCallback(
+    data => {
+      let records = data.data;
+      cityList = [];
+      data.uniqueCity.map(item => {
+        cityList.push({key: item, text: item});
+      });
+      if (dataIndex === 0) {
+        setSearchedUser([...records]);
+        setDefaultUsers([...records]);
+        result = `${currentShowing}-${dataSize}`;
+      } else {
+        currentShowing = dataIndex * 10;
+        result = `${currentShowing}-${
+          records.length < 10
+            ? currentShowing + records.length
+            : currentShowing + dataSize
+        }`;
+        setSearchedUser([...searchedUser, ...records]);
+        setDefaultUsers([...defaultUsersList, ...records]);
+      }
+      setPaginationStatus(PaginationStatus.waiting);
+    },
+    [searchedUser, defaultUsersList],
+  );
 
   const applyFilter = () => {
     if (locationFilter === '' && genderFilter === '') {
@@ -202,7 +205,7 @@ const DirectoryDetails = ({route, navigation}) => {
     }
   };
 
-  const applySorting = (type) => {
+  const applySorting = type => {
     filterObject.sortBy = type;
 
     setTimeout(() => {
@@ -233,7 +236,7 @@ const DirectoryDetails = ({route, navigation}) => {
     }, 200);
   };
 
-  const handleSearch = (text) => {
+  const handleSearch = text => {
     searchQuery = text;
     setLookingFor(text);
 
@@ -274,7 +277,7 @@ const DirectoryDetails = ({route, navigation}) => {
     resetCount();
   };
 
-  const onScrollEndDrag = (event) => {
+  const onScrollEndDrag = event => {
     if (isAtbottom) {
       setShowScrollTop(true);
     } else {
@@ -282,7 +285,7 @@ const DirectoryDetails = ({route, navigation}) => {
     }
   };
 
-  const onScroll = (event) => {
+  const onScroll = event => {
     const currentOffset = event.nativeEvent.contentOffset.y;
     const dif = currentOffset - (offset || 0);
 
@@ -296,7 +299,7 @@ const DirectoryDetails = ({route, navigation}) => {
     offset = currentOffset;
   };
 
-  const concateLocation = (item) => {
+  const concateLocation = item => {
     let fullName = '';
 
     if (item.city && item.city !== undefined && item.city !== '') {
@@ -310,7 +313,7 @@ const DirectoryDetails = ({route, navigation}) => {
     return fullName;
   };
 
-  const renameProfession = (profession) => {
+  const renameProfession = profession => {
     if (profession.includes('-')) {
       let profArray = profession.split('-');
       return profArray.length > 2 ? profArray[2] : profession;
@@ -756,7 +759,7 @@ const DirectoryDetails = ({route, navigation}) => {
   const renderFooter = () => {
     return (
       <View style={style.footerView}>
-        {searchedUser.length === totalCount ? (
+        {searchedUser?.length === totalCount ? (
           <View />
         ) : (
           <View style={{height: scale(60)}}>
@@ -867,7 +870,7 @@ const DirectoryDetails = ({route, navigation}) => {
 
       {/* city list sheet */}
       <CityListSheet
-        ref={(ref) => {
+        ref={ref => {
           cityListSheet = ref;
         }}
         height={deviceHeight - 150}
@@ -890,7 +893,7 @@ const DirectoryDetails = ({route, navigation}) => {
           defaultSelected={locationFilter}
           PROP={cityList}
           capitalize
-          onRadioSelect={(value) => {
+          onRadioSelect={value => {
             setLocationFilter(value.text.toString());
             cityListSheet.close();
           }}

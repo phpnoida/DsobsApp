@@ -84,22 +84,6 @@ const GroupInfo = ({route, navigation}) => {
   }, [getGroupData, route.params]);
 
   useEffect(() => {
-    // if (
-    //   socketRef == null ||
-    //   socketRef.current === null ||
-    //   socketRef.current === undefined
-    // ) {
-    //   console.log('====================================');
-    //   console.log('connect to socket');
-    //   console.log('====================================');
-
-    //   socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
-    //     reconnectionAttempts: 2,
-    //     transports: ['websocket'],
-    //     upgrade: false,
-    //   });
-    // }
-    console.log('isConnected', socketRef.current.connected);
     isUserConnected = socketRef.current.connected;
     if (socketRef.current.connected) {
       socketRef.current.on('error', attempt => {

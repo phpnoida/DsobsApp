@@ -56,6 +56,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import io from 'socket.io-client';
 import moment from 'moment';
 import _ from 'lodash';
+import {SERVER_PATH} from '../../../config';
 
 const {height, width} = Dimensions.get('window');
 
@@ -210,7 +211,7 @@ const StartGroupChat = ({route}) => {
       console.log('connect to socket');
       console.log('====================================');
 
-      socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
+      socketRef.current = io(SERVER_PATH, {
         reconnectionAttempts: 2,
       });
     }

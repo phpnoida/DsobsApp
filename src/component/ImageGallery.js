@@ -15,6 +15,7 @@ import ImageViewer from 'react-native-image-zoom-viewer';
 import DocViewer from '../component/DocViewer';
 import ImageShareModal from '../component/ImageShareModal';
 import YoutubeView from '../component/YoutubeView';
+import AudioPlayer from '../component/AudioPlayer';
 import g from '../theme/global';
 import grid from '../theme/grid';
 import ProgressImage from './ProgresImage';
@@ -27,7 +28,7 @@ let documentItem = '';
 let selectedKey = '';
 let playAudio = '';
 
-const ImageGallery = (props) => {
+const ImageGallery = props => {
   const playbackState = usePlaybackState();
 
   const [showModal, setShowModal] = useState(false);
@@ -52,7 +53,7 @@ const ImageGallery = (props) => {
   const openImage = () => {
     if (mediaContent.length > 0) {
       imageArray = [];
-      mediaContent.map((item) => {
+      mediaContent.map(item => {
         if (item.type === 1) {
           imageArray.push({url: item.thumbnail, key: item.key});
         }
@@ -288,7 +289,7 @@ const ImageGallery = (props) => {
             imageUrls={imageArray}
             index={lastIndex}
             enablePreload={true}
-            onChange={(index) => {
+            onChange={index => {
               setIastIndex(index);
             }}
             backgroundColor={'#000'}
@@ -302,7 +303,7 @@ const ImageGallery = (props) => {
       {showShareModal && (
         <ImageShareModal
           status={showShareModal}
-          onCloseAction={(type) => {
+          onCloseAction={type => {
             setShowShareModal(!showShareModal);
           }}
         />
@@ -318,61 +319,14 @@ const ImageGallery = (props) => {
         />
       )}
 
-      <Modal
-        transparent={true}
-        onRequestClose={() => {
-          TrackPlayer.stop().then(() => {
-            setShowPlayer(!showPlayer);
-          });
-        }}
-        visible={showPlayer}>
-        <View style={styles.modalView}>
-          <View style={styles.centeredView}>
-            <View
-              style={{
-                backgroundColor: 'white',
-                borderRadius: 15,
-                shadowColor: '#333333',
-                shadowOffset: {width: 0, height: 2},
-                shadowOpacity: 0.2,
-                shadowRadius: 6,
-                elevation: 5,
-                padding: 8,
-                width: '90%',
-                justifyContent: 'center',
-                alignSelf: 'center',
-                alignItems: 'center',
-                height: scale(130),
-              }}>
-              <TouchableOpacity
-                onPress={() => {
-                  TrackPlayer.stop().then(() => {
-                    setShowPlayer(!showPlayer);
-                  });
-                }}
-                style={{
-                  width: scale(32),
-                  height: scale(32),
-                  justifyContent: 'flex-end',
-                  alignItems: 'flex-end',
-                  alignSelf: 'flex-end',
-                }}
-                background={TouchableNativeFeedback.SelectableBackground()}>
-                <GlobalInclude.BaseIcon
-                  containerStyle={{height: scale(30), width: scale(30)}}
-                  iconColor={'#000'}
-                  iconName={'close'}
-                  iconSize={scale(30)}
-                  iconType={IconType[8]}
-                />
-              </TouchableOpacity>
-              <View style={{flex: 1}}>
-                <Player onTogglePlayback={togglePlayback} />
-              </View>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      {showPlayer && (
+        <AudioPlayer
+          mediaContent={playAudio}
+          onClose={() => {
+            setShowPlayer(false);
+          }}
+        />
+      )}
     </View>
   );
 };

@@ -83,19 +83,16 @@ const Location = ({content}) => {
                   //   latitude: latitude,
                   //   longitude: longitude,
                   // });
-
-                  Linking.canOpenURL(content.googleMapLink).then(
-                    (supported) => {
-                      if (supported) {
-                        Linking.openURL(content.googleMapLink);
-                      } else {
-                        console.log(
-                          "Don't know how to open URI: " +
-                            content.googleMapLink,
-                        );
-                      }
-                    },
-                  );
+                  //Linking.openURL(content.googleMapLink);
+                  Linking.canOpenURL(content.googleMapLink).then(supported => {
+                    if (supported) {
+                      Linking.openURL(content.googleMapLink);
+                    } else {
+                      console.log(
+                        "Don't know how to open URI: " + content.googleMapLink,
+                      );
+                    }
+                  });
                 }}>
                 <ProgresImage
                   source={GlobalInclude.Assets.MapLocation}

@@ -111,6 +111,8 @@ const Ticker = ({route, navigation}) => {
         notification.commentUpdate &&
         notification.commentUpdate !== undefined
       ) {
+        console.log('notification.commentUpdate', notification.commentUpdate);
+        console.log('notification.commentUpdate', notification.commentData);
         //{"commentData": {"count": 4, "postIndex": 0}, "commentUpdate": true, "refresh": false}
         if (
           notification.commentData &&
@@ -130,11 +132,21 @@ const Ticker = ({route, navigation}) => {
 
   useEffect(() => {
     if (refreshState) {
+      console.log('commentUpddate', commentUpddate);
+      console.log('commentUpddate', refreshState);
+
       let oldData = postContent;
+      console.log('commentUpddate', oldData.length);
       if (commentUpddate !== undefined && commentUpddate !== null) {
-        let postIndex = commentUpddate.postIndex;
-        let count = commentUpddate.count;
-        oldData[postIndex].totalComments = count;
+        let postIndex = commentUpddate.postIndex ?? -1;
+        console.log('====================================');
+        console.log('postIndex', postIndex);
+        console.log('====================================');
+        if (oldData.length > postIndex) {
+          let count = commentUpddate.count;
+          oldData[postIndex].totalComments = count;
+        }
+
         setTimeout(() => {
           dispatch(clearIncreaseComment());
           setPostContent([...oldData]);
@@ -760,85 +772,87 @@ const Ticker = ({route, navigation}) => {
     );
   };
 
-  const renderItem = ({item, index}) => (
-    <PostFeedCard
-      //key={index}
-      feedType={'Main'}
-      navigation={navigation}
-      itemIndex={index}
-      postId={item._id}
-      author={item.author}
-      status={item.status}
-      postedAt={item.postedAt}
-      categoryId={item.categoryId}
-      categoryMsg={item.categoryMsg}
-      title={item.title}
-      linkHost={item.linkHost}
-      fullUrl={item.fullUrl}
-      colorCode={item.colorCode}
-      body={item.body}
-      links={item.links}
-      totalLikes={item.totalLikes}
-      totalComments={item.totalComments}
-      item={item}
-      onLayout={event => {
-        const layout = event.nativeEvent.layout;
-        dataSourceCords[index] = layout.y;
-      }}
-      onClickUser={() => {
-        if (item.author !== undefined && item.author !== null) {
-          navigation.navigate('UserProfile', {
-            userId: item.author.id,
-          });
-        }
-      }}
-      onItemCallback={(post, clickIndex) => {
-        imageArray = [];
-        if (post[clickIndex].type === 3) {
-          documentItem = post[clickIndex].file;
-          setShowDocViewer(true);
-        } else {
-          post.map((child, indx) => {
-            if (child.type === 1) {
-              imageArray.push({url: child.file, key: indx});
-            }
-          });
-          if (imageArray.length > 0) {
-            setPickedIndex(clickIndex);
-            setshowImageViewer(true);
+  const renderItem = ({item, index}) => {
+    return (
+      <PostFeedCard
+        //key={index}
+        feedType={'Main'}
+        navigation={navigation}
+        itemIndex={index}
+        postId={item._id}
+        author={item.author}
+        status={item.status}
+        postedAt={item.postedAt}
+        categoryId={item.categoryId}
+        categoryMsg={item.categoryMsg}
+        title={item.title}
+        linkHost={item.linkHost}
+        fullUrl={item.fullUrl}
+        colorCode={item.colorCode}
+        body={item.body}
+        links={item.links}
+        totalLikes={item.totalLikes}
+        totalComments={item.totalComments}
+        item={item}
+        onLayout={event => {
+          const layout = event.nativeEvent.layout;
+          dataSourceCords[index] = layout.y;
+        }}
+        onClickUser={() => {
+          if (item.author !== undefined && item.author !== null) {
+            navigation.navigate('UserProfile', {
+              userId: item.author.id,
+            });
           }
-        }
-      }}
-      onClickPostOptions={() => {
-        setSelectedFeed(item);
-        if (
-          refPostOptions.current !== undefined &&
-          refPostOptions.current !== null
-        ) {
-          refPostOptions.current.open();
-        }
-      }}
-      onClickMediaOption={type => {
-        selectedIndex = index;
-        if (type === 1) {
-          setSelectedFeed(item);
-
-          setTimeout(() => {
-            if (
-              refPostLikes.current !== undefined &&
-              refPostLikes.current !== null
-            ) {
-              refPostLikes.current.open();
+        }}
+        onItemCallback={(post, clickIndex) => {
+          imageArray = [];
+          if (post[clickIndex].type === 3) {
+            documentItem = post[clickIndex].file;
+            setShowDocViewer(true);
+          } else {
+            post.map((child, indx) => {
+              if (child.type === 1) {
+                imageArray.push({url: child.file, key: indx});
+              }
+            });
+            if (imageArray.length > 0) {
+              setPickedIndex(clickIndex);
+              setshowImageViewer(true);
             }
-          }, 200);
-        } else if (type === 2) {
-          navigation.navigate('Comments', {
-            data: {postId: item._id, postIndex: index},
-          });
-        }
-      }}
-    />
-  );
+          }
+        }}
+        onClickPostOptions={() => {
+          setSelectedFeed(item);
+          if (
+            refPostOptions.current !== undefined &&
+            refPostOptions.current !== null
+          ) {
+            refPostOptions.current.open();
+          }
+        }}
+        onClickMediaOption={type => {
+          selectedIndex = index;
+          if (type === 1) {
+            setSelectedFeed(item);
+
+            setTimeout(() => {
+              if (
+                refPostLikes.current !== undefined &&
+                refPostLikes.current !== null
+              ) {
+                refPostLikes.current.open();
+              }
+            }, 200);
+          } else if (type === 2) {
+            navigation.navigate('Comments', {
+              data: {postId: item._id, postIndex: index},
+            });
+          }
+        }}
+      />
+    );
+  };
 
   const keyExtractor = (item, index) => index;
 

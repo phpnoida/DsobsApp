@@ -44,6 +44,7 @@ import {
   doGetGroups,
   doGetBatchGroups,
 } from '../../Actions/GroupActions';
+import {SERVER_PATH} from '../../../config'
 
 import _ from 'lodash';
 import io from 'socket.io-client';
@@ -135,7 +136,7 @@ const GroupsList = ({route, navigation}) => {
       socketRef.current === null ||
       socketRef.current === undefined
     ) {
-      socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
+      socketRef.current = io(SERVER_PATH, {
         reconnectionAttempts: 2,
         transports: ['websocket'],
         upgrade: false,

@@ -52,6 +52,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import io from 'socket.io-client';
 import _ from 'lodash';
 import RNBeep from 'react-native-a-beep';
+import {SERVER_PATH} from '../../../../config';
 
 const {height, width} = Dimensions.get('window');
 
@@ -220,7 +221,7 @@ const MakeChat = ({route, navigation}) => {
       socketRef.current === null ||
       socketRef.current === undefined
     ) {
-      socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
+      socketRef.current = io(SERVER_PATH, {
         reconnectionAttempts: 2,
       });
     }

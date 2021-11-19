@@ -22,6 +22,7 @@ import {IconType, APP_NAME} from '../../../helper/Constants';
 import Helper from '../../../helper/Helper';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
 import {doGetChats, updateChatStatus} from '../../../Actions/SocketChatActions';
+import {SERVER_PATH} from '../../../../config'
 import _ from 'lodash';
 import io from 'socket.io-client';
 
@@ -116,7 +117,7 @@ const ChatList = ({navigation}) => {
       socketRef.current === null ||
       socketRef.current === undefined
     ) {
-      socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
+      socketRef.current = io(SERVER_PATH, {
         reconnectionAttempts: 2,
         transports: ['websocket'],
         upgrade: false,

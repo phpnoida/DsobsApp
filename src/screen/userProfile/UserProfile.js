@@ -39,6 +39,7 @@ import MyFamily from './MyFamily';
 import Links from './Links';
 import {addUser, checkUserExist} from '../../helper/ChatHelper';
 import {IconType} from '../../helper/Constants';
+import {SERVER_PATH} from '../../../config';
 import io from 'socket.io-client';
 
 let profileSheetMenu = [
@@ -247,7 +248,7 @@ const UserProfile = ({route, navigation}) => {
       socketRef.current === null ||
       socketRef.current === undefined
     ) {
-      socketRef.current = io('https://devapi-dsobs.alumbus.com/', {
+      socketRef.current = io(SERVER_PATH, {
         reconnectionAttempts: 2,
         transports: ['websocket'],
         upgrade: false,

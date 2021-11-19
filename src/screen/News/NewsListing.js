@@ -13,6 +13,7 @@ import {
   FlatList,
   Modal,
   Keyboard,
+  Alert,
   KeyboardAvoidingView,
 } from 'react-native';
 import GlobalInclude from '../../globalInclude/Globalinclude';
@@ -990,11 +991,28 @@ const NewsListing = ({navigation}) => {
                           let oldData = selectedUsers;
 
                           if (oldData.length < 3) {
-                            searchVal = '';
-                            oldData.push(row);
-                            setSearchUserQuery('');
-                            setSelectedUsers([...oldData]);
-                            setSearchedUser([]);
+                            let oldIndex = oldData.findIndex(
+                              item => item._id === row._id,
+                            );
+
+                            console.log('oldIndex', oldIndex);
+                            if (oldIndex > -1) {
+                              Alert.alert(
+                                'Duplicate User',
+                                'User already selected!',
+                              );
+                            } else {
+                              searchVal = '';
+                              oldData.push(row);
+                              setSearchUserQuery('');
+                              setSelectedUsers([...oldData]);
+                              setSearchedUser([]);
+                            }
+                          } else {
+                            Alert.alert(
+                              'Max Selection',
+                              'You can select max 3 users',
+                            );
                           }
                         }}
                       />

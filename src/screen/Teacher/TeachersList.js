@@ -77,7 +77,7 @@ const TeachersList = ({navigation}) => {
   const getTeachers = () => {
     doFilterTeachers(
       filterObject,
-      (response) => {
+      response => {
         setIsRefreshing(false);
         if (response && response !== null) {
           if (
@@ -149,7 +149,7 @@ const TeachersList = ({navigation}) => {
     filterObject.type = 1;
   };
 
-  const createFullName = (item) => {
+  const createFullName = item => {
     let fullName = '';
 
     if (item.title !== undefined && item.title !== null && item.title !== '') {
@@ -337,7 +337,7 @@ const TeachersList = ({navigation}) => {
                         ]}
                         keyboardType={'default'}
                         placeholder={'Search By Keywords'}
-                        onChangeText={(text) => {
+                        onChangeText={text => {
                           searchVal = text;
                           setFilterQuery(text);
 

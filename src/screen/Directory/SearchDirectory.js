@@ -72,7 +72,7 @@ const SearchDirectory = ({route, navigation}) => {
     const unsubscribe = navigation.addListener('focus', () => {
       if (global.isConnected) {
         logDirectory(
-          (response) => {
+          response => {
             if (response && response !== null) {
               if (
                 response.data &&
@@ -103,7 +103,7 @@ const SearchDirectory = ({route, navigation}) => {
 
   const getProfessionList = () => {
     doGetProfessionList(
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -115,8 +115,8 @@ const SearchDirectory = ({route, navigation}) => {
             if (data.status) {
               let dataList = [];
 
-              data.data.map((item) => {
-                item.children.map((child) => {
+              data.data.map(item => {
+                item.children.map(child => {
                   child.children.map((sub, index) => {
                     dataList.push({key: index, text: sub});
                   });
@@ -135,13 +135,13 @@ const SearchDirectory = ({route, navigation}) => {
     );
   };
 
-  const getSearchDataByCity = (query) => {
+  const getSearchDataByCity = query => {
     setIsLoading(true);
     doSearchCity(
       query,
       10,
       0,
-      (response) => {
+      response => {
         setIsLoading(false);
         if (response && response !== null) {
           if (
@@ -170,13 +170,13 @@ const SearchDirectory = ({route, navigation}) => {
     );
   };
 
-  const getSearchDataByCompany = (query) => {
+  const getSearchDataByCompany = query => {
     setIsLoading(true);
     doSearchCompany(
       query,
       10,
       0,
-      (response) => {
+      response => {
         setIsLoading(false);
         if (response && response !== null) {
           if (
@@ -205,12 +205,12 @@ const SearchDirectory = ({route, navigation}) => {
     );
   };
 
-  const doSearchUser = (query) => {
+  const doSearchUser = query => {
     setIsLoading(true);
     getDirectory(
       searchBy.toString(),
       query,
-      (response) => {
+      response => {
         setIsLoading(false);
         if (response && response !== null) {
           if (
@@ -223,7 +223,7 @@ const SearchDirectory = ({route, navigation}) => {
             if (searchBy === 5) {
               if (data.data.length > 0) {
                 navigation.navigate('DirectoryDetails', {
-                  data: data.data,
+                  data: data.data ?? [],
                   searchBy: searchBy,
                   searchVal: query,
                 });
@@ -238,7 +238,7 @@ const SearchDirectory = ({route, navigation}) => {
           }
         }
       },
-      (error) => {
+      error => {
         setIsLoading(false);
         setSearchedUser([]);
         console.log('error', error);
@@ -369,7 +369,7 @@ const SearchDirectory = ({route, navigation}) => {
     return <View />;
   };
 
-  const concatName = (item) => {
+  const concatName = item => {
     let fullName = '';
 
     if (
@@ -463,9 +463,9 @@ const SearchDirectory = ({route, navigation}) => {
       </View>
     );
   };
-  const searchProfession = (searchText) => {
+  const searchProfession = searchText => {
     if (searchText.length > 0) {
-      var filtered = professionListMain.filter((element) =>
+      var filtered = professionListMain.filter(element =>
         element.text.toLowerCase().includes(searchText.toLowerCase()),
       );
       setProfessions([...filtered]);
@@ -540,7 +540,7 @@ const SearchDirectory = ({route, navigation}) => {
                 marginStart: scale(3),
                 marginTop: scale(5),
               }}>
-              {row.split(' ').map((child) => {
+              {row.split(' ').map(child => {
                 if (child.trim() !== '') {
                   return (
                     <Text
@@ -604,7 +604,7 @@ const SearchDirectory = ({route, navigation}) => {
           showsVerticalScrollIndicator={false}>
           <View
             style={GlobalInclude.AppStyle.fill}
-            onLayout={(event) => {
+            onLayout={event => {
               const layout = event.nativeEvent.layout;
             }}>
             <View
@@ -774,7 +774,7 @@ const SearchDirectory = ({route, navigation}) => {
                       keyboardType={'default'}
                       returnKeyType={'done'}
                       placeholder={'I am looking for'}
-                      onChangeText={(text) => {
+                      onChangeText={text => {
                         searchVal = text;
                         setSearchQuery(text);
                         if (text.length > 0) {
@@ -858,7 +858,7 @@ const SearchDirectory = ({route, navigation}) => {
               {professionList.length > 0 && (
                 <View
                   style={GlobalInclude.AppStyle.fullWidth}
-                  onLayout={(event) => {
+                  onLayout={event => {
                     const layout = event.nativeEvent.layout;
                     console.log('layout', layout);
                     positionY = layout.y;
@@ -942,7 +942,7 @@ const SearchDirectory = ({route, navigation}) => {
 
       {/* profession sheet */}
       <ProfessionSheet
-        ref={(ref) => {
+        ref={ref => {
           professionSheet = ref;
         }}
         height={deviceHeight - 150}
@@ -962,14 +962,14 @@ const SearchDirectory = ({route, navigation}) => {
         <BottomSheetHeader
           title={'Select Profession'}
           showSearch={true}
-          onSeachQuery={(query) => {
+          onSeachQuery={query => {
             searchProfession(query);
           }}
         />
         <RadioButton
           defaultSelected={searchQuery}
           PROP={professions}
-          onRadioSelect={(value) => {
+          onRadioSelect={value => {
             setSearchQuery(value.text.toString());
             setSearchIndex(5);
             searchBy = 5;
