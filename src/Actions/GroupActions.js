@@ -122,9 +122,6 @@ export function doGetDiscoverGroups(filterObject, callback, errCallback) {
 
 export function doJoinGroup(groupId, callback, errCallback) {
   let requestPath = `${SERVER_PATH}group/join-request/${groupId}`;
-
-  console.log('requestPath', requestPath);
-
   const request = axios
     .post(
       requestPath,
@@ -172,8 +169,6 @@ export function doAcceptUserRequest(
   } else {
     requestPath = `${SERVER_PATH}group/reject-user-request/${groupId}/${userId}`;
   }
-
-  console.log('requestPath', requestPath);
 
   const request = axios
     .post(
@@ -233,8 +228,6 @@ export function doUpdateGroupAdmin(
     requestPath = `${SERVER_PATH}group/remove-admin/${groupId}/${userId}`;
   }
 
-  console.log('requestPath', requestPath);
-
   const request = axios
     .post(
       requestPath,
@@ -257,7 +250,7 @@ export function doUpdateGroupAdmin(
 
 export function doGetGroupMessages(params, groupId, callback, errCallback) {
   let requestPath = `${SERVER_PATH}chat/get-messages/${groupId}`;
-  // console.log('requestPath', requestPath);
+
   const request = axios
     .get(requestPath, {
       headers: {Authorization: global.accessToken},
@@ -281,9 +274,6 @@ export function doReportMessage(
 ) {
   let requestPath = `${SERVER_PATH}chat/report-message/${groupId}/${chatId}`;
 
-  console.log('requestPath', requestPath);
-  console.log('payload', payload);
-
   const request = axios
     .post(requestPath, payload, {
       headers: {
@@ -302,10 +292,6 @@ export function doReportMessage(
 
 export function doHideMessage(groupId, messageId, callback, errCallback) {
   let requestPath = `${SERVER_PATH}chat/hide-message/${groupId}/${messageId}`;
-
-  console.log('====================================');
-  console.log('requestPath', requestPath);
-  console.log('====================================');
 
   const request = axios
     .post(
@@ -329,9 +315,6 @@ export function doHideMessage(groupId, messageId, callback, errCallback) {
 
 export function doRemoveMessage(groupId, messageId, callback, errCallback) {
   let requestPath = `${SERVER_PATH}chat/message/${groupId}/${messageId}`;
-  console.log('====================================');
-  console.log('requestPath', requestPath);
-  console.log('====================================');
 
   const request = axios
     .delete(requestPath, {
@@ -356,8 +339,6 @@ export function doGetReportedMessageInfo(
   errCallback,
 ) {
   let requestPath = `${SERVER_PATH}chat/reported-message-details/${groupId}/${messageId}`;
-
-  console.log('requestPath', requestPath);
   const request = axios
     .get(requestPath, {
       headers: {Authorization: global.accessToken},

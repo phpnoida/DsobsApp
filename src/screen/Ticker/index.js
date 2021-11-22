@@ -132,16 +132,9 @@ const Ticker = ({route, navigation}) => {
 
   useEffect(() => {
     if (refreshState) {
-      console.log('commentUpddate', commentUpddate);
-      console.log('commentUpddate', refreshState);
-
       let oldData = postContent;
-      console.log('commentUpddate', oldData.length);
       if (commentUpddate !== undefined && commentUpddate !== null) {
         let postIndex = commentUpddate.postIndex ?? -1;
-        console.log('====================================');
-        console.log('postIndex', postIndex);
-        console.log('====================================');
         if (oldData.length > postIndex) {
           let count = commentUpddate.count;
           oldData[postIndex].totalComments = count;
@@ -292,7 +285,7 @@ const Ticker = ({route, navigation}) => {
               totalCount = data.totalCount;
               setPostContent([...data.data]);
             } else {
-              setPostContent([...postContent, ...data.data]);
+              setPostContent(old => [...old, ...data.data]);
             }
             setPaginationStatus(PaginationStatus.waiting);
 
@@ -568,7 +561,7 @@ const Ticker = ({route, navigation}) => {
           <View />
         ) : (
           <View style={{height: scale(30)}}>
-            {paginationStatus === PaginationStatus.waiting ? (
+            {isRefreshing ? (
               <View style={g.p10}>
                 <ActivityIndicator
                   size={'small'}

@@ -15,11 +15,9 @@ const ChatEtiquette = ({navigation}) => {
           g.fs15,
           g.colorBlack,
           {
-            textAlign: 'justify',
             justifyContent: 'center',
             alignContent: 'center',
             textAlignVertical: 'center',
-            letterSpacing: 1,
             lineHeight: 25,
           },
         ]}>

@@ -59,7 +59,7 @@ class PostFeedCard extends PureComponent {
     );
   }
 
-  _renderDoc = (url) => {
+  _renderDoc = url => {
     return (
       <View>
         <View style={{width: '100%', aspectRatio: 16 / 9}}>
@@ -84,7 +84,7 @@ class PostFeedCard extends PureComponent {
     );
   };
 
-  _renderOne = (item) => {
+  _renderOne = item => {
     return (
       <TouchableOpacity
         onPress={() => {
@@ -109,7 +109,7 @@ class PostFeedCard extends PureComponent {
     );
   };
 
-  _showViewByType = (item) => {
+  _showViewByType = item => {
     return item.length === 1 ? (
       this._renderOne(item)
     ) : (
@@ -185,86 +185,84 @@ class PostFeedCard extends PureComponent {
           <View style={styles.shadowLine} />
           {/* User Row */}
           <View style={[grid.rowdir, g.p10, g.pt5, g.pl5, g.pr5]}>
-            <TouchableOpacity
-              style={grid.row}
-              activeOpacity={0.9}
-              onPress={this.props.onClickUser}>
-              <View
-                style={[
-                  g.mr10,
-                  g.bggray,
-                  g.oh,
-                  {
-                    width: scale(40),
-                    height: scale(40),
-                    borderRadius: scale(50),
-                  },
-                ]}>
-                {this.props.author.profileImg !== undefined &&
-                this.props.author.profileImg !== null &&
-                this.props.author.profileImg !== '' ? (
-                  <ProgressImage
-                    source={{uri: this.props.author.profileImg}}
-                    containerStyle={styles.imageStyle}
-                    mode={'cover'}
-                  />
-                ) : (
-                  <ProgressImage
-                    source={GlobalInclude.Assets.DefaultProfile}
-                    containerStyle={styles.imageStyle}
-                    mode={'cover'}
-                  />
-                )}
-              </View>
-              {this.props.author !== undefined && this.props.author !== null && (
-                <View style={[grid.justifyContentCenter, grid.flex1]}>
-                  <View style={grid.rowdir}>
-                    <View style={[grid.col]}>
-                      <Text
-                        style={[
-                          g.fs15,
-                          g.FHNM,
-                          g.colorBlue,
-                          GlobalInclude.AppStyle.transform,
-                        ]}>
-                        {`${Helpers.concatName(this.props.author)} - ${
-                          this.props.author.batch
-                        }`}
-                      </Text>
-                    </View>
-                    {this.props.status !== 2 && this.props.feedType === 'Main' && (
-                      <TouchableOpacity
-                        activeOpacity={1}
-                        onPress={this.props.onClickPostOptions}
-                        style={[
-                          g.mr7,
-                          grid.justifyContentCenter,
-                          grid.alignItems,
-                        ]}>
-                        <GlobalInclude.BaseIcon
-                          containerStyle={{height: scale(22), width: scale(22)}}
-                          iconColor={GlobalInclude.Color.ColorPrimaryLight}
-                          iconName={'dots-three-horizontal'}
-                          iconSize={scale(22)}
-                          iconType={IconType[9]}
-                        />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                  <Text
-                    style={[
-                      g.fs14,
-                      g.FHNR,
-                      g.colorBlack,
-                      grid.justifyContentCenter,
-                      grid.alignItems,
-                      g.txtCenterVertical,
-                    ]}>
-                    {moment(this.props.postedAt * 1000).fromNow()}
-                  </Text>
+            <View style={grid.row}>
+              <TouchableOpacity
+                style={[grid.row, grid.col]}
+                activeOpacity={0.9}
+                onPress={this.props.onClickUser}>
+                <View
+                  style={[
+                    g.mr10,
+                    g.bggray,
+                    g.oh,
+                    {
+                      width: scale(40),
+                      height: scale(40),
+                      borderRadius: scale(50),
+                    },
+                  ]}>
+                  {this.props.author.profileImg !== undefined &&
+                  this.props.author.profileImg !== null &&
+                  this.props.author.profileImg !== '' ? (
+                    <ProgressImage
+                      source={{uri: this.props.author.profileImg}}
+                      containerStyle={styles.imageStyle}
+                      mode={'cover'}
+                    />
+                  ) : (
+                    <ProgressImage
+                      source={GlobalInclude.Assets.DefaultProfile}
+                      containerStyle={styles.imageStyle}
+                      mode={'cover'}
+                    />
+                  )}
                 </View>
+                {this.props.author !== undefined && this.props.author !== null && (
+                  <View style={[grid.justifyContentCenter, grid.flex1]}>
+                    <Text
+                      style={[
+                        g.fs15,
+                        g.FHNM,
+                        g.colorBlue,
+                        GlobalInclude.AppStyle.transform,
+                      ]}>
+                      {`${Helpers.concatName(this.props.author)} - ${
+                        this.props.author.batch
+                      }`}
+                    </Text>
+                    <Text
+                      style={[
+                        g.fs14,
+                        g.FHNR,
+                        g.colorBlack,
+                        grid.justifyContentCenter,
+                        grid.alignItems,
+                        g.txtCenterVertical,
+                      ]}>
+                      {moment(this.props.postedAt * 1000).fromNow()}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+              {this.props.status !== 2 && this.props.feedType === 'Main' && (
+                <TouchableOpacity
+                  activeOpacity={1}
+                  hitSlop={{top: 10, bottom: 20, left: 10, right: 10}}
+                  onPress={this.props.onClickPostOptions}
+                  style={[g.mr7, g.mt3, grid.alignItems]}>
+                  <GlobalInclude.BaseIcon
+                    containerStyle={{
+                      height: scale(22),
+                      width: scale(22),
+                    }}
+                    iconColor={GlobalInclude.Color.ColorPrimaryLight}
+                    iconName={'dots-three-horizontal'}
+                    iconSize={scale(22)}
+                    iconType={IconType[9]}
+                  />
+                </TouchableOpacity>
               )}
-            </TouchableOpacity>
+            </View>
           </View>
 
           {/* User Row */}

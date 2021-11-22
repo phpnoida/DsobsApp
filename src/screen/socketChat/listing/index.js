@@ -22,7 +22,7 @@ import {IconType, APP_NAME} from '../../../helper/Constants';
 import Helper from '../../../helper/Helper';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
 import {doGetChats, updateChatStatus} from '../../../Actions/SocketChatActions';
-import {SERVER_PATH} from '../../../../config'
+import {SERVER_PATH} from '../../../../config';
 import _ from 'lodash';
 import io from 'socket.io-client';
 
@@ -190,6 +190,7 @@ const ChatList = ({navigation}) => {
           console.log('chat-status-ack', event);
           if (event && event !== null && event !== undefined) {
             if (event.status) {
+              console.log('checkAlternate', checkAlternate);
               if (checkAlternate) {
                 checkAlternate = false;
                 chatStatus(event.chatStatus);
@@ -294,6 +295,9 @@ const ChatList = ({navigation}) => {
   };
 
   const joinSocketEvent = useCallback(() => {
+    console.log('====================================');
+    console.log('299');
+    console.log('====================================');
     if (socketRef.current !== undefined && socketRef.current !== null) {
       let payload = {
         userId: global.userId,
@@ -364,9 +368,9 @@ const ChatList = ({navigation}) => {
       //{"blockByUserId": "602a65dca1714c5bd918612e", "blockUserId": undefined}
       console.log('blockUser', payload);
       if (isBlocked) {
-        socketRef.current.emit('chat-block-user', payload);
+        socketRef?.current?.emit('chat-block-user', payload);
       } else {
-        socketRef.current.emit('chat-unblock-user', payload);
+        socketRef?.current?.emit('chat-unblock-user', payload);
       }
     }
   }, []);
@@ -406,7 +410,9 @@ const ChatList = ({navigation}) => {
       filterObject,
       response => {
         pingYourSelf();
-        checkChatStatus(global.userId);
+        setTimeout(() => {
+          checkChatStatus(global.userId);
+        }, 200);
         setShowLoader(false);
         setFirstTimeLoad(false);
         manageResponse(response);

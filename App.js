@@ -54,7 +54,7 @@ const App = () => {
       requestUserPermission();
       PushNotificationIOS.addEventListener('notification', notification => {
         const isClicked = notification.getData().userInteraction === 1;
-        console.log('isClicked', isClicked);
+
         if (isClicked) {
           global.notification = notification;
           setTimeout(() => {
@@ -74,14 +74,12 @@ const App = () => {
       });
     } else {
       PushNotification.popInitialNotification(notification => {
-        console.log('Initial Notification', notification);
         global.notification = notification;
       });
     }
     const unsubscribe = messaging().onMessage(async remoteMessage => {
       handleNotification('PushNotificationIOS', remoteMessage);
       global.notification = remoteMessage;
-      console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
     });
 
     /**
@@ -216,11 +214,7 @@ const App = () => {
   };
 
   async function requestUserPermission() {
-    PushNotificationIOS.checkPermissions(status => {
-      console.log('====================================');
-      console.log('statuys', status);
-      console.log('====================================');
-    });
+    PushNotificationIOS.checkPermissions(status => {});
   }
 
   const handleNotification = (from, data) => {

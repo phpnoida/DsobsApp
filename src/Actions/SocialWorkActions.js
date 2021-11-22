@@ -6,8 +6,8 @@ export function getWorkCategory(callback, errCallback) {
 
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => callback(res))
-    .catch((err) => {
+    .then(res => callback(res))
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -22,8 +22,8 @@ export function searchWorkCategory(filterQuery, callback, errCallback) {
       headers: {Authorization: global.accessToken},
       params: filterQuery,
     })
-    .then((res) => callback(res))
-    .catch((err) => {
+    .then(res => callback(res))
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -41,8 +41,8 @@ export function addSocialWork(payload, callback, errCallback) {
         'content-type': 'application/json',
       },
     })
-    .then((res) => callback(res))
-    .catch((err) => {
+    .then(res => callback(res))
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -52,16 +52,14 @@ export function addSocialWork(payload, callback, errCallback) {
 
 export function doFitlerSocialWork(filterQuery, callback, errCallback) {
   let requestPath = `${SERVER_PATH}socialworks/filter`;
-  console.log('====================================');
-  console.log(filterQuery);
-  console.log('====================================');
+
   const request = axios
     .get(requestPath, {
       headers: {Authorization: global.accessToken},
       params: filterQuery,
     })
-    .then((res) => callback(res))
-    .catch((err) => {
+    .then(res => callback(res))
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -71,16 +69,14 @@ export function doFitlerSocialWork(filterQuery, callback, errCallback) {
 
 export function doSearchSocialWork(filterQuery, callback, errCallback) {
   let requestPath = `${SERVER_PATH}socialworks`;
-  console.log('====================================');
-  console.log(filterQuery);
-  console.log('====================================');
+
   const request = axios
     .get(requestPath, {
       headers: {Authorization: global.accessToken},
       params: filterQuery,
     })
-    .then((res) => callback(res))
-    .catch((err) => {
+    .then(res => callback(res))
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -96,8 +92,8 @@ export function getComments(filterObject, callback, errCallback) {
       headers: {Authorization: global.accessToken},
       params: filterObject,
     })
-    .then((res) => callback(res))
-    .catch((err) => {
+    .then(res => callback(res))
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -115,8 +111,8 @@ export function addUserComment(payload, callback, errCallback) {
         'content-type': 'application/json',
       },
     })
-    .then((res) => callback(res))
-    .catch((err) => {
+    .then(res => callback(res))
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -125,9 +121,6 @@ export function addUserComment(payload, callback, errCallback) {
 }
 
 export function updateUserComment(payload, commentId, callback, errCallback) {
-  console.log('====================================');
-  console.log('commentId', commentId);
-  console.log('====================================');
   let requestPath = `${SERVER_PATH}socialworks/comment?id=${commentId}`;
 
   const request = axios
@@ -137,8 +130,8 @@ export function updateUserComment(payload, commentId, callback, errCallback) {
         'content-type': 'application/json',
       },
     })
-    .then((res) => callback(res))
-    .catch((err) => {
+    .then(res => callback(res))
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -147,9 +140,6 @@ export function updateUserComment(payload, commentId, callback, errCallback) {
 }
 
 export function removeUserComment(commentId, callback, errCallback) {
-  console.log('====================================');
-  console.log('commentId', commentId);
-  console.log('====================================');
   let requestPath = `${SERVER_PATH}socialworks/comment?id=${commentId}`;
 
   const request = axios
@@ -159,8 +149,8 @@ export function removeUserComment(commentId, callback, errCallback) {
         'content-type': 'application/json',
       },
     })
-    .then((res) => callback(res))
-    .catch((err) => {
+    .then(res => callback(res))
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {

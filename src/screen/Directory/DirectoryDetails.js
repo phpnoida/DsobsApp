@@ -141,11 +141,14 @@ const DirectoryDetails = ({route, navigation}) => {
             }
 
             if (data.status) {
-              saveData(data);
+              saveData(data).then(() => {
+                setTimeout(() => {
+                  setShowLoader(false);
+                }, 200);
+              });
             }
           }
         }
-        setShowLoader(false);
         if (dataIndex === 0) {
           setIsLoading(false);
         }
@@ -160,16 +163,21 @@ const DirectoryDetails = ({route, navigation}) => {
     );
   }, [saveData]);
 
-  const saveData = useCallback(
-    data => {
+  const saveData = useCallback(data => {
+    return new Promise((resolve, reject) => {
       let records = data.data;
-      cityList = [];
       data.uniqueCity.map(item => {
-        cityList.push({key: item, text: item});
+        let exist = cityList.findIndex(function (el) {
+          return el.key === item;
+        });
+        if (exist < 0) {
+          cityList.push({key: item, text: item});
+        }
       });
       if (dataIndex === 0) {
         setSearchedUser([...records]);
         setDefaultUsers([...records]);
+        resolve(true);
         result = `${currentShowing}-${dataSize}`;
       } else {
         currentShowing = dataIndex * 10;
@@ -178,13 +186,13 @@ const DirectoryDetails = ({route, navigation}) => {
             ? currentShowing + records.length
             : currentShowing + dataSize
         }`;
-        setSearchedUser([...searchedUser, ...records]);
-        setDefaultUsers([...defaultUsersList, ...records]);
+        setSearchedUser(old => [...old, ...records]);
+        setDefaultUsers(old => [...old, ...records]);
+        resolve(true);
       }
       setPaginationStatus(PaginationStatus.waiting);
-    },
-    [searchedUser, defaultUsersList],
-  );
+    });
+  }, []);
 
   const applyFilter = () => {
     if (locationFilter === '' && genderFilter === '') {
@@ -763,7 +771,7 @@ const DirectoryDetails = ({route, navigation}) => {
           <View />
         ) : (
           <View style={{height: scale(60)}}>
-            {paginationStatus === PaginationStatus.waiting ? (
+            {showLoader ? (
               <View style={g.p10}>
                 <ActivityIndicator
                   size={'large'}

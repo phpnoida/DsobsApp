@@ -66,6 +66,8 @@ let profileSheet = null,
   birthDate = 'N/A',
   moveToTab = 1;
 let challengerUser = null;
+let isFromRelatives = false;
+let lastUserId = '';
 const UserProfile = ({route, navigation}) => {
   const socketRef = useRef();
 
@@ -84,6 +86,8 @@ const UserProfile = ({route, navigation}) => {
 
     birthDate = 'N/A';
     moveToTab = 1;
+    isFromRelatives = false;
+    lastUserId = '';
 
     console.log('Request for', userId);
 
@@ -374,10 +378,11 @@ const UserProfile = ({route, navigation}) => {
   const openProfile = selectedId => {
     birthDate = 'N/A';
     moveToTab = 1;
-
     console.log('====================================');
     console.log('selectedId', selectedId);
     console.log('====================================');
+    isFromRelatives = true;
+    lastUserId = userId;
     userId = selectedId;
     onRefresh();
   };
@@ -401,7 +406,14 @@ const UserProfile = ({route, navigation}) => {
     if (lastStep > 1) {
       setStep(lastStep - 1);
     } else {
-      navigation.goBack();
+      if (isFromRelatives) {
+        userId = lastUserId;
+        lastUserId = '';
+        isFromRelatives = false;
+        onRefresh();
+      } else {
+        navigation.goBack();
+      }
       // navigation.dispatch(
       //   CommonActions.reset({
       //     index: 1,

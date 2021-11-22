@@ -40,15 +40,10 @@ const AppWrapper = ({navigation}) => {
     };
   }, [onNotif]);
 
-  const onRegister = token => {
-    console.log('token.token', token.token);
-  };
+  const onRegister = token => {};
 
   const onNotif = useCallback(
     notification => {
-      console.log('====================================');
-      console.log('onNotif-AppWrapper-48', notification);
-      console.log('====================================');
       if (notification && notification !== undefined && notification !== null) {
         if (notification.userInteraction) {
           global.notification = notification;

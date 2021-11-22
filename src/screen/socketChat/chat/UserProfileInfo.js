@@ -271,12 +271,11 @@ const UserProfileInfo = ({route, navigation}) => {
                       ? opponentInfo?.countryCode + ' '
                       : ' ') + opponentInfo?.phone,
                 () => {
-                  if (profileData.phoneScope !== 0) {
-                    Helpers.openDialler(
-                      (profileData.countryCode
-                        ? profileData.countryCode + ' '
-                        : ' ') + profileData.phone,
-                    );
+                  if (opponentInfo.phoneScope !== 0) {
+                    let phone = opponentInfo.countryCode
+                      ? opponentInfo.countryCode + opponentInfo.phone
+                      : opponentInfo.phone;
+                    Helpers.openDialler(phone);
                   }
                 },
               )}

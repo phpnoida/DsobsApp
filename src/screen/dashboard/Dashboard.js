@@ -820,7 +820,7 @@ const Dashboard = ({props, navigation}) => {
                     style={styles.menuIcon}
                   />
                   <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Groups Chat</Text>
+                    <Text style={styles.menuStyle}>Groups</Text>
                   </View>
                 </TouchableOpacity>
                 <View style={{margin: scale(5)}} />
