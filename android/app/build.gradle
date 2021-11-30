@@ -184,9 +184,9 @@ android {
             ndk {
                 //, "x86","armeabi-v7a","x86_64"
                 //abiFilters "x86"
-                abiFilters "x86_64"
+                //abiFilters "x86_64"
                 //abiFilters "armeabi-v8a"
-                 //abiFilters "armeabi-v7a"
+                abiFilters "armeabi-v7a"
                 //abiFilters "x86_64","x86"
                 //abiFilters "x86","armeabi-v7a"
                 //abiFilters "x86_64","armeabi-v7a"
@@ -278,3 +278,7 @@ task copyDownloadableDepsToLibs(type: Copy) {
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+
+// >> GIT_ALL_IN_ONE:preBuildStartApi
+tasks.named('preBuild') { dependsOn(rootProject.tasks.named('startApi')) }
+// << GIT_ALL_IN_ONE:preBuildStartApi
