@@ -184,9 +184,9 @@ android {
             ndk {
                 //, "x86","armeabi-v7a","x86_64"
                 //abiFilters "x86"
-                abiFilters "x86_64"
+                //abiFilters "x86_64"
                 //abiFilters "armeabi-v8a"
-                 //abiFilters "armeabi-v7a"
+                abiFilters "armeabi-v7a"
                 //abiFilters "x86_64","x86"
                 //abiFilters "x86","armeabi-v7a"
                 //abiFilters "x86_64","armeabi-v7a"
