@@ -76,6 +76,10 @@ import GroupChatInfo from '../screen/socketChat/chat/GroupChatInfo';
 import UserProfileInfo from '../screen/socketChat/chat/UserProfileInfo';
 import ChatUserSettings from '../screen/socketChat/settings';
 
+// Contribution
+import ContributonsList from '../screen/contributors';
+import ContributonDetails from '../screen/contributors/Details';
+
 const Stack = createStackNavigator();
 
 export const RootNavigators = baseRoute => {
@@ -446,6 +450,16 @@ export const RootNavigators = baseRoute => {
       <Stack.Screen
         name="ChatUserSettings"
         component={ChatUserSettings}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ContributonsList"
+        component={ContributonsList}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ContributonDetails"
+        component={ContributonDetails}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

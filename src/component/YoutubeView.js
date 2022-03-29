@@ -93,7 +93,7 @@ const YoutubeView = props => {
         })
           .then(() => console.log('Standalone Player Exited'))
           .catch(errorMessage => {
-            console.log('errorMessage',errorMessage);
+            console.log('errorMessage', errorMessage);
             console.error(errorMessage);
           });
       }

@@ -30,6 +30,12 @@ const menuOptions = [
   {screen: 'SocialListing', visible: true, value: 11, label: 'Social Work'},
   {screen: 'Teachers', visible: true, value: 12, label: 'Masters'},
   {screen: 'JobListing', visible: true, value: 13, label: 'Jobs'},
+  {
+    screen: 'ContributonsList',
+    visible: true,
+    value: 14,
+    label: 'Contributions',
+  },
 ];
 
 const TopHeaderView = ({

@@ -1,0 +1,551 @@
+import React, {useState, useEffect, useMemo, useRef, useCallback} from 'react';
+import {
+  View,
+  StyleSheet,
+  SafeAreaView,
+  Text,
+  ActivityIndicator,
+  Animated,
+  TouchableOpacity,
+  Keyboard,
+} from 'react-native';
+import GlobalInclude from '../../globalInclude/Globalinclude';
+import {scale} from '../../theme/Scalling';
+import g from '../../theme/global';
+import grid from '../../theme/grid';
+import OptionsSheet from 'react-native-raw-bottom-sheet';
+
+import TopHeaderView from '../../component/TopHeaderView';
+import ProgressImage from '../../component/ProgresImage';
+import YoutubeView from '../../component/YoutubeView';
+import SocialWorkSearch from '../../component/SocialWorkSearch';
+import {
+  generateMenuOption,
+  renderNoDataComponent,
+} from '../../component/Common';
+import FilterCategory from '../../component/FilterCategory';
+import {URL_REGX, IconType} from '../../helper/Constants';
+import Helper from '../../helper/Helper';
+import NumberFormat from 'react-number-format';
+
+const {urlRegex} = URL_REGX;
+
+const PaginationStatus = {
+  firstLoad: 0,
+  waiting: 1,
+  allLoaded: 2,
+};
+
+let totalCount = 0;
+let categoryListMain = [];
+let filterObject = {
+  index: 0,
+  size: 10,
+};
+
+let curY = new Animated.Value(0);
+
+const ContributionsList = ({navigation}) => {
+  curY = new Animated.Value(0);
+  const refCategory = useRef();
+  const flatList = useRef();
+  const refOptions = useRef();
+
+  const [firstTimeLoad, setFirstTimeLoad] = useState(false);
+  const [filterQuery, setFilterQuery] = useState('');
+  const [pageContent, setPageContent] = useState([
+    {
+      currency: 'INR',
+      totalRaised: 0,
+      totalRaisedInPr: 0,
+      status: 0,
+      _id: '6242de2423962f2080c8064c',
+      amountTORaise: 2000,
+      title: 'DEV',
+      closingDate: 1711673044,
+      contributionsPhoto: 'https://live-thequorum.incred.io/images/logo.png',
+      description: 'Safsgdyretre',
+      media: [],
+      createdAt: '2022-03-29T10:23:32.969Z',
+      updatedAt: '2022-03-29T10:23:32.969Z',
+      __v: 0,
+    },
+    {
+      currency: 'INR',
+      totalRaised: 0,
+      totalRaisedInPr: 0,
+      status: 0,
+      _id: '6242de2423962f2080c8064c',
+      amountTORaise: 2000,
+      title: 'DEV',
+      closingDate: 1711673044,
+      contributionsPhoto: 'https://www.youtube.com/watch?v=EngW7tLk6R8',
+      description: 'Safsgdyretre',
+      media: [],
+      createdAt: '2022-03-29T10:23:32.969Z',
+      updatedAt: '2022-03-29T10:23:32.969Z',
+      __v: 0,
+    },
+  ]);
+  const [paginationStatus, setPaginationStatus] = useState(
+    PaginationStatus.firstLoad,
+  );
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [animatedHeight, setAnimatedHeight] = useState(0);
+  const [categoryList, setCategoryList] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [searchCategory, setSearchCategory] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {});
+
+    return () => {
+      unsubscribe();
+    };
+  }, [navigation]);
+
+  /*****
+   *
+   * API Section
+   *
+   */
+
+  /**
+   *
+   * Pagination
+   *
+   */
+  const onPaginate = () => {
+    if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
+      setPaginationStatus(PaginationStatus.waiting);
+      filterObject.index = filterObject.index + 1;
+    }
+  };
+
+  const onEndReached = () => {
+    if (pageContent.length === totalCount || pageContent.length < 10) {
+      setPaginationStatus(PaginationStatus.allLoaded);
+      return;
+    }
+    if (paginationStatus === PaginationStatus.waiting) {
+      onPaginate();
+    }
+  };
+
+  const handleRefresh = () => {
+    filterObject.index = 0;
+    setIsRefreshing(false);
+    resetCount();
+  };
+
+  const resetCount = () => {
+    totalCount = 0;
+    filterObject = {};
+    filterObject.index = 0;
+    filterObject.size = 10;
+  };
+  /**
+   *
+   * Pagination
+   *
+   */
+
+  const userOptions = useMemo(() => {
+    return (
+      <OptionsSheet
+        ref={refOptions}
+        minClosingHeight={50}
+        height={300}
+        duration={200}
+        closeOnDragDown={true}
+        customStyles={{
+          container: GlobalInclude.AppStyle.sheetContainer,
+        }}>
+        <View stylre={[grid.flex1, g.mb10]}>
+          {generateMenuOption(
+            'About Contributions',
+            'exclamationcircleo',
+            10,
+            () => {
+              refOptions.current.close();
+              setTimeout(() => {
+                // navigation.navigate('ChatEtiquette');
+              }, 220);
+            },
+          )}
+        </View>
+      </OptionsSheet>
+    );
+  }, []);
+
+  const renderFooter = () => {
+    return (
+      <View style={style.footerView}>
+        {pageContent.length === totalCount ? (
+          <View />
+        ) : (
+          <View style={{height: scale(30)}}>
+            {paginationStatus === PaginationStatus.waiting ? (
+              <View style={g.p10}>
+                <ActivityIndicator
+                  size={'small'}
+                  color={GlobalInclude.Color.ColorPrimary}
+                />
+              </View>
+            ) : null}
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const loadContributionPhoto = useCallback(itemPath => {
+    if (
+      itemPath === undefined ||
+      itemPath === null ||
+      itemPath === '' ||
+      !Helper.validateRegex(urlRegex, itemPath)
+    ) {
+      return (
+        <ProgressImage
+          source={GlobalInclude.Assets.DefaultImage}
+          containerStyle={style.imageStyle}
+          imageStyle={style.imageStyle}
+          mode={'cover'}
+        />
+      );
+    }
+    let extension = itemPath.split(/[#?]/)[0].split('.').pop().trim();
+    if (
+      extension.toLowerCase() === 'png' ||
+      extension.toLowerCase() === 'jpg' ||
+      extension.toLowerCase() === 'jpeg'
+    ) {
+      return (
+        <ProgressImage
+          source={{uri: itemPath}}
+          containerStyle={style.imageStyle}
+          imageStyle={style.imageStyle}
+          mode={'cover'}
+        />
+      );
+    } else {
+      return (
+        <YoutubeView
+          link={itemPath}
+          containerStyle={style.videoContainer}
+          overlayStyle={style.overlayStyle}
+          thumbStyle={style.thumbStyle}
+          showPlay
+          playIconstyle={style.playIconstyle}
+          playIconContainer={{
+            height: scale(20),
+            width: scale(20),
+          }}
+          iconSize={scale(20)}
+        />
+      );
+    }
+  }, []);
+
+  const renderItem = ({item, index}) => {
+    return (
+      <View key={index}>
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => {
+            filterObject.id = item._id;
+            navigation.navigate('ContributonDetails', {data: filterObject});
+          }}
+          key={index}
+          style={{
+            marginBottom: scale(15),
+            marginHorizontal: scale(15),
+          }}>
+          <View style={[g.bgWhite, g.boxShadow, {borderRadius: scale(10)}]}>
+            <View style={[g.bggray3, style.backgroundBorder]}>
+              {loadContributionPhoto(item.contributionsPhoto)}
+            </View>
+            <View style={[g.pr10, g.pl10, g.pt5, g.pb5]}>
+              <Text
+                numberOfLines={1}
+                style={[
+                  g.FHNB,
+                  g.fs15,
+                  g.colorBlack,
+                  GlobalInclude.AppStyle.transform,
+                ]}>
+                {item.title && item.title !== undefined && item.title !== null
+                  ? item.title
+                  : 'N/A'}
+              </Text>
+              <Text
+                style={[
+                  g.fs14,
+                  g.mt5,
+                  g.FHNM,
+                  GlobalInclude.AppStyle.transform,
+                  g.colorBlack,
+                ]}
+                numberOfLines={1}>
+                {`Raised so far - ${item.totalRaisedInPr}%`}
+              </Text>
+
+              <NumberFormat
+                value={item.amountTORaise}
+                displayType={'text'}
+                thousandSeparator={true}
+                prefix={'₹'}
+                decimalScale={2}
+                fixedDecimalScale
+                renderText={formattedValue => (
+                  <Text
+                    style={[
+                      g.fs14,
+                      g.mt5,
+                      g.FHNM,
+                      GlobalInclude.AppStyle.transform,
+                      g.colorBlue,
+                    ]}
+                    numberOfLines={1}>
+                    To Raise{' '}
+                    <Text
+                      style={[
+                        g.fs14,
+                        g.mt5,
+                        g.FHNB,
+                        GlobalInclude.AppStyle.upper,
+                        g.colorBlue,
+                      ]}
+                      numberOfLines={1}>
+                      {`${formattedValue} - ${item.currency}`}
+                    </Text>
+                  </Text>
+                )}
+              />
+            </View>
+          </View>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const headerDistance = Animated.diffClamp(
+    curY,
+    0,
+    searchCategory.length > 0 ? 328 : animatedHeight,
+  ).interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -1],
+  });
+
+  const renderHeader = () => {
+    return (
+      <Animated.View
+        style={[
+          g.newHeaderConcept,
+          {
+            transform: [
+              {
+                translateY: headerDistance,
+              },
+            ],
+          },
+        ]}
+        onLayout={({nativeEvent}) => {
+          setAnimatedHeight(nativeEvent.layout.height);
+        }}>
+        <View
+          style={[
+            GlobalInclude.AppStyle.contentSpace,
+            {marginBottom: scale(10)},
+          ]}>
+          <SocialWorkSearch
+            changeText={text => {
+              setFilterQuery(text);
+              if (text.length === 0) {
+                Keyboard.dismiss();
+                setSearchCategory([]);
+                resetCount();
+              } else if (text.length >= 2) {
+                resetCount();
+                filterObject.s = text;
+              }
+            }}
+            filterQuery={filterQuery}
+            onFilterPress={() => {
+              if (
+                refCategory.current !== undefined &&
+                refCategory.current !== null
+              ) {
+                refCategory.current.open();
+              }
+            }}
+          />
+        </View>
+      </Animated.View>
+    );
+  };
+
+  return (
+    <View style={[GlobalInclude.AppStyle.fill, g.bgWhite]}>
+      <TopHeaderView
+        index={14}
+        navigation={navigation}
+        label={'Contributions'}
+        customIcon={{
+          containerStyle: {height: scale(24), width: scale(24)},
+          iconColor: GlobalInclude.Color.ColorPrimary,
+          iconName: 'dots-horizontal',
+          size: scale(24),
+          type: IconType[1],
+        }}
+        customIconPress={() => {
+          if (refOptions.current !== undefined && refOptions.current !== null) {
+            refOptions.current.open();
+          }
+        }}
+      />
+      <SafeAreaView style={GlobalInclude.AppStyle.fill}>
+        <View style={GlobalInclude.AppStyle.fill}>
+          {firstTimeLoad ? (
+            <View style={GlobalInclude.AppStyle.fillCenter}>
+              <ActivityIndicator
+                size={'small'}
+                color={GlobalInclude.Color.ColorPrimary}
+              />
+            </View>
+          ) : (
+            <Animated.FlatList
+              ref={flatList}
+              showsVerticalScrollIndicator={false}
+              extraData={pageContent}
+              data={pageContent}
+              renderItem={renderItem}
+              keyExtractor={(item, index) => index.toString()}
+              onEndReachedThreshold={0.1}
+              onEndReached={onEndReached}
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              ListEmptyComponent={renderNoDataComponent}
+              ListFooterComponent={renderFooter}
+              contentContainerStyle={{
+                marginTop: animatedHeight,
+                paddingBottom:
+                  searchCategory.length > 0 ? scale(280) : scale(130),
+              }}
+              scrollEventThrottle={16}
+              onScroll={Animated.event(
+                [{nativeEvent: {contentOffset: {y: curY}}}],
+                {useNativeDriver: true},
+              )}
+            />
+          )}
+
+          {renderHeader()}
+        </View>
+      </SafeAreaView>
+
+      <FilterCategory
+        refRBSheet={refCategory}
+        dataList={categoryList}
+        title={'Select'}
+        selectedFilter={selectedCategory}
+        setSelectedFilter={(value, item) => {
+          Keyboard.dismiss();
+          resetCount();
+          if (item.key === -2) {
+            filterObject.past = true;
+          } else if (item.key !== -1) {
+            filterObject.category = value;
+          }
+          setSelectedCategory(Helper.capitalize(value));
+
+          refCategory.current.close();
+          setFirstTimeLoad(true);
+        }}
+        onClose={() => {}}
+      />
+
+      {userOptions}
+    </View>
+  );
+};
+
+const style = StyleSheet.create({
+  searchIcon: {
+    height: scale(20),
+    width: scale(20),
+    alignSelf: 'center',
+    marginEnd: scale(6),
+    marginStart: scale(6),
+  },
+  filterButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: scale(150),
+    alignContent: 'center',
+    alignSelf: 'center',
+  },
+  filterText: {
+    paddingTop: 12,
+    paddingBottom: 12,
+    borderTopColor: '#dddddd',
+    borderTopWidth: 1,
+    borderBottomColor: '#dddddd',
+    borderBottomWidth: 1,
+  },
+  footerView: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  videoContainer: {
+    aspectRatio: 16 / 9,
+    width: '100%',
+    borderRadius: scale(10),
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    justifyContent: 'center',
+  },
+  overlayStyle: {
+    backgroundColor: '#00000066',
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    top: 0,
+    left: 0,
+    zIndex: 1,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    borderRadius: scale(10),
+  },
+  thumbStyle: {
+    borderRadius: scale(10),
+    aspectRatio: 16 / 9,
+    width: '100%',
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  playIconstyle: {
+    position: 'absolute',
+    zIndex: 9,
+    bottom: 15,
+    left: 15,
+  },
+  imageStyle: {
+    aspectRatio: 16 / 9,
+    borderRadius: scale(10),
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  grayColorText: {color: '#bababa'},
+  backgroundBorder: {
+    borderRadius: scale(10),
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    overflow: 'hidden',
+  },
+});
+
+export default ContributionsList;

@@ -256,6 +256,9 @@ export default StyleSheet.create({
   transform: {
     textTransform: 'capitalize',
   },
+  upper: {
+    textTransform: 'uppercase',
+  },
   triangleShape: {
     width: 0,
     height: 0,
