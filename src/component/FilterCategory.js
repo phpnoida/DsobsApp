@@ -43,7 +43,7 @@ const FilterCategory = ({
     <RadioButton
       defaultSelected={selectedFilter}
       PROP={dataList}
-      onRadioSelect={(item) => {
+      onRadioSelect={item => {
         setSelectedFilter(item.text.toString(), item);
       }}
     />

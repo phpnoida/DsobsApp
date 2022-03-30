@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   Text,
   View,
@@ -26,7 +26,7 @@ import {
   addUserComment,
   updateUserComment,
   removeUserComment,
-} from '../../../Actions/SocialVenturesActions';
+} from '../../../Actions/ContributionActions';
 
 const PaginationStatus = {
   firstLoad: 0,
@@ -34,14 +34,14 @@ const PaginationStatus = {
   allLoaded: 2,
 };
 let filterObject = {
-  index: 0,
-  size: 10,
+  page: 1,
+  limit: 10,
 };
 let commentId = '';
 let lastIndex = -1;
 let totalCount = 0;
 
-const Comments = ({ventureId, navigation}) => {
+const Comments = ({contributeId, navigation}) => {
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [commentError, setCommentError] = useState('');
@@ -59,10 +59,8 @@ const Comments = ({ventureId, navigation}) => {
     lastIndex = -1;
     totalCount = 0;
 
-    console.log('focus', ventureId);
     if (global.isConnected) {
       resetCount();
-
       if (global.isConnected) {
         getCommentsList();
       } else {
@@ -71,7 +69,7 @@ const Comments = ({ventureId, navigation}) => {
     }
 
     return () => {};
-  }, [ventureId, navigation]);
+  }, [navigation, resetCount, getCommentsList]);
 
   /**
    *
@@ -80,15 +78,13 @@ const Comments = ({ventureId, navigation}) => {
    */
   const onPaginate = () => {
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
-      console.log('onPaginate()');
       setPaginationStatus(PaginationStatus.waiting);
-      filterObject.index = filterObject.index + 1;
+      filterObject.page = filterObject.page + 1;
       getCommentsList();
     }
   };
 
   const onEndReached = () => {
-    console.log('onEndReached()');
     if (comments.length === totalCount || comments.length < 10) {
       setPaginationStatus(PaginationStatus.allLoaded);
       return;
@@ -99,19 +95,18 @@ const Comments = ({ventureId, navigation}) => {
   };
 
   const handleRefresh = () => {
-    filterObject.index = 0;
+    filterObject.page = 0;
     setIsRefreshing(false);
     resetCount();
     getCommentsList();
   };
 
-  const resetCount = () => {
+  const resetCount = useCallback(() => {
     totalCount = 0;
     filterObject = {};
-    filterObject.index = 0;
-    filterObject.size = 10;
-    filterObject.ventureId = ventureId;
-  };
+    filterObject.page = 1;
+    filterObject.limit = 10;
+  }, []);
   /**
    *
    * Pagination
@@ -124,10 +119,11 @@ const Comments = ({ventureId, navigation}) => {
    *
    *
    */
-  const getCommentsList = () => {
+  const getCommentsList = useCallback(() => {
     getComments(
+      contributeId,
       filterObject,
-      (response) => {
+      response => {
         setFirstTimeLoad(false);
         setIsRefreshing(false);
         if (response && response !== null) {
@@ -146,11 +142,11 @@ const Comments = ({ventureId, navigation}) => {
                     commentList.push(items[key]);
                   }
                 }
-                if (filterObject.index === 0) {
+                if (filterObject.page === 1) {
                   totalCount = data.totalCount;
                   setComments([...commentList]);
                 } else {
-                  setComments([...comments, ...commentList]);
+                  setComments(old => [...old, ...commentList]);
                 }
               }
               setPaginationStatus(PaginationStatus.waiting);
@@ -159,26 +155,22 @@ const Comments = ({ventureId, navigation}) => {
         }
       },
       (code, error) => {
-        console.log('====================================');
-        console.log('code', code, error);
-        console.log('====================================');
         setComments([]);
         setFirstTimeLoad(false);
-        console.log('error->', error);
       },
     );
-  };
+  }, [contributeId]);
 
   const postUserComment = () => {
     let requestObject = {
-      ventureId: filterObject.ventureId,
+      contributionId: contributeId,
       depth: 0,
       parentId: '',
       commentText: commentText,
     };
     addUserComment(
       requestObject,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -187,20 +179,6 @@ const Comments = ({ventureId, navigation}) => {
           ) {
             let data = response.data;
             if (data.status) {
-              // let commentList = comments;
-              // let detail = {};
-
-              // detail._id = global.userDetails._id;
-              // detail.profileImg = global.userDetails.profileImg;
-              // detail.lastName = global.userDetails.lastName;
-              // detail.batch = global.userDetails.batch;
-              // detail.firstName = global.userDetails.firstName;
-
-              // let item = data.data;
-              // item.authorId = detail;
-              // commentList.splice(0, 0, item);
-              // setComments([...commentList]);
-
               lastIndex = -1;
               commentId = '';
               setCommentError('');
@@ -241,7 +219,7 @@ const Comments = ({ventureId, navigation}) => {
     updateUserComment(
       requestObject,
       commentId,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -280,7 +258,7 @@ const Comments = ({ventureId, navigation}) => {
   const deleteUserCommentData = () => {
     removeUserComment(
       commentId,
-      (response) => {
+      response => {
         if (response && response !== null) {
           if (
             response.data &&
@@ -368,7 +346,7 @@ const Comments = ({ventureId, navigation}) => {
         style={g.mb10}
         key={index}
         onLongPress={
-          global.userId === item.authorId._id
+          global.userId === item?.authorId?._id
             ? () => {
                 lastIndex = index;
                 commentId = item._id;
@@ -382,7 +360,7 @@ const Comments = ({ventureId, navigation}) => {
           <TouchableOpacity
             onPress={() => {
               navigation.navigate('UserProfile', {
-                userId: item.authorId._id,
+                userId: item?.authorId?._id,
               });
             }}
             style={[
@@ -391,13 +369,13 @@ const Comments = ({ventureId, navigation}) => {
               g.oh,
               {width: scale(35), height: scale(35), borderRadius: scale(50)},
             ]}>
-            {item.authorId !== undefined &&
-            item.authorId !== null &&
-            item.authorId.profileImg !== undefined &&
-            item.authorId.profileImg !== null &&
-            item.authorId.profileImg !== '' ? (
+            {item?.authorId !== undefined &&
+            item?.authorId !== null &&
+            item?.authorId?.profileImg !== undefined &&
+            item?.authorId?.profileImg !== null &&
+            item?.authorId?.profileImg !== '' ? (
               <ProgressImage
-                source={{uri: item.authorId.profileImg}}
+                source={{uri: item?.authorId?.profileImg}}
                 containerStyle={styles.imageStyle}
                 mode={'cover'}
               />
@@ -415,12 +393,12 @@ const Comments = ({ventureId, navigation}) => {
                 style={[g.fs15, g.FHNM, g.colordarkGray, grid.col, g.mr5]}
                 onPress={() => {
                   navigation.navigate('UserProfile', {
-                    userId: item.authorId._id,
+                    userId: item?.authorId?._id,
                   });
                 }}>
-                {item.authorId !== undefined && item.authorId !== null
-                  ? `${Helper.concatName(item.authorId)} (${
-                      item.authorId.batch
+                {item?.authorId !== undefined && item?.authorId !== null
+                  ? `${Helper.concatName(item?.authorId)} (${
+                      item?.authorId?.batch
                     })`
                   : 'N/A'}
               </Text>
@@ -443,53 +421,6 @@ const Comments = ({ventureId, navigation}) => {
                 ? item.commentText
                 : 'N/A'}
             </Text>
-            {/* {global.userId === item.authorId._id ? (
-              <View style={[grid.rowdir, g.mb5, grid.justifyContentRight]}>
-                <TouchableOpacity
-                  hitSlop={{top: 10, bottom: 10, left: 10, right: 0}}
-                  activeOpacity={0.8}
-                  onPress={() => {}}
-                  style={[
-                    grid.rowdir,
-                    grid.alignItems,
-                    grid.justifyContentCenter,
-                    g.bgBlue,
-                    g.mr10,
-                    styles.iconContainer,
-                  ]}>
-                  <GlobalInclude.BaseIcon
-                    containerStyle={{height: scale(12), width: scale(12)}}
-                    iconColor={'#fff'}
-                    iconName={'pencil'}
-                    iconSize={scale(12)}
-                    iconType={IconType[4]}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    commentId = item._id;
-                    lastIndex = index;
-                    removeIndex();
-                  }}
-                  style={[
-                    grid.rowdir,
-                    grid.alignItems,
-                    grid.justifyContentCenter,
-                    g.bgBlue,
-                    styles.iconContainer,
-                  ]}>
-                  <GlobalInclude.BaseIcon
-                    containerStyle={{height: scale(12), width: scale(12)}}
-                    iconColor={'#fff'}
-                    iconName={'close'}
-                    iconSize={scale(12)}
-                    iconType={IconType[4]}
-                  />
-                </TouchableOpacity>
-              </View>
-            ) : null} */}
           </View>
         </View>
         <View style={{borderBottomWidth: 0.5, borderBottomColor: '#e5e5e5'}} />
@@ -590,7 +521,7 @@ const Comments = ({ventureId, navigation}) => {
                   g.textareaStyle,
                   {minHeight: 160, maxHeight: 160, height: 160},
                 ]}
-                onChangeText={(comment) => {
+                onChangeText={comment => {
                   setCommentText(comment);
                 }}
               />

@@ -27,6 +27,10 @@ import FilterCategory from '../../component/FilterCategory';
 import {URL_REGX, IconType} from '../../helper/Constants';
 import Helper from '../../helper/Helper';
 import NumberFormat from 'react-number-format';
+import {
+  getContributions,
+  getFilterData,
+} from '../../Actions/ContributionActions';
 
 const {urlRegex} = URL_REGX;
 
@@ -38,9 +42,10 @@ const PaginationStatus = {
 
 let totalCount = 0;
 let categoryListMain = [];
+
 let filterObject = {
-  index: 0,
-  size: 10,
+  page: 1,
+  limit: 10,
 };
 
 let curY = new Animated.Value(0);
@@ -51,42 +56,9 @@ const ContributionsList = ({navigation}) => {
   const flatList = useRef();
   const refOptions = useRef();
 
-  const [firstTimeLoad, setFirstTimeLoad] = useState(false);
+  const [firstTimeLoad, setFirstTimeLoad] = useState(true);
   const [filterQuery, setFilterQuery] = useState('');
-  const [pageContent, setPageContent] = useState([
-    {
-      currency: 'INR',
-      totalRaised: 0,
-      totalRaisedInPr: 0,
-      status: 0,
-      _id: '6242de2423962f2080c8064c',
-      amountTORaise: 2000,
-      title: 'DEV',
-      closingDate: 1711673044,
-      contributionsPhoto: 'https://live-thequorum.incred.io/images/logo.png',
-      description: 'Safsgdyretre',
-      media: [],
-      createdAt: '2022-03-29T10:23:32.969Z',
-      updatedAt: '2022-03-29T10:23:32.969Z',
-      __v: 0,
-    },
-    {
-      currency: 'INR',
-      totalRaised: 0,
-      totalRaisedInPr: 0,
-      status: 0,
-      _id: '6242de2423962f2080c8064c',
-      amountTORaise: 2000,
-      title: 'DEV',
-      closingDate: 1711673044,
-      contributionsPhoto: 'https://www.youtube.com/watch?v=EngW7tLk6R8',
-      description: 'Safsgdyretre',
-      media: [],
-      createdAt: '2022-03-29T10:23:32.969Z',
-      updatedAt: '2022-03-29T10:23:32.969Z',
-      __v: 0,
-    },
-  ]);
+  const [pageContent, setPageContent] = useState([]);
   const [paginationStatus, setPaginationStatus] = useState(
     PaginationStatus.firstLoad,
   );
@@ -97,18 +69,96 @@ const ContributionsList = ({navigation}) => {
   const [searchCategory, setSearchCategory] = useState([]);
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {});
+    const unsubscribe = navigation.addListener('focus', () => {
+      refreshData();
+    });
 
     return () => {
       unsubscribe();
     };
-  }, [navigation]);
+  }, [navigation, refreshData]);
 
   /*****
    *
    * API Section
    *
    */
+
+  const categoryListRequest = useCallback(() => {
+    getFilterData(
+      response => {
+        getContributionList();
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+            if (data.status) {
+              let categoryArray = [];
+              const categoryObject = data?.data ?? {};
+
+              if (categoryObject !== null) {
+                categoryArray.push({key: -1, text: 'All Contributions'});
+                for (var key in categoryObject) {
+                  if (categoryObject.hasOwnProperty(key)) {
+                    if (key !== '1' || key !== '2') {
+                      categoryArray.push({key: key, text: categoryObject[key]});
+                    }
+                  }
+                }
+              }
+              categoryListMain = categoryArray;
+              setCategoryList(categoryArray);
+              setSelectedCategory('All Contributions');
+            }
+          }
+        }
+      },
+      error => {
+        getContributionList();
+      },
+    );
+  }, [getContributionList]);
+
+  const getContributionList = useCallback(() => {
+    getContributions(
+      filterObject,
+      response => {
+        manageResponse(response);
+      },
+      error => {},
+    );
+  }, [manageResponse]);
+
+  const manageResponse = useCallback(response => {
+    setIsRefreshing(false);
+    if (response && response !== null) {
+      if (
+        response.data &&
+        response.data !== undefined &&
+        response.data !== null
+      ) {
+        let data = response.data;
+        if (data.status) {
+          if (filterObject.page === 1) {
+            totalCount = data.totalCount;
+            setPageContent([...data.data]);
+          } else {
+            setPageContent(old => [...old, ...data.data]);
+          }
+          setPaginationStatus(PaginationStatus.waiting);
+        }
+      }
+    }
+    setFirstTimeLoad(false);
+  }, []);
+
+  const refreshData = useCallback(() => {
+    resetCount();
+    categoryListRequest();
+  }, [categoryListRequest]);
 
   /**
    *
@@ -118,7 +168,7 @@ const ContributionsList = ({navigation}) => {
   const onPaginate = () => {
     if (paginationStatus !== PaginationStatus.allLoaded && !isRefreshing) {
       setPaginationStatus(PaginationStatus.waiting);
-      filterObject.index = filterObject.index + 1;
+      filterObject.page = filterObject.page + 1;
     }
   };
 
@@ -133,7 +183,7 @@ const ContributionsList = ({navigation}) => {
   };
 
   const handleRefresh = () => {
-    filterObject.index = 0;
+    filterObject.page = 1;
     setIsRefreshing(false);
     resetCount();
   };
@@ -141,7 +191,7 @@ const ContributionsList = ({navigation}) => {
   const resetCount = () => {
     totalCount = 0;
     filterObject = {};
-    filterObject.index = 0;
+    filterObject.page = 1;
     filterObject.size = 10;
   };
   /**
@@ -254,8 +304,8 @@ const ContributionsList = ({navigation}) => {
         <TouchableOpacity
           activeOpacity={1}
           onPress={() => {
-            filterObject.id = item._id;
-            navigation.navigate('ContributonDetails', {data: filterObject});
+            // filterObject.id = item._id;
+            navigation.navigate('ContributonDetails', {data: item._id});
           }}
           key={index}
           style={{
@@ -318,7 +368,7 @@ const ContributionsList = ({navigation}) => {
                         g.colorBlue,
                       ]}
                       numberOfLines={1}>
-                      {`${formattedValue} - ${item.currency}`}
+                      {formattedValue}
                     </Text>
                   </Text>
                 )}
@@ -365,11 +415,12 @@ const ContributionsList = ({navigation}) => {
               setFilterQuery(text);
               if (text.length === 0) {
                 Keyboard.dismiss();
-                setSearchCategory([]);
                 resetCount();
+                getContributionList();
               } else if (text.length >= 2) {
                 resetCount();
-                filterObject.s = text;
+                filterObject.search = text;
+                getContributionList();
               }
             }}
             filterQuery={filterQuery}
@@ -454,19 +505,19 @@ const ContributionsList = ({navigation}) => {
         setSelectedFilter={(value, item) => {
           Keyboard.dismiss();
           resetCount();
-          if (item.key === -2) {
-            filterObject.past = true;
-          } else if (item.key !== -1) {
-            filterObject.category = value;
+          if (item.key !== -1) {
+            filterObject.status = value;
+          } else {
+            delete filterObject.status;
           }
           setSelectedCategory(Helper.capitalize(value));
 
           refCategory.current.close();
+          getContributionList();
           setFirstTimeLoad(true);
         }}
         onClose={() => {}}
       />
-
       {userOptions}
     </View>
   );

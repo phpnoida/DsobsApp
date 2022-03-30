@@ -3,7 +3,7 @@ import {Text, View, TouchableOpacity, ActivityIndicator} from 'react-native';
 import g from '../theme/global';
 import {scale} from '../theme/Scalling';
 
-const CommonButtonGray = (props) => {
+const CommonButtonGray = props => {
   return (
     <TouchableOpacity
       activeOpacity={1}
@@ -15,6 +15,7 @@ const CommonButtonGray = (props) => {
         width: '100%',
         height: scale(38),
         justifyContent: 'center',
+        ...props.customStyle,
       }}
       onPress={() => {
         props.onPress();

@@ -22,33 +22,18 @@ const showTaggedUsers = (navigation, users) => {
 
   for (let i = 0; i < users.length; i++) {
     let item = users[i];
+    let contributorName = '';
+    if (item.fromSchool) {
+      contributorName = item?.contributerId?.name ?? '';
+    } else {
+      contributorName = item?.contributerName ?? '';
+    }
+
     console.log(item);
     const component = (
       <View key={i}>
-        {showUser(item.profilePic, item.name, item.batch, null, () => {
-          if (item.fromSchool) {
-            navigation.navigate('UserProfile', {
-              userId: item._id,
-            });
-          }
-        })}
-      </View>
-    );
-
-    componentArray.push(component);
-  }
-  return componentArray;
-};
-
-const TheTeam = ({content, navigation}) => (
-  <ScrollView
-    style={[g.pl10, g.pr10, grid.flex1]}
-    contentContainerStyle={g.pb30}
-    showsVerticalScrollIndicator={false}>
-    <View style={g.p5}>
-      <>
         <TouchableOpacity
-          style={[grid.row, grid.alignItems]}
+          style={[grid.row, grid.alignItems, g.mb10]}
           activeOpacity={0.8}
           onPress={() => {}}>
           <View
@@ -62,7 +47,13 @@ const TheTeam = ({content, navigation}) => (
               },
             ]}>
             <ProgresImage
-              source={GlobalInclude.Assets.DefaultProfile}
+              source={
+                item?.image !== undefined &&
+                item?.image !== null &&
+                item?.image !== ''
+                  ? {uri: item.image}
+                  : GlobalInclude.Assets.DefaultProfile
+              }
               containerStyle={{
                 aspectRatio: 1 / 1,
                 height: scale(50),
@@ -85,7 +76,7 @@ const TheTeam = ({content, navigation}) => (
                 GlobalInclude.AppStyle.transform,
               ]}
               numberOfLines={1}>
-              John Karter
+              {item?.showName ? contributorName : 'Anonymous'}
             </Text>
             <View style={{marginVertical: scale(2)}} />
             <Text
@@ -102,7 +93,7 @@ const TheTeam = ({content, navigation}) => (
             <View style={{marginVertical: scale(2)}} />
           </View>
           <NumberFormat
-            value={13000}
+            value={item?.totalContribute ?? 0}
             displayType={'text'}
             thousandSeparator={true}
             prefix={'₹'}
@@ -124,66 +115,27 @@ const TheTeam = ({content, navigation}) => (
             )}
           />
         </TouchableOpacity>
-      </>
+      </View>
+    );
 
-      {/* {content.organizer &&
-      content.organizer !== undefined &&
-      content.organizer !== null &&
-      content.organizer.length > 0 ? (
+    componentArray.push(component);
+  }
+  return componentArray;
+};
+
+const TheTeam = ({content, navigation}) => (
+  <ScrollView
+    style={[g.pl10, g.pr10, grid.flex1]}
+    contentContainerStyle={g.pb30}
+    showsVerticalScrollIndicator={false}>
+    <View style={g.p5}>
+      {content.contributor &&
+      content.contributor !== undefined &&
+      content.contributor !== null &&
+      content.contributor.length > 0 ? (
         <>
           <View style={[g.ml10, g.mb15]}>
-            <TouchableOpacity activeOpacity={0.8} onPress={() => {}}>
-              <View
-                style={[
-                  g.bglightGray,
-                  g.oh,
-                  {
-                    borderRadius: 100,
-                    justifyContent: 'center',
-                    alignSelf: 'center',
-                  },
-                ]}>
-                <ProgresImage
-                  source={GlobalInclude.Assets.DefaultProfile}
-                  containerStyle={{
-                    aspectRatio: 1 / 1,
-                    height: scale(70),
-                    alignSelf: 'center',
-                    justifyContent: 'center',
-                  }}
-                  imageStyle={{
-                    aspectRatio: 1 / 1,
-                  }}
-                  mode={'cover'}
-                />
-              </View>
-              <View style={{minHeight: 65, flex: 1}}>
-                <Text
-                  style={[
-                    g.fs14,
-                    g.FHNM,
-                    g.txtLeft,
-                    g.colorBlack,
-                    GlobalInclude.AppStyle.transform,
-                  ]}
-                  numberOfLines={2}>
-                  John Karter
-                </Text>
-                <View style={{marginVertical: scale(2)}} />
-                <Text
-                  style={[
-                    g.fs12,
-                    g.FHNR,
-                    g.txtLeft,
-                    g.colorGray1,
-                    grid.alignItems,
-                    grid.justifyContentCenter,
-                  ]}>
-                  Batch-1994
-                </Text>
-                <View style={{marginVertical: scale(2)}} />
-              </View>
-            </TouchableOpacity>
+            {showTaggedUsers(navigation, content.contributor)}
           </View>
         </>
       ) : (
@@ -194,7 +146,7 @@ const TheTeam = ({content, navigation}) => (
             </Text>
           </View>
         </View>
-      )} */}
+      )}
     </View>
   </ScrollView>
 );

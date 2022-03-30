@@ -23,54 +23,68 @@ import {APP_NAME, URL_REGX} from '../../../helper/Constants';
 import Description from './Description';
 import TheTeam from './TheTeam';
 import PitchDocument from './PitchDocument';
-import Tags from './Tags';
 import Comments from './Comments';
 import CommonButton from '../../../component/CommonButton';
 import NumberFormat from 'react-number-format';
-import * as Progress from 'react-native-progress';
+import SemiCircleProgress from '../../../component/SemiCircleProgress';
+import {getContributionDetail} from '../../../Actions/ContributionActions';
 
 const {urlRegex} = URL_REGX;
-let filterObject = {};
+let contributeId = '';
 
 const ContributionDetails = ({route, navigation}) => {
-  const {width} = useWindowDimensions();
-  const [isLoading, setIsLoading] = useState(false);
-  const [pageContent, setPageContent] = useState({
-    currency: 'INR',
-    totalRaised: 1850,
-    totalRaisedInPr: 85,
-    status: 0,
-    _id: '6242de2423962f2080c8064c',
-    amountTORaise: 2000,
-    title: 'DEV',
-    closingDate: 1711673044,
-    contributionsPhoto: 'https://live-thequorum.incred.io/images/logo.png',
-    description:
-      'In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before the final copy is available.',
-    media: [],
-    createdAt: '2022-03-29T10:23:32.969Z',
-    updatedAt: '2022-03-29T10:23:32.969Z',
-    __v: 0,
-  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [pageContent, setPageContent] = useState(null);
 
   useEffect(() => {
     if (route.params && route.params !== undefined && route.params !== null) {
-      filterObject = route.params.data;
-      console.log('====================================');
-      console.log('data', filterObject);
-      console.log('====================================');
+      contributeId = route.params.data;
+
+      console.log('contributeId', contributeId);
     }
-    // if (filterObject !== undefined && filterObject !== null) {
-    //   getSocialWork();
-    // }
+    if (contributeId !== undefined && contributeId !== null) {
+      getContributionList();
+    }
     return () => {};
-  }, [route]);
+  }, [route, getContributionList]);
 
   /****
    *
    * API Section
    *
    */
+  const getContributionList = useCallback(() => {
+    getContributionDetail(
+      contributeId,
+      response => {
+        manageResponse(response);
+      },
+      error => {
+        setIsLoading(false);
+        setPageContent(null);
+      },
+    );
+  }, [manageResponse]);
+
+  const manageResponse = useCallback(response => {
+    setIsLoading(false);
+    if (response && response !== null) {
+      if (
+        response.data &&
+        response.data !== undefined &&
+        response.data !== null
+      ) {
+        let data = response.data;
+        if (data.status) {
+          const {resData, contributor} = data;
+
+          resData.contributor = contributor;
+
+          setPageContent(resData);
+        }
+      }
+    }
+  }, []);
 
   /****
    *
@@ -160,158 +174,177 @@ const ContributionDetails = ({route, navigation}) => {
               />
             </View>
           ) : (
-            <View style={GlobalInclude.AppStyle.fill}>
-              <View style={GlobalInclude.AppStyle.fill}>
-                <View
-                  style={[
-                    g.bggray3,
-                    style.backgroundBorder,
-                    g.mt15,
-                    g.ml10,
-                    g.mr10,
-                  ]}>
-                  {loadContributionPhoto(pageContent.contributionsPhoto)}
-                </View>
-                <View
-                  style={[
-                    GlobalInclude.AppStyle.center,
-                    GlobalInclude.AppStyle.textCenter,
+            <>
+              {pageContent !== null && pageContent !== undefined ? (
+                <>
+                  <View style={GlobalInclude.AppStyle.fill}>
+                    <View style={GlobalInclude.AppStyle.fill}>
+                      <View
+                        style={[
+                          g.bggray3,
+                          style.backgroundBorder,
+                          g.mt15,
+                          g.ml10,
+                          g.mr10,
+                        ]}>
+                        {loadContributionPhoto(pageContent.contributionsPhoto)}
+                      </View>
+                      <View style={[g.mt5, g.p5]}>
+                        <View style={[g.boxShadow, g.bgWhite, g.br3]}>
+                          <View
+                            style={[
+                              grid.alignItems,
+                              grid.justifyContentCenter,
+                              g.mb10,
+                              g.mt10,
+                            ]}>
+                            <SemiCircleProgress
+                              percentage={
+                                pageContent.totalRaisedInPr > 100
+                                  ? 100
+                                  : pageContent.totalRaisedInPr
+                              }
+                              circleRadius={70}
+                              progressWidth={15}
+                              progressColor={GlobalInclude.Color.ColorPrimary}>
+                              <Text
+                                style={[
+                                  g.fs24,
+                                  g.FHNB,
+                                  GlobalInclude.AppStyle.transform,
+                                  g.colorBlue,
+                                ]}>{`${
+                                pageContent.totalRaisedInPr > 100
+                                  ? '100'
+                                  : pageContent.totalRaisedInPr
+                              }%`}</Text>
+                            </SemiCircleProgress>
+                          </View>
 
-                    grid.alignItems,
-                    g.mt5,
-                    g.p5,
-                  ]}>
-                  <View style={[g.boxShadow, g.bgWhite, g.br3]}>
-                    <Progress.Bar
-                      height={scale(5)}
-                      width={width - 20}
-                      progress={pageContent.totalRaisedInPr / 100}
-                      borderRadius={scale(8)}
-                      borderWidth={0}
-                      unfilledColor={'#f8f8f8'}
-                      color={GlobalInclude.Color.ColorPrimary}
-                    />
-                    <View style={[g.mb5, GlobalInclude.AppStyle.row]}>
-                      <View
-                        style={[
-                          grid.col,
-                          GlobalInclude.AppStyle.center,
-                          GlobalInclude.AppStyle.textCenter,
-                          grid.alignItems,
-                          g.mr5,
-                        ]}>
-                        <Text
-                          style={[
-                            g.fs15,
-                            g.FHNM,
-                            GlobalInclude.AppStyle.transform,
-                            g.colorBlue,
-                          ]}
-                          numberOfLines={1}>
-                          Total to Raise
-                        </Text>
-                        <NumberFormat
-                          value={pageContent.amountTORaise}
-                          displayType={'text'}
-                          thousandSeparator={true}
-                          prefix={'₹'}
-                          decimalScale={2}
-                          fixedDecimalScale
-                          renderText={formattedValue => (
-                            <Text
+                          <View style={[g.mb5, GlobalInclude.AppStyle.row]}>
+                            <View
                               style={[
-                                g.fs20,
-                                g.FHNB,
-                                GlobalInclude.AppStyle.upper,
-                                g.colorBlue,
-                              ]}
-                              numberOfLines={1}>
-                              {formattedValue}
-                            </Text>
-                          )}
-                        />
-                      </View>
-                      <View
-                        style={[
-                          grid.col,
-                          GlobalInclude.AppStyle.center,
-                          GlobalInclude.AppStyle.textCenter,
-                          grid.alignItems,
-                          g.ml5,
-                        ]}>
-                        <Text
-                          style={[
-                            g.fs15,
-                            g.FHNM,
-                            GlobalInclude.AppStyle.transform,
-                            g.colorBlue,
-                          ]}
-                          numberOfLines={1}>
-                          Raised so far
-                        </Text>
-                        <NumberFormat
-                          value={pageContent.totalRaised}
-                          displayType={'text'}
-                          thousandSeparator={true}
-                          prefix={'₹'}
-                          decimalScale={2}
-                          fixedDecimalScale
-                          renderText={formattedValue => (
-                            <Text
+                                grid.col,
+                                GlobalInclude.AppStyle.center,
+                                GlobalInclude.AppStyle.textCenter,
+                                grid.alignItems,
+                                g.mr5,
+                              ]}>
+                              <Text
+                                style={[
+                                  g.fs15,
+                                  g.FHNM,
+                                  GlobalInclude.AppStyle.transform,
+                                  g.colorBlue,
+                                ]}
+                                numberOfLines={1}>
+                                Total to Raise
+                              </Text>
+                              <NumberFormat
+                                value={pageContent.amountTORaise}
+                                displayType={'text'}
+                                thousandSeparator={true}
+                                prefix={'₹'}
+                                decimalScale={2}
+                                fixedDecimalScale
+                                renderText={formattedValue => (
+                                  <Text
+                                    style={[
+                                      g.fs20,
+                                      g.FHNB,
+                                      GlobalInclude.AppStyle.upper,
+                                      g.colorBlue,
+                                    ]}
+                                    numberOfLines={1}>
+                                    {formattedValue}
+                                  </Text>
+                                )}
+                              />
+                            </View>
+                            <View
                               style={[
-                                g.fs20,
-                                g.FHNB,
-                                GlobalInclude.AppStyle.upper,
-                                g.colorBlue,
-                              ]}
-                              numberOfLines={1}>
-                              {formattedValue}
-                            </Text>
-                          )}
-                        />
+                                grid.col,
+                                GlobalInclude.AppStyle.center,
+                                GlobalInclude.AppStyle.textCenter,
+                                grid.alignItems,
+                                g.ml5,
+                              ]}>
+                              <Text
+                                style={[
+                                  g.fs15,
+                                  g.FHNM,
+                                  GlobalInclude.AppStyle.transform,
+                                  g.colorBlue,
+                                ]}
+                                numberOfLines={1}>
+                                Raised so far
+                              </Text>
+                              <NumberFormat
+                                value={pageContent.totalRaised}
+                                displayType={'text'}
+                                thousandSeparator={true}
+                                prefix={'₹'}
+                                decimalScale={2}
+                                fixedDecimalScale
+                                renderText={formattedValue => (
+                                  <Text
+                                    style={[
+                                      g.fs20,
+                                      g.FHNB,
+                                      GlobalInclude.AppStyle.upper,
+                                      g.colorBlue,
+                                    ]}
+                                    numberOfLines={1}>
+                                    {formattedValue}
+                                  </Text>
+                                )}
+                              />
+                            </View>
+                          </View>
+                        </View>
                       </View>
+
+                      <ScrollableTabView
+                        underlineColor={'#ffffff'}
+                        initialPage={0}
+                        tabBarActiveTextColor={GlobalInclude.Color.ColorPrimary}
+                        tabBarInactiveTextColor={'#bababa'}
+                        tabBarTextStyle={style.tabTextStyle}
+                        tabBarUnderlineStyle={style.tabBarUnderlineStyle}
+                        renderTabBar={() => (
+                          <ScrollableTabBar style={style.tabBarStyle} />
+                        )}>
+                        <Description tabLabel={'About'} content={pageContent} />
+                        <TheTeam
+                          tabLabel={'Contributors'}
+                          content={pageContent}
+                        />
+                        <PitchDocument
+                          tabLabel={'Media'}
+                          content={pageContent}
+                        />
+                        <Comments
+                          tabLabel={'Comments'}
+                          contributeId={contributeId}
+                          navigation={navigation}
+                        />
+                      </ScrollableTabView>
                     </View>
                   </View>
-                </View>
-
-                <ScrollableTabView
-                  underlineColor={'#ffffff'}
-                  initialPage={0}
-                  tabBarActiveTextColor={GlobalInclude.Color.ColorPrimary}
-                  tabBarInactiveTextColor={'#bababa'}
-                  tabBarTextStyle={style.tabTextStyle}
-                  tabBarUnderlineStyle={style.tabBarUnderlineStyle}
-                  renderTabBar={() => (
-                    <ScrollableTabBar style={style.tabBarStyle} />
-                  )}>
-                  <Description tabLabel={'About'} content={pageContent} />
-                  <TheTeam tabLabel={'Contributors'} content={pageContent} />
-                  <PitchDocument tabLabel={'Media'} content={pageContent} />
-                </ScrollableTabView>
-              </View>
-            </View>
+                </>
+              ) : null}
+            </>
           )}
         </View>
 
-        <View
-          style={{
-            justifyContent: 'center',
-            alignItems: 'center',
-            width: scale(125),
-            paddingTop: scale(10),
-            paddingBottom: scale(10),
-            alignContent: 'center',
-            alignSelf: 'center',
-            position: 'absolute',
-            bottom: scale(2),
-          }}>
+        <View style={style.buttonContainer}>
           {pageContent !== null && (
             <CommonButton
               showLoader={false}
-              title={'Connect'}
+              title={'Contribute Now'}
               onPress={() => {
-                navigation.navigate('UserProfile', {
-                  userId: pageContent.createdById,
+                navigation.navigate('Contributions', {
+                  pageContent: pageContent,
                 });
               }}
             />
@@ -377,6 +410,17 @@ const style = StyleSheet.create({
     fontSize: scale(15),
     fontFamily: 'Lato-Regular',
     margin: -5,
+  },
+  buttonContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: scale(145),
+    paddingTop: scale(10),
+    paddingBottom: scale(10),
+    alignContent: 'center',
+    alignSelf: 'center',
+    position: 'absolute',
+    bottom: scale(2),
   },
 });
 

@@ -208,7 +208,6 @@ export const renderRadioButton = (radioObj, onSelect) => {
         style={{
           marginEnd: scale(8),
           marginStart: scale(2),
-          alignSelf: 'center',
         }}>
         <Radio
           item={item}

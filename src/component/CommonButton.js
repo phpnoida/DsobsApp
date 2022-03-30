@@ -16,6 +16,7 @@ const CommonButton = props => {
         width: '100%',
         height: scale(38),
         justifyContent: 'center',
+        ...props.customStyle,
       }}
       onPress={e => {
         props.onPress(e);

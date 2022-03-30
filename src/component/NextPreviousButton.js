@@ -5,7 +5,7 @@ import CommonButtonGray from './CommonButtonGray';
 import grid from '../theme/grid';
 import {scale} from '../theme/Scalling';
 
-const NextPreviousButton = (props) => {
+const NextPreviousButton = props => {
   return (
     <View style={styles.buttonContainer}>
       <View style={grid.flex1}>

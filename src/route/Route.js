@@ -79,6 +79,8 @@ import ChatUserSettings from '../screen/socketChat/settings';
 // Contribution
 import ContributonsList from '../screen/contributors';
 import ContributonDetails from '../screen/contributors/Details';
+import Contributions from '../screen/contributors/Contribution';
+import AddContribution from '../screen/contributors/Contribution/AddContribution';
 
 const Stack = createStackNavigator();
 
@@ -460,6 +462,16 @@ export const RootNavigators = baseRoute => {
       <Stack.Screen
         name="ContributonDetails"
         component={ContributonDetails}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="Contributions"
+        component={Contributions}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="AddContribution"
+        component={AddContribution}
         options={{headerShown: false}}
       />
     </Stack.Navigator>
