@@ -1,11 +1,10 @@
-import React, {useState, useCallback, useEffect} from 'react';
+import React, {useState, useCallback, useEffect, useRef} from 'react';
 import {
   Text,
   View,
   StyleSheet,
   ActivityIndicator,
   SafeAreaView,
-  useWindowDimensions,
 } from 'react-native';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import g from '../../../theme/global';
@@ -33,14 +32,14 @@ const {urlRegex} = URL_REGX;
 let contributeId = '';
 
 const ContributionDetails = ({route, navigation}) => {
+  const tabRef = useRef();
   const [isLoading, setIsLoading] = useState(true);
   const [pageContent, setPageContent] = useState(null);
+  const [initialPage, setInitialPage] = useState(0);
 
   useEffect(() => {
     if (route.params && route.params !== undefined && route.params !== null) {
-      contributeId = route.params.data;
-
-      console.log('contributeId', contributeId);
+      contributeId = route?.params?.data;
     }
     if (contributeId !== undefined && contributeId !== null) {
       getContributionList();
@@ -66,25 +65,37 @@ const ContributionDetails = ({route, navigation}) => {
     );
   }, [manageResponse]);
 
-  const manageResponse = useCallback(response => {
-    setIsLoading(false);
-    if (response && response !== null) {
-      if (
-        response.data &&
-        response.data !== undefined &&
-        response.data !== null
-      ) {
-        let data = response.data;
-        if (data.status) {
-          const {resData, contributor} = data;
+  const manageResponse = useCallback(
+    response => {
+      setIsLoading(false);
+      if (response && response !== null) {
+        if (
+          response.data &&
+          response.data !== undefined &&
+          response.data !== null
+        ) {
+          let data = response.data;
+          if (data.status) {
+            const {resData, contributor} = data;
 
-          resData.contributor = contributor;
+            resData.contributor = contributor;
 
-          setPageContent(resData);
+            setPageContent(resData);
+
+            let openPastMatch = route?.params?.openLastPage ?? false;
+            if (openPastMatch) {
+              setTimeout(() => {
+                // setInitialPage(1);
+                tabRef?.current?.goToPage(1);
+              }, 1000);
+            }
+            console.log('openPastMatch', openPastMatch);
+          }
         }
       }
-    }
-  }, []);
+    },
+    [route],
+  );
 
   /****
    *
@@ -200,9 +211,9 @@ const ContributionDetails = ({route, navigation}) => {
                             ]}>
                             <SemiCircleProgress
                               percentage={
-                                pageContent.totalRaisedInPr > 100
+                                Math.round(pageContent.totalRaisedInPr) > 100
                                   ? 100
-                                  : pageContent.totalRaisedInPr
+                                  : Math.round(pageContent.totalRaisedInPr)
                               }
                               circleRadius={70}
                               progressWidth={15}
@@ -214,22 +225,15 @@ const ContributionDetails = ({route, navigation}) => {
                                   GlobalInclude.AppStyle.transform,
                                   g.colorBlue,
                                 ]}>{`${
-                                pageContent.totalRaisedInPr > 100
+                                Math.round(pageContent.totalRaisedInPr) > 100
                                   ? '100'
-                                  : pageContent.totalRaisedInPr
+                                  : Math.round(pageContent.totalRaisedInPr)
                               }%`}</Text>
                             </SemiCircleProgress>
                           </View>
 
                           <View style={[g.mb5, GlobalInclude.AppStyle.row]}>
-                            <View
-                              style={[
-                                grid.col,
-                                GlobalInclude.AppStyle.center,
-                                GlobalInclude.AppStyle.textCenter,
-                                grid.alignItems,
-                                g.mr5,
-                              ]}>
+                            <View style={[grid.col, g.pl10, g.mr15]}>
                               <Text
                                 style={[
                                   g.fs15,
@@ -261,14 +265,7 @@ const ContributionDetails = ({route, navigation}) => {
                                 )}
                               />
                             </View>
-                            <View
-                              style={[
-                                grid.col,
-                                GlobalInclude.AppStyle.center,
-                                GlobalInclude.AppStyle.textCenter,
-                                grid.alignItems,
-                                g.ml5,
-                              ]}>
+                            <View style={[grid.col, g.pl10, g.ml15]}>
                               <Text
                                 style={[
                                   g.fs15,
@@ -305,6 +302,7 @@ const ContributionDetails = ({route, navigation}) => {
                       </View>
 
                       <ScrollableTabView
+                        ref={tabRef}
                         underlineColor={'#ffffff'}
                         initialPage={0}
                         tabBarActiveTextColor={GlobalInclude.Color.ColorPrimary}
@@ -318,6 +316,7 @@ const ContributionDetails = ({route, navigation}) => {
                         <TheTeam
                           tabLabel={'Contributors'}
                           content={pageContent}
+                          navigation={navigation}
                         />
                         <PitchDocument
                           tabLabel={'Media'}
@@ -338,7 +337,7 @@ const ContributionDetails = ({route, navigation}) => {
         </View>
 
         <View style={style.buttonContainer}>
-          {pageContent !== null && (
+          {pageContent !== null && pageContent.status === 2 && (
             <CommonButton
               showLoader={false}
               title={'Contribute Now'}

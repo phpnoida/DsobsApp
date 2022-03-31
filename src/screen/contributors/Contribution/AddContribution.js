@@ -2,7 +2,6 @@ import React, {useState, useEffect} from 'react';
 import {
   View,
   StyleSheet,
-  ActivityIndicator,
   SafeAreaView,
   TextInput,
   Text,
@@ -17,19 +16,24 @@ import {generateHeader} from '../../../component/Common';
 import Radio from '../../../component/Radio';
 import HeaderBar from '../../../component/HeaderBar';
 import Helper from '../../../helper/Helper';
-import {APP_NAME, URL_REGX} from '../../../helper/Constants';
+import {APP_NAME} from '../../../helper/Constants';
 import CommonButton from '../../../component/CommonButton';
 import CommonButtonGray from '../../../component/CommonButtonGray';
 import _ from 'lodash';
 import NumberFormat from 'react-number-format';
+import {addUserContribution} from '../../../Actions/ContributionActions';
+import {CommonActions} from '@react-navigation/native';
 
-let postData = {};
+let responseMessage = '';
+let contributeId = '';
 
 const AddContribution = ({route, navigation}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [viewType] = useState(route?.params?.type ?? undefined);
-  const [postData] = useState(route?.params?.data ?? undefined);
+  const [postData] = useState(route?.params?.request ?? undefined);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [errorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState({});
 
   const [name, setName] = useState('');
   const [panNumber, setPanNumber] = useState('');
@@ -49,7 +53,12 @@ const AddContribution = ({route, navigation}) => {
   ]);
 
   useEffect(() => {
-    
+    const fullName = `${global.userDetails.prefix} ${global.userDetails.firstName} ${global.userDetails.lastName}`;
+    const address = global.userDetails.permanentAddress;
+
+    setName(fullName);
+    setAddress(address);
+
     return () => {};
   }, []);
 
@@ -58,6 +67,70 @@ const AddContribution = ({route, navigation}) => {
    * API Section
    *
    */
+
+  const submitRequest = () => {
+    setErrorMessage({});
+
+    if (name.trim().length === 0) {
+      setErrorMessage({fullName: 'This field is required'});
+    } else if (address.trim().length === 0) {
+      setErrorMessage({address: 'This field is required'});
+    } else if (
+      panNumber.trim() !== '' &&
+      !Helper.validateRegex('[A-Z]{5}[0-9]{4}[A-Z]{1}', panNumber)
+    ) {
+      setErrorMessage({panNumber: 'Please enter valid pan number'});
+    } else {
+      // const index = _.findIndex(attributes, child => child.selected);
+      // const showATG = attributes[index].selected;
+      const request = {
+        panNumber: panNumber,
+        address: address,
+        ATG: showPan,
+      };
+
+      const cloneData = JSON.parse(JSON.stringify(postData));
+      const {_id} = cloneData;
+      contributeId = _id;
+
+      delete cloneData._id;
+      delete cloneData.title;
+      const merged = {...cloneData, ...request};
+
+      console.log('Reqest', merged);
+
+      if (global.isConnected) {
+        setIsLoading(true);
+        addUserContribution(
+          _id,
+          merged,
+          response => {
+            setIsLoading(false);
+            if (response && response !== null) {
+              if (
+                response.data &&
+                response.data !== undefined &&
+                response.response !== null
+              ) {
+                let data = response.data;
+                responseMessage = data.message;
+                if (data.status) {
+                  setShowSuccessModal(old => !old);
+                } else {
+                  setShowErrorModal(old => !old);
+                }
+              }
+            }
+          },
+          (error, message) => {
+            setIsLoading(false);
+            responseMessage = message;
+            setShowErrorModal(old => !old);
+          },
+        );
+      }
+    }
+  };
 
   /****
    *
@@ -98,12 +171,9 @@ const AddContribution = ({route, navigation}) => {
     <View style={GlobalInclude.AppStyle.fill}>
       <HeaderBar
         title={
-          postData !== null &&
-          postData.title &&
-          postData.title !== undefined &&
-          postData.title !== null
-            ? postData.title
-            : APP_NAME
+          postData !== null && postData.indianCitizen
+            ? 'Indian Citizens'
+            : 'International Citizens'
         }
         navigation={navigation}
         customIcon={{
@@ -161,7 +231,7 @@ const AddContribution = ({route, navigation}) => {
                 your contribution of
               </Text>
               <NumberFormat
-                value={2500}
+                value={parseFloat(postData?.amount ?? 0)}
                 displayType={'text'}
                 thousandSeparator={true}
                 prefix={'₹'}
@@ -211,7 +281,21 @@ const AddContribution = ({route, navigation}) => {
                   showLoader={false}
                   customStyle={{height: scale(45)}}
                   title={'View Contributors'}
-                  onPress={() => {}}
+                  onPress={() => {
+                    navigation.dispatch(
+                      CommonActions.reset({
+                        index: 1,
+                        routes: [
+                          {name: 'Dashboard'},
+                          {name: 'ContributonsList'},
+                          {
+                            name: 'ContributonDetails',
+                            params: {openLastPage: true, data: contributeId},
+                          },
+                        ],
+                      }),
+                    );
+                  }}
                 />
               </View>
               <View style={[g.ml5, g.mr5]} />
@@ -220,7 +304,17 @@ const AddContribution = ({route, navigation}) => {
                   showLoader={false}
                   customStyle={{height: scale(45)}}
                   title={'Goto Home'}
-                  onPress={() => {}}
+                  onPress={() => {
+                    navigation.dispatch(
+                      CommonActions.reset({
+                        index: 1,
+                        routes: [
+                          {name: 'Dashboard'},
+                          {name: 'ContributonsList'},
+                        ],
+                      }),
+                    );
+                  }}
                 />
               </View>
             </View>
@@ -259,6 +353,11 @@ const AddContribution = ({route, navigation}) => {
                   value={name}
                   onChangeText={value => setName(value)}
                 />
+                {errorMessage.fullName && errorMessage.fullName.length > 0 && (
+                  <Text style={[g.errorMsg, g.pt5]}>
+                    {errorMessage.fullName}
+                  </Text>
+                )}
               </View>
 
               {showPan && viewType === '2' && (
@@ -272,6 +371,12 @@ const AddContribution = ({route, navigation}) => {
                     value={panNumber}
                     onChangeText={value => setPanNumber(value)}
                   />
+                  {errorMessage.panNumber &&
+                    errorMessage.panNumber.length > 0 && (
+                      <Text style={[g.errorMsg, g.pt5]}>
+                        {errorMessage.panNumber}
+                      </Text>
+                    )}
                 </View>
               )}
 
@@ -288,16 +393,37 @@ const AddContribution = ({route, navigation}) => {
                   ]}
                   onChangeText={value => setAddress(value)}
                 />
+                {errorMessage.address && errorMessage.address.length > 0 && (
+                  <Text style={[g.errorMsg, g.pt5]}>
+                    {errorMessage.address}
+                  </Text>
+                )}
               </View>
             </View>
             <View style={[g.mb10, g.ml15, g.mr15]}>
               <CommonButton
-                showLoader={false}
+                showLoader={isLoading}
                 title={'Contribute Now'}
-                onPress={() => {}}
+                onPress={() => {
+                  submitRequest();
+                }}
               />
             </View>
           </ScrollView>
+        )}
+
+        {errorModal && (
+          <GlobalInclude.ModalAlert
+            status={errorModal}
+            header={responseMessage}
+            okButton={'Okay'}
+            okAction={() => {
+              setShowErrorModal(false);
+            }}
+            closeAction={() => {
+              setShowErrorModal(false);
+            }}
+          />
         )}
       </SafeAreaView>
     </View>

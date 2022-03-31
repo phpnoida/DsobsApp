@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {
   Text,
   TouchableOpacity,
@@ -28,14 +28,18 @@ const showTaggedUsers = (navigation, users) => {
     } else {
       contributorName = item?.contributerName ?? '';
     }
-
-    console.log(item);
     const component = (
       <View key={i}>
         <TouchableOpacity
           style={[grid.row, grid.alignItems, g.mb10]}
           activeOpacity={0.8}
-          onPress={() => {}}>
+          onPress={() => {
+            if (item.fromSchool) {
+              navigation.navigate('UserProfile', {
+                userId: item?.contributerId?._id,
+              });
+            }
+          }}>
           <View
             style={[
               g.bglightGray,
@@ -78,18 +82,23 @@ const showTaggedUsers = (navigation, users) => {
               numberOfLines={1}>
               {item?.showName ? contributorName : 'Anonymous'}
             </Text>
-            <View style={{marginVertical: scale(2)}} />
-            <Text
-              style={[
-                g.fs12,
-                g.FHNR,
-                g.txtLeft,
-                g.colordarkGray,
-                grid.alignItems,
-                grid.justifyContentCenter,
-              ]}>
-              Batch-1994
-            </Text>
+            {item?.showName ? (
+              <>
+                <View style={{marginVertical: scale(2)}} />
+                <Text
+                  style={[
+                    g.fs12,
+                    g.FHNR,
+                    g.txtLeft,
+                    g.colordarkGray,
+                    grid.alignItems,
+                    grid.justifyContentCenter,
+                  ]}>
+                  {item?.contributerId?.batch ?? ''}
+                </Text>
+              </>
+            ) : null}
+
             <View style={{marginVertical: scale(2)}} />
           </View>
           <NumberFormat
@@ -123,33 +132,35 @@ const showTaggedUsers = (navigation, users) => {
   return componentArray;
 };
 
-const TheTeam = ({content, navigation}) => (
-  <ScrollView
-    style={[g.pl10, g.pr10, grid.flex1]}
-    contentContainerStyle={g.pb30}
-    showsVerticalScrollIndicator={false}>
-    <View style={g.p5}>
-      {content.contributor &&
-      content.contributor !== undefined &&
-      content.contributor !== null &&
-      content.contributor.length > 0 ? (
-        <>
-          <View style={[g.ml10, g.mb15]}>
-            {showTaggedUsers(navigation, content.contributor)}
+const TheTeam = ({content, navigation}) => {
+  return (
+    <ScrollView
+      style={[g.pl10, g.pr10, grid.flex1]}
+      contentContainerStyle={g.pb30}
+      showsVerticalScrollIndicator={false}>
+      <View style={g.p5}>
+        {content.contributor &&
+        content.contributor !== undefined &&
+        content.contributor !== null &&
+        content.contributor.length > 0 ? (
+          <>
+            <View style={[g.ml10, g.mb15]}>
+              {showTaggedUsers(navigation, content.contributor)}
+            </View>
+          </>
+        ) : (
+          <View>
+            <View style={GlobalInclude.AppStyle.center}>
+              <Text style={[g.fs16, g.FHNB, g.colorBlack]}>
+                Currently No Data Uploaded!
+              </Text>
+            </View>
           </View>
-        </>
-      ) : (
-        <View>
-          <View style={GlobalInclude.AppStyle.center}>
-            <Text style={[g.fs16, g.FHNB, g.colorBlack]}>
-              Currently No Data Uploaded!
-            </Text>
-          </View>
-        </View>
-      )}
-    </View>
-  </ScrollView>
-);
+        )}
+      </View>
+    </ScrollView>
+  );
+};
 
 const styles = StyleSheet.create({
   imageContainer: {

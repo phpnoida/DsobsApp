@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  Alert,
 } from 'react-native';
 import GlobalInclude from '../../../globalInclude/Globalinclude';
 import g from '../../../theme/global';
@@ -210,9 +211,9 @@ const Contributions = ({route, navigation}) => {
                           ]}>
                           <SemiCircleProgress
                             percentage={
-                              pageContent.totalRaisedInPr > 100
+                              Math.round(pageContent.totalRaisedInPr) > 100
                                 ? 100
-                                : pageContent.totalRaisedInPr
+                                : Math.round(pageContent.totalRaisedInPr)
                             }
                             circleRadius={70}
                             progressWidth={15}
@@ -224,9 +225,9 @@ const Contributions = ({route, navigation}) => {
                                 GlobalInclude.AppStyle.transform,
                                 g.colorBlue,
                               ]}>{`${
-                              pageContent.totalRaisedInPr > 100
+                              Math.round(pageContent.totalRaisedInPr) > 100
                                 ? '100'
-                                : pageContent.totalRaisedInPr
+                                : Math.round(pageContent.totalRaisedInPr)
                             }%`}</Text>
                           </SemiCircleProgress>
                         </View>
@@ -345,7 +346,8 @@ const Contributions = ({route, navigation}) => {
                             style={[
                               grid.col,
                               {
-                                color: '#ddd',
+                                color:
+                                  selectedCategory === '' ? '#ddd' : '#000',
                                 fontSize: scale(14),
                                 fontFamily: 'Lato-Regular',
                               },
@@ -403,10 +405,32 @@ const Contributions = ({route, navigation}) => {
                         customStyle={{height: scale(48)}}
                         title={'International\nCitizens'}
                         onPress={() => {
-                          navigation.navigate('AddContribution', {
-                            type: '1',
-                            data: pageContent,
-                          });
+                          if (amount.trim().length === 0) {
+                            Alert.alert('Required', 'Amount is required');
+                          } else {
+                            const index = _.findIndex(
+                              attributes,
+                              child => child.selected,
+                            );
+                            const selectedAttribute = attributes[index];
+
+                            const request = {
+                              showName:
+                                selectedAttribute.key === '1' ? true : false,
+                              currency: selectedCategory,
+                              amount: amount,
+                              fromSchool: true,
+                              indianCitizen: false,
+                              contributerId: global.userId,
+                              title: pageContent?.title,
+                              _id: pageContent?._id,
+                            };
+
+                            navigation.navigate('AddContribution', {
+                              type: '1',
+                              request: request,
+                            });
+                          }
                         }}
                       />
                     </View>
@@ -417,10 +441,32 @@ const Contributions = ({route, navigation}) => {
                         customStyle={{height: scale(48)}}
                         title={'Indian\nCitizens'}
                         onPress={() => {
-                          navigation.navigate('AddContribution', {
-                            type: '2',
-                            data: pageContent,
-                          });
+                          if (amount.trim().length === 0) {
+                            Alert.alert('Required', 'Amount is required');
+                          } else {
+                            const index = _.findIndex(
+                              attributes,
+                              child => child.selected,
+                            );
+                            const selectedAttribute = attributes[index];
+
+                            const request = {
+                              showName:
+                                selectedAttribute.key === '1' ? true : false,
+                              currency: selectedCategory,
+                              amount: parseFloat(amount),
+                              fromSchool: true,
+                              indianCitizen: true,
+                              contributerId: global.userId,
+                              title: pageContent?.title,
+                              _id: pageContent?._id,
+                            };
+
+                            navigation.navigate('AddContribution', {
+                              type: '2',
+                              request: request,
+                            });
+                          }
                         }}
                       />
                     </View>

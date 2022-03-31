@@ -52,7 +52,10 @@ const HeaderBar = ({
             marginStart: scale(40),
           }}>
           {title && (
-            <Text style={[g.fs16, g.FHNB, g.colordarkGray, g.txtCenter]}>
+            <Text
+              ellipsizeMode={'tail'}
+              style={[g.fs16, g.FHNB, g.colordarkGray, g.txtCenter]}
+              numberOfLines={2}>
               {title}
             </Text>
           )}

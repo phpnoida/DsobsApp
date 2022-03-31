@@ -103,7 +103,7 @@ const ContributionsList = ({navigation}) => {
                 categoryArray.push({key: -1, text: 'All Contributions'});
                 for (var key in categoryObject) {
                   if (categoryObject.hasOwnProperty(key)) {
-                    if (key !== '1' || key !== '2') {
+                    if (key.toString() !== '1' && key.toString() !== '2') {
                       categoryArray.push({key: key, text: categoryObject[key]});
                     }
                   }
@@ -128,7 +128,10 @@ const ContributionsList = ({navigation}) => {
       response => {
         manageResponse(response);
       },
-      error => {},
+      error => {
+        setIsRefreshing(false);
+        setPaginationStatus(PaginationStatus.allLoaded);
+      },
     );
   }, [manageResponse]);
 
@@ -145,10 +148,27 @@ const ContributionsList = ({navigation}) => {
           if (filterObject.page === 1) {
             totalCount = data.totalCount;
             setPageContent([...data.data]);
+            if (data.data.length > 0) {
+              setPaginationStatus(
+                totalCount === data.data.length
+                  ? PaginationStatus.allLoaded
+                  : PaginationStatus.waiting,
+              );
+            } else {
+              setPaginationStatus(PaginationStatus.allLoaded);
+            }
           } else {
             setPageContent(old => [...old, ...data.data]);
+            if (data.data.length > 0) {
+              setPaginationStatus(
+                totalCount === data.data.length
+                  ? PaginationStatus.allLoaded
+                  : PaginationStatus.waiting,
+              );
+            } else {
+              setPaginationStatus(PaginationStatus.allLoaded);
+            }
           }
-          setPaginationStatus(PaginationStatus.waiting);
         }
       }
     }
@@ -231,7 +251,7 @@ const ContributionsList = ({navigation}) => {
   const renderFooter = () => {
     return (
       <View style={style.footerView}>
-        {pageContent.length === totalCount ? (
+        {pageContent.length === totalCount || totalCount < 10 ? (
           <View />
         ) : (
           <View style={{height: scale(30)}}>
@@ -304,7 +324,6 @@ const ContributionsList = ({navigation}) => {
         <TouchableOpacity
           activeOpacity={1}
           onPress={() => {
-            // filterObject.id = item._id;
             navigation.navigate('ContributonDetails', {data: item._id});
           }}
           key={index}
@@ -337,8 +356,8 @@ const ContributionsList = ({navigation}) => {
                   GlobalInclude.AppStyle.transform,
                   g.colorBlack,
                 ]}
-                numberOfLines={1}>
-                {`Raised so far - ${item.totalRaisedInPr}%`}
+                numberOfLines={2}>
+                {`Raised so far - ${Math.round(item.totalRaisedInPr)}%`}
               </Text>
 
               <NumberFormat
@@ -506,9 +525,9 @@ const ContributionsList = ({navigation}) => {
           Keyboard.dismiss();
           resetCount();
           if (item.key !== -1) {
-            filterObject.status = value;
+            filterObject.type = item.key;
           } else {
-            delete filterObject.status;
+            delete filterObject.type;
           }
           setSelectedCategory(Helper.capitalize(value));
 
