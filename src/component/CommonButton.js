@@ -7,6 +7,7 @@ import Color from '../theme/Colors';
 const CommonButton = props => {
   return (
     <TouchableOpacity
+      disabled={props.isDisabled ?? false}
       activeOpacity={1}
       style={{
         backgroundColor: Color.ColorPrimary,

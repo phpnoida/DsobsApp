@@ -54,10 +54,8 @@ const AddContribution = ({route, navigation}) => {
 
   useEffect(() => {
     const fullName = `${global.userDetails.prefix} ${global.userDetails.firstName} ${global.userDetails.lastName}`;
-    const address = global.userDetails.permanentAddress;
-
     setName(fullName);
-    setAddress(address);
+    setAddress(global.userDetails.permanentAddress);
 
     return () => {};
   }, []);

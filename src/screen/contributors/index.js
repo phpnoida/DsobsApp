@@ -41,7 +41,6 @@ const PaginationStatus = {
 };
 
 let totalCount = 0;
-let categoryListMain = [];
 
 let filterObject = {
   page: 1,
@@ -66,7 +65,6 @@ const ContributionsList = ({navigation}) => {
   const [animatedHeight, setAnimatedHeight] = useState(0);
   const [categoryList, setCategoryList] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [searchCategory, setSearchCategory] = useState([]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -109,7 +107,7 @@ const ContributionsList = ({navigation}) => {
                   }
                 }
               }
-              categoryListMain = categoryArray;
+
               setCategoryList(categoryArray);
               setSelectedCategory('All Contributions');
             }
@@ -144,6 +142,7 @@ const ContributionsList = ({navigation}) => {
         response.data !== null
       ) {
         let data = response.data;
+        // console.log('data', data);
         if (data.status) {
           if (filterObject.page === 1) {
             totalCount = data.totalCount;
@@ -270,39 +269,17 @@ const ContributionsList = ({navigation}) => {
   };
 
   const loadContributionPhoto = useCallback(itemPath => {
+    const {contributionsVideo, contributionsPhoto} = itemPath;
+
     if (
-      itemPath === undefined ||
-      itemPath === null ||
-      itemPath === '' ||
-      !Helper.validateRegex(urlRegex, itemPath)
+      contributionsVideo !== undefined &&
+      contributionsVideo !== null &&
+      contributionsVideo !== '' &&
+      Helper.validateRegex(urlRegex, contributionsVideo)
     ) {
-      return (
-        <ProgressImage
-          source={GlobalInclude.Assets.DefaultImage}
-          containerStyle={style.imageStyle}
-          imageStyle={style.imageStyle}
-          mode={'cover'}
-        />
-      );
-    }
-    let extension = itemPath.split(/[#?]/)[0].split('.').pop().trim();
-    if (
-      extension.toLowerCase() === 'png' ||
-      extension.toLowerCase() === 'jpg' ||
-      extension.toLowerCase() === 'jpeg'
-    ) {
-      return (
-        <ProgressImage
-          source={{uri: itemPath}}
-          containerStyle={style.imageStyle}
-          imageStyle={style.imageStyle}
-          mode={'cover'}
-        />
-      );
-    } else {
       return (
         <YoutubeView
-          link={itemPath}
+          link={contributionsVideo}
           containerStyle={style.videoContainer}
           overlayStyle={style.overlayStyle}
           thumbStyle={style.thumbStyle}
@@ -313,6 +290,29 @@ const ContributionsList = ({navigation}) => {
             width: scale(20),
           }}
           iconSize={scale(20)}
+        />
+      );
+    } else if (
+      contributionsPhoto !== undefined &&
+      contributionsPhoto !== null &&
+      contributionsPhoto !== '' &&
+      Helper.validateRegex(urlRegex, contributionsPhoto)
+    ) {
+      return (
+        <ProgressImage
+          source={{uri: contributionsPhoto}}
+          containerStyle={style.imageStyle}
+          imageStyle={style.imageStyle}
+          mode={'cover'}
+        />
+      );
+    } else {
+      return (
+        <ProgressImage
+          source={GlobalInclude.Assets.DefaultImage}
+          containerStyle={style.imageStyle}
+          imageStyle={style.imageStyle}
+          mode={'cover'}
         />
       );
     }
@@ -333,7 +333,7 @@ const ContributionsList = ({navigation}) => {
           }}>
           <View style={[g.bgWhite, g.boxShadow, {borderRadius: scale(10)}]}>
             <View style={[g.bggray3, style.backgroundBorder]}>
-              {loadContributionPhoto(item.contributionsPhoto)}
+              {loadContributionPhoto(item)}
             </View>
             <View style={[g.pr10, g.pl10, g.pt5, g.pb5]}>
               <Text
@@ -365,12 +365,11 @@ const ContributionsList = ({navigation}) => {
                 displayType={'text'}
                 thousandSeparator={true}
                 prefix={'₹'}
-                decimalScale={2}
-                fixedDecimalScale
+                decimalSeparator={false}
                 renderText={formattedValue => (
                   <Text
                     style={[
-                      g.fs14,
+                      g.fs15,
                       g.mt5,
                       g.FHNM,
                       GlobalInclude.AppStyle.transform,
@@ -380,7 +379,7 @@ const ContributionsList = ({navigation}) => {
                     To Raise{' '}
                     <Text
                       style={[
-                        g.fs14,
+                        g.fs15,
                         g.mt5,
                         g.FHNB,
                         GlobalInclude.AppStyle.upper,
@@ -402,7 +401,7 @@ const ContributionsList = ({navigation}) => {
   const headerDistance = Animated.diffClamp(
     curY,
     0,
-    searchCategory.length > 0 ? 328 : animatedHeight,
+    animatedHeight,
   ).interpolate({
     inputRange: [0, 1],
     outputRange: [0, -1],
@@ -501,8 +500,7 @@ const ContributionsList = ({navigation}) => {
               ListFooterComponent={renderFooter}
               contentContainerStyle={{
                 marginTop: animatedHeight,
-                paddingBottom:
-                  searchCategory.length > 0 ? scale(280) : scale(130),
+                paddingBottom: scale(130),
               }}
               scrollEventThrottle={16}
               onScroll={Animated.event(

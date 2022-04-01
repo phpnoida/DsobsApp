@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   Text,
   View,
@@ -14,12 +14,9 @@ import g from '../../../theme/global';
 import grid from '../../../theme/grid';
 import {scale} from '../../../theme/Scalling';
 import {IconType} from '../../../helper/Constants';
-import ProgressImage from '../../../component/ProgresImage';
-import YoutubeView from '../../../component/YoutubeView';
 import Radio from '../../../component/Radio';
 import Helper from '../../../helper/Helper';
 import HeaderBar from '../../../component/HeaderBar';
-import {APP_NAME, URL_REGX} from '../../../helper/Constants';
 import CommonButton from '../../../component/CommonButton';
 import CommonButtonGray from '../../../component/CommonButtonGray';
 import SemiCircleProgress from '../../../component/SemiCircleProgress';
@@ -28,13 +25,13 @@ import {getCurrencyList} from '../../../Actions/ContributionActions';
 import FilterCategory from '../../../component/FilterCategory';
 import _ from 'lodash';
 
-const {urlRegex} = URL_REGX;
-
 const Contributions = ({route, navigation}) => {
   const sheetRef = useRef();
   const [amount, setAmount] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [categoryList, setCategoryList] = useState([]);
+  const [disableIndian, setDisableIndian] = useState(false);
+  const [disableInternational, setDisableInternational] = useState(false);
 
   const [attributes, setAttributes] = useState([
     {
@@ -49,6 +46,22 @@ const Contributions = ({route, navigation}) => {
     },
   ]);
   const [pageContent] = useState(route?.params?.pageContent ?? null);
+
+  useEffect(() => {
+    const {contributor} = route?.params?.pageContent;
+    let alreadyContribute = _.findIndex(
+      contributor,
+      child => child?.contributerId?._id === global.userId,
+    );
+
+    if (alreadyContribute > -1) {
+      const selected = contributor[alreadyContribute];
+      setDisableIndian(!selected.indianCitizen);
+      setDisableInternational(selected.indianCitizen);
+    }
+
+    return () => {};
+  }, [route]);
 
   useEffect(() => {
     getCurrencyList(
@@ -108,66 +121,10 @@ const Contributions = ({route, navigation}) => {
     });
   };
 
-  const loadContributionPhoto = useCallback(itemPath => {
-    if (
-      itemPath === undefined ||
-      itemPath === null ||
-      itemPath === '' ||
-      !Helper.validateRegex(urlRegex, itemPath)
-    ) {
-      return (
-        <ProgressImage
-          source={GlobalInclude.Assets.DefaultImage}
-          containerStyle={style.imageStyle}
-          imageStyle={style.imageStyle}
-          mode={'cover'}
-        />
-      );
-    }
-    let extension = itemPath.split(/[#?]/)[0].split('.').pop().trim();
-    if (
-      extension.toLowerCase() === 'png' ||
-      extension.toLowerCase() === 'jpg' ||
-      extension.toLowerCase() === 'jpeg'
-    ) {
-      return (
-        <ProgressImage
-          source={{uri: itemPath}}
-          containerStyle={style.imageStyle}
-          imageStyle={style.imageStyle}
-          mode={'cover'}
-        />
-      );
-    } else {
-      return (
-        <YoutubeView
-          link={itemPath}
-          containerStyle={style.videoContainer}
-          overlayStyle={style.overlayStyle}
-          thumbStyle={style.thumbStyle}
-          showPlay
-          playIconstyle={style.playIconstyle}
-          playIconContainer={{
-            height: scale(20),
-            width: scale(20),
-          }}
-          iconSize={scale(20)}
-        />
-      );
-    }
-  }, []);
-
   return (
     <View style={GlobalInclude.AppStyle.fill}>
       <HeaderBar
-        title={
-          pageContent !== null &&
-          pageContent?.title &&
-          pageContent?.title !== undefined &&
-          pageContent?.title !== null
-            ? pageContent?.title
-            : APP_NAME
-        }
+        title={'Contribute Now'}
         navigation={navigation}
         customIcon={{
           containerStyle: {height: scale(30), width: scale(30)},
@@ -190,77 +147,32 @@ const Contributions = ({route, navigation}) => {
               <>
                 <View style={GlobalInclude.AppStyle.fill}>
                   <View style={GlobalInclude.AppStyle.fill}>
-                    <View
-                      style={[
-                        g.bggray3,
-                        style.backgroundBorder,
-                        g.mt15,
-                        g.ml10,
-                        g.mr10,
-                      ]}>
-                      {loadContributionPhoto(pageContent.contributionsPhoto)}
-                    </View>
-                    <View style={[g.mt5, g.p5]}>
+                    <View style={[g.mt10, g.p5]}>
                       <View style={[g.boxShadow, g.bgWhite, g.br3]}>
-                        <View
-                          style={[
-                            grid.alignItems,
-                            grid.justifyContentCenter,
-                            g.mb10,
-                            g.mt10,
-                          ]}>
-                          <SemiCircleProgress
-                            percentage={
-                              Math.round(pageContent.totalRaisedInPr) > 100
-                                ? 100
-                                : Math.round(pageContent.totalRaisedInPr)
-                            }
-                            circleRadius={70}
-                            progressWidth={15}
-                            progressColor={GlobalInclude.Color.ColorPrimary}>
-                            <Text
-                              style={[
-                                g.fs24,
-                                g.FHNB,
-                                GlobalInclude.AppStyle.transform,
-                                g.colorBlue,
-                              ]}>{`${
-                              Math.round(pageContent.totalRaisedInPr) > 100
-                                ? '100'
-                                : Math.round(pageContent.totalRaisedInPr)
-                            }%`}</Text>
-                          </SemiCircleProgress>
-                        </View>
-                        <View style={[g.mb5, grid.rowrow]}>
+                        <View style={[g.p10]}>
                           <View
-                            style={[
-                              grid.col,
-                              GlobalInclude.AppStyle.center,
-                              GlobalInclude.AppStyle.textCenter,
-                              grid.alignItems,
-                              g.mr5,
-                            ]}>
+                            style={[GlobalInclude.AppStyle.row, g.pl10, g.mb5]}>
                             <Text
                               style={[
                                 g.fs15,
                                 g.FHNM,
                                 GlobalInclude.AppStyle.transform,
                                 g.colorBlue,
+                                g.mr5,
                               ]}
                               numberOfLines={1}>
-                              Total to Raise
+                              Total to Raise -
                             </Text>
                             <NumberFormat
                               value={pageContent.amountTORaise}
                               displayType={'text'}
                               thousandSeparator={true}
                               prefix={'₹'}
-                              decimalScale={2}
-                              fixedDecimalScale
+                              decimalSeparator={false}
                               renderText={formattedValue => (
                                 <Text
                                   style={[
-                                    g.fs20,
+                                    g.fs15,
                                     g.FHNB,
                                     GlobalInclude.AppStyle.upper,
                                     g.colorBlue,
@@ -272,34 +184,28 @@ const Contributions = ({route, navigation}) => {
                             />
                           </View>
                           <View
-                            style={[
-                              grid.col,
-                              GlobalInclude.AppStyle.center,
-                              GlobalInclude.AppStyle.textCenter,
-                              grid.alignItems,
-                              g.ml5,
-                            ]}>
+                            style={[GlobalInclude.AppStyle.row, g.pl10, g.mt5]}>
                             <Text
                               style={[
                                 g.fs15,
                                 g.FHNM,
                                 GlobalInclude.AppStyle.transform,
                                 g.colorBlue,
+                                g.mr5,
                               ]}
                               numberOfLines={1}>
-                              Raised so far
+                              Raised so far -
                             </Text>
                             <NumberFormat
                               value={pageContent.totalRaised}
                               displayType={'text'}
                               thousandSeparator={true}
                               prefix={'₹'}
-                              decimalScale={2}
-                              fixedDecimalScale
+                              decimalSeparator={false}
                               renderText={formattedValue => (
                                 <Text
                                   style={[
-                                    g.fs20,
+                                    g.fs15,
                                     g.FHNB,
                                     GlobalInclude.AppStyle.upper,
                                     g.colorBlue,
@@ -311,6 +217,36 @@ const Contributions = ({route, navigation}) => {
                             />
                           </View>
                         </View>
+                      </View>
+
+                      <View
+                        style={[
+                          grid.alignItems,
+                          grid.justifyContentCenter,
+                          g.mb10,
+                          g.mt45,
+                        ]}>
+                        <SemiCircleProgress
+                          percentage={
+                            Math.round(pageContent.totalRaisedInPr) > 100
+                              ? 100
+                              : Math.round(pageContent.totalRaisedInPr)
+                          }
+                          circleRadius={120}
+                          progressWidth={33}
+                          progressColor={GlobalInclude.Color.ColorPrimary}>
+                          <Text
+                            style={[
+                              g.fs24,
+                              g.FHNB,
+                              GlobalInclude.AppStyle.transform,
+                              g.colorBlue,
+                            ]}>{`${
+                            Math.round(pageContent.totalRaisedInPr) > 100
+                              ? '100'
+                              : Math.round(pageContent.totalRaisedInPr)
+                          }%`}</Text>
+                        </SemiCircleProgress>
                       </View>
                     </View>
 
@@ -373,18 +309,7 @@ const Contributions = ({route, navigation}) => {
                         />
                       </View>
 
-                      <Text
-                        style={[
-                          g.fs15,
-                          g.FHNM,
-                          GlobalInclude.AppStyle.transform,
-                          g.colorBlue,
-                        ]}
-                        numberOfLines={1}>
-                        Attribute
-                      </Text>
-
-                      <View style={[g.mt10]}>
+                      <View style={[g.mt20]}>
                         {renderRadioButton(attributes)}
                       </View>
                     </View>
@@ -401,6 +326,7 @@ const Contributions = ({route, navigation}) => {
                     ]}>
                     <View style={grid.col}>
                       <CommonButtonGray
+                        isDisabled={disableInternational}
                         showLoader={false}
                         customStyle={{height: scale(48)}}
                         title={'International\nCitizens'}
@@ -437,6 +363,7 @@ const Contributions = ({route, navigation}) => {
                     <View style={[g.ml5, g.mr5]} />
                     <View style={grid.col}>
                       <CommonButton
+                        isDisabled={disableIndian}
                         showLoader={false}
                         customStyle={{height: scale(48)}}
                         title={'Indian\nCitizens'}
@@ -579,7 +506,7 @@ const style = StyleSheet.create({
   radioStyle: {
     marginEnd: scale(8),
     marginStart: scale(2),
-    marginBottom: scale(10),
+    marginBottom: scale(15),
   },
 });
 

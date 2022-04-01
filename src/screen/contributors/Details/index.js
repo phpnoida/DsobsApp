@@ -80,6 +80,8 @@ const ContributionDetails = ({route, navigation}) => {
 
             resData.contributor = contributor;
 
+            // console.log('resData', JSON.stringify(resData));
+
             setPageContent(resData);
 
             let openPastMatch = route?.params?.openLastPage ?? false;
@@ -89,7 +91,7 @@ const ContributionDetails = ({route, navigation}) => {
                 tabRef?.current?.goToPage(1);
               }, 1000);
             }
-            console.log('openPastMatch', openPastMatch);
+            // console.log('openPastMatch', openPastMatch);
           }
         }
       }
@@ -103,13 +105,8 @@ const ContributionDetails = ({route, navigation}) => {
    *
    */
 
-  const loadContributionPhoto = useCallback(itemPath => {
-    if (
-      itemPath === undefined ||
-      itemPath === null ||
-      itemPath === '' ||
-      !Helper.validateRegex(urlRegex, itemPath)
-    ) {
+  const loadContributionPhoto = useCallback(() => {
+    if (pageContent === undefined || pageContent === null) {
       return (
         <ProgressImage
           source={GlobalInclude.Assets.DefaultImage}
@@ -119,24 +116,18 @@ const ContributionDetails = ({route, navigation}) => {
         />
       );
     }
-    let extension = itemPath.split(/[#?]/)[0].split('.').pop().trim();
+
+    const {contributionsVideo, contributionsPhoto} = pageContent;
+
     if (
-      extension.toLowerCase() === 'png' ||
-      extension.toLowerCase() === 'jpg' ||
-      extension.toLowerCase() === 'jpeg'
+      contributionsVideo !== undefined &&
+      contributionsVideo !== null &&
+      contributionsVideo !== '' &&
+      Helper.validateRegex(urlRegex, contributionsVideo)
     ) {
       return (
-        <ProgressImage
-          source={{uri: itemPath}}
-          containerStyle={style.imageStyle}
-          imageStyle={style.imageStyle}
-          mode={'cover'}
-        />
-      );
-    } else {
-      return (
         <YoutubeView
-          link={itemPath}
+          link={contributionsVideo}
           containerStyle={style.videoContainer}
           overlayStyle={style.overlayStyle}
           thumbStyle={style.thumbStyle}
@@ -149,8 +140,31 @@ const ContributionDetails = ({route, navigation}) => {
           iconSize={scale(20)}
         />
       );
+    } else if (
+      contributionsPhoto !== undefined &&
+      contributionsPhoto !== null &&
+      contributionsPhoto !== '' &&
+      Helper.validateRegex(urlRegex, contributionsPhoto)
+    ) {
+      return (
+        <ProgressImage
+          source={{uri: contributionsPhoto}}
+          containerStyle={style.imageStyle}
+          imageStyle={style.imageStyle}
+          mode={'cover'}
+        />
+      );
+    } else {
+      return (
+        <ProgressImage
+          source={GlobalInclude.Assets.DefaultImage}
+          containerStyle={style.imageStyle}
+          imageStyle={style.imageStyle}
+          mode={'cover'}
+        />
+      );
     }
-  }, []);
+  }, [pageContent]);
 
   return (
     <View style={GlobalInclude.AppStyle.fill}>
@@ -198,63 +212,38 @@ const ContributionDetails = ({route, navigation}) => {
                           g.ml10,
                           g.mr10,
                         ]}>
-                        {loadContributionPhoto(pageContent.contributionsPhoto)}
+                        {loadContributionPhoto()}
                       </View>
                       <View style={[g.mt5, g.p5]}>
                         <View style={[g.boxShadow, g.bgWhite, g.br3]}>
-                          <View
-                            style={[
-                              grid.alignItems,
-                              grid.justifyContentCenter,
-                              g.mb10,
-                              g.mt10,
-                            ]}>
-                            <SemiCircleProgress
-                              percentage={
-                                Math.round(pageContent.totalRaisedInPr) > 100
-                                  ? 100
-                                  : Math.round(pageContent.totalRaisedInPr)
-                              }
-                              circleRadius={70}
-                              progressWidth={15}
-                              progressColor={GlobalInclude.Color.ColorPrimary}>
-                              <Text
-                                style={[
-                                  g.fs24,
-                                  g.FHNB,
-                                  GlobalInclude.AppStyle.transform,
-                                  g.colorBlue,
-                                ]}>{`${
-                                Math.round(pageContent.totalRaisedInPr) > 100
-                                  ? '100'
-                                  : Math.round(pageContent.totalRaisedInPr)
-                              }%`}</Text>
-                            </SemiCircleProgress>
-                          </View>
-
-                          <View style={[g.mb5, GlobalInclude.AppStyle.row]}>
-                            <View style={[grid.col, g.pl10, g.mr15]}>
+                          <View style={[g.mb5, g.mt5]}>
+                            <View
+                              style={[
+                                GlobalInclude.AppStyle.row,
+                                g.pl10,
+                                g.mb10,
+                              ]}>
                               <Text
                                 style={[
                                   g.fs15,
                                   g.FHNM,
                                   GlobalInclude.AppStyle.transform,
                                   g.colorBlue,
+                                  g.mr5,
                                 ]}
                                 numberOfLines={1}>
-                                Total to Raise
+                                Total to Raise -
                               </Text>
                               <NumberFormat
                                 value={pageContent.amountTORaise}
                                 displayType={'text'}
                                 thousandSeparator={true}
                                 prefix={'₹'}
-                                decimalScale={2}
-                                fixedDecimalScale
+                                decimalSeparator={false}
                                 renderText={formattedValue => (
                                   <Text
                                     style={[
-                                      g.fs20,
+                                      g.fs15,
                                       g.FHNB,
                                       GlobalInclude.AppStyle.upper,
                                       g.colorBlue,
@@ -265,28 +254,28 @@ const ContributionDetails = ({route, navigation}) => {
                                 )}
                               />
                             </View>
-                            <View style={[grid.col, g.pl10, g.ml15]}>
+                            <View style={[GlobalInclude.AppStyle.row, g.pl10]}>
                               <Text
                                 style={[
                                   g.fs15,
                                   g.FHNM,
                                   GlobalInclude.AppStyle.transform,
                                   g.colorBlue,
+                                  g.mr5,
                                 ]}
                                 numberOfLines={1}>
-                                Raised so far
+                                Raised so far -
                               </Text>
                               <NumberFormat
                                 value={pageContent.totalRaised}
                                 displayType={'text'}
                                 thousandSeparator={true}
                                 prefix={'₹'}
-                                decimalScale={2}
-                                fixedDecimalScale
+                                decimalSeparator={false}
                                 renderText={formattedValue => (
                                   <Text
                                     style={[
-                                      g.fs20,
+                                      g.fs15,
                                       g.FHNB,
                                       GlobalInclude.AppStyle.upper,
                                       g.colorBlue,

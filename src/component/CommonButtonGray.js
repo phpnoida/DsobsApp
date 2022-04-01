@@ -7,6 +7,7 @@ const CommonButtonGray = props => {
   return (
     <TouchableOpacity
       activeOpacity={1}
+      disabled={props.isDisabled ?? false}
       style={{
         backgroundColor: '#f8f8f8',
         textAlign: 'center',
