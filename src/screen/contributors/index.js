@@ -238,7 +238,7 @@ const ContributionsList = ({navigation}) => {
             () => {
               refOptions.current.close();
               setTimeout(() => {
-                // navigation.navigate('ChatEtiquette');
+                navigation.navigate('ContributorEttiquete');
               }, 220);
             },
           )}

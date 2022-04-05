@@ -81,6 +81,7 @@ import ContributonsList from '../screen/contributors';
 import ContributonDetails from '../screen/contributors/Details';
 import Contributions from '../screen/contributors/Contribution';
 import AddContribution from '../screen/contributors/Contribution/AddContribution';
+import ContributorEttiquete from '../screen/contributors/contributorEttiquete';
 
 const Stack = createStackNavigator();
 
@@ -472,6 +473,11 @@ export const RootNavigators = baseRoute => {
       <Stack.Screen
         name="AddContribution"
         component={AddContribution}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ContributorEttiquete"
+        component={ContributorEttiquete}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

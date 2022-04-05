@@ -326,36 +326,42 @@ const Contributions = ({route, navigation}) => {
                     ]}>
                     <View style={grid.col}>
                       <CommonButtonGray
-                        isDisabled={disableInternational}
                         showLoader={false}
                         customStyle={{height: scale(48)}}
                         title={'International\nCitizens'}
                         onPress={() => {
-                          if (amount.trim().length === 0) {
-                            Alert.alert('Required', 'Amount is required');
-                          } else {
-                            const index = _.findIndex(
-                              attributes,
-                              child => child.selected,
+                          if (disableInternational) {
+                            Alert.alert(
+                              '',
+                              'You have already contributed as an Indian citizen, you cannot also contribute as a foreign citizen. To resolve any related issues please contact the alumni office directly.',
                             );
-                            const selectedAttribute = attributes[index];
+                          } else {
+                            if (amount.trim().length === 0) {
+                              Alert.alert('Required', 'Amount is required');
+                            } else {
+                              const index = _.findIndex(
+                                attributes,
+                                child => child.selected,
+                              );
+                              const selectedAttribute = attributes[index];
 
-                            const request = {
-                              showName:
-                                selectedAttribute.key === '1' ? true : false,
-                              currency: selectedCategory,
-                              amount: amount,
-                              fromSchool: true,
-                              indianCitizen: false,
-                              contributerId: global.userId,
-                              title: pageContent?.title,
-                              _id: pageContent?._id,
-                            };
+                              const request = {
+                                showName:
+                                  selectedAttribute.key === '1' ? true : false,
+                                currency: selectedCategory,
+                                amount: amount,
+                                fromSchool: true,
+                                indianCitizen: false,
+                                contributerId: global.userId,
+                                title: pageContent?.title,
+                                _id: pageContent?._id,
+                              };
 
-                            navigation.navigate('AddContribution', {
-                              type: '1',
-                              request: request,
-                            });
+                              navigation.navigate('AddContribution', {
+                                type: '1',
+                                request: request,
+                              });
+                            }
                           }
                         }}
                       />
@@ -363,36 +369,42 @@ const Contributions = ({route, navigation}) => {
                     <View style={[g.ml5, g.mr5]} />
                     <View style={grid.col}>
                       <CommonButton
-                        isDisabled={disableIndian}
                         showLoader={false}
                         customStyle={{height: scale(48)}}
                         title={'Indian\nCitizens'}
                         onPress={() => {
-                          if (amount.trim().length === 0) {
-                            Alert.alert('Required', 'Amount is required');
-                          } else {
-                            const index = _.findIndex(
-                              attributes,
-                              child => child.selected,
+                          if (disableIndian) {
+                            Alert.alert(
+                              '',
+                              'You have already contributed as a foreign citizen, you cannot also contribute as an Indian citizen. To resolve any related issues please contact the alumni office directly.',
                             );
-                            const selectedAttribute = attributes[index];
+                          } else {
+                            if (amount.trim().length === 0) {
+                              Alert.alert('Required', 'Amount is required');
+                            } else {
+                              const index = _.findIndex(
+                                attributes,
+                                child => child.selected,
+                              );
+                              const selectedAttribute = attributes[index];
 
-                            const request = {
-                              showName:
-                                selectedAttribute.key === '1' ? true : false,
-                              currency: selectedCategory,
-                              amount: parseFloat(amount),
-                              fromSchool: true,
-                              indianCitizen: true,
-                              contributerId: global.userId,
-                              title: pageContent?.title,
-                              _id: pageContent?._id,
-                            };
+                              const request = {
+                                showName:
+                                  selectedAttribute.key === '1' ? true : false,
+                                currency: selectedCategory,
+                                amount: parseFloat(amount),
+                                fromSchool: true,
+                                indianCitizen: true,
+                                contributerId: global.userId,
+                                title: pageContent?.title,
+                                _id: pageContent?._id,
+                              };
 
-                            navigation.navigate('AddContribution', {
-                              type: '2',
-                              request: request,
-                            });
+                              navigation.navigate('AddContribution', {
+                                type: '2',
+                                request: request,
+                              });
+                            }
                           }
                         }}
                       />

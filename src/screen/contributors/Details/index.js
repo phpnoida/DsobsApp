@@ -89,7 +89,7 @@ const ContributionDetails = ({route, navigation}) => {
               setTimeout(() => {
                 // setInitialPage(1);
                 tabRef?.current?.goToPage(1);
-              }, 1000);
+              }, 10);
             }
             // console.log('openPastMatch', openPastMatch);
           }
