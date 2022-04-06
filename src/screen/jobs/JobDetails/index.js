@@ -367,7 +367,7 @@ const JobDetails = ({route, navigation}) => {
                         content={pageContent}
                       />
                       <PostedBy
-                        tabLabel={'PostedBy'}
+                        tabLabel={'Posted By'}
                         content={pageContent}
                         navigation={navigation}
                       />

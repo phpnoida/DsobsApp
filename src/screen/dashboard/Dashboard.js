@@ -1075,7 +1075,7 @@ const Dashboard = ({props, navigation}) => {
                     style={styles.menuIcon}
                   />
                   <View style={styles.menuText}>
-                    <Text style={styles.menuStyle}>Contribution</Text>
+                    <Text style={styles.menuStyle}>Contributions</Text>
                   </View>
                 </TouchableOpacity>
                 <View style={{margin: scale(5)}} />
