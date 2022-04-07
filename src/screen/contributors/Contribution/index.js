@@ -353,6 +353,7 @@ const Contributions = ({route, navigation}) => {
                                 fromSchool: true,
                                 indianCitizen: false,
                                 contributerId: global.userId,
+                                image: global.userDetails.profileImg,
                                 title: pageContent?.title,
                                 _id: pageContent?._id,
                               };
@@ -396,6 +397,7 @@ const Contributions = ({route, navigation}) => {
                                 fromSchool: true,
                                 indianCitizen: true,
                                 contributerId: global.userId,
+                                image: global.userDetails.profileImg,
                                 title: pageContent?.title,
                                 _id: pageContent?._id,
                               };
