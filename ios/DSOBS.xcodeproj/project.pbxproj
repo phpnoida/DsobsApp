@@ -581,7 +581,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = DSOBS/DSOBS.entitlements;
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 2.1;
+				CURRENT_PROJECT_VERSION = 2.2;
 				DEVELOPMENT_TEAM = H9Q3F2C9AA;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = DSOBS/Info.plist;
@@ -594,7 +594,7 @@
 					"$(inherited)",
 					"$(SDKROOT)/usr/lib/swift",
 				);
-				MARKETING_VERSION = 3.9;
+				MARKETING_VERSION = 4.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -619,7 +619,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = DSOBS/DSOBS.entitlements;
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 2.1;
+				CURRENT_PROJECT_VERSION = 2.2;
 				DEVELOPMENT_TEAM = H9Q3F2C9AA;
 				INFOPLIST_FILE = DSOBS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
@@ -631,7 +631,7 @@
 					"$(inherited)",
 					"$(SDKROOT)/usr/lib/swift",
 				);
-				MARKETING_VERSION = 3.9;
+				MARKETING_VERSION = 4.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
