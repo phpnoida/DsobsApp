@@ -132,6 +132,7 @@ export function getPopNotification(callback, errCallback) {
 
 export function doSearchCity(query, size, index, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user/directory/cities?size=${size}&index=${index}&s=${query}`;
+  console.log('requestPath', requestPath);
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
     .then(res => {
@@ -147,6 +148,8 @@ export function doSearchCity(query, size, index, callback, errCallback) {
 
 export function doSearchCompany(query, size, index, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user/directory/company?size=${size}&index=${index}&s=${query}`;
+  console.log('requestPath', requestPath);
+  console.log('header', {headers: {Authorization: global.accessToken}});
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
     .then(res => {

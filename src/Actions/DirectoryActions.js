@@ -3,11 +3,11 @@ import {SERVER_PATH} from '../../config';
 
 export function getDirectory(searchType, searchQuery, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user/directory?type=${searchType}&s=${searchQuery}`;
-  
+  console.log('requestPath', requestPath);
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => callback(res))
-    .catch((err) => {
+    .then(res => callback(res))
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -17,14 +17,14 @@ export function getDirectory(searchType, searchQuery, callback, errCallback) {
 
 export function doFilterDirectory(filterQuery, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user/directory`;
-  
+
   const request = axios
     .get(requestPath, {
       headers: {Authorization: global.accessToken},
       params: filterQuery,
     })
-    .then((res) => callback(res))
-    .catch((err) => {
+    .then(res => callback(res))
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -34,11 +34,11 @@ export function doFilterDirectory(filterQuery, callback, errCallback) {
 
 export function logDirectory(callback, errCallback) {
   let requestPath = `${SERVER_PATH}user/directory/logs`;
-  
+
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => callback(res))
-    .catch((err) => {
+    .then(res => callback(res))
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
