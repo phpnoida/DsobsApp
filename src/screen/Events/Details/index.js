@@ -34,8 +34,7 @@ import {
   updateEvent,
 } from '../../../Actions/SocialEventsActions';
 import Share, {ShareSheet, Button} from 'react-native-share';
-import NumberFormat from 'react-number-format';
-import RNFetchBlob from 'rn-fetch-blob';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import moment from 'moment';
 
 const {urlRegex} = URL_REGX;
@@ -221,7 +220,7 @@ const EventDetails = ({route, navigation}) => {
   };
 
   const getEventImage = attachment => {
-    RNFetchBlob.config({
+    ReactNativeBlobUtil.config({
       fileCache: true,
     })
       .fetch('GET', attachment)

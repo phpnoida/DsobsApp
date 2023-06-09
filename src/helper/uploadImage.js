@@ -1,6 +1,6 @@
 import React from 'react';
 import {Alert, Platform} from 'react-native';
-import RNFetchBlob from 'rn-fetch-blob';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import ImagePicker from 'react-native-image-crop-picker';
 import {uploadMedia} from '../Actions/CommonActions';
 
@@ -114,7 +114,7 @@ export const uploadImage = (pickFile, childPath, mediaType, onPickMedia) => {
         name: 'image',
         filename: imageName,
         type: imageType,
-        data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
+        data: ReactNativeBlobUtil.wrap(decodeURIComponent(imagePath)),
       };
       body.push(imageData);
 

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import {Platform} from 'react-native';
 import {SERVER_PATH} from '../../config';
-import RNFetchBlob from 'rn-fetch-blob';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import {getModel} from 'react-native-device-info';
 
 
@@ -52,7 +52,7 @@ export function getCities(stateId, callback, errCallback) {
 
 export function uploadMedia(childPath, body, callback, errCallback) {
   let requestPath = `${SERVER_PATH}${childPath}`;
-  RNFetchBlob.fetch(
+  ReactNativeBlobUtil.fetch(
     'POST',
     requestPath,
     {

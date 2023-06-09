@@ -3,7 +3,6 @@ import {Alert, View, Platform} from 'react-native';
 import Share, {ShareSheet, Button} from 'react-native-share';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import Clipboard from '@react-native-clipboard/clipboard';
-import RNFetchBlob from 'rn-fetch-blob';
 
 const SharingSheet = ({shareContent, setVisible}) => (
   <ShareSheet visible={true} onCancel={setVisible}>

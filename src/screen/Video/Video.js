@@ -30,7 +30,7 @@ import TopHeaderView from '../../component/TopHeaderView';
 import Share, {ShareSheet, Button} from 'react-native-share';
 import Helper from '../../helper/Helper';
 import CommonButton from '../../component/CommonButton';
-import RNFetchBlob from 'rn-fetch-blob';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import CategoryFilter from '../../component/CategoryFilterSheet';
 let windowWidth = Dimensions.get('window').width;
 
@@ -229,7 +229,7 @@ const Video = ({navigation}) => {
   const shareImage = (title, subject, attachment, link) => {
     console.log('attachment', attachment);
     let base64image = '';
-    RNFetchBlob.fetch('GET', attachment)
+    ReactNativeBlobUtil.fetch('GET', attachment)
       .then(resp => {
         base64image = resp.data;
         base64image = 'data:image/png;base64,' + base64image;

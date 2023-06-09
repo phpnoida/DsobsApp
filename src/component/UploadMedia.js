@@ -16,7 +16,7 @@ import g from '../theme/global';
 import grid from '../theme/grid';
 import {scale} from '../theme/Scalling';
 import GlobalInclude from '../globalInclude/Globalinclude';
-import RNFetchBlob from 'rn-fetch-blob';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import ImagePicker from 'react-native-image-crop-picker';
 import DocumentPicker from 'react-native-document-picker';
 import {uploadMedia} from '../Actions/CommonActions';
@@ -235,7 +235,7 @@ const UploadMedia = ({
           name: 'image',
           filename: imageName,
           type: imageType,
-          data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
+          data: ReactNativeBlobUtil.wrap(decodeURIComponent(imagePath)),
         };
         body.push(imageData);
 
@@ -297,7 +297,7 @@ const UploadMedia = ({
             name: 'image',
             filename: imageName,
             type: imageType,
-            data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
+            data: ReactNativeBlobUtil.wrap(decodeURIComponent(imagePath)),
           };
           body.push(imageData);
 

@@ -2,7 +2,7 @@ import {Linking, Alert, Platform} from 'react-native';
 import {APP_NAME, WHATSAPP_NO} from '../helper/Constants';
 import PushNotification from 'react-native-push-notification';
 import PushNotificationIOS from '@react-native-community/push-notification-ios';
-import RNFetchBlob from 'rn-fetch-blob';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import moment from 'moment';
 
 const Helpers = {
@@ -383,7 +383,7 @@ const Helpers = {
         name: 'image',
         filename: imageName,
         type: imageType,
-        data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
+        data: ReactNativeBlobUtil.wrap(decodeURIComponent(imagePath)),
       };
       body.push(imageData);
 

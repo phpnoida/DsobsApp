@@ -1,6 +1,6 @@
 import axios from 'axios';
 import {SERVER_PATH} from '../../config';
-import RNFetchBlob from 'rn-fetch-blob';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 
 export function requestAuthCode(data, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user/auth`;
@@ -132,7 +132,7 @@ export function getProfessionList(callback, errCallback) {
 
 export function uploadProfilePic(body, callback, errCallback) {
   let requestPath = `${SERVER_PATH}utils/imageupload`;
-  RNFetchBlob.fetch(
+  ReactNativeBlobUtil.fetch(
     'POST',
     requestPath,
     {

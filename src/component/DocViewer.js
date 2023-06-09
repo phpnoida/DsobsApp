@@ -10,7 +10,7 @@ import {
   PermissionsAndroid,
   Dimensions,
 } from 'react-native';
-import RNFetchBlob from 'rn-fetch-blob';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import {scale} from '../theme/Scalling';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import {IconType} from '../helper/Constants';
@@ -18,7 +18,7 @@ import DocView from 'react-native-pdf';
 import Orientation from 'react-native-orientation-locker';
 
 const {width} = Dimensions.get('window');
-const {config, fs} = RNFetchBlob;
+const {config, fs} = ReactNativeBlobUtil;
 let PictureDir = fs.dirs.PictureDir;
 let responseMessage = '';
 let downloadOptions = {

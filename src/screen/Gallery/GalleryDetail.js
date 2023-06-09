@@ -24,7 +24,7 @@ import {IconType, APP_NAME} from '../../helper/Constants';
 import HeaderBar from '../../component/HeaderBar';
 import OptionsSheet from 'react-native-raw-bottom-sheet';
 import ProgresImage from '../../component/ProgresImage';
-import RNFetchBlob from 'rn-fetch-blob';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import Orientation, {
   OrientationLocker,
@@ -37,7 +37,7 @@ import {
 } from '../../Actions/GalleryActions';
 
 const {width} = Dimensions.get('window');
-const {config} = RNFetchBlob;
+const {config} = ReactNativeBlobUtil;
 let index = 0;
 let pageTitle = '';
 let arrayItems = [];
@@ -293,7 +293,7 @@ const GalleryDetail = ({route, navigation}) => {
 
     let extension = imageName.split('.')[1];
 
-    let dirs = RNFetchBlob.fs.dirs;
+    let dirs = ReactNativeBlobUtil.fs.dirs;
     let path =
       Platform.OS === 'ios'
         ? dirs['MainBundleDir'] + imageName

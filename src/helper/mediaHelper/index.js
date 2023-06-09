@@ -1,7 +1,6 @@
 import {Platform, Alert, PermissionsAndroid} from 'react-native';
-import RNFetchBlob from 'rn-fetch-blob';
-const {config} = RNFetchBlob;
-import CameraRoll from '@react-native-community/cameraroll';
+import ReactNativeBlobUtil from 'react-native-blob-util';
+const {config} = ReactNativeBlobUtil;
 
 export const hasPermission = async () => {
   if (Platform.OS !== 'android') {
@@ -69,7 +68,7 @@ export const downloadData = async file => {
 
   let extension = imageName.split('.')[1];
 
-  let dirs = RNFetchBlob.fs.dirs;
+  let dirs = ReactNativeBlobUtil.fs.dirs;
   let path =
     Platform.OS === 'ios'
       ? dirs['MainBundleDir'] + imageName

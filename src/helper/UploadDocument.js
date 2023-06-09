@@ -1,7 +1,7 @@
 import React from 'react';
 import {Platform, PermissionsAndroid, Alert} from 'react-native';
 import DocumentPicker from 'react-native-document-picker';
-import RNFetchBlob from 'rn-fetch-blob';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import getPath from '@flyerhq/react-native-android-uri-path';
 
 export const permissionDocument = async () => {
@@ -56,7 +56,7 @@ export const uploadDoc = async (pickFile, childPath, mediaType) => {
             name: 'image',
             filename: imageName,
             type: imageType,
-            data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
+            data: ReactNativeBlobUtil.wrap(decodeURIComponent(imagePath)),
           };
           body.push(imageData);
           let object = {body: body, childPath: childPath, mediaType: mediaType};

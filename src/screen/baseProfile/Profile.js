@@ -44,7 +44,7 @@ import {
   updateUserProfile,
 } from '../../Actions/UserActions';
 import {getCountries, getStates, getCities} from '../../Actions/CommonActions';
-import RNFetchBlob from 'rn-fetch-blob';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 let firstName = '',
   middleName = '',
   lastName = '',
@@ -394,7 +394,7 @@ const Profile = ({navigation}) => {
         name: 'image',
         filename: imageName,
         type: imageType,
-        data: RNFetchBlob.wrap(decodeURIComponent(imagePath)),
+        data: ReactNativeBlobUtil.wrap(decodeURIComponent(imagePath)),
       };
       body.push(imageData);
 

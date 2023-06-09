@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
-import {ActivityIndicator, StyleSheet} from 'react-native';
-import {View} from 'native-base';
+import {ActivityIndicator, StyleSheet, View} from 'react-native';
 import Color from '../theme/Colors';
 
 export default class Loader extends Component {
