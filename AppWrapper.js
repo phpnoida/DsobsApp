@@ -1,8 +1,6 @@
 import React, {useEffect, useCallback} from 'react';
 import App from './App';
 import NotifService from './src/helper/NotifService';
-import firestore from '@react-native-firebase/firestore';
-import {authentication} from './src/helper/ChatHelper';
 import {useDispatch} from 'react-redux';
 import {refreshScreen} from './src/reducer/NotificationReducer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,11 +21,6 @@ const AppWrapper = ({navigation}) => {
       if (details && details !== null && details !== '') {
         var userDetails = JSON.parse(details);
         global.userDetails = userDetails;
-        if (global.userDetails !== undefined && global.userDetails !== null) {
-          authentication(() => {
-            //bootstrap();
-          });
-        }
       }
     });
     return () => {};

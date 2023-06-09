@@ -32,13 +32,6 @@ import {useDispatch, useSelector, shallowEqual} from 'react-redux';
 import {clearNotifications} from '../../reducer/NotificationReducer';
 import PushNotification from 'react-native-push-notification';
 import {IconType} from '../../helper/Constants';
-import {
-  setUserLastSeen,
-  addUser,
-  checkUserExist,
-  clearAuthentication,
-  updateUserObject,
-} from '../../helper/ChatHelper';
 import {doGetAnyUnread} from '../../Actions/SocketChatActions';
 import Orientation from 'react-native-orientation-locker';
 
@@ -106,9 +99,6 @@ const Dashboard = ({props, navigation}) => {
           {
             text: 'YES',
             onPress: () => {
-              // setUserLastSeen(false, new Date().getTime(), () => {
-
-              // });
               BackHandler.exitApp();
             },
           },
@@ -121,15 +111,6 @@ const Dashboard = ({props, navigation}) => {
     const unsubscribe = navigation.addListener('focus', () => {
       Orientation.lockToPortrait();
       checkForLatestMsg();
-      // addUser(global.userId, global.userDetails, () => {});
-      // checkUserExist(global.userId, false).then(detailis => {
-      //   setUserData(detailis);
-      //   let object = {
-      //     platform: Platform.OS,
-      //   };
-      //   updateUserObject(object, global.userId, status => {});
-      // });
-
       getPopNotifications();
 
       /**
@@ -297,36 +278,6 @@ const Dashboard = ({props, navigation}) => {
         break;
       case 204:
         navigation.navigate('ChatList');
-        break;
-      case 1002:
-        if (
-          data.threadId !== undefined &&
-          data.threadId !== null &&
-          data.threadId !== ''
-        ) {
-          setUserLastSeen(true, new Date().getTime(), () => {
-            console.log('notification Data', data);
-            console.log('notification Data', data.isGroup);
-
-            checkUserExist(global.userId, false).then(result => {
-              if (result !== undefined && result !== null) {
-                console.log('notification isGroup', data.isGroup);
-                let payload = {
-                  threadId: data.threadId,
-                  challenger: result,
-                  isGroup: data.isGroup,
-                };
-                if (data.isGroup === 'true') {
-                  console.log('groupChat', payload);
-                  navigation.navigate('GroupChatScreen', payload);
-                } else {
-                  console.log('singleChat', payload);
-                  navigation.navigate('ChatScreen', payload);
-                }
-              }
-            });
-          });
-        }
         break;
       default:
         break;

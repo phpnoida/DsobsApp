@@ -6,8 +6,8 @@ export function requestAuthCode(data, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user/auth`;
   const request = axios
     .post(requestPath, data)
-    .then((res) => callback(res))
-    .catch((err) => {
+    .then(res => callback(res))
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -18,8 +18,8 @@ export function verifyAuthCode(data, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user/authVerify`;
   const request = axios
     .post(requestPath, data)
-    .then((res) => callback(res))
-    .catch((err) => {
+    .then(res => callback(res))
+    .catch(err => {
       if (
         err.response &&
         err.response !== null &&
@@ -45,8 +45,8 @@ export function getSchoolHouses(callback, errCallback) {
   let requestPath = `${SERVER_PATH}house`;
   const request = axios
     .get(requestPath)
-    .then((res) => callback(res))
-    .catch((err) => {
+    .then(res => callback(res))
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -58,10 +58,10 @@ export function addUser(data, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user?app=1`;
   const request = axios
     .post(requestPath, data)
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -73,10 +73,10 @@ export function submitContactForm(data, callback, errCallback) {
   let requestPath = `${SERVER_PATH}contactForm`;
   const request = axios
     .post(requestPath, data)
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -89,10 +89,10 @@ export function getUserProfile(userId, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user`;
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -104,10 +104,10 @@ export function getUserProfileFromDirectory(userId, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user/directory/profile?id=${userId}`;
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -119,10 +119,10 @@ export function getProfessionList(callback, errCallback) {
   let requestPath = `${SERVER_PATH}user/proffession/list?app=1`;
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -141,12 +141,12 @@ export function uploadProfilePic(body, callback, errCallback) {
     },
     body,
   )
-    .then((resp) => {
+    .then(resp => {
       let bodyData = JSON.parse(resp.data);
       callback(bodyData);
     })
 
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
 }
@@ -155,8 +155,8 @@ export function updateUserProfile(data, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user?id=${global.userId}`;
   const request = axios
     .patch(requestPath, data, {headers: {Authorization: global.accessToken}})
-    .then((res) => callback(res))
-    .catch((err) => {
+    .then(res => callback(res))
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -168,10 +168,10 @@ export function searchUser(userName, callback, errCallback) {
   let requestPath = `${SERVER_PATH}user?s=${userName}`;
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {
@@ -183,10 +183,10 @@ export function doGetProfessionList(callback, errCallback) {
   let requestPath = `${SERVER_PATH}user/proffession/list`;
   const request = axios
     .get(requestPath, {headers: {Authorization: global.accessToken}})
-    .then((res) => {
+    .then(res => {
       callback(res);
     })
-    .catch((err) => {
+    .catch(err => {
       handleError(err, errCallback);
     });
   return {

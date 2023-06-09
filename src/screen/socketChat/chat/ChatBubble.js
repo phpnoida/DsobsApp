@@ -21,7 +21,7 @@ import Pdf from 'react-native-pdf';
 
 import {isSameDay} from '../../../helper/ChatHelper';
 import {IconType} from '../../../helper/Constants';
-import {showImageThumb} from '../../chat/ChatDelegates';
+import {showImageThumb} from '../ChatDelegates';
 import Helpers from '../../../helper/Helper';
 
 const {width} = Dimensions.get('window');

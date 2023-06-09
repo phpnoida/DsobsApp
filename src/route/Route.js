@@ -53,14 +53,7 @@ import AddJobPost from '../screen/jobs/PostJob';
 import JobDetails from '../screen/jobs/JobDetails/';
 import VideoPlayer from '../component/VideoPlayer';
 import YoutubePlayer from '../component/YoutubePlayer';
-import ChatUserList from '../screen/chat/';
-import ChatSettings from '../screen/chat/ChatSettings';
-import ChatEtiquette from '../screen/chat/ChatEtiquette';
-import StartChatWith from '../screen/chat/StartChatWith';
-import ChatScreen from '../screen/chat/ChatScreen';
-import ChatUserProfile from '../screen/chat/ChatUserProfile';
-import GroupChatScreen from '../screen/chat/GroupChatScreen';
-import GroupMembersProfile from '../screen/chat/GroupMembersProfile';
+
 import GroupsList from '../screen/Groups/';
 import CreateGroup from '../screen/Groups/CreateGroup';
 import GroupSettings from '../screen/Groups/GroupSettings';
@@ -75,6 +68,7 @@ import MakeChat from '../screen/socketChat/chat';
 import GroupChatInfo from '../screen/socketChat/chat/GroupChatInfo';
 import UserProfileInfo from '../screen/socketChat/chat/UserProfileInfo';
 import ChatUserSettings from '../screen/socketChat/settings';
+import ChatEtiquette from '../screen/socketChat/ChatEtiquette';
 
 // Contribution
 import ContributonsList from '../screen/contributors';
@@ -355,43 +349,8 @@ export const RootNavigators = baseRoute => {
         options={{headerShown: false}}
       />
       <Stack.Screen
-        name="ChatUserList"
-        component={ChatUserList}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        name="ChatSettings"
-        component={ChatSettings}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
         name="ChatEtiquette"
         component={ChatEtiquette}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        name="StartChatWith"
-        component={StartChatWith}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        name="ChatScreen"
-        component={ChatScreen}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        name="ChatUserProfile"
-        component={ChatUserProfile}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        name="GroupChatScreen"
-        component={GroupChatScreen}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        name="GroupMembersProfile"
-        component={GroupMembersProfile}
         options={{headerShown: false}}
       />
       <Stack.Screen

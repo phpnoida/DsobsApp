@@ -27,7 +27,6 @@ import {scale} from '../../theme/Scalling';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Constants from '../../helper/Constants';
 import {URL_REGX, APP_NAME} from '../../helper/Constants';
-import {checkAndCreateUser} from '../../helper/ChatHelper';
 import {CommonActions} from '@react-navigation/native';
 import PushNotification from 'react-native-push-notification';
 import messaging from '@react-native-firebase/messaging';
@@ -323,16 +322,14 @@ const Login = ({navigation}) => {
   };
 
   const sendUserPresence = userDetails => {
-    checkAndCreateUser(status => {
-      sendPresenceStatus(
-        response => {
-          completeLogin(userDetails);
-        },
-        (statusCode, error) => {
-          console.log('error', error, statusCode);
-        },
-      );
-    });
+    sendPresenceStatus(
+      response => {
+        completeLogin(userDetails);
+      },
+      (statusCode, error) => {
+        console.log('error', error, statusCode);
+      },
+    );
   };
 
   const completeLogin = userDetails => {

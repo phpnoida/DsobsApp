@@ -37,7 +37,6 @@ import Awards from './Awards';
 import MyRelatives from './MyRelatives';
 import MyFamily from './MyFamily';
 import Links from './Links';
-import {addUser, checkUserExist} from '../../helper/ChatHelper';
 import {IconType} from '../../helper/Constants';
 import {SERVER_PATH} from '../../../config';
 import io from 'socket.io-client';
@@ -68,13 +67,13 @@ let profileSheet = null,
 let challengerUser = null;
 let isFromRelatives = false;
 let lastUserId = '';
+
 const UserProfile = ({route, navigation}) => {
   const socketRef = useRef();
 
   const [step, setStep] = useState(1);
   const [profileData, setProfileData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [userObject, setUserObject] = useState(null);
 
   useEffect(() => {
     if (route !== null) {
@@ -96,11 +95,6 @@ const UserProfile = ({route, navigation}) => {
       connectSocket();
     });
 
-    // checkUserExist(global.userId, false).then(result => {
-    //   if (result !== undefined && result !== null) {
-    //     challengerUser = result;
-    //   }
-    // });
 
     if (userId === global.userId) {
       getProfile();
@@ -144,8 +138,6 @@ const UserProfile = ({route, navigation}) => {
               global.firstName = profile.firstName;
               global.lastName = profile.lastName;
 
-              addUser(profile._id, profile, () => {});
-
               AsyncStorage.setItem('userDetails', JSON.stringify(profile)).then(
                 () => {
                   userId = profile._id;
@@ -168,46 +160,36 @@ const UserProfile = ({route, navigation}) => {
     getUserProfileFromDirectory(
       userId,
       response => {
-        checkUserChat(response);
+        setIsLoading(false);
+        if (response && response !== null) {
+          if (
+            response.data &&
+            response.data !== undefined &&
+            response.data !== null
+          ) {
+            let data = response.data;
+
+            if (data.status) {
+              let profile =
+                Array.isArray(data.data) && data.data.length > 0
+                  ? data.data[0]
+                  : null;
+
+              // console.log('otherProfile', profile);
+
+              profileSheetMenu.splice(0, 1);
+              profileSheetMenu.splice(3, 1);
+
+              manageProfile(profile);
+            }
+          }
+        }
       },
       error => {
         setIsLoading(false);
         console.log('error', error);
       },
     );
-  };
-
-  const checkUserChat = async profileResponse => {
-    checkUserExist(userId, false).then(result => {
-      if (result !== undefined && result !== null) {
-        setUserObject(result);
-      }
-
-      if (profileResponse && profileResponse !== null) {
-        if (
-          profileResponse.data &&
-          profileResponse.data !== undefined &&
-          profileResponse.data !== null
-        ) {
-          let data = profileResponse.data;
-
-          if (data.status) {
-            let profile =
-              Array.isArray(data.data) && data.data.length > 0
-                ? data.data[0]
-                : null;
-
-            // console.log('otherProfile', profile);
-
-            profileSheetMenu.splice(0, 1);
-            profileSheetMenu.splice(3, 1);
-
-            manageProfile(profile);
-          }
-        }
-      }
-      setIsLoading(false);
-    });
   };
 
   const manageProfile = profile => {
@@ -525,7 +507,6 @@ const UserProfile = ({route, navigation}) => {
 
                     <UserProfileHeader
                       navigation={navigation}
-                      userObject={userObject}
                       challengerUser={challengerUser}
                       profileImg={profileData.profileImg}
                       firstName={profileData.firstName}

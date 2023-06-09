@@ -26,7 +26,7 @@ import DocViewer from '../../component/DocViewer';
 import AudioPlayer from '../../component/AudioPlayer';
 import ImageViewer from '../../component/ImageViewer';
 import CommonButton from '../../component/CommonButton';
-import {showImageThumb} from '../chat/ChatDelegates';
+import {showImageThumb} from '../socketChat/ChatDelegates';
 import GlobalInclude from '../../globalInclude/Globalinclude';
 import {getStatusBarHeight} from 'react-native-iphone-x-helper';
 import {IconType, APP_NAME} from '../../helper/Constants';

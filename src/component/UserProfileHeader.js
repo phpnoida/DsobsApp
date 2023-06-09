@@ -1,17 +1,9 @@
-import React, {useCallback, useRef, useEffect} from 'react';
-import {
-  Text,
-  View,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  Alert,
-} from 'react-native';
+import React from 'react';
+import {Text, View, TouchableOpacity, Image, StyleSheet} from 'react-native';
 import GlobalInclude from '../globalInclude/Globalinclude';
 import g from '../theme/global';
 import grid from '../theme/grid';
 import {scale} from '../theme/Scalling';
-import {checkChatExist} from '../helper/ChatHelper';
 
 const UserProfileHeader = props => {
   const showLastSeen = timestamp => {
@@ -47,51 +39,6 @@ const UserProfileHeader = props => {
       return `Last seen: ${month_names[month]} ${date}, ${year}`;
     } else {
       return 'Not Logged In Yet';
-    }
-  };
-
-  const openChat = async () => {
-    let userObject = props.userObject;
-    let challengerUser = props.challengerUser;
-    if (userObject !== undefined && userObject !== null) {
-      if (
-        userObject.chatEnabled &&
-        userObject.chatEnabled !== undefined &&
-        userObject.chatEnabled !== null &&
-        userObject.chatEnabled
-      ) {
-        let blockedUser = userObject.blockedUser;
-        let blockedBy = userObject.blockedBy;
-
-        if (blockedBy.indexOf(global.userId) > -1) {
-          Alert.alert(
-            'You blocked this user',
-            'You blocked this user on chat!',
-          );
-        } else if (blockedUser.indexOf(global.userId) > -1) {
-          Alert.alert('You have been blocked', 'user has blocked you on chat.');
-        } else {
-          const result = await checkChatExist(props.userId, 1);
-          if (result !== undefined && result !== null) {
-            let threadId = result._id;
-            let payload = {
-              isGroup: false,
-              threadId: threadId,
-            };
-            props.navigation.navigate('ChatScreen', payload);
-            //props.navigation.replace('ChatScreen', payload);
-          } else {
-            let payload = {
-              challenger: challengerUser,
-              opponent: userObject || {},
-              isGroup: false,
-            };
-            props.navigation.navigate('ChatScreen', payload);
-          }
-        }
-      } else {
-        Alert.alert('Feature not available', 'user has disabled this feature.');
-      }
     }
   };
 
