@@ -4,15 +4,15 @@
   "private": true,
   "scripts": {
     "postinstall": "npx jetify",
-    "run:a": "cd android && ./gradlew clean && cd - && npx react-native run-android",
+    "run:a": "node init && cd android && ./gradlew clean && cd - && npx react-native run-android",
     "ios": "react-native run-ios",
-    "start": "react-native start",
+    "start": "node init && react-native start",
     "test": "jest",
     "lint": "eslint .",
     "open": "npm start --reset-cache",
     "android": "cd android && ./gradlew clean && cd - && react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res",
     "update:a": "cd android && ./gradlew assembledebug",
-    "build:ios": "react-native bundle --entry-file='index.js' --bundle-output='./ios/main.jsbundle' --assets-dest ios --dev=false --platform='ios'"
+    "build:ios": "node init && react-native bundle --entry-file='index.js' --bundle-output='./ios/main.jsbundle' --assets-dest ios --dev=false --platform='ios'"
   },
   "dependencies": {
     "@flyerhq/react-native-android-uri-path": "^2.1.0",
