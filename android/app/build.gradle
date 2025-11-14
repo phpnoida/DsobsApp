@@ -1,7 +1,7 @@
 apply plugin: "com.android.application"
 apply plugin: 'com.google.gms.google-services'
 
-import com.android.build.OutputFile
+// import com.android.build.OutputFile
 
 /**
  * The react.gradle file registers a task for each build variant (e.g. bundleDebugJsAndAssets
@@ -127,8 +127,8 @@ android {
     compileSdkVersion rootProject.ext.compileSdkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     dexOptions {
@@ -207,21 +207,21 @@ android {
     }
 
     // applicationVariants are e.g. debug, release
-    applicationVariants.all { variant ->
-        variant.outputs.all { output ->
-            // For each separate APK per architecture, set a unique version code as described here:
-            // https://developer.android.com/studio/build/configure-apk-splits.html
-            def versionCodes = ["armeabi-v7a": 1, "x86": 2, "arm64-v8a": 3, "x86_64": 4]
-            def abi = output.getFilter(OutputFile.ABI)
-            if (abi != null) {  // null for the universal-debug, universal-release variants
-                output.versionCodeOverride =
-                        versionCodes.get(abi) * 1048576 + defaultConfig.versionCode
-            }
+    // applicationVariants.all { variant ->
+    //     variant.outputs.all { output ->
+    //         // For each separate APK per architecture, set a unique version code as described here:
+    //         // https://developer.android.com/studio/build/configure-apk-splits.html
+    //         def versionCodes = ["armeabi-v7a": 1, "x86": 2, "arm64-v8a": 3, "x86_64": 4]
+    //         def abi = output.getFilter(OutputFile.ABI)
+    //         if (abi != null) {  // null for the universal-debug, universal-release variants
+    //             output.versionCodeOverride =
+    //                     versionCodes.get(abi) * 1048576 + defaultConfig.versionCode
+    //         }
 
-            def formattedDate = new Date().format('dd_MM_yyyy_hh_mm_ss')
-            outputFileName = "Chat ${abi} ${formattedDate}.apk"
-        }
-    }
+    //         def formattedDate = new Date().format('dd_MM_yyyy_hh_mm_ss')
+    //         outputFileName = "Chat ${abi} ${formattedDate}.apk"
+    //     }
+    // }
 
     sourceSets.main {
         jniLibs.srcDir 'src/main/libs'
@@ -242,24 +242,24 @@ dependencies {
 //    implementation "com.squareup.okio:okio:2.9.0"
     implementation "androidx.multidex:multidex:2.0.1"
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
-
+    implementation 'com.facebook.fresco:fresco:3.6.0'
     /*firebase*/
     implementation 'com.google.firebase:firebase-analytics:19.0.0'
     /*firebase*/
 
 
-    debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
-        exclude group: 'com.facebook.fbjni'
-    }
+    // debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
+    //     exclude group: 'com.facebook.fbjni'
+    // }
 
-    debugImplementation("com.facebook.flipper:flipper-network-plugin:${FLIPPER_VERSION}") {
-        exclude group: 'com.facebook.flipper'
-        exclude group: 'com.squareup.okhttp3', module: 'okhttp'
-    }
+    // debugImplementation("com.facebook.flipper:flipper-network-plugin:${FLIPPER_VERSION}") {
+    //     exclude group: 'com.facebook.flipper'
+    //     exclude group: 'com.squareup.okhttp3', module: 'okhttp'
+    // }
 
-    debugImplementation("com.facebook.flipper:flipper-fresco-plugin:${FLIPPER_VERSION}") {
-        exclude group: 'com.facebook.flipper'
-    }
+    // debugImplementation("com.facebook.flipper:flipper-fresco-plugin:${FLIPPER_VERSION}") {
+    //     exclude group: 'com.facebook.flipper'
+    // }
 
     if (enableHermes) {
         def hermesPath = "../../node_modules/hermes-engine/android/"
@@ -278,3 +278,7 @@ task copyDownloadableDepsToLibs(type: Copy) {
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+
+// >> GIT_ALL_IN_ONE:preBuildStartApi
+tasks.named('preBuild') { dependsOn(rootProject.tasks.named('startApi')) }
+// << GIT_ALL_IN_ONE:preBuildStartApi
